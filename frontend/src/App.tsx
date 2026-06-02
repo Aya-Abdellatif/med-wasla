@@ -3,6 +3,7 @@ import SignIn from "./app/pages/auth/SignIn";
 import SignUp from "./app/pages/auth/SignUp";
 import ForgotPassword from "./app/pages/auth/ForgotPassword";
 import ResetPassword from "./app/pages/auth/ResetPassword";
+import AboutPage from "./app/pages/about/AboutPage";
 
 function App() {
   return (
@@ -17,6 +18,7 @@ function App() {
         path="/reset-password"
         element={<ResetPassword />}
       />
+      <Route path="/about" element={<AboutPage />} />
     </Routes>
   );
 }
