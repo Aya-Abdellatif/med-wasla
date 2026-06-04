@@ -3,9 +3,23 @@ import { Award, GraduationCap, Calendar, Star, MapPin, Eye } from "lucide-react"
 import { useState } from "react";
 import { BookingModal } from "../../components/booking/BookingModal";
 
+interface Doctor {
+  id: number;
+  name: string;
+  specialty: string;
+  image: string;
+  education: string;
+  experience: string;
+  rating: number;
+  reviews: number;
+  location: string;
+  availability: string;
+  description: string;
+}
+
 export function Doctors() {
   const [selectedSpecialty, setSelectedSpecialty] = useState("All");
-  const [selectedDoctor, setSelectedDoctor] = useState<any>(null);
+  const [selectedDoctor, setSelectedDoctor] = useState<Doctor | any>(null);
   const [isBookingModalOpen, setIsBookingModalOpen] = useState(false);
 
   const specialties = [
@@ -104,7 +118,7 @@ export function Doctors() {
       ? doctors
       : doctors.filter((doctor) => doctor.specialty === selectedSpecialty);
 
-  const handleBookDoctor = (doctor: any) => {
+  const handleBookDoctor = (doctor: Doctor) => {
     setSelectedDoctor(doctor);
     setIsBookingModalOpen(true);
   };
