@@ -19,7 +19,7 @@ interface Doctor {
 
 export function Doctors() {
   const [selectedSpecialty, setSelectedSpecialty] = useState("All");
-  const [selectedDoctor, setSelectedDoctor] = useState<Doctor | any>(null);
+  const [selectedDoctor, setSelectedDoctor] = useState<Doctor | null>(null);
   const [isBookingModalOpen, setIsBookingModalOpen] = useState(false);
 
   const specialties = [
@@ -277,7 +277,7 @@ export function Doctors() {
           setIsBookingModalOpen(false);
           setSelectedDoctor(null);
         }}
-        provider={selectedDoctor}
+        provider={selectedDoctor ?? undefined}
         serviceType="doctor"
       />
     </div>
