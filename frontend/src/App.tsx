@@ -7,6 +7,8 @@ import ResetPassword from "./app/pages/auth/ResetPassword";
 import { Dashboard } from "./app/pages/Doctor side/Dashboard";
 import MainLayout from "./app/Layouts/MainLayout";
 import Home from "./app/pages/Home";
+import { Doctors } from "./app/pages/public/DoctorsPage";
+
 function App() {
   return (
     <AuthProvider>
@@ -16,6 +18,7 @@ function App() {
         <Route path="/forgot-password" element={<ForgotPassword />} />
         <Route path="/reset-password" element={<ResetPassword />} />
         {/* <Route path="/dashboard" element={<Dashboard />} /> */}
+        <Route path="/doctors" element={<Doctors />} />
         <Route element={<MainLayout />}>
           <Route path="/home" element={<Home />} />
           <Route path="/dashboard" element={<Dashboard />} />
