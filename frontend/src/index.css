@@ -1,3 +1,11 @@
 @import "tailwindcss";
 
-/* Tailwind v4 import syntax; global visuals are handled through HTML/body class utilities. */
+@theme {
+  --color-primary: #14b8a6;
+  --color-primary-deep: #1d3ba5;
+  --color-accent: #0ea5e9;
+  --color-fg: #1f2937;
+  --color-fg-muted: #6b7280;
+  --color-muted: #f9fafb;
+  --color-border: #e5e7eb;
+}
