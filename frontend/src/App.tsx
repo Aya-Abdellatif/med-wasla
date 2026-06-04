@@ -7,6 +7,9 @@ import ResetPassword from "./app/pages/auth/ResetPassword";
 import AboutPage from "./app/pages/about/AboutPage";
 import { Dashboard } from "./app/pages/Doctor side/Dashboard";
 import ContactPage from "./app/pages/contact/ContactPage";
+import MainLayout from "./app/Layouts/MainLayout";
+import Home from "./app/pages/Home";
+import ServicesPage from "./app/pages/Services/ServicesPage";
 
 
 function App() {
@@ -15,24 +18,22 @@ function App() {
     <Routes>
       <Route path="/" element={<SignIn />} />
       <Route path="/signup" element={<SignUp />} />
-      <Route
-        path="/forgot-password"
-        element={<ForgotPassword />}
-      />
-      <Route
-        path="/reset-password"
-        element={<ResetPassword />}
-      />
+      <Route path="/forgot-password" element={<ForgotPassword />}/>
+      <Route path="/reset-password" element={<ResetPassword />}/>
       <Route path="/about" element={<AboutPage />} />
-      <Route
-        path="/dashboard"
-        element={<Dashboard />}
-      />
+      <Route path="/dashboard" element={<Dashboard />}/>
       <Route path="/contact" element={<ContactPage />} />
-
-    </Routes>
+      <Route path="/services" element={<ServicesPage />} />
+      {/* <Route path="/dashboard" element={<Dashboard />} /> */}
+        <Route element={<MainLayout />}>
+          <Route path="/home" element={<Home />} />
+          <Route path="/dashboard" element={<Dashboard />} />
+        </Route>
+      </Routes>
     </AuthProvider>
   );
 }
 
 export default App;
+
+ 

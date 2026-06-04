@@ -48,7 +48,7 @@ export default function ContactPage() {
 
   if (isSubmitted) {
     return (
-      <main className="min-h-screen flex items-center justify-center bg-gradient-to-br from-teal-50 to-cyan-50 px-4">
+      <main className="min-h-screen flex items-center justify-center bg-linear-to-br from-teal-50 to-cyan-50 px-4">
         <div className="max-w-md w-full bg-white rounded-2xl shadow-xl p-8 text-center">
           <div className="w-20 h-20 bg-teal-50 rounded-full flex items-center justify-center mx-auto mb-6">
             <FontAwesomeIcon
@@ -72,7 +72,7 @@ export default function ContactPage() {
   return (
     <main className="min-h-screen bg-white text-gray-900">
       {/* Hero */}
-      <section className="bg-gradient-to-br from-teal-50 to-cyan-50 py-20 px-4 text-center">
+      <section className="bg-linear-to-br from-teal-50 to-cyan-50 py-20 px-4 text-center">
         <h1 className="text-4xl md:text-5xl font-bold mb-6">
           Get in Touch
         </h1>

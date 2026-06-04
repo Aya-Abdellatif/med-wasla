@@ -86,38 +86,3 @@ jobs:
             } else {
               console.log("✅ No merge conflicts!");
             }
-
-  branch-check:
-    name: 🌿 Branch Name Check
-    runs-on: ubuntu-latest
-
-    steps:
-      - name: ✅ Validate branch belongs to a team member
-        uses: actions/github-script@v7
-        with:
-          script: |
-            const branch = context.payload.pull_request.head.ref;
-            console.log("Source branch:", branch);
-
-            const teamBranches = [
-              "Ranim-Mohareb",
-              "aya",
-              "hana",
-              "mayar",
-              "salma",
-              "walaa",
-            ];
-
-            const isTeamBranch = teamBranches.includes(branch)
-              || branch.startsWith("feature/")
-              || branch.startsWith("fix/")
-              || branch.startsWith("hotfix/");
-
-            if (!isTeamBranch) {
-              core.warning(
-                `⚠️ Branch "${branch}" is not a recognized team branch. ` +
-                `Known branches: ${teamBranches.join(", ")}`
-              );
-            } else {
-              console.log(`✅ Branch "${branch}" recognized as a valid team branch.`);
-            }
