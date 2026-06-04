@@ -411,7 +411,7 @@ export function Dashboard() {
               <div className="flex items-center space-x-6">
                 <div className="w-24 h-24 rounded-full overflow-hidden bg-primary/10">
                   {user?.avatar ? (
-                    <ImageWithFallback
+                    <img
                       src={user.avatar}
                       alt={user.name}
                       className="w-full h-full object-cover"
