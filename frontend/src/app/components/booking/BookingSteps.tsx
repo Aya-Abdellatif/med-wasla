@@ -47,9 +47,9 @@ export function BookingTypeModal({ isOpen, onClose }: BookingTypeModalProps) {
               onClick={() => handleSelection("doctor")}
               className="group relative overflow-hidden bg-white border-2 border-border rounded-xl p-8 hover:border-primary transition-all hover:shadow-xl text-left"
             >
-              <div className="absolute inset-0 bg-gradient-to-br from-teal-500 to-blue-600 opacity-0 group-hover:opacity-5 transition-opacity" />
+              <div className="absolute inset-0 bg-linear-to-br from-teal-500 to-blue-600 opacity-0 group-hover:opacity-5 transition-opacity" />
               <div className="relative">
-                <div className="w-16 h-16 bg-gradient-to-br from-teal-500 to-blue-600 rounded-xl flex items-center justify-center mb-4">
+                <div className="w-16 h-16 bg-linear-to-br from-teal-500 to-blue-600 rounded-xl flex items-center justify-center mb-4">
                   <Stethoscope className="w-8 h-8 text-white" />
                 </div>
                 <h3 className="text-xl font-bold text-foreground mb-2">
@@ -84,9 +84,9 @@ export function BookingTypeModal({ isOpen, onClose }: BookingTypeModalProps) {
               onClick={() => handleSelection("nurse")}
               className="group relative overflow-hidden bg-white border-2 border-border rounded-xl p-8 hover:border-primary transition-all hover:shadow-xl text-left"
             >
-              <div className="absolute inset-0 bg-gradient-to-br from-pink-500 to-pink-600 opacity-0 group-hover:opacity-5 transition-opacity" />
+              <div className="absolute inset-0 bg-linear-to-br from-pink-500 to-pink-600 opacity-0 group-hover:opacity-5 transition-opacity" />
               <div className="relative">
-                <div className="w-16 h-16 bg-gradient-to-br from-pink-500 to-pink-600 rounded-xl flex items-center justify-center mb-4">
+                <div className="w-16 h-16 bg-linear-to-br from-pink-500 to-pink-600 rounded-xl flex items-center justify-center mb-4">
                   <Home className="w-8 h-8 text-white" />
                 </div>
                 <h3 className="text-xl font-bold text-foreground mb-2">

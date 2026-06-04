@@ -1,18 +1,25 @@
 import { useState } from "react";
-import { X, Calendar, Clock, MapPin, User, Phone, Mail, AlertCircle } from "lucide-react";
+import { X, Calendar, Clock, MapPin, AlertCircle } from "lucide-react";
+
+interface Provider {
+  name: string;
+  specialty?: string;
+  certification?: string;
+  location?: string;
+}
 
 interface BookingModalProps {
   isOpen: boolean;
   onClose: () => void;
-  provider?: any; // Doctor or Nurse data
+  provider?: Provider;
   serviceType?: "doctor" | "nurse";
 }
 
 export function BookingModal({ isOpen, onClose, provider, serviceType }: BookingModalProps) {
   const [formData, setFormData] = useState({
-    patientName: "",
-    email: "",
-    phone: "",
+    //patientName: "",
+    //email: "",
+    //phone: "",
     date: "",
     time: "",
     reason: "",
@@ -25,19 +32,19 @@ export function BookingModal({ isOpen, onClose, provider, serviceType }: Booking
   const validateForm = () => {
     const newErrors: Record<string, string> = {};
 
-    if (!formData.patientName.trim()) {
+    /*if (!formData.patientName.trim()) {
       newErrors.patientName = "Name is required";
-    }
+    }*/
 
-    if (!formData.email) {
+    /*if (!formData.email) {
       newErrors.email = "Email is required";
     } else if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(formData.email)) {
       newErrors.email = "Please enter a valid email address";
-    }
+    }*/
 
-    if (!formData.phone) {
+    /*if (!formData.phone) {
       newErrors.phone = "Phone number is required";
-    }
+    }*/
 
     if (!formData.date) {
       newErrors.date = "Date is required";
@@ -82,9 +89,9 @@ export function BookingModal({ isOpen, onClose, provider, serviceType }: Booking
       onClose();
       // Reset form
       setFormData({
-        patientName: "",
-        email: "",
-        phone: "",
+        //patientName: "",
+        //email: "",
+        //phone: "",
         date: "",
         time: "",
         reason: "",
@@ -133,7 +140,7 @@ export function BookingModal({ isOpen, onClose, provider, serviceType }: Booking
         {/* Form */}
         <form onSubmit={handleSubmit} className="p-6 space-y-6">
           {/* Patient Name */}
-          <div>
+          {/*<div>
             <label htmlFor="patientName" className="block mb-2 font-medium text-foreground">
               Patient Name *
             </label>
@@ -158,10 +165,10 @@ export function BookingModal({ isOpen, onClose, provider, serviceType }: Booking
                 <span>{errors.patientName}</span>
               </div>
             )}
-          </div>
+          </div>*/}
 
           {/* Email */}
-          <div>
+          {/*<div>
             <label htmlFor="email" className="block mb-2 font-medium text-foreground">
               Email Address *
             </label>
@@ -186,10 +193,10 @@ export function BookingModal({ isOpen, onClose, provider, serviceType }: Booking
                 <span>{errors.email}</span>
               </div>
             )}
-          </div>
+          </div>*/}
 
           {/* Phone */}
-          <div>
+          {/*<div>
             <label htmlFor="phone" className="block mb-2 font-medium text-foreground">
               Phone Number *
             </label>
@@ -214,7 +221,7 @@ export function BookingModal({ isOpen, onClose, provider, serviceType }: Booking
                 <span>{errors.phone}</span>
               </div>
             )}
-          </div>
+          </div>*/}
 
           {/* Address (for home service only) */}
           {serviceType === "nurse" && (
