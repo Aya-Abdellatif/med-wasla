@@ -7,6 +7,8 @@ import ResetPassword from "./app/pages/auth/ResetPassword";
 import AboutPage from "./app/pages/about/AboutPage";
 import { Dashboard } from "./app/pages/Doctor side/Dashboard";
 import ContactPage from "./app/pages/contact/ContactPage";
+import { PatientProfile } from "./app/pages/patient/PatientProfile";
+
 import MainLayout from "./app/Layouts/MainLayout";
 import Home from "./app/pages/Home";
 import ServicesPage from "./app/pages/Services/ServicesPage";
@@ -31,6 +33,7 @@ function App() {
           <Route path="/home" element={<Home />} />
           <Route path="/dashboard" element={<Dashboard />} />
         </Route>
+        <Route path="/patient-profile" element={<PatientProfile />} />
       </Routes>
     </AuthProvider>
   );
