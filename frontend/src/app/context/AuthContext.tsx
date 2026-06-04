@@ -1,47 +1,5 @@
-import { createContext, useContext, useState, ReactNode } from "react";
-
-export type UserRole = "patient" | "doctor" | "nurse";
-
-export interface Certificate {
-  id: string;
-  name: string;
-  issuer: string;
-  issueDate: string;
-  fileUrl?: string;
-  verified: boolean;
-}
-
-export interface DiseaseRecord {
-  id: string;
-  disease: string;
-  diagnosedDate: string;
-  treatedBy: string;
-  status: "active" | "resolved" | "under_treatment";
-  notes?: string;
-}
-
-export interface User {
-  id: string;
-  name: string;
-  email: string;
-  role: UserRole;
-  avatar?: string;
-  specialty?: string; // For doctors
-  experience?: string; // For doctors/nurses
-  location?: string; // For doctors/nurses
-  certificates?: Certificate[]; // For doctors
-  diseaseHistory?: DiseaseRecord[]; // For patients
-}
-
-interface AuthContextType {
-  user: User | null;
-  isAuthenticated: boolean;
-  login: (email: string, password: string, role: UserRole) => Promise<void>;
-  logout: () => void;
-  updateProfile: (data: Partial<User>) => void;
-}
-
-const AuthContext = createContext<AuthContextType | undefined>(undefined);
+import { useState, type ReactNode } from "react";
+import { AuthContext, type User, type UserRole } from "./authCore";
 
 export function AuthProvider({ children }: { children: ReactNode }) {
   const [user, setUser] = useState<User | null>(null);
@@ -59,8 +17,8 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       avatar: role === "doctor"
         ? "https://images.unsplash.com/photo-1632054224477-c9cb3aae1b7e?crop=entropy&cs=tinysrgb&fit=max&fm=jpg&ixid=M3w3Nzg4Nzd8MHwxfHNlYXJjaHwxfHxmZW1hbGUlMjBkb2N0b3IlMjBwcm9mZXNzaW9uYWx8ZW58MXx8fHwxNzc3NzI3Njk4fDA&ixlib=rb-4.1.0&q=80&w=1080"
         : role === "nurse"
-        ? "https://images.unsplash.com/photo-1594824476967-48c8b964273f?crop=entropy&cs=tinysrgb&fit=max&fm=jpg&ixid=M3w3Nzg4Nzd8MHwxfHNlYXJjaHwxfHxudXJzZSUyMHByb2Zlc3Npb25hbHxlbnwxfHx8fDE3Nzc3Mjc2OTl8MA&ixlib=rb-4.1.0&q=80&w=1080"
-        : undefined,
+          ? "https://images.unsplash.com/photo-1594824476967-48c8b964273f?crop=entropy&cs=tinysrgb&fit=max&fm=jpg&ixid=M3w3Nzg4Nzd8MHwxfHNlYXJjaHwxfHxudXJzZSUyMHByb2Zlc3Npb25hbHxlbnwxfHx8fDE3Nzc3Mjc2OTl8MA&ixlib=rb-4.1.0&q=80&w=1080"
+          : undefined,
       specialty: role === "doctor" ? "Cardiology" : undefined,
       experience: role !== "patient" ? "10 years" : undefined,
       location: role !== "patient" ? "Building A, Floor 3" : undefined,
@@ -133,12 +91,4 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       {children}
     </AuthContext.Provider>
   );
-}
-
-export function useAuth() {
-  const context = useContext(AuthContext);
-  if (context === undefined) {
-    throw new Error("useAuth must be used within an AuthProvider");
-  }
-  return context;
 }
