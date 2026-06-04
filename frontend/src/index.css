@@ -1,5 +1,23 @@
 @import "tailwindcss";
 
+* {
+  box-sizing: border-box;
+}
+
+html,
+body,
+#root {
+  margin: 0;
+  width: 100%;
+  min-height: 100%;
+  overflow-x: hidden;
+  overflow-y: auto;
+}
+
+body {
+  background-color: #ffffff;
+}
+/* Tailwind v4 import syntax; global visuals are handled through HTML/body class utilities. */
 @theme {
   --color-primary: #14b8a6;
   --color-primary-deep: #1d3ba5;
