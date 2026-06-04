@@ -33,6 +33,7 @@ function App() {
           <Route path="/home" element={<Home />} />
           <Route path="/dashboard" element={<Dashboard />} />
         </Route>
+        {/*-----test*/}
         <Route path="/patient-profile" element={<PatientProfile />} />
       </Routes>
     </AuthProvider>
