@@ -4,7 +4,7 @@ import { AuthContext, type User, type UserRole } from "./authCore";
 export function AuthProvider({ children }: { children: ReactNode }) {
   const [user, setUser] = useState<User | null>(null);
 
-  const login = async (email: string, password: string, role: UserRole) => {
+  const login = async (email: string, _password: string, role: UserRole) => {
     // Simulate API call
     await new Promise((resolve) => setTimeout(resolve, 1000));
 

@@ -1,5 +1,6 @@
 import { useState } from "react";
 import { useAuth } from "../../context/useAuth";
+
 import {
   Calendar,
   Clock,
@@ -179,7 +180,7 @@ export function Dashboard() {
             <div className="flex items-center space-x-4">
               <div className="w-16 h-16 rounded-full overflow-hidden bg-primary/10">
                 {user?.avatar ? (
-                  <ImageWithFallback
+                  <img
                     src={user.avatar}
                     alt={user.name}
                     className="w-full h-full object-cover"
