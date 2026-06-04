@@ -12,6 +12,8 @@ import Home from "./app/pages/Home";
 import ServicesPage from "./app/pages/Services/ServicesPage";
 
 
+import { Doctors } from "./app/pages/public/DoctorsPage";
+
 function App() {
   return (
      <AuthProvider>
@@ -21,10 +23,10 @@ function App() {
       <Route path="/forgot-password" element={<ForgotPassword />}/>
       <Route path="/reset-password" element={<ResetPassword />}/>
       <Route path="/about" element={<AboutPage />} />
-      <Route path="/dashboard" element={<Dashboard />}/>
       <Route path="/contact" element={<ContactPage />} />
       <Route path="/services" element={<ServicesPage />} />
       {/* <Route path="/dashboard" element={<Dashboard />} /> */}
+        <Route path="/doctors" element={<Doctors />} />
         <Route element={<MainLayout />}>
           <Route path="/home" element={<Home />} />
           <Route path="/dashboard" element={<Dashboard />} />
