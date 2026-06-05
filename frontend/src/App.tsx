@@ -10,6 +10,7 @@ import { PatientProfile } from "./app/pages/patient/PatientProfile";
 import MainLayout from "./app/Layouts/MainLayout";
 import Home from "./app/pages/Home";
 import { Doctors } from "./app/pages/public/DoctorsPage";
+import { Nurses } from "./app/pages/public/NursesPage";
 
 function App() {
   return (
@@ -21,6 +22,7 @@ function App() {
         <Route path="/reset-password" element={<ResetPassword />} />
         {/* <Route path="/dashboard" element={<Dashboard />} /> */}
         <Route path="/doctors" element={<Doctors />} />
+        <Route path="/nurses" element={<Nurses />} />
         <Route element={<MainLayout />}>
           <Route path="/home" element={<Home />} />
           <Route path="/dashboard" element={<Dashboard />} />
