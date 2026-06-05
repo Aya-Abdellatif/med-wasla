@@ -1,94 +1,158 @@
-import { useState, type ReactNode } from "react";
-import { AuthContext, type User, type UserRole } from "./authCore";
+import { createContext, useContext, useState } from "react";
+import type { ReactNode } from "react";
 
+export type UserRole = "patient" | "doctor" | "nurse";
+
+export interface Certificate {
+  id: string;
+  name: string;
+  issuer: string;
+  issueDate: string;
+  fileUrl?: string;
+  verified: boolean;
+}
+
+export interface DiseaseRecord {
+  id: string;
+  disease: string;
+  diagnosedDate: string;
+  treatedBy: string;
+  status: "active" | "resolved" | "under_treatment";
+  notes?: string;
+}
+
+export interface User {
+  id: string;
+  name: string;
+  email: string;
+  role: UserRole;
+  avatar?: string;
+  specialty?: string;
+  experience?: string;
+  location?: string;
+  certificates?: Certificate[];
+  diseaseHistory?: DiseaseRecord[];
+}
+
+interface AuthContextType {
+  user: User | null;
+  isAuthenticated: boolean;
+  login: (email: string, password: string, role: UserRole) => Promise<void>;
+  logout: () => void;
+  updateProfile: (data: Partial<User>) => void;
+}
+
+const AuthContext = createContext<AuthContextType | undefined>(undefined)
+
+// ─── Provider (component export) ────────────────────────────────────────────
 export function AuthProvider({ children }: { children: ReactNode }) {
   const [user, setUser] = useState<User | null>(null);
+  const login = async (
+    email: string,
+    _password: string, // prefixed with _ to silence ts(6133) unused-var warning
+    role: UserRole
+  ) => {
 
-  const login = async (email: string, _password: string, role: UserRole) => {
     // Simulate API call
     await new Promise((resolve) => setTimeout(resolve, 1000));
 
-    // Mock user data based on role
     const mockUser: User = {
       id: "1",
-      name: role === "patient" ? "John Doe" : role === "doctor" ? "Dr. Sarah Williams" : "Nurse Emily Johnson",
+      name:
+        role === "patient"
+          ? "John Doe"
+          : role === "doctor"
+          ? "Dr. Sarah Williams"
+          : "Nurse Emily Johnson",
       email,
       role,
       avatar: role === "doctor"
         ? "https://images.unsplash.com/photo-1632054224477-c9cb3aae1b7e?crop=entropy&cs=tinysrgb&fit=max&fm=jpg&ixid=M3w3Nzg4Nzd8MHwxfHNlYXJjaHwxfHxmZW1hbGUlMjBkb2N0b3IlMjBwcm9mZXNzaW9uYWx8ZW58MXx8fHwxNzc3NzI3Njk4fDA&ixlib=rb-4.1.0&q=80&w=1080"
         : role === "nurse"
+      avatar:
+        role === "doctor"
+          ? "https://images.unsplash.com/photo-1632054224477-c9cb3aae1b7e?crop=entropy&cs=tinysrgb&fit=max&fm=jpg&ixid=M3w3Nzg4Nzd8MHwxfHNlYXJjaHwxfHxmZW1hbGUlMjBkb2N0b3IlMjBwcm9mZXNzaW9uYWx8ZW58MXx8fHwxNzc3NzI3Njk4fDA&ixlib=rb-4.1.0&q=80&w=1080"
+          : role === "nurse"
           ? "https://images.unsplash.com/photo-1594824476967-48c8b964273f?crop=entropy&cs=tinysrgb&fit=max&fm=jpg&ixid=M3w3Nzg4Nzd8MHwxfHNlYXJjaHwxfHxudXJzZSUyMHByb2Zlc3Npb25hbHxlbnwxfHx8fDE3Nzc3Mjc2OTl8MA&ixlib=rb-4.1.0&q=80&w=1080"
           : undefined,
       specialty: role === "doctor" ? "Cardiology" : undefined,
       experience: role !== "patient" ? "10 years" : undefined,
       location: role !== "patient" ? "Building A, Floor 3" : undefined,
-      certificates: role === "doctor" ? [
-        {
-          id: "1",
-          name: "Board Certification in Cardiology",
-          issuer: "American Board of Internal Medicine",
-          issueDate: "2015-06-15",
-          verified: true,
-        },
-        {
-          id: "2",
-          name: "Advanced Cardiac Life Support (ACLS)",
-          issuer: "American Heart Association",
-          issueDate: "2023-01-10",
-          verified: true,
-        },
-        {
-          id: "3",
-          name: "Fellowship in Interventional Cardiology",
-          issuer: "Johns Hopkins University",
-          issueDate: "2018-08-20",
-          verified: false, // Pending verification
-        },
-      ] : undefined,
-      diseaseHistory: role === "patient" ? [
-        {
-          id: "1",
-          disease: "Hypertension",
-          diagnosedDate: "2020-03-15",
-          treatedBy: "Dr. Michael Chen",
-          status: "under_treatment",
-          notes: "Blood pressure controlled with medication",
-        },
-        {
-          id: "2",
-          disease: "Type 2 Diabetes",
-          diagnosedDate: "2019-07-22",
-          treatedBy: "Dr. Sarah Williams",
-          status: "under_treatment",
-          notes: "HbA1c levels stable with diet and medication",
-        },
-      ] : undefined,
+      certificates:
+        role === "doctor" || role === "nurse"
+          ? [
+              {
+                id: "1",
+                name: "Board Certification in Cardiology",
+                issuer: "American Board of Internal Medicine",
+                issueDate: "2015-06-15",
+                verified: true,
+              },
+              {
+                id: "2",
+                name: "Advanced Cardiac Life Support (ACLS)",
+                issuer: "American Heart Association",
+                issueDate: "2023-01-10",
+                verified: true,
+              },
+              {
+                id: "3",
+                name: "Fellowship in Cardiology",
+                issuer: "Johns Hopkins University",
+                issueDate: "2018-08-20",
+                verified: false,
+              },
+            ]
+          : undefined,
+      diseaseHistory:
+        role === "patient"
+          ? [
+              {
+                id: "1",
+                disease: "Hypertension",
+                diagnosedDate: "2020-03-15",
+                treatedBy: "Dr. Michael Chen",
+                status: "under_treatment",
+                notes: "Blood pressure controlled with medication",
+              },
+              {
+                id: "2",
+                disease: "Type 2 Diabetes",
+                diagnosedDate: "2019-07-22",
+                treatedBy: "Dr. Sarah Williams",
+                status: "under_treatment",
+                notes: "HbA1c levels stable with diet and medication",
+              },
+            ]
+          : undefined,
     };
 
     setUser(mockUser);
   };
 
-  const logout = () => {
-    setUser(null);
-  };
+  const logout = () => setUser(null);
 
   const updateProfile = (data: Partial<User>) => {
-    if (user) {
-      setUser({ ...user, ...data });
-    }
+    if (user) setUser({ ...user, ...data });
   };
 
   return (
     <AuthContext.Provider
-      value={{
-        user,
-        isAuthenticated: !!user,
-        login,
-        logout,
-        updateProfile,
-      }}
+      value={{ user, isAuthenticated: !!user, login, logout, updateProfile }}
     >
       {children}
     </AuthContext.Provider>
   );
+}
+
+// ─── Hook (non-component export — kept in a separate export statement so
+//     Fast Refresh only complains about mixed component+hook files, not about
+//     the hook itself.  If the ESLint rule still fires, add the comment below) ─
+// eslint-disable-next-line react-refresh/only-export-components
+export function useAuth() {
+  const context = useContext(AuthContext);
+  if (context === undefined) {
+    throw new Error("useAuth must be used within an AuthProvider");
+  }
+  return context;
 }

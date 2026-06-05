@@ -188,7 +188,7 @@ function Home() {
 
         <div className="flex-1 relative flex justify-center">
           <div className="relative w-full max-w-2xl">
-            <div className="rounded-3xl overflow-hidden bg-primary/10 aspect-[4/3]">
+            <div className="rounded-3xl overflow-hidden bg-primary/10 aspect-4/3">
               <img
                 src={docImg}
                 alt="Doctor"
@@ -196,7 +196,7 @@ function Home() {
               />
             </div>
             <div className="absolute -bottom-5 -left-4 bg-white rounded-2xl shadow-xl px-5 py-3.5 flex items-center gap-3 border border-border">
-              <div className="h-11 w-11 rounded-full bg-primary/10 flex items-center justify-center flex-shrink-0">
+              <div className="h-11 w-11 rounded-full bg-primary/10 flex items-center justify-center shrink-0">
                 <Phone className="h-5 w-5 text-primary" />
               </div>
               <div>
@@ -278,7 +278,7 @@ function Home() {
             <div className="grid grid-cols-1 sm:grid-cols-2 gap-5">
               {reasons.map(({ icon: Icon, title, desc }) => (
                 <div key={title} className="flex gap-3">
-                  <div className="h-10 w-10 rounded-xl bg-primary/10 flex items-center justify-center flex-shrink-0">
+                  <div className="h-10 w-10 rounded-xl bg-primary/10 flex items-center justify-center shrink-0">
                     <Icon className="h-5 w-5 text-primary" />
                   </div>
                   <div>
