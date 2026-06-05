@@ -1,20 +1,24 @@
 import { useState, useEffect, useRef } from "react";
 import { LogOut, CalendarDays } from "lucide-react";
+import { Link, useNavigate } from "react-router-dom";
+import { AppointmentTypeModal } from "../booking/AppointmentTypeModal";
 function Navbar() {
   const [isOpen, setIsOpen] = useState(false);
   const [active, setActive] = useState<string | null>(null);
   const [underlineStyle, setUnderlineStyle] = useState({ left: 0, width: 0 });
   const [isFirstClick, setIsFirstClick] = useState(true);
+  const [isAppointmentModalOpen, setIsAppointmentModalOpen] = useState(false);
+  const navigate = useNavigate();
   const navLinks = [
-    "Home",
-    "Services",
-    "Doctors",
-    "Nurses",
-    "About",
-    "Contact Us",
+    { name: "Home", path: "/home" },
+    { name: "Services", path: "/services" },
+    { name: "Doctors", path: "/doctors" },
+    { name: "Nurses", path: "/nurses" },
+    { name: "About", path: "/about" },
+    { name: "Contact Us", path: "/contact" },
   ];
   const containerRef = useRef<HTMLDivElement | null>(null);
-  const linksRef = useRef<Record<string, HTMLAnchorElement | null>>({});
+  const linksRef = useRef<Record<string, HTMLElement | null>>({});
   useEffect(() => {
     if (!active) return;
     const el = linksRef.current[active];
@@ -39,11 +43,12 @@ function Navbar() {
     setIsFirstClick(true);
   };
   return (
-    <nav className="bg-white shadow-md sticky top-0 z-50">
+    <>
+      <nav className="bg-white shadow-md sticky top-0 z-50">
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
         <div className="flex h-20 items-center gap-6">
-          <a
-            href="#"
+          <Link
+            to="/home"
             onClick={handleLogoClick}
             className="flex items-center gap-3 flex-shrink-0 cursor-pointer group"
           >
@@ -58,7 +63,7 @@ function Navbar() {
               <span className="text-fg">Med</span>
               <span className="text-primary font-bold">Wasla</span>
             </span>
-          </a>
+          </Link>
           <div className="hidden xl:block h-6 w-px bg-border flex-shrink-0" />
           <div
             ref={containerRef}
@@ -75,10 +80,10 @@ function Navbar() {
                 }}
               />
             )}
-            {navLinks.map((name) => (
-              <a
+            {navLinks.map(({ name, path }) => (
+              <Link
                 key={name}
-                href="#"
+                to={path}
                 ref={(el) => {
                   linksRef.current[name] = el;
                 }}
@@ -90,15 +95,19 @@ function Navbar() {
                 }`}
               >
                 {name}
-              </a>
+              </Link>
             ))}
           </div>
           <div className="hidden xl:flex items-center gap-4 ml-auto flex-shrink-0">
-            <button className="flex items-center gap-2 text-lg font-semibold text-fg-muted hover:text-red-500 transition-colors duration-300 cursor-pointer">
+            <button
+              onClick={() => navigate("/")}
+              className="flex items-center gap-2 text-lg font-semibold text-fg-muted hover:text-red-500 transition-colors duration-300 cursor-pointer">
               <LogOut className="h-5 w-5" strokeWidth={2.5} />
               Logout
             </button>
-            <button className="group flex items-center gap-2 bg-primary text-white border-2 border-primary font-bold text-lg px-6 py-3 rounded-xl cursor-pointer transition-all duration-300 ease-in-out hover:-translate-y-0.5 hover:bg-transparent hover:text-primary hover:shadow-md">
+            <button
+              onClick={() => setIsAppointmentModalOpen(true)}
+              className="group flex items-center gap-2 bg-primary text-white border-2 border-primary font-bold text-lg px-6 py-3 rounded-xl cursor-pointer transition-all duration-300 ease-in-out hover:-translate-y-0.5 hover:bg-transparent hover:text-primary hover:shadow-md">
               <CalendarDays
                 className="h-5 w-5 text-brand-teal group-hover:text-primary transition-colors duration-300"
                 strokeWidth={2.5}
@@ -146,10 +155,10 @@ function Navbar() {
       </div>
       {isOpen && (
         <div className="xl:hidden bg-muted border-t border-border px-4 py-4 space-y-2">
-          {navLinks.map((name) => (
-            <a
+          {navLinks.map(({ name, path }) => (
+            <Link
               key={name}
-              href="#"
+              to={path}
               onClick={() => {
                 handleLinkClick(name);
                 setIsOpen(false);
@@ -161,14 +170,18 @@ function Navbar() {
               }`}
             >
               {name}
-            </a>
+            </Link>
           ))}
           <div className="pt-3 border-t border-border space-y-3">
-            <button className="flex items-center gap-2 w-full text-xl font-semibold text-fg-muted hover:text-red-500 px-4 py-2.5 rounded-lg transition-colors duration-300 cursor-pointer">
+            <button
+              onClick={() => navigate("/")}
+              className="flex items-center gap-2 w-full text-xl font-semibold text-fg-muted hover:text-red-500 px-4 py-2.5 rounded-lg transition-colors duration-300 cursor-pointer">
               <LogOut className="h-5 w-5" strokeWidth={2.5} />
               Logout
             </button>
-            <button className="group flex items-center justify-center gap-2 w-full bg-primary text-white border-2 border-primary font-bold text-base px-4 py-3 rounded-xl transition-all duration-300 hover:-translate-y-0.5 hover:bg-transparent hover:text-primary cursor-pointer">
+            <button
+              onClick={() => setIsAppointmentModalOpen(true)}
+              className="group flex items-center justify-center gap-2 w-full bg-primary text-white border-2 border-primary font-bold text-base px-4 py-3 rounded-xl transition-all duration-300 hover:-translate-y-0.5 hover:bg-transparent hover:text-primary cursor-pointer">
               <CalendarDays
                 className="h-5 w-5 text-brand-teal group-hover:text-primary transition-colors duration-300"
                 strokeWidth={2.5}
@@ -178,7 +191,12 @@ function Navbar() {
           </div>
         </div>
       )}
-    </nav>
+      </nav>
+      <AppointmentTypeModal
+        isOpen={isAppointmentModalOpen}
+        onClose={() => setIsAppointmentModalOpen(false)}
+      />
+    </>
   );
 }
 export default Navbar;

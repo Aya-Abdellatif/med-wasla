@@ -12,7 +12,7 @@ export default function ResetPassword() {
   const handleResetPassword = () => {
     //hanady hna el API lma n3ml el backedn
 
-    navigate("/");
+    navigate("/home");
   };
 
   return (

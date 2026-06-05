@@ -125,7 +125,7 @@ export function Nurses() {
       ? nurses
       : nurses.filter((nurse) => nurse.specialty === selectedSpecialty);
 
-  const handleBookNurse = (nurse: any) => {
+  const handleBookNurse = (nurse: Nurse) => {
     setSelectedNurse(nurse);
     setIsBookingModalOpen(true);
   };
@@ -286,13 +286,13 @@ export function Nurses() {
           <p className="text-xl text-white/90 mb-8 max-w-2xl mx-auto">
             Our dedicated nurses are here to provide quality care in the comfort of your home. Request a service today.
           </p>
-          <a
-            href="tel:+1234567890"
+          <Link
+            to="/contact"
             className="inline-flex items-center space-x-2 bg-primary text-white px-8 py-4 rounded-lg hover:bg-primary/90 transition-colors text-lg font-medium"
           >
             <Phone className="w-5 h-5" />
-            <span>Call Us Now</span>
-          </a>
+            <span>Contact Us</span>
+          </Link>
         </div>
       </section>
 

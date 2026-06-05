@@ -25,19 +25,17 @@ function App() {
       <Route path="/signup" element={<SignUp />} />
       <Route path="/forgot-password" element={<ForgotPassword />}/>
       <Route path="/reset-password" element={<ResetPassword />}/>
-      <Route path="/about" element={<AboutPage />} />
-      <Route path="/contact" element={<ContactPage />} />
-      <Route path="/services" element={<ServicesPage />} />
-      {/* <Route path="/dashboard" element={<Dashboard />} /> */}
+      <Route element={<MainLayout />}>
+        <Route path="/home" element={<Home />} />
+        <Route path="/about" element={<AboutPage />} />
+        <Route path="/contact" element={<ContactPage />} />
+        <Route path="/services" element={<ServicesPage />} />
+        <Route path="/dashboard" element={<Dashboard />} />
         <Route path="/doctors" element={<Doctors />} />
         <Route path="/nurses" element={<Nurses />} />
-        <Route element={<MainLayout />}>
-          <Route path="/home" element={<Home />} />
-          <Route path="/dashboard" element={<Dashboard />} />
-        </Route>
-        {/*-----test*/}
         <Route path="/patient-profile" element={<PatientProfile />} />
-      </Routes>
+      </Route>
+    </Routes>
     </AuthProvider>
   );
 }
