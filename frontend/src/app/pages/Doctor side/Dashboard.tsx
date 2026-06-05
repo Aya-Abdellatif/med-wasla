@@ -1,5 +1,6 @@
 import { useState } from "react";
-import { useAuth } from "../../context/AuthContext";
+import { useAuth } from "../../context/useAuth";
+
 import {
   Calendar,
   Clock,
@@ -183,6 +184,19 @@ export function Dashboard() {
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-6">
           <div className="flex items-center justify-between">
             <div className="flex items-center space-x-4">
+              <div className="w-16 h-16 rounded-full overflow-hidden bg-primary/10">
+                {user?.avatar ? (
+                  <img
+                    src={user.avatar}
+                    alt={user.name}
+                    className="w-full h-full object-cover"
+                  />
+                ) : (
+                  <div className="w-full h-full flex items-center justify-center text-primary text-2xl font-semibold">
+                    {user?.name.charAt(0)}
+                  </div>
+                )}
+              </div>
               <Avatar src={user?.avatar} name={user?.name || "U"} size="md" />
               <div>
                 <h1 className="text-2xl font-bold" style={{ color: "#111827" }}>
@@ -403,6 +417,19 @@ export function Dashboard() {
             <div className="space-y-6">
               {/* Avatar Section */}
               <div className="flex items-center space-x-6">
+                <div className="w-24 h-24 rounded-full overflow-hidden bg-primary/10">
+                  {user?.avatar ? (
+                    <img
+                      src={user.avatar}
+                      alt={user.name}
+                      className="w-full h-full object-cover"
+                    />
+                  ) : (
+                    <div className="w-full h-full flex items-center justify-center text-primary text-3xl font-semibold">
+                      {user?.name.charAt(0)}
+                    </div>
+                  )}
+                </div>
                 <Avatar src={user?.avatar} name={user?.name || "U"} size="lg" />
                 <div>
                   <h3 className="text-lg font-semibold" style={{ color: "#111827" }}>{user?.name}</h3>

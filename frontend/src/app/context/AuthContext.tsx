@@ -42,17 +42,17 @@ interface AuthContextType {
   updateProfile: (data: Partial<User>) => void;
 }
 
-const AuthContext = createContext<AuthContextType | undefined>(undefined);
+const AuthContext = createContext<AuthContextType | undefined>(undefined)
 
 // ─── Provider (component export) ────────────────────────────────────────────
 export function AuthProvider({ children }: { children: ReactNode }) {
   const [user, setUser] = useState<User | null>(null);
-
   const login = async (
     email: string,
     _password: string, // prefixed with _ to silence ts(6133) unused-var warning
     role: UserRole
   ) => {
+
     // Simulate API call
     await new Promise((resolve) => setTimeout(resolve, 1000));
 
@@ -66,6 +66,9 @@ export function AuthProvider({ children }: { children: ReactNode }) {
           : "Nurse Emily Johnson",
       email,
       role,
+      avatar: role === "doctor"
+        ? "https://images.unsplash.com/photo-1632054224477-c9cb3aae1b7e?crop=entropy&cs=tinysrgb&fit=max&fm=jpg&ixid=M3w3Nzg4Nzd8MHwxfHNlYXJjaHwxfHxmZW1hbGUlMjBkb2N0b3IlMjBwcm9mZXNzaW9uYWx8ZW58MXx8fHwxNzc3NzI3Njk4fDA&ixlib=rb-4.1.0&q=80&w=1080"
+        : role === "nurse"
       avatar:
         role === "doctor"
           ? "https://images.unsplash.com/photo-1632054224477-c9cb3aae1b7e?crop=entropy&cs=tinysrgb&fit=max&fm=jpg&ixid=M3w3Nzg4Nzd8MHwxfHNlYXJjaHwxfHxmZW1hbGUlMjBkb2N0b3IlMjBwcm9mZXNzaW9uYWx8ZW58MXx8fHwxNzc3NzI3Njk4fDA&ixlib=rb-4.1.0&q=80&w=1080"
