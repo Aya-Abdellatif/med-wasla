@@ -7,7 +7,7 @@ export default function SignUp() {
   const handleSignUp = () => {
     // Later call API here
 
-    navigate("/");
+    navigate("/home");
   };
 
   return (

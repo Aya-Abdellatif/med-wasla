@@ -1,4 +1,7 @@
 import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
+import { Link } from "react-router-dom";
+import { useState } from "react";
+import { AppointmentTypeModal } from "../../components/booking/AppointmentTypeModal";
 
 import {
   CheckIcon,
@@ -10,6 +13,7 @@ import {
 } from "./AboutData";
 
 const AboutPage = () => {
+  const [isAppointmentModalOpen, setIsAppointmentModalOpen] = useState(false);
   return (
     <main className="min-h-screen bg-[#FFFFFF] font-['Inter'] text-[#1F2937]">
       {/* Hero */}
@@ -248,13 +252,20 @@ const AboutPage = () => {
               </p>
             </div>
 
-            <button className="mt-8 inline-flex items-center gap-3 rounded-xl bg-[#14B8A6] px-8 py-4 text-[1.25rem] font-semibold text-white transition duration-300 hover:bg-[#0F766E]">
+            <button
+              onClick={() => setIsAppointmentModalOpen(true)}
+              className="mt-8 inline-flex items-center gap-3 rounded-xl bg-[#14B8A6] px-8 py-4 text-[1.25rem] font-semibold text-white transition duration-300 hover:bg-[#0F766E]"
+            >
               <FontAwesomeIcon icon={UsersIcon} className="text-[22px]" />
-              View Our Doctors
+              Book Appointment
             </button>
           </div>
         </div>
       </section>
+      <AppointmentTypeModal
+        isOpen={isAppointmentModalOpen}
+        onClose={() => setIsAppointmentModalOpen(false)}
+      />
     </main>
   );
 };
