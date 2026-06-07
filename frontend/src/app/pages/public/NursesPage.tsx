@@ -255,7 +255,7 @@ export function Nurses() {
 
                     <div className="grid grid-cols-2 gap-3">
                       <Link
-                        to={`/provider/nurse/${nurse.id}`}
+                        to={`/nurse/${nurse.id}`}
                         className="flex items-center justify-center space-x-2 border-2 border-primary text-primary py-3 rounded-lg hover:bg-primary/5 transition-colors font-medium"
                       >
                         <Eye className="w-4 h-4" />
