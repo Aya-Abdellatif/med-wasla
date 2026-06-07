@@ -16,6 +16,7 @@ import ServicesPage from "./app/pages/Services/ServicesPage";
 
 import { Doctors } from "./app/pages/public/DoctorsPage";
 import { Nurses } from "./app/pages/public/NursesPage";
+import { DoctorProfile } from "./app/pages/public/DoctorProfile";
 
 function App() {
   return (
@@ -25,6 +26,8 @@ function App() {
       <Route path="/signup" element={<SignUp />} />
       <Route path="/forgot-password" element={<ForgotPassword />}/>
       <Route path="/reset-password" element={<ResetPassword />}/>
+      <Route path="/doctor/:id" element={<DoctorProfile />} />
+      
       <Route element={<MainLayout />}>
         <Route path="/home" element={<Home />} />
         <Route path="/about" element={<AboutPage />} />
