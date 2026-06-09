@@ -1,4 +1,4 @@
-name: 🛡️ Pull Request Guard
+name: Pull Request Guard
 
 on:
   pull_request:
@@ -13,16 +13,16 @@ permissions:
 jobs:
 
   pr-validation:
-    name: 📋 PR Validation
+    name: PR Validation
     runs-on: ubuntu-latest
 
     steps:
-      - name: ⬇️ Checkout code
+      - name: Checkout code
         uses: actions/checkout@v4
         with:
           fetch-depth: 0
 
-      - name: 📝 Check PR title
+      - name: Check PR title
         uses: actions/github-script@v7
         with:
           script: |
