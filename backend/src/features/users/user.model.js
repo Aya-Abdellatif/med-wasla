@@ -1,7 +1,7 @@
 import mongoose from "mongoose";
 import bcrypt from "bcrypt";
 
-const userSchema = new Schema(
+const userSchema = new mongoose.Schema(
     {
         name: {
             type: String,
@@ -57,7 +57,7 @@ const userSchema = new Schema(
 );
 
 
-developerSchema.pre('save', async function () {
+userSchema.pre('save', async function () {
     if (!this.isModified('password'))
         return;
 
