@@ -1,5 +1,5 @@
 import { Routes, Route } from "react-router-dom";
-import { AuthProvider } from "./app/context/AuthContext";
+import { AuthProvider } from "./app/context/AuthProvider";
 import { ChatBotProvider } from "./app/context/ChatBotContext";
 import SignIn from "./app/pages/auth/SignIn";
 import SignUp from "./app/pages/auth/SignUp";
@@ -23,35 +23,14 @@ import { NurseProfile } from "./app/pages/public/NurseProfile";
 
 function App() {
   return (
-     <AuthProvider>
-    <Routes>
-      <Route path="/" element={<SignIn />} />
-      <Route path="/role" element={<Role />} />
-      <Route path="/signup" element={<SignUp />} />
-      <Route path="/forgot-password" element={<ForgotPassword />}/>
-      <Route path="/reset-password" element={<ResetPassword />}/>
-      <Route path="/doctor/:id" element={<DoctorProfile />} />
-      <Route path="/nurse/:id" element={<NurseProfile />} />
-      
-      <Route element={<MainLayout />}>
-        <Route path="/home" element={<Home />} />
-        <Route path="/about" element={<AboutPage />} />
-        <Route path="/contact" element={<ContactPage />} />
-        <Route path="/services" element={<ServicesPage />} />
-        <Route path="/dashboard" element={<Dashboard />} />
-        <Route path="/doctors" element={<Doctors />} />
-        <Route path="/nurses" element={<Nurses />} />
-        <Route path="/patient-profile" element={<PatientProfile />} />
-      </Route>
-    </Routes>
-    </AuthProvider>
-    <ChatBotProvider>
-      <AuthProvider>
+    <AuthProvider>
+      <ChatBotProvider>
         <Routes>
           <Route path="/" element={<SignIn />} />
+          <Route path="/role" element={<Role />} />
           <Route path="/signup" element={<SignUp />} />
-          <Route path="/forgot-password" element={<ForgotPassword />}/>
-          <Route path="/reset-password" element={<ResetPassword />}/>
+          <Route path="/forgot-password" element={<ForgotPassword />} />
+          <Route path="/reset-password" element={<ResetPassword />} />
           <Route path="/doctor/:id" element={<DoctorProfile />} />
           <Route path="/nurse/:id" element={<NurseProfile />} />
           
@@ -66,8 +45,8 @@ function App() {
             <Route path="/patient-profile" element={<PatientProfile />} />
           </Route>
         </Routes>
-      </AuthProvider>
-    </ChatBotProvider>
+      </ChatBotProvider>
+    </AuthProvider>
   );
 }
 

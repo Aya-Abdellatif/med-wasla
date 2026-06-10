@@ -100,20 +100,16 @@ medicalSpecialistSchema.index({ serviceAreas: 1 });
 // ── Scenario guard ────────────────────────────────────────────────────────────
 medicalSpecialistSchema.pre("validate", function (next) {
   const isDoctor = this.specialistType === "doctor";
-  const isNurse  = this.specialistType === "nurse";
-  const isBoth   = this.specialistType === "both";
+  const isNurse = this.specialistType === "nurse";
 
-  // homeVisit rules
   if (isDoctor) this.homeVisit = false;
-  if (isNurse || isBoth) this.homeVisit = true;
+  if (isNurse) this.homeVisit = true;
 
-  // doctor / both → specialization required
-  if ((isDoctor || isBoth) && !this.specialization) {
+  if (isDoctor && !this.specialization) {
     return next(new Error("specialization is required for doctors"));
   }
 
-  // nurse / both → serviceAreas required
-  if ((isNurse || isBoth) && (!this.serviceAreas || this.serviceAreas.length === 0)) {
+  if (isNurse && (!this.serviceAreas || this.serviceAreas.length === 0)) {
     return next(new Error("serviceAreas are required for nurses"));
   }
 
@@ -124,5 +120,8 @@ medicalSpecialistSchema.virtual("isVerified").get(function () {
   return this.verificationStatus === "approved";
 });
 
-const MedicalSpecialist = mongoose.model("MedicalSpecialist", medicalSpecialistSchema);
+const MedicalSpecialist = mongoose.model(
+  "MedicalSpecialist",
+  medicalSpecialistSchema,
+);
 export default MedicalSpecialist;
