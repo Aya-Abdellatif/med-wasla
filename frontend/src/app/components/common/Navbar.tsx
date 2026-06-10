@@ -50,7 +50,7 @@ function Navbar() {
           <Link
             to="/home"
             onClick={handleLogoClick}
-            className="flex items-center gap-3 flex-shrink-0 cursor-pointer group"
+            className="flex items-center gap-3 shrink-0 cursor-pointer group"
           >
             <svg
               className="h-8 w-8 text-primary transition-transform duration-300 group-hover:scale-105"
@@ -64,7 +64,7 @@ function Navbar() {
               <span className="text-primary font-bold">Wasla</span>
             </span>
           </Link>
-          <div className="hidden xl:block h-6 w-px bg-border flex-shrink-0" />
+          <div className="hidden xl:block h-6 w-px bg-border shrink-0" />
           <div
             ref={containerRef}
             className="hidden xl:flex items-center gap-1 flex-1 relative h-full"
@@ -98,7 +98,7 @@ function Navbar() {
               </Link>
             ))}
           </div>
-          <div className="hidden xl:flex items-center gap-4 ml-auto flex-shrink-0">
+          <div className="hidden xl:flex items-center gap-4 ml-auto shrink-0">
             <button
               onClick={() => navigate("/")}
               className="flex items-center gap-2 text-lg font-semibold text-fg-muted hover:text-red-500 transition-colors duration-300 cursor-pointer">
