@@ -15,7 +15,7 @@ function Navbar() {
 
   // Role-based navigation links
   const isDoctor = user?.role === "doctor" || user?.role === "nurse";
-  
+
   const navLinks = isDoctor
     ? [
         { name: "UI Design", path: "#" },
@@ -66,13 +66,18 @@ function Navbar() {
               onClick={handleLogoClick}
               className="flex items-center gap-3 shrink-0 cursor-pointer group"
             >
-              <svg
+              {/* <svg
                 className="h-8 w-8 text-primary transition-transform duration-300 group-hover:scale-105"
                 fill="currentColor"
                 viewBox="0 0 24 24"
               >
                 <path d="M19 10.5h-5.5V5c0-.83-.67-1.5-1.5-1.5s-1.5.67-1.5 1.5v5.5H5c-.83 0-1.5.67-1.5 1.5s.67 1.5 1.5 1.5h5.5V19c0 .83.67 1.5 1.5 1.5s1.5-.67 1.5-1.5v-5.5H19c.83 0 1.5-.67 1.5-1.5s-.67-1.5-1.5-1.5z" />
-              </svg>
+              </svg> */}
+              <img
+                src="src/assets/logo.png"
+                alt="Logo"
+                className="w-10 h-10 "
+              />
               <span className="text-3xl font-medium tracking-tight">
                 <span className="text-fg">Med</span>
                 <span className="text-primary font-bold">Wasla</span>
@@ -115,7 +120,9 @@ function Navbar() {
             <div className="hidden xl:flex items-center gap-4 ml-auto shrink-0">
               {isDoctor ? (
                 <>
-                  <span className="text-lg font-semibold text-fg-muted">+1 (234) 567-890</span>
+                  <span className="text-lg font-semibold text-fg-muted">
+                    +1 (234) 567-890
+                  </span>
                   <Link
                     to="/dashboard"
                     className="text-lg font-semibold text-fg-muted hover:text-primary transition-colors duration-300"
@@ -123,7 +130,8 @@ function Navbar() {
                     Dashboard
                   </Link>
                   <span className="text-lg font-semibold text-fg-muted">
-                    {user?.role === "doctor" ? "Dr." : "Nurse"} {user?.name?.split(" ")[0]}
+                    {user?.role === "doctor" ? "Dr." : "Nurse"}{" "}
+                    {user?.name?.split(" ")[0]}
                   </span>
                 </>
               ) : null}
@@ -218,7 +226,8 @@ function Navbar() {
                     Dashboard
                   </Link>
                   <div className="text-lg font-semibold text-fg-muted px-4 py-2">
-                    {user?.role === "doctor" ? "Dr." : "Nurse"} {user?.name?.split(" ")[0]}
+                    {user?.role === "doctor" ? "Dr." : "Nurse"}{" "}
+                    {user?.name?.split(" ")[0]}
                   </div>
                 </>
               )}
