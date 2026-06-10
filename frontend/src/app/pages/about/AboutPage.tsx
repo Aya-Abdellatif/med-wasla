@@ -16,7 +16,7 @@ const AboutPage = () => {
   return (
     <main className="min-h-screen bg-[#FFFFFF] font-['Inter'] text-[#1F2937]">
       {/* Hero */}
-      <section className="bg-gradient-to-br from-[#E6FFFB] via-[#ECFEFF] to-[#F0FDFA] px-5 py-24 text-center">
+      <section className="bg-linear-to-br from-[#E6FFFB] via-[#ECFEFF] to-[#F0FDFA] px-5 py-24 text-center">
         <div className="mx-auto max-w-4xl">
           <h2 className="text-[3rem] font-bold leading-tight tracking-tight text-[#1F2937]">
             About HealthCarePlus
@@ -85,7 +85,7 @@ const AboutPage = () => {
             <img
               src="https://images.unsplash.com/photo-1576091160550-2173dba999ef?auto=format&fit=crop&w=1200&q=80"
               alt="Healthcare professionals meeting"
-              className="h-[420px] w-full object-cover"
+              className="h-105 w-full object-cover"
             />
           </div>
         </div>
@@ -167,7 +167,7 @@ const AboutPage = () => {
           </div>
 
           <div className="relative mx-auto mt-20 max-w-5xl">
-            <div className="absolute left-1/2 top-0 hidden h-full w-[3px] -translate-x-1/2 bg-[#CCFBF1] md:block" />
+            <div className="absolute left-1/2 top-0 hidden h-full w-0.75 -translate-x-1/2 bg-[#CCFBF1] md:block" />
 
             <div className="space-y-20">
               {journey.map((item, index) => {
@@ -221,13 +221,13 @@ const AboutPage = () => {
       </section>
 
       {/* Team */}
-      <section className="bg-gradient-to-br from-[#E6FFFB] via-[#ECFEFF] to-[#F0FDFA] px-5 py-24">
+      <section className="bg-linear-to-br from-[#E6FFFB] via-[#ECFEFF] to-[#F0FDFA] px-5 py-24">
         <div className="mx-auto grid max-w-7xl items-center gap-16 lg:grid-cols-2">
           <div className="overflow-hidden rounded-3xl shadow-2xl shadow-gray-300/60">
             <img
               src="https://images.unsplash.com/photo-1582750433449-648ed127bb54?auto=format&fit=crop&w=1200&q=80"
               alt="Medical team"
-              className="h-[420px] w-full object-cover"
+              className="h-105 w-full object-cover"
             />
           </div>
 
