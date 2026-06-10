@@ -4,6 +4,7 @@ import SignIn from "./app/pages/auth/SignIn";
 import SignUp from "./app/pages/auth/SignUp";
 import ForgotPassword from "./app/pages/auth/ForgotPassword";
 import ResetPassword from "./app/pages/auth/ResetPassword";
+import Role from "./app/pages/auth/Role";
 import AboutPage from "./app/pages/about/AboutPage";
 import { Dashboard } from "./app/pages/Doctor side/Dashboard";
 import ContactPage from "./app/pages/contact/ContactPage";
@@ -24,6 +25,7 @@ function App() {
      <AuthProvider>
     <Routes>
       <Route path="/" element={<SignIn />} />
+      <Route path="/role" element={<Role />} />
       <Route path="/signup" element={<SignUp />} />
       <Route path="/forgot-password" element={<ForgotPassword />}/>
       <Route path="/reset-password" element={<ResetPassword />}/>

@@ -6,6 +6,7 @@ interface AuthLayoutProps {
   children: ReactNode;
   compact?: boolean;
   small?: boolean;
+  wide?: boolean; 
 }
 
 export default function AuthLayout({
@@ -14,6 +15,7 @@ export default function AuthLayout({
   children,
   compact = false,
   small = false,
+
 }: AuthLayoutProps) {
   const cardWidthClass = small ? 'max-w-[350px]' : compact ? 'max-w-[420px]' : 'max-w-[560px]';
   const cardPaddingClass = small ? 'p-4' : compact ? 'p-4 sm:p-5' : 'p-8 sm:p-10';
