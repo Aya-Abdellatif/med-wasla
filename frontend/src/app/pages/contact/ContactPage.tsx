@@ -1,5 +1,5 @@
 import { useState } from "react";
-import { useNavigate } from "react-router-dom";
+// import { useNavigate } from "react-router-dom";
 import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
 import {
   faCheckCircle,
@@ -22,7 +22,7 @@ const initialFormData: ContactFormData = {
 export default function ContactPage() {
   const [formData, setFormData] = useState<ContactFormData>(initialFormData);
   const [isSubmitted, setIsSubmitted] = useState(false);
-  const navigate = useNavigate();
+  // const navigate = useNavigate();
 
   const handleChange = (
     e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement | HTMLSelectElement>
