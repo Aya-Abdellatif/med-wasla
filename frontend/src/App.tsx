@@ -5,6 +5,7 @@ import SignUp from "./app/pages/auth/SignUp";
 import ForgotPassword from "./app/pages/auth/ForgotPassword";
 import ResetPassword from "./app/pages/auth/ResetPassword";
 import Role from "./app/pages/auth/Role";
+import MedicalSpecialist from "./app/pages/auth/MedicalSpecialist";
 import AboutPage from "./app/pages/about/AboutPage";
 import { Dashboard } from "./app/pages/Doctor side/Dashboard";
 import ContactPage from "./app/pages/contact/ContactPage";
@@ -26,6 +27,7 @@ function App() {
     <Routes>
       <Route path="/" element={<SignIn />} />
       <Route path="/role" element={<Role />} />
+      <Route path="/medical-specialist" element={<MedicalSpecialist />} />
       <Route path="/signup" element={<SignUp />} />
       <Route path="/forgot-password" element={<ForgotPassword />}/>
       <Route path="/reset-password" element={<ResetPassword />}/>

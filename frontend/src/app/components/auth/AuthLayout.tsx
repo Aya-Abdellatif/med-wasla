@@ -22,8 +22,8 @@ export default function AuthLayout({
   const sectionPaddingClass = small ? 'py-6' : compact ? 'py-6' : 'py-12';
 
   return (
-    <div className={`h-screen overflow-hidden flex items-center justify-center px-4 ${sectionPaddingClass} bg-teal-50`}>
-      <div className={`w-full ${cardWidthClass}`}> 
+    <div className={`min-h-screen bg-teal-50 px-4 ${sectionPaddingClass}`}>
+      <div className={`mx-auto w-full ${cardWidthClass} py-6`}>
         <div className="flex flex-row items-center justify-center gap-3 mb-6">
           <div className="w-14 h-14 bg-teal-500 rounded-2xl flex items-center justify-center shadow-md shrink-0">
             <div className="w-6 h-6 bg-white rounded-full"></div>
