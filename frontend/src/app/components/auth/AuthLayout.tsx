@@ -6,6 +6,7 @@ interface AuthLayoutProps {
   children: ReactNode;
   compact?: boolean;
   small?: boolean;
+  wide?: boolean; 
 }
 
 export default function AuthLayout({
@@ -14,6 +15,7 @@ export default function AuthLayout({
   children,
   compact = false,
   small = false,
+
 }: AuthLayoutProps) {
   const cardWidthClass = small ? 'max-w-[350px]' : compact ? 'max-w-[420px]' : 'max-w-[560px]';
   const cardPaddingClass = small ? 'p-4' : compact ? 'p-4 sm:p-5' : 'p-8 sm:p-10';
@@ -23,7 +25,7 @@ export default function AuthLayout({
     <div className={`h-screen overflow-hidden flex items-center justify-center px-4 ${sectionPaddingClass} bg-teal-50`}>
       <div className={`w-full ${cardWidthClass}`}> 
         <div className="flex flex-row items-center justify-center gap-3 mb-6">
-          <div className="w-14 h-14 bg-teal-500 rounded-2xl flex items-center justify-center shadow-md flex-shrink-0">
+          <div className="w-14 h-14 bg-teal-500 rounded-2xl flex items-center justify-center shadow-md shrink-0">
             <div className="w-6 h-6 bg-white rounded-full"></div>
           </div>
 

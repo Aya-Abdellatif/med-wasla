@@ -4,10 +4,12 @@ import {
   faArrowRight,
   faCheck,
 } from "@fortawesome/free-solid-svg-icons";
+import { useChatBot } from "../../context/ChatBotContext";
 
 import { services, topFeatures } from "./ServicesData";
 
 export default function ServicesPage() {
+  const { openChatBot } = useChatBot();
   return (
     <main className="min-h-screen bg-white text-[#1F2937] font-['Inter']">
       {/* Hero Section */}
@@ -94,18 +96,35 @@ export default function ServicesPage() {
                       ))}
                     </div>
 
-                    <Link
-                      to="/contact"
-                      className="inline-flex items-center gap-3 rounded-lg bg-[#14B8A6] px-6 py-3 font-medium text-white transition hover:bg-teal-600"
-                    >
-                      <span>
-                        {service.title === "AI Medical Assistant"
-                          ? "Start Chatbot"
-                          : "Book Appointment"}
-                      </span>
-
-                      <FontAwesomeIcon icon={faArrowRight} />
-                    </Link>
+                    {service.title === "AI Medical Assistant" ? (
+                      <button
+                        onClick={openChatBot}
+                        className="inline-flex items-center gap-3 rounded-lg bg-[#14B8A6] px-6 py-3 font-medium text-white transition hover:bg-teal-600 cursor-pointer"
+                      >
+                        <span>Start Chatbot</span>
+                        <FontAwesomeIcon icon={faArrowRight} />
+                      </button>
+                    ) : (
+                      <Link
+                        to={
+                          service.title === "Doctor Reservation"
+                            ? "/doctors"
+                            : service.title === "Home Visit"
+                            ? "/nurses"
+                            : "/services"
+                        }
+                        className="inline-flex items-center gap-3 rounded-lg bg-[#14B8A6] px-6 py-3 font-medium text-white transition hover:bg-teal-600"
+                      >
+                        <span>
+                          {service.title === "Doctor Reservation"
+                            ? "Go to Doctors"
+                            : service.title === "Home Visit"
+                            ? "Go to Home Services"
+                            : "Go to Home services"}
+                        </span>
+                        <FontAwesomeIcon icon={faArrowRight} />
+                      </Link>
+                    )}
                   </div>
                 </div>
               );
