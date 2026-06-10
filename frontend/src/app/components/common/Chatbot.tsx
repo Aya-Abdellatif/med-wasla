@@ -1,8 +1,8 @@
-import { useState } from "react";
 import { X, Bot, Send } from "lucide-react";
+import { useChatBot } from "../../context/ChatBotContext";
 
 function ChatBot() {
-  const [isOpen, setIsOpen] = useState(false);
+  const { isOpen, openChatBot, closeChatBot } = useChatBot();
 
   return (
     <>
@@ -11,7 +11,7 @@ function ChatBot() {
         <span className="absolute inset-0 scale-110 rounded-full bg-primary opacity-20 animate-pulse" />
 
         <button
-          onClick={() => setIsOpen(true)}
+          onClick={openChatBot}
           className="relative h-14 w-14 rounded-full bg-primary hover:bg-primary-deep text-white shadow-lg transition-all duration-300 hover:scale-110 flex items-center justify-center cursor-pointer"
         >
           <Bot className="h-7 w-7" />
@@ -21,7 +21,7 @@ function ChatBot() {
       {isOpen && (
         <div
           className="fixed inset-0 bg-black/20 z-40"
-          onClick={() => setIsOpen(false)}
+          onClick={closeChatBot}
         />
       )}
 
@@ -31,7 +31,7 @@ function ChatBot() {
           (isOpen ? "translate-x-0" : "translate-x-full")
         }
       >
-        <div className="flex items-center justify-between px-5 py-4 bg-primary text-white flex-shrink-0">
+        <div className="flex items-center justify-between px-5 py-4 bg-primary text-white shrink-0">
           <div className="flex items-center gap-3">
             <div className="h-9 w-9 rounded-full bg-white/20 flex items-center justify-center">
               <Bot className="h-5 w-5" />
@@ -42,7 +42,7 @@ function ChatBot() {
             </div>
           </div>
           <button
-            onClick={() => setIsOpen(false)}
+            onClick={closeChatBot}
             className="text-white/70 hover:text-white transition-colors cursor-pointer"
           >
             <X className="h-5 w-5" />
@@ -61,13 +61,13 @@ function ChatBot() {
           </p>
         </div>
 
-        <div className="px-4 py-4 border-t border-border flex items-center gap-2 flex-shrink-0">
+        <div className="px-4 py-4 border-t border-border flex items-center gap-2 shrink-0">
           <input
             type="text"
             placeholder="Type a message..."
             className="flex-1 text-sm px-4 py-2.5 rounded-xl border border-border bg-muted text-fg placeholder:text-fg-muted focus:outline-none focus:border-primary transition-colors"
           />
-          <button className="h-10 w-10 rounded-xl bg-primary hover:bg-primary-deep text-white flex items-center justify-center transition-colors cursor-pointer flex-shrink-0">
+          <button className="h-10 w-10 rounded-xl bg-primary hover:bg-primary-deep text-white flex items-center justify-center transition-colors cursor-pointer shrink-0">
             <Send className="h-4 w-4" />
           </button>
         </div>
