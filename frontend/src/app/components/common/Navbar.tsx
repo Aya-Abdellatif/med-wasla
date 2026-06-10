@@ -115,7 +115,6 @@ function Navbar() {
             <div className="hidden xl:flex items-center gap-4 ml-auto shrink-0">
               {isDoctor ? (
                 <>
-                  <span className="text-lg font-semibold text-fg-muted">+1 (234) 567-890</span>
                   <Link
                     to="/dashboard"
                     className="text-lg font-semibold text-fg-muted hover:text-primary transition-colors duration-300"
