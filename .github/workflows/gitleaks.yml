@@ -6,7 +6,6 @@ on:
 
 permissions:
   contents: read
-  pull-requests: write
 
 jobs:
   scan:
@@ -23,4 +22,4 @@ jobs:
         uses: gitleaks/gitleaks-action@v2
         with:
           args: --verbose
-          token: ${{ secrets.GITHUB_TOKEN }}
+          token: ${{ github.token }}
