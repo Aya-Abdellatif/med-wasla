@@ -11,7 +11,7 @@ import { services, topFeatures } from "./ServicesData";
 export default function ServicesPage() {
   const { openChatBot } = useChatBot();
   return (
-    <main className="min-h-screen bg-white text-[#1F2937] font-['Inter']">
+    <main className="min-h-screen bg-white text-[#1F2937] ">
       {/* Hero Section */}
       <section className="relative bg-linear-to-br from-[#F6FFFB] via-[#ECFEFF] to-[#F0FDFA] py-20 px-5 text-center">
         <div className="mx-auto max-w-7xl">
