@@ -78,7 +78,7 @@ export default function ContactPage() {
           <div className="absolute bottom-10 left-10 w-40 h-40 bg-cyan-300 rounded-full blur-3xl" />
         </div>
         <div className="max-w-4xl mx-auto relative z-10">
-          <h1 className="text-5xl md:text-6xl font-bold mb-6 bg-linear-to-r from-teal-600 to-cyan-600 bg-clip-text text-transparent">
+          <h1 className="text-5xl md:text-6xl font-bold  text-[#1F2937] mb-6">
             Get in Touch
           </h1>
           <p className="text-lg md:text-xl text-gray-600 leading-relaxed max-w-2xl mx-auto">
@@ -87,37 +87,9 @@ export default function ContactPage() {
         </div>
       </section>
 
-      {/* Contact Info Cards
-      <section className="py-20 px-4 bg-white">
-        <div className="max-w-7xl mx-auto">
-          <div className="grid sm:grid-cols-2 lg:grid-cols-4 gap-6">
-            {contactInfo.map((item) => (
-              <div
-                key={item.title}
-                className="bg-gradient-to-br from-gray-50 to-gray-100 rounded-2xl p-8 hover:shadow-xl transition-all duration-300 hover:-translate-y-1 cursor-pointer group"
-              >
-                <div
-                  className={`w-14 h-14 rounded-xl flex items-center justify-center mb-6 group-hover:scale-110 transition-transform ${item.iconBoxClass}`}
-                >
-                  <FontAwesomeIcon icon={item.icon} className="text-2xl" />
-                </div>
-                <h3 className="text-lg font-bold mb-4">{item.title}</h3>
-                <div className="space-y-2">
-                  {item.details.map((detail) => (
-                    <p key={detail} className="text-gray-600 text-sm leading-relaxed">
-                      {detail}
-                    </p>
-                  ))}
-                </div>
-              </div>
-            ))}
-          </div>
-        </div>
-      </section> */}
-
       {/* Form & Quick Info */}
       <section className="py-20 px-4 bg-gray-50">
-        <div className="max-w-7xl mx-auto grid lg:grid-cols-4 gap-8 items-start">
+        <div className="max-w-7xl mx-auto grid lg:grid-cols-5 gap-8 items-start">
           {/* Form */}
           <div className="lg:col-span-2">
             <h2 className="text-4xl font-bold mb-8">Send us a Message</h2>
@@ -214,60 +186,62 @@ export default function ContactPage() {
             </form>
           </div>
 
-          {/* Quick Contact Info - Center Column */}
-          <div className="space-y-6">
-            <div className="bg-white rounded-2xl p-8 shadow-lg hover:shadow-xl transition">
-              <div className="flex items-start gap-4">
-                <div className="w-12 h-12 bg-purple-50 rounded-xl flex items-center justify-center shrink-0">
-                  <FontAwesomeIcon icon={faClock} className="text-purple-500 text-xl" />
-                </div>
-                <div>
-                  <h3 className="font-bold text-gray-900 mb-3">Working Hours</h3>
-                  <div className="space-y-2 text-sm text-gray-600">
-                    <p><span className="font-semibold">Mon-Fri:</span> 8AM - 8PM</p>
-                    <p><span className="font-semibold">Sat-Sun:</span> 9AM - 5PM</p>
-                    <p><span className="font-semibold">Emergency:</span> 24/7</p>
-                  </div>
+          <div className="lg:col-span-3 grid md:grid-cols-3 gap-8">
+          {/* Quick Contact Info - Working Hours */}
+          <div className="bg-white rounded-2xl p-8 shadow-lg hover:shadow-xl transition">
+            <div className="flex flex-col items-center text-center gap-4">
+              <div className="w-12 h-12 bg-purple-50 rounded-xl flex items-center justify-center">
+                <FontAwesomeIcon icon={faClock} className="text-purple-500 text-xl" />
+              </div>
+              <div>
+                <h3 className="font-bold text-gray-900 mb-3">Working Hours</h3>
+                <div className="space-y-2 text-sm text-gray-600">
+                  <p><span className="font-semibold">Mon-Fri:</span> 8AM - 8PM</p>
+                  <p><span className="font-semibold">Sat-Sun:</span> 9AM - 5PM</p>
+                  <p><span className="font-semibold">Emergency:</span> 24/7</p>
                 </div>
               </div>
             </div>
+          </div>
 
-            <div className="bg-white rounded-2xl p-8 shadow-lg hover:shadow-xl transition">
-              <div className="flex items-start gap-4">
-                <div className="w-12 h-12 bg-green-50 rounded-xl flex items-center justify-center shrink-0">
-                  <FontAwesomeIcon icon={faEnvelope} className="text-green-500 text-xl" />
-                </div>
-                <div>
-                  <h3 className="font-bold text-gray-900 mb-2">Email</h3>
-                  <div className="space-y-1">
-                    <p className="text-sm text-gray-600">info@healthcareplus.com</p>
-                    <p className="text-sm text-gray-600">support@healthcareplus.com</p>
-                  </div>
+          {/* Quick Contact Info - Email */}
+          <div className="bg-white rounded-2xl p-8 shadow-lg hover:shadow-xl transition">
+            <div className="flex flex-col items-center text-center gap-4">
+              <div className="w-12 h-12 bg-green-50 rounded-xl flex items-center justify-center">
+                <FontAwesomeIcon icon={faEnvelope} className="text-green-500 text-xl" />
+              </div>
+              <div>
+                <h3 className="font-bold text-gray-900 mb-2">Email</h3>
+                <div className="space-y-1">
+                  <p className="text-sm text-gray-600">info@healthcareplus.com</p>
+                  <p className="text-sm text-gray-600">support@healthcareplus.com</p>
                 </div>
               </div>
             </div>
           </div>
 
           {/* Emergency Column */}
-          <div>
-            <div className="bg-linear-to-br from-teal-500 to-cyan-500 text-white rounded-2xl p-8 shadow-lg sticky top-20">
-              <div className="flex items-start gap-4">
-                <div className="w-12 h-12 bg-white/20 rounded-xl flex items-center justify-center shrink-0">
-                  <FontAwesomeIcon icon={faPhone} className="text-white text-xl" />
-                </div>
-                <div>
-                  <h3 className="font-bold mb-2">Emergency</h3>
-                  <a
-                    href="tel:+12345678891"
-                    className="text-lg font-bold hover:underline flex items-center gap-2"
-                  >
-                    +1 (234) 567-891
-                    <FontAwesomeIcon icon={faArrowRight} className="text-sm" />
-                  </a>
-                  <p className="text-xs text-white/80 mt-2">Available 24/7</p>
-                </div>
+          <div className="bg-linear-to-br from-teal-500 to-cyan-500 text-white rounded-2xl p-8 shadow-lg sticky top-20">
+            <div className="flex flex-col items-center text-center gap-4">
+              <div className="w-12 h-12 bg-white/20 rounded-xl flex items-center justify-center">
+                <FontAwesomeIcon icon={faPhone} className="text-white text-xl" />
               </div>
+
+              <div>
+                <h3 className="font-bold mb-2">Emergency</h3>
+                <a
+                  href="tel:+12345678891"
+                  className="text-lg font-bold hover:underline flex items-center justify-center gap-2"
+                >
+                  +1 (234) 567-891
+                  <FontAwesomeIcon icon={faArrowRight} className="text-sm" />
+                </a>
+                <p className="text-xs text-white/80 mt-2">Available 24/7</p>
+              </div>
+
             </div>
+          </div>
+
           </div>
         </div>
       </section>
@@ -300,7 +274,7 @@ export default function ContactPage() {
                   </span>
                 </button>
                 {expandedFAQ === index && (
-                  <div className="px-6 pb-6 border-t border-gray-200">
+                  <div className="px-6 pt-6 pb-6 border-t border-gray-200">
                     <p className="text-gray-600 leading-relaxed">{faq.answer}</p>
                   </div>
                 )}
