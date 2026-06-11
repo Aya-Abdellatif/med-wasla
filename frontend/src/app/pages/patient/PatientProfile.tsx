@@ -269,7 +269,7 @@ export function PatientProfile() {
           </div>
 
           <div className="mb-4 p-4 bg-yellow-50 border border-yellow-200 rounded-lg flex items-start space-x-3">
-            <AlertCircle className="w-5 h-5 text-yellow-600 flex-shrink-0 mt-0.5" />
+            <AlertCircle className="w-5 h-5 text-yellow-600 shrink-0 mt-0.5" />
             <div>
               <p className="text-sm text-yellow-800 font-medium">
                 Restricted Access
@@ -321,7 +321,7 @@ export function PatientProfile() {
                         </div>
                         {record.notes && (
                           <div className="flex items-start space-x-2 text-sm text-muted-foreground mt-3">
-                            <FileText className="w-4 h-4 flex-shrink-0 mt-0.5" />
+                            <FileText className="w-4 h-4 shrink-0 mt-0.5" />
                             <span>{record.notes}</span>
                           </div>
                         )}

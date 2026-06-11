@@ -1,5 +1,5 @@
 import { X, Bot, Send } from "lucide-react";
-import { useChatBot } from "../../context/ChatBotContext";
+import { useChatBot } from "../../context/useChatBot";
 
 function ChatBot() {
   const { isOpen, openChatBot, closeChatBot } = useChatBot();

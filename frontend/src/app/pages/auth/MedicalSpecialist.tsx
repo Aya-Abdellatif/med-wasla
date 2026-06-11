@@ -1,7 +1,7 @@
 import { Link, useNavigate } from "react-router-dom";
 import AuthLayout from "../../components/auth/AuthLayout";
 
-export default function Role() {
+export default function MedicalSpecialist() {
   const navigate = useNavigate();
 
   const selectRole = (role: string) => {
@@ -23,32 +23,32 @@ export default function Role() {
           <div className="max-w-4xl mx-auto">
             <div className="grid grid-cols-1 sm:grid-cols-2 gap-8">
               
-              {/* Patient */}
+              {/* Doctor */}
               <button
-                onClick={() => selectRole("patient")}
+                onClick={() => selectRole("doctor")}
                 className="flex flex-col items-center gap-4 p-8 bg-white border border-slate-200 rounded-xl shadow-sm hover:shadow-md transition-shadow text-center"
-                aria-label="Register as patient"
+                aria-label="Register as doctor"
               >
                 <div className="w-20 h-20 rounded-xl bg-blue-500 flex items-center justify-center text-white text-3xl">
                   👤
                 </div>
-                <div className="font-semibold text-lg">Patient</div>
+                <div className="font-semibold text-lg">Doctor</div>
                 <div className="text-sm text-slate-500">
-                  Book appointments and manage your health records
+                  Book appointments and manage your health record
                 </div>
               </button>
 
-              {/* Medical Specialist */}
+              {/*Nurse*/}
               <button
-                onClick={() => navigate("/medical-specialist")}
+                onClick={() => selectRole("nurse")}
                 className="flex flex-col items-center gap-4 p-8 bg-white border border-slate-200 rounded-xl shadow-sm hover:shadow-md transition-shadow text-center"
-                aria-label="Register as medical specialist"
+                aria-label="Register as nurse"
               >
                 <div className="w-20 h-20 rounded-xl bg-teal-500 flex items-center justify-center text-white text-3xl">
                   🩺
                 </div>
                 <div className="font-semibold text-lg">
-                  Medical Specialist
+                  Nurse
                 </div>
                 <div className="text-sm text-slate-500">
                   Provide medical services and manage patient care

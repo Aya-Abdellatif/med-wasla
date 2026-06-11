@@ -31,7 +31,7 @@ const AboutPage = () => {
         </div>
       </section>
 
-      
+    
 
       {/* Mission & Vision */}
       <section className="bg-[#FFFFFF] px-5 py-24">
