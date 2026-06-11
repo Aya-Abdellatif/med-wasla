@@ -1,5 +1,6 @@
 import { Routes, Route } from "react-router-dom";
-import { AuthProvider } from "./app/context/AuthContext";
+import { AuthProvider } from "./app/context/AuthProvider";
+import { ChatBotProvider } from "./app/context/ChatBotProvider";
 import SignIn from "./app/pages/auth/SignIn";
 import SignUp from "./app/pages/auth/SignUp";
 import ForgotPassword from "./app/pages/auth/ForgotPassword";
@@ -15,7 +16,6 @@ import MainLayout from "./app/Layouts/MainLayout";
 import Home from "./app/pages/Home";
 import ServicesPage from "./app/pages/Services/ServicesPage";
 
-
 import { Doctors } from "./app/pages/public/DoctorsPage";
 import { Nurses } from "./app/pages/public/NursesPage";
 import { DoctorProfile } from "./app/pages/public/DoctorProfile";
@@ -23,32 +23,31 @@ import { NurseProfile } from "./app/pages/public/NurseProfile";
 
 function App() {
   return (
-     <AuthProvider>
-    <Routes>
-      <Route path="/" element={<SignIn />} />
-      <Route path="/role" element={<Role />} />
-      <Route path="/medical-specialist" element={<MedicalSpecialist />} />
-      <Route path="/signup" element={<SignUp />} />
-      <Route path="/forgot-password" element={<ForgotPassword />}/>
-      <Route path="/reset-password" element={<ResetPassword />}/>
-      <Route path="/doctor/:id" element={<DoctorProfile />} />
-      <Route path="/nurse/:id" element={<NurseProfile />} />
-      
-      <Route element={<MainLayout />}>
-        <Route path="/home" element={<Home />} />
-        <Route path="/about" element={<AboutPage />} />
-        <Route path="/contact" element={<ContactPage />} />
-        <Route path="/services" element={<ServicesPage />} />
-        <Route path="/dashboard" element={<Dashboard />} />
-        <Route path="/doctors" element={<Doctors />} />
-        <Route path="/nurses" element={<Nurses />} />
-        <Route path="/patient-profile" element={<PatientProfile />} />
-      </Route>
-    </Routes>
+    <AuthProvider>
+      <ChatBotProvider>
+        <Routes>
+          <Route path="/" element={<SignIn />} />
+          <Route path="/role" element={<Role />} />
+          <Route path="/signup" element={<SignUp />} />
+          <Route path="/forgot-password" element={<ForgotPassword />} />
+          <Route path="/reset-password" element={<ResetPassword />} />
+          <Route path="/doctor/:id" element={<DoctorProfile />} />
+          <Route path="/nurse/:id" element={<NurseProfile />} />
+
+          <Route element={<MainLayout />}>
+            <Route path="/home" element={<Home />} />
+            <Route path="/about" element={<AboutPage />} />
+            <Route path="/contact" element={<ContactPage />} />
+            <Route path="/services" element={<ServicesPage />} />
+            <Route path="/dashboard" element={<Dashboard />} />
+            <Route path="/doctors" element={<Doctors />} />
+            <Route path="/nurses" element={<Nurses />} />
+            <Route path="/patient-profile" element={<PatientProfile />} />
+          </Route>
+        </Routes>
+      </ChatBotProvider>
     </AuthProvider>
   );
 }
 
 export default App;
-
- 

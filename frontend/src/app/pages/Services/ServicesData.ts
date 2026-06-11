@@ -51,7 +51,7 @@ export const services: ServiceItem[] = [
   },
   {
     icon: faUserNurse,
-    title: "Nurse Home Visit",
+    title: "Home Visit",
     description:
       "Schedule professional nursing services at home for follow-up care, monitoring, injections, and medical support.",
     features: [
