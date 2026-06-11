@@ -8,8 +8,61 @@ import {
   journey,
   missionVision,
   stats,
-  UsersIcon,
 } from "./AboutData";
+
+
+
+// ── Team data ── swap placeholders with real info
+const team = [
+  {
+    name: "Dr. Sarah Mitchell",
+    title: "Chief Medical Officer",
+    linkedin: "https://linkedin.com/in/placeholder",
+    whatsapp: "https://wa.me/1234567890",
+    initials: "SM",
+    color: "#14B8A6",
+  },
+  {
+    name: "Dr. James Carter",
+    title: "Head of Surgery",
+    linkedin: "https://linkedin.com/in/placeholder",
+    whatsapp: "https://wa.me/1234567890",
+    initials: "JC",
+    color: "#0F766E",
+  },
+  {
+    name: "Dr. Aisha Nour",
+    title: "Director of Internal Medicine",
+    linkedin: "https://linkedin.com/in/placeholder",
+    whatsapp: "https://wa.me/1234567890",
+    initials: "AN",
+    color: "#2DD4BF",
+  },
+  {
+    name: "Dr. Omar Hassan",
+    title: "Cardiology Specialist",
+    linkedin: "https://linkedin.com/in/placeholder",
+    whatsapp: "https://wa.me/1234567890",
+    initials: "OH",
+    color: "#14B8A6",
+  },
+  {
+    name: "Dr. Elena Vasquez",
+    title: "Head of Paediatrics",
+    linkedin: "https://linkedin.com/in/placeholder",
+    whatsapp: "https://wa.me/1234567890",
+    initials: "EV",
+    color: "#0F766E",
+  },
+  {
+    name: "Dr. Liam Chen",
+    title: "Orthopaedic Surgeon",
+    linkedin: "https://linkedin.com/in/placeholder",
+    whatsapp: "https://wa.me/1234567890",
+    initials: "LC",
+    color: "#2DD4BF",
+  },
+];
 
 const AboutPage = () => {
   const [isAppointmentModalOpen, setIsAppointmentModalOpen] = useState(false);
@@ -220,44 +273,68 @@ const AboutPage = () => {
         </div>
       </section>
 
-      {/* Team */}
-      <section className="bg-linear-to-br from-[#E6FFFB] via-[#ECFEFF] to-[#F0FDFA] px-5 py-24">
-        <div className="mx-auto grid max-w-7xl items-center gap-16 lg:grid-cols-2">
-          <div className="overflow-hidden rounded-3xl shadow-2xl shadow-gray-300/60">
-            <img
-              src="https://images.unsplash.com/photo-1582750433449-648ed127bb54?auto=format&fit=crop&w=1200&q=80"
-              alt="Medical team"
-              className="h-105 w-full object-cover"
-            />
-          </div>
-
-          <div>
-            <h3 className="text-[2.25rem] font-bold leading-tight tracking-tight text-[#1F2937]">
+      {/* ── Team — 6 cards ── */}
+      <section className="bg-[#F9FAFB] px-5 py-24">
+        <div className="mx-auto max-w-7xl">
+          <div className="mb-16 max-w-xl">
+            <p className="text-xs font-semibold uppercase tracking-widest text-[#14B8A6]">
+              The people behind your care
+            </p>
+            <h3 className="mt-3 text-4xl font-bold leading-tight text-[#1F2937]">
               Meet Our Team
             </h3>
+            <p className="mt-4 text-base leading-8 text-[#6B7280]">
+              100+ board-certified professionals, united by one goal: your wellbeing.
+            </p>
+          </div>
 
-            <div className="mt-7 space-y-6 text-[0.875rem] font-normal leading-8 text-[#6B7280]">
-              <p>
-                Our healthcare team is comprised of over 100 board-certified
-                physicians, nurses, and support staff who are passionate about
-                providing exceptional care.
-              </p>
+ <div className="grid gap-6 sm:grid-cols-2 lg:grid-cols-3">
+              {team.map((member) => (
+              <article
+                key={member.name}
+                className="flex flex-col rounded-2xl border border-[#E5E7EB] bg-white p-8 transition-all duration-300 hover:-translate-y-1 hover:shadow-lg hover:shadow-teal-100/50"
+              >
+                {/* Avatar */}
+                <div
+                  className="flex h-16 w-16 items-center justify-center rounded-full text-xl font-bold text-white shadow-md"
+                  style={{ backgroundColor: member.color }}
+                >
+                  {member.initials}
+                </div>
 
-              <p>
-                Each member of our team brings expertise, dedication, and a
-                commitment to your health and well-being. Together, we work
-                collaboratively to ensure you receive comprehensive, coordinated
-                care.
-              </p>
-            </div>
+                <h4 className="mt-5 text-lg font-semibold text-[#1F2937]">
+                  {member.name}
+                </h4>
 
-            <button
-              onClick={() => setIsAppointmentModalOpen(true)}
-              className="mt-8 inline-flex items-center gap-3 rounded-xl bg-[#14B8A6] px-8 py-4 text-[1.25rem] font-semibold text-white transition duration-300 hover:bg-[#0F766E]"
-            >
-              <FontAwesomeIcon icon={UsersIcon} className="text-[22px]" />
-              Book Appointment
-            </button>
+                <p className="mt-1 text-sm text-[#14B8A6]">{member.title}</p>
+
+                {/* Divider */}
+                <div className="my-5 h-px bg-[#F3F4F6]" />
+
+                {/* Links */}
+                <div className="mt-auto flex items-center gap-4">
+                  <a
+                    href={member.linkedin}
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    className="flex items-center gap-2 rounded-lg border border-[#E5E7EB] px-3 py-2 text-xs font-medium text-[#6B7280] transition-colors duration-200 hover:border-[#0A66C2] hover:text-[#0A66C2]"
+                  >
+                    {/* <FontAwesomeIcon icon={faLinkedin} className="text-base" /> */}
+                    LinkedIn
+                  </a>
+
+                  <a
+                    href={member.whatsapp}
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    className="flex items-center gap-2 rounded-lg border border-[#E5E7EB] px-3 py-2 text-xs font-medium text-[#6B7280] transition-colors duration-200 hover:border-[#25D366] hover:text-[#25D366]"
+                  >
+                    {/* <FontAwesomeIcon icon={faWhatsapp} className="text-base" /> */}
+                    WhatsApp
+                  </a>
+                </div>
+              </article>
+            ))}
           </div>
         </div>
       </section>
