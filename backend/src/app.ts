@@ -1,5 +1,7 @@
 import express from "express";
 import cors from "cors";
+import errorHandler from "./middleware/errorHandler.middleware.js";
+
 
 const app = express();
 
@@ -21,5 +23,5 @@ app.use(express.json());
 // app.use("/api/reviews", reviewsRouter);
 // app.use("/api/admin", adminRouter);
 // app.use("/api/ai", aiRouter);
-
+app.use(errorHandler);
 export default app;
