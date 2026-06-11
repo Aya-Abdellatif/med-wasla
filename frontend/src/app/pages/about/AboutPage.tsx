@@ -13,6 +13,60 @@ import {
   servicesHighlight,
 } from "./AboutData";
 
+
+
+// ── Team data ── swap placeholders with real info
+const team = [
+  {
+    name: "Dr. Sarah Mitchell",
+    title: "Chief Medical Officer",
+    linkedin: "https://linkedin.com/in/placeholder",
+    whatsapp: "https://wa.me/1234567890",
+    initials: "SM",
+    color: "#14B8A6",
+  },
+  {
+    name: "Dr. James Carter",
+    title: "Head of Surgery",
+    linkedin: "https://linkedin.com/in/placeholder",
+    whatsapp: "https://wa.me/1234567890",
+    initials: "JC",
+    color: "#0F766E",
+  },
+  {
+    name: "Dr. Aisha Nour",
+    title: "Director of Internal Medicine",
+    linkedin: "https://linkedin.com/in/placeholder",
+    whatsapp: "https://wa.me/1234567890",
+    initials: "AN",
+    color: "#2DD4BF",
+  },
+  {
+    name: "Dr. Omar Hassan",
+    title: "Cardiology Specialist",
+    linkedin: "https://linkedin.com/in/placeholder",
+    whatsapp: "https://wa.me/1234567890",
+    initials: "OH",
+    color: "#14B8A6",
+  },
+  {
+    name: "Dr. Elena Vasquez",
+    title: "Head of Paediatrics",
+    linkedin: "https://linkedin.com/in/placeholder",
+    whatsapp: "https://wa.me/1234567890",
+    initials: "EV",
+    color: "#0F766E",
+  },
+  {
+    name: "Dr. Liam Chen",
+    title: "Orthopaedic Surgeon",
+    linkedin: "https://linkedin.com/in/placeholder",
+    whatsapp: "https://wa.me/1234567890",
+    initials: "LC",
+    color: "#2DD4BF",
+  },
+];
+
 const AboutPage = () => {
   const [isAppointmentModalOpen, setIsAppointmentModalOpen] = useState(false);
   return (
@@ -131,89 +185,68 @@ const AboutPage = () => {
         </div>
       </section>
 
-      {/* Team */}
-      <section className="bg-linear-to-br from-[#E6FFFB] via-[#ECFEFF] to-[#F0FDFA] px-5 py-24">
+      {/* ── Team — 6 cards ── */}
+      <section className="bg-[#F9FAFB] px-5 py-24">
         <div className="mx-auto max-w-7xl">
-          <div className="text-center mb-20">
-            <h3 className="text-[2.25rem] font-bold leading-tight tracking-tight text-[#1F2937]">
-              Meet Our Medical Team
+          <div className="mb-16 max-w-xl">
+            <p className="text-xs font-semibold uppercase tracking-widest text-[#14B8A6]">
+              The people behind your care
+            </p>
+            <h3 className="mt-3 text-4xl font-bold leading-tight text-[#1F2937]">
+              Meet Our Team
             </h3>
-
-            <p className="mt-5 text-[1.25rem] font-normal leading-8 text-[#6B7280]">
-              Six exceptional healthcare professionals dedicated to your wellness and recovery.
+            <p className="mt-4 text-base leading-8 text-[#6B7280]">
+              100+ board-certified professionals, united by one goal: your wellbeing.
             </p>
           </div>
 
-          <div className="grid gap-10 sm:grid-cols-2 lg:grid-cols-3">
-            {teamMembers.map((member) => (
-              <div
+ <div className="grid gap-6 sm:grid-cols-2 lg:grid-cols-3">
+              {team.map((member) => (
+              <article
                 key={member.name}
-                className="group overflow-hidden rounded-2xl bg-white shadow-lg transition duration-500 hover:shadow-2xl"
+                className="flex flex-col rounded-2xl border border-[#E5E7EB] bg-white p-8 transition-all duration-300 hover:-translate-y-1 hover:shadow-lg hover:shadow-teal-100/50"
               >
-                {/* Image Container */}
-                <div className="relative h-64 overflow-hidden bg-gradient-to-br from-[#E6FFFB] to-[#F0FDFA]">
-                  <img
-                    src={member.image}
-                    alt={member.name}
-                    className="h-full w-full object-cover transition duration-500 group-hover:scale-110"
-                  />
-                  <div className="absolute inset-0 bg-gradient-to-t from-black/40 to-transparent opacity-0 transition duration-300 group-hover:opacity-100" />
+                {/* Avatar */}
+                <div
+                  className="flex h-16 w-16 items-center justify-center rounded-full text-xl font-bold text-white shadow-md"
+                  style={{ backgroundColor: member.color }}
+                >
+                  {member.initials}
                 </div>
 
-                {/* Content */}
-                <div className="p-8">
-                  <h4 className="text-[1.25rem] font-bold text-[#1F2937]">
-                    {member.name}
-                  </h4>
+                <h4 className="mt-5 text-lg font-semibold text-[#1F2937]">
+                  {member.name}
+                </h4>
 
-                  <p className="mt-2 text-[0.875rem] font-medium text-[#14B8A6]">
-                    {member.role}
-                  </p>
+                <p className="mt-1 text-sm text-[#14B8A6]">{member.title}</p>
 
-                  {/* Social Links */}
-                  <div className="mt-6 flex gap-4">
-                    <a
-                      href={member.linkedin}
-                      target="_blank"
-                      rel="noopener noreferrer"
-                      className="flex h-10 w-10 items-center justify-center rounded-full bg-[#E6FFFB] text-[#14B8A6] transition duration-300 hover:bg-[#14B8A6] hover:text-white"
-                      title="LinkedIn"
-                    >
-                      {/* <FontAwesomeIcon icon={faLinkedin} className="text-[18px]" /> */}
-                    </a>
+                {/* Divider */}
+                <div className="my-5 h-px bg-[#F3F4F6]" />
 
-                    <a
-                      href={member.whatsapp}
-                      target="_blank"
-                      rel="noopener noreferrer"
-                      className="flex h-10 w-10 items-center justify-center rounded-full bg-[#E6FFFB] text-[#14B8A6] transition duration-300 hover:bg-[#14B8A6] hover:text-white"
-                      title="WhatsApp"
-                    >
-                      {/* <FontAwesomeIcon icon={faWhatsapp} className="text-[18px]" /> */}
-                    </a>
-                  </div>
+                {/* Links */}
+                <div className="mt-auto flex items-center gap-4">
+                  <a
+                    href={member.linkedin}
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    className="flex items-center gap-2 rounded-lg border border-[#E5E7EB] px-3 py-2 text-xs font-medium text-[#6B7280] transition-colors duration-200 hover:border-[#0A66C2] hover:text-[#0A66C2]"
+                  >
+                    {/* <FontAwesomeIcon icon={faLinkedin} className="text-base" /> */}
+                    LinkedIn
+                  </a>
+
+                  <a
+                    href={member.whatsapp}
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    className="flex items-center gap-2 rounded-lg border border-[#E5E7EB] px-3 py-2 text-xs font-medium text-[#6B7280] transition-colors duration-200 hover:border-[#25D366] hover:text-[#25D366]"
+                  >
+                    {/* <FontAwesomeIcon icon={faWhatsapp} className="text-base" /> */}
+                    WhatsApp
+                  </a>
                 </div>
-              </div>
+              </article>
             ))}
-          </div>
-
-          {/* CTA Section */}
-          <div className="mt-20 rounded-2xl bg-white p-10 text-center shadow-lg">
-            <h4 className="text-[1.75rem] font-bold text-[#1F2937]">
-              Ready to Schedule an Appointment?
-            </h4>
-
-            <p className="mt-4 text-[1rem] text-[#6B7280]">
-              Connect with our expert doctors and get the healthcare you deserve.
-            </p>
-
-            <button
-              onClick={() => setIsAppointmentModalOpen(true)}
-              className="mt-8 inline-flex items-center gap-3 rounded-xl bg-[#14B8A6] px-8 py-4 text-[1rem] font-semibold text-white transition duration-300 hover:bg-[#0F766E]"
-            >
-              <FontAwesomeIcon icon={UsersIcon} className="text-[20px]" />
-              Book Appointment Now
-            </button>
           </div>
         </div>
       </section>
