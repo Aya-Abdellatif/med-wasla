@@ -1,8 +1,8 @@
 import mongoose, { Document, Schema, Types } from "mongoose";
-export const appointmentTypes = ["clinic", "home"] as const;
+const appointmentTypes = ["clinic", "home"] as const;
 export type AppointmentType = (typeof appointmentTypes)[number];    
 
-export const appointmentStatuses = ["pending", "confirmed", "completed", "cancelled"] as const;
+const appointmentStatuses = ["pending", "confirmed", "completed", "cancelled"] as const;
 export type AppointmentStatus = (typeof appointmentStatuses)[number];
 
 export interface IAppointment extends Document {

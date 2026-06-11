@@ -14,6 +14,15 @@ server.use(cors({
 
 server.use(express.json());
 
+//server.use("/api/auth", authRouter);
+//server.use("/api/user", userRouter);
+//server.use("/api/specialists", specialistsRouter);
+//server.use("/api/appointments", appointmentsRouter);
+//server.use("/api/queue", queueRouter);
+//server.use("/api/reviews", reviewsRouter);
+//server.use("/api/admin", adminRouter);
+//server.use("/api/ai", aiRouter);
+
 try {
     await mongoose.connect(process.env.DATABASE_CONNECTION_STRING!);
     console.log("MongoDB Connected.");
