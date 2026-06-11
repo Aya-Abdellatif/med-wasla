@@ -12,10 +12,11 @@ server.use(cors({
   credentials: true,
 }));
 
+server.use(express.json());
 
 try {
-    await mongoose.connect(process.env.DATABASE_CONNECTION_STRING);
-    console.log("Connected to database.");
+    await mongoose.connect(process.env.DATABASE_CONNECTION_STRING!);
+    console.log("MongoDB Connected.");
     server.listen(process.env.PORT_NUMBER || 5000);
 }
 catch (error) {

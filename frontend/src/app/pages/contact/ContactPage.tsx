@@ -78,7 +78,7 @@ export default function ContactPage() {
           <div className="absolute bottom-10 left-10 w-40 h-40 bg-cyan-300 rounded-full blur-3xl" />
         </div>
         <div className="max-w-4xl mx-auto relative z-10">
-          <h1 className="text-5xl md:text-6xl font-bold mb-6 bg-linear-to-r from-teal-600 to-cyan-600 bg-clip-text text-transparent">
+          <h1 className="text-5xl md:text-6xl font-bold  text-[#1F2937] mb-6">
             Get in Touch
           </h1>
           <p className="text-lg md:text-xl text-gray-600 leading-relaxed max-w-2xl mx-auto">
@@ -86,34 +86,6 @@ export default function ContactPage() {
           </p>
         </div>
       </section>
-
-      {/* Contact Info Cards
-      <section className="py-20 px-4 bg-white">
-        <div className="max-w-7xl mx-auto">
-          <div className="grid sm:grid-cols-2 lg:grid-cols-4 gap-6">
-            {contactInfo.map((item) => (
-              <div
-                key={item.title}
-                className="bg-gradient-to-br from-gray-50 to-gray-100 rounded-2xl p-8 hover:shadow-xl transition-all duration-300 hover:-translate-y-1 cursor-pointer group"
-              >
-                <div
-                  className={`w-14 h-14 rounded-xl flex items-center justify-center mb-6 group-hover:scale-110 transition-transform ${item.iconBoxClass}`}
-                >
-                  <FontAwesomeIcon icon={item.icon} className="text-2xl" />
-                </div>
-                <h3 className="text-lg font-bold mb-4">{item.title}</h3>
-                <div className="space-y-2">
-                  {item.details.map((detail) => (
-                    <p key={detail} className="text-gray-600 text-sm leading-relaxed">
-                      {detail}
-                    </p>
-                  ))}
-                </div>
-              </div>
-            ))}
-          </div>
-        </div>
-      </section> */}
 
       {/* Form & Quick Info */}
       <section className="py-20 px-4 bg-gray-50">
@@ -300,7 +272,7 @@ export default function ContactPage() {
                   </span>
                 </button>
                 {expandedFAQ === index && (
-                  <div className="px-6 pb-6 border-t border-gray-200">
+                  <div className="px-6 pt-6 pb-6 border-t border-gray-200">
                     <p className="text-gray-600 leading-relaxed">{faq.answer}</p>
                   </div>
                 )}
