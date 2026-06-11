@@ -74,42 +74,69 @@ export const coreValues = [
   },
 ];
 
-export const journey = [
+export const teamMembers = [
   {
-    year: "2000",
-    title: "Foundation",
-    description:
-      "HealthCarePlus was established with a vision to provide accessible, quality healthcare.",
+    name: "Dr. Ahmed Hassan",
+    role: "Founder & Chief Medical Officer",
+    image: "https://images.unsplash.com/photo-1507003211169-0a1dd7228f2d?auto=format&fit=crop&w=500&q=60",
+    linkedin: "https://linkedin.com/in/ahmed-hassan",
+    whatsapp: "https://wa.me/201001234567",
   },
   {
-    year: "2005",
-    title: "Expansion",
-    description:
-      "Opened our second facility and introduced specialized departments.",
+    name: "Dr. Sarah Johnson",
+    role: "Head of Cardiology",
+    image: "https://images.unsplash.com/photo-1494790108377-be9c29b29330?auto=format&fit=crop&w=500&q=60",
+    linkedin: "https://linkedin.com/in/sarah-johnson",
+    whatsapp: "https://wa.me/201009876543",
   },
   {
-    year: "2010",
-    title: "Innovation",
-    description:
-      "Implemented cutting-edge medical technology and digital health records.",
+    name: "Dr. Fatima Al-Mansouri",
+    role: "Lead Neurologist",
+    image: "https://images.unsplash.com/photo-1438761681033-6461ffad8d80?auto=format&fit=crop&w=500&q=60",
+    linkedin: "https://linkedin.com/in/fatima-almansouri",
+    whatsapp: "https://wa.me/201005555555",
   },
   {
-    year: "2015",
-    title: "Recognition",
-    description:
-      "Received national accreditation for excellence in patient care.",
+    name: "Dr. Mohammed Ali",
+    role: "Head of Surgery",
+    image: "https://images.unsplash.com/photo-1500648767791-00dcc994a43e?auto=format&fit=crop&w=500&q=60",
+    linkedin: "https://linkedin.com/in/mohammed-ali",
+    whatsapp: "https://wa.me/201002222222",
   },
   {
-    year: "2020",
-    title: "Growth",
-    description:
-      "Expanded services to include telemedicine and 24/7 emergency care.",
+    name: "Dr. Emily Martinez",
+    role: "Chief Pediatrician",
+    image: "https://images.unsplash.com/photo-1507003211169-0a1dd7228f2d?auto=format&fit=crop&w=500&q=60",
+    linkedin: "https://linkedin.com/in/emily-martinez",
+    whatsapp: "https://wa.me/201003333333",
   },
   {
-    year: "2026",
-    title: "Leadership",
+    name: "Dr. Amira Saleh",
+    role: "Head of Orthopedics",
+    image: "https://images.unsplash.com/photo-1438761681033-6461ffad8d80?auto=format&fit=crop&w=500&q=60",
+    linkedin: "https://linkedin.com/in/amira-saleh",
+    whatsapp: "https://wa.me/201004444444",
+  },
+];
+
+export const servicesHighlight = [
+  {
+    title: "Emergency Care",
     description:
-      "Recognized as a leading healthcare provider serving 50,000+ patients annually.",
+      "24/7 emergency services with rapid response and expert trauma care.",
+    icon: faHeart,
+  },
+  {
+    title: "Specialized Departments",
+    description:
+      "15+ specialized departments covering all major medical disciplines.",
+    icon: faHospital,
+  },
+  {
+    title: "Expert Doctors",
+    description:
+      "100+ board-certified physicians with decades of combined expertise.",
+    icon: faUserDoctor,
   },
 ];
 
