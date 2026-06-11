@@ -1,13 +1,33 @@
-import mongoose from "mongoose";
-const queueEntrySchema = new mongoose.Schema(
+import mongoose, { Document, Schema, Types } from "mongoose";
+
+export type QueueStatus = "waiting" | "in_progress" | "completed" | "cancelled";
+
+export interface IQueueEntry {
+  patientId: Types.ObjectId;
+  appointmentId: Types.ObjectId;
+  queueNumber: number;
+  status: QueueStatus;
+}
+
+export interface IQueue extends Document {
+  specialistId: Types.ObjectId;
+  date: Date;
+  entries: IQueueEntry[];
+  currentNumber?: number;
+  avgWaitMinutes?: number;
+  createdAt?: Date;
+  updatedAt?: Date;
+}
+
+const queueEntrySchema = new Schema<IQueueEntry>(
   {
     patientId: {
-      type: mongoose.Schema.Types.ObjectId,
+      type: Schema.Types.ObjectId,
       ref: "User",
       required: true,
     },
     appointmentId: {
-      type: mongoose.Schema.Types.ObjectId,
+      type: Schema.Types.ObjectId,
       ref: "Appointment",
       required: true,
     },
@@ -21,12 +41,13 @@ const queueEntrySchema = new mongoose.Schema(
       default: "waiting",
     },
   },
-  { _id: false },
+  { _id: false }
 );
-const queueSchema = new mongoose.Schema(
+
+const queueSchema = new Schema<IQueue>(
   {
     specialistId: {
-      type: mongoose.Schema.Types.ObjectId,
+      type: Schema.Types.ObjectId,
       ref: "MedicalSpecialist",
       required: true,
     },
@@ -49,8 +70,11 @@ const queueSchema = new mongoose.Schema(
   },
   {
     timestamps: true,
-  },
+  }
 );
+
 queueSchema.index({ specialistId: 1, date: 1 }, { unique: true });
-const Queue = mongoose.model("Queue", queueSchema);
+
+const Queue = mongoose.model<IQueue>("Queue", queueSchema);
+
 export default Queue;

@@ -1,6 +1,50 @@
-import mongoose from "mongoose";
+import mongoose, { Document, Schema, Types } from "mongoose";
 
-const certificationSchema = new mongoose.Schema(
+export const verificationStatuses = ["pending", "approved", "rejected"] as const;
+export type VerificationStatus = (typeof verificationStatuses)[number];
+
+export const specialistTypes = ["doctor", "nurse"] as const;
+export type SpecialistType = (typeof specialistTypes)[number];
+
+export interface ICertification {
+  _id?: Types.ObjectId;
+  title: string;
+  issuedBy: string;
+  issuedAt?: Date;
+  certificateUrl: string;
+  status?: VerificationStatus;
+  createdAt?: Date;
+  updatedAt?: Date;
+}
+
+export interface IAvailableSlot {
+  day: string;
+  startTime: string;
+  endTime: string;
+}
+
+export interface IMedicalSpecialist extends Document {
+  userId: Types.ObjectId;
+  specialistType: SpecialistType;
+  specialization?: string;
+  clinicAddress?: string;
+  certifications?: ICertification[];
+  avgWaitMinutes?: number;
+  serviceAreas?: string[];
+  areasOfExpertise?: string[];
+  homeVisit: boolean;
+  licenseNumber: string;
+  bio?: string;
+  consultationFee?: number;
+  availableSlots?: IAvailableSlot[];
+  rating?: number;
+  reviewCount?: number;
+  verificationStatus?: VerificationStatus;
+  createdAt?: Date;
+  updatedAt?: Date;
+}
+
+const certificationSchema = new Schema<ICertification>(
   {
     title: { type: String, required: true },
     issuedBy: { type: String, required: true },
@@ -8,26 +52,26 @@ const certificationSchema = new mongoose.Schema(
     certificateUrl: { type: String, required: true },
     status: {
       type: String,
-      enum: ["pending", "approved", "rejected"],
+      enum: verificationStatuses,
       default: "pending",
     },
   },
-  { _id: true, timestamps: true },
+  { _id: true, timestamps: true }
 );
 
-const availableSlotSchema = new mongoose.Schema(
+const availableSlotSchema = new Schema<IAvailableSlot>(
   {
     day: { type: String, required: true },
     startTime: { type: String, required: true },
     endTime: { type: String, required: true },
   },
-  { _id: false },
+  { _id: false }
 );
 
-const medicalSpecialistSchema = new mongoose.Schema(
+const medicalSpecialistSchema = new Schema<IMedicalSpecialist>(
   {
     userId: {
-      type: mongoose.Schema.Types.ObjectId,
+      type: Schema.Types.ObjectId,
       ref: "User",
       required: true,
       unique: true,
@@ -35,11 +79,10 @@ const medicalSpecialistSchema = new mongoose.Schema(
 
     specialistType: {
       type: String,
-      enum: ["doctor", "nurse", "both"],
+      enum: specialistTypes,
       required: true,
     },
 
-    // ── Doctor / Both only ──────────────────────────────────────────────────
     specialization: {
       type: String,
       enum: [
@@ -67,10 +110,10 @@ const medicalSpecialistSchema = new mongoose.Schema(
 
     avgWaitMinutes: { type: Number },
 
-    // ── Nurse / Both only ───────────────────────────────────────────────────
     serviceAreas: { type: [String], default: undefined },
 
-    // ── Shared ──────────────────────────────────────────────────────────────
+    areasOfExpertise: { type: [String], default: undefined },
+
     homeVisit: { type: Boolean, required: true },
 
     licenseNumber: { type: String, required: true, unique: true },
@@ -84,44 +127,39 @@ const medicalSpecialistSchema = new mongoose.Schema(
 
     verificationStatus: {
       type: String,
-      enum: ["pending", "approved", "rejected"],
+      enum: verificationStatuses,
       default: "pending",
     },
   },
-  { timestamps: true },
+  { timestamps: true }
 );
 
-// ── Indexes ───────────────────────────────────────────────────────────────────
 medicalSpecialistSchema.index({ specialistType: 1 });
 medicalSpecialistSchema.index({ specialization: 1 });
 medicalSpecialistSchema.index({ verificationStatus: 1 });
 medicalSpecialistSchema.index({ serviceAreas: 1 });
 
-// ── Scenario guard ────────────────────────────────────────────────────────────
-medicalSpecialistSchema.pre("validate", function (next) {
+medicalSpecialistSchema.pre("validate", function (this: IMedicalSpecialist) {
   const isDoctor = this.specialistType === "doctor";
   const isNurse = this.specialistType === "nurse";
 
-  if (isDoctor) this.homeVisit = false;
   if (isNurse) this.homeVisit = true;
 
   if (isDoctor && !this.specialization) {
-    return next(new Error("specialization is required for doctors"));
+    throw new Error("specialization is required for doctors");
   }
 
   if (isNurse && (!this.serviceAreas || this.serviceAreas.length === 0)) {
-    return next(new Error("serviceAreas are required for nurses"));
+    throw new Error("serviceAreas are required for nurses");
   }
-
-  next();
 });
 
-medicalSpecialistSchema.virtual("isVerified").get(function () {
+medicalSpecialistSchema.virtual("isVerified").get(function (this: IMedicalSpecialist) {
   return this.verificationStatus === "approved";
 });
 
-const MedicalSpecialist = mongoose.model(
+const MedicalSpecialist = mongoose.model<IMedicalSpecialist>(
   "MedicalSpecialist",
-  medicalSpecialistSchema,
+  medicalSpecialistSchema
 );
 export default MedicalSpecialist;
