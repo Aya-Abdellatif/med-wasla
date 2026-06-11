@@ -90,10 +90,8 @@ export default function SignIn() {
           onClick={() => navigate("/home")}
           className="w-full rounded-full bg-teal-500 py-4 text-base font-bold text-white shadow-lg hover:bg-teal-600 transition-colors"
         >
-          Sign In
+          Login
         </button>
-
-
 
         <p className="text-center text-sm text-slate-600">
           Don't have an account?{' '}
