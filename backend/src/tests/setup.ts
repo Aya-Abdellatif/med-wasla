@@ -1,13 +1,17 @@
+import { beforeAll, afterAll } from "vitest";
 import { MongoMemoryServer } from "mongodb-memory-server";
 import mongoose from "mongoose";
 
 let mongo: MongoMemoryServer;
 
+process.env.JWT_SECRET = "test-secret-key";
+process.env.JWT_EXPIRES_IN = "7d";
+process.env.EMAIL_USER = "test@test.com";
+process.env.EMAIL_PASS = "testpass";
+
 beforeAll(async () => {
   mongo = await MongoMemoryServer.create();
-  const uri = mongo.getUri();
-
-  await mongoose.connect(uri);
+  await mongoose.connect(mongo.getUri());
 });
 
 afterAll(async () => {
@@ -15,12 +19,3 @@ afterAll(async () => {
   await mongoose.connection.close();
   await mongo.stop();
 });
-
-function beforeAll(arg0: () => Promise<void>) {
-    throw new Error("Function not implemented.");
-}
-
-
-function afterAll(arg0: () => Promise<void>) {
-    throw new Error("Function not implemented.");
-}
