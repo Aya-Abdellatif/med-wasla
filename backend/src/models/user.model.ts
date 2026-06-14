@@ -12,6 +12,7 @@ export interface IUser extends Document {
   address: Governorate;
   role: UserRole;
   photoUrl: string;
+  isVerified: boolean;
   createdAt?: Date;
   updatedAt?: Date;
   comparePassword?: (candidatePassword: string) => Promise<boolean>;
@@ -61,6 +62,11 @@ const userSchema = new Schema<IUser>(
     photoUrl: {
       type: String,
       required: false,
+    },
+    
+    isVerified: {
+      type: Boolean,
+      default: false,
     },
   },
   {
