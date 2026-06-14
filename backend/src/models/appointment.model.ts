@@ -1,4 +1,5 @@
 import mongoose, { Document, Schema, Types } from "mongoose";
+import type { IReminder } from "./reminder.model.js";
 
 const appointmentTypes = ["clinic", "home"] as const;
 export type AppointmentType = (typeof appointmentTypes)[number];    
@@ -14,7 +15,7 @@ export interface IAppointment extends Document {
   status: AppointmentStatus;
   address?: string;
   notes?: string;
-  reminders?: Types.ObjectId[];
+  reminders?: Types.ObjectId[] | IReminder[];
   createdAt?: Date;
   updatedAt?: Date;
 }
@@ -62,12 +63,15 @@ const appointmentSchema = new Schema<IAppointment>(
       type: String,
       trim: true,
     },
-    reminders: [
-      {
-        type: Schema.Types.ObjectId,
-        ref: "Reminder",
-      },
-    ],
+    reminders: {
+      type: [
+        {
+          type: Schema.Types.ObjectId,
+          ref: "Reminder",
+        },
+      ],
+      default: [],
+    },
   },
   {
     timestamps: true,

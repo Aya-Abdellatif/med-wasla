@@ -5,34 +5,17 @@ import {
   updateReview,
   deleteReview,
 } from "./reviews.controller.js";
-import { authenticate, authorize } from "../middlewares/auth.middleware.js";
+
+import { protect, restrictTo } from "../../middleware/auth.middleware.js";
 
 const router = Router();
 
-router.post(
-  "/",
-  authenticate,
-  authorize("patient"),
-  createReview
-);
+router.post("/", protect, restrictTo("patient"), createReview);
 
-router.get(
-  "/specialist/:id",
-  getSpecialistReviews // public، no auth
-);
+router.get("/specialist/:id", getSpecialistReviews);
 
-router.put(
-  "/:id",
-  authenticate,
-  authorize("patient"),
-  updateReview
-);
+router.put("/:id", protect, restrictTo("patient"), updateReview);
 
-router.delete(
-  "/:id",
-  authenticate,
-  authorize("patient", "admin"),
-  deleteReview
-);
+router.delete("/:id", protect, restrictTo("patient", "admin"), deleteReview);
 
 export default router;
