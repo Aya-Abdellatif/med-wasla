@@ -24,6 +24,20 @@ export const createReview = async (req: Request, res: Response) => {
       });
     }
 
+    if (rating < 1 || rating > 5) {
+      return res.status(400).json({
+        success: false,
+        message: "Rating must be between 1 and 5",
+      });
+    }
+
+    if (comment && comment.length > 1000) {
+      return res.status(400).json({
+        success: false,
+        message: "Comment must be less than 1000 characters",
+      });
+    }
+
     const review = await createReviewService({
       patientId,
       specialistId,
@@ -65,11 +79,12 @@ export const getSpecialistReviews = async (req: Request, res: Response) => {
       });
     }
 
-    const reviews = await getSpecialistReviewsService(specialistId);
+    const { reviews, averageRating, totalReviews } = await getSpecialistReviewsService(specialistId);
 
     res.status(200).json({
       success: true,
-      count: reviews.length,
+      count: totalReviews,
+      averageRating,
       data: reviews,
     });
   } catch (error) {
@@ -100,6 +115,20 @@ export const updateReview = async (req: Request, res: Response) => {
     }
 
     const { rating, comment } = req.body;
+
+    if (rating != null && (rating < 1 || rating > 5)) {
+      return res.status(400).json({
+        success: false,
+        message: "Rating must be between 1 and 5",
+      });
+    }
+
+    if (comment && comment.length > 1000) {
+      return res.status(400).json({
+        success: false,
+        message: "Comment must be less than 1000 characters",
+      });
+    }
 
     const review = await updateReviewService(reviewId, patientId, {
       rating,
@@ -156,7 +185,7 @@ export const deleteReview = async (req: Request, res: Response) => {
     const review = await deleteReviewService(
       reviewId,
       requesterId,
-      requesterRole as string
+      requesterRole as "patient" | "specialist" | "admin"
     );
 
     if (!review) {

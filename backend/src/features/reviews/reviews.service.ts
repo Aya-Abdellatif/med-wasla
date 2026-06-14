@@ -19,7 +19,12 @@ export const getSpecialistReviewsService = async (specialistId: string) => {
     .populate("patientId", "name profileImage")
     .sort({ createdAt: -1 });
 
-  return reviews;
+  // Calculate average rating
+  const averageRating = reviews.length > 0
+    ? parseFloat((reviews.reduce((sum, r) => sum + r.rating, 0) / reviews.length).toFixed(1))
+    : 0;
+
+  return { reviews, averageRating, totalReviews: reviews.length };
 };
 
 export const updateReviewService = async (
@@ -44,7 +49,7 @@ export const updateReviewService = async (
 export const deleteReviewService = async (
   reviewId: string,
   requesterId: string,
-  requesterRole: string
+  requesterRole: "patient" | "specialist" | "admin"
 ) => {
   const review = await Review.findById(reviewId);
   if (!review) return null;
