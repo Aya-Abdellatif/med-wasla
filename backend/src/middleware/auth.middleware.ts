@@ -47,7 +47,7 @@ export const protect = async (req: Request, _res: Response, next: NextFunction) 
 };
 
 export const restrictTo = (...roles: ("patient" | "specialist" | "admin")[]) => {
-    return (req: Request, res: Response, next: NextFunction) => {
+    return (req: Request, _res: Response, next: NextFunction) => {
         if (!req.user || !roles.includes(req.user.role)) {
             return next(new AppError("You don't have permission", 403));
         }

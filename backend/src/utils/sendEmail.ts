@@ -7,11 +7,17 @@ interface EmailOptions {
 }
 
 const sendEmail = async (options: EmailOptions): Promise<void> => {
+
+  const user = process.env.EMAIL_USER;
+  const pass = process.env.EMAIL_PASS;
+  if (!user || !pass)
+    throw new Error("EMAIL_USER and EMAIL_PASS must be set");
+
   const transporter = nodemailer.createTransport({
     service: "gmail",
     auth: {
-      user: process.env.EMAIL_USER!,
-      pass: process.env.EMAIL_PASS!,
+      user: user,
+      pass: pass,
     },
   });
 
