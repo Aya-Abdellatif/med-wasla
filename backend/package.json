@@ -7,7 +7,9 @@
     "dev": "ts-node server.ts",
     "build": "tsc",
     "start": "node dist/server.js",
-    "lint": "eslint ."
+    "lint": "eslint .",
+    "test": "vitest --config src/vitest.config.ts",
+    "test:run": "vitest run --config src/vitest.config.ts"
   },
   "keywords": [],
   "author": "",
