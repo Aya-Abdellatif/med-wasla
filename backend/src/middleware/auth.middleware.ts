@@ -13,7 +13,7 @@ declare global {
     }
 }
 
-export const protect = async (req: Request, _res: Response, next: NextFunction) => {
+export const protect = (req: Request, _res: Response, next: NextFunction) => {
 
     const authHeader = req.headers.authorization;
 

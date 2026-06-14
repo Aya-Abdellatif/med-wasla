@@ -1,11 +1,15 @@
+// auth.interface.ts
+import type { Governorate, UserRole } from "../models/user.model.js";
+import type { SpecialistType } from "../models/medicalSpecialist.model.js";
+
 export interface RegisterData {
   name: string;
   email: string;
   password: string;
   phone: string;
-  address: string;
-  role?: string;
-  specialistType?: string;
+  address: Governorate;
+  role?: UserRole;
+  specialistType?: SpecialistType;
   licenseNumber?: string;
   homeVisit?: boolean;
   specialization?: string;
