@@ -7,7 +7,6 @@ const errorHandler = (
   res: Response,
   next: NextFunction
 ): void => {
-  // AppError = غلطة إنتِ عمداً رميتيها (زي "email already exists")
   if (err instanceof AppError) {
     res.status(err.statusCode).json({
       status: "error",
@@ -22,6 +21,11 @@ const errorHandler = (
       status: "error",
       message: err.message,
     });
+    return;
+  }
+
+  if ((err as any).code === 11000) {
+    res.status(400).json({ status: "error", message: "Email already in use" });
     return;
   }
 
