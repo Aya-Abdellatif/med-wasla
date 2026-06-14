@@ -4,20 +4,25 @@
   "main": "index.js",
   "type": "module",
   "scripts": {
-    "dev": "ts-node src/server.ts",
+    "dev": "ts-node server.ts",
     "build": "tsc",
     "start": "node dist/server.js",
-    "lint": "eslint ."
+    "lint": "eslint .",
+    "test": "vitest --config src/vitest.config.ts",
+    "test:run": "vitest run --config src/vitest.config.ts"
   },
   "keywords": [],
   "author": "",
   "dependencies": {
+    "@types/mongoose": "^5.11.96",
     "bcrypt": "^6.0.0",
     "bcryptjs": "^2.4.3",
     "cors": "^2.8.6",
     "dotenv": "^17.4.2",
     "express": "^5.2.1",
-    "mongoose": "^9.6.3"
+    "jsonwebtoken": "^9.0.3",
+    "mongoose": "^9.7.0",
+    "nodemailer": "^8.0.11"
   },
   "devDependencies": {
     "@eslint/js": "^10.0.1",
@@ -26,12 +31,15 @@
     "@types/cors": "^2.8.19",
     "@types/express": "^5.0.6",
     "@types/jsonwebtoken": "^9.0.10",
-    "@types/mongoose": "^5.11.96",
     "@types/node": "^25.9.2",
     "@types/nodemailer": "^8.0.0",
+    "@types/supertest": "^7.2.0",
     "eslint": "^10.4.1",
     "globals": "^17.6.0",
+    "mongodb-memory-server": "^11.2.0",
+    "supertest": "^7.2.2",
     "ts-node": "^10.9.2",
-    "typescript": "^6.0.3"
+    "typescript": "^6.0.3",
+    "vitest": "^4.1.8"
   }
 }
