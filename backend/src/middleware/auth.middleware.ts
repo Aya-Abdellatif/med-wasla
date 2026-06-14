@@ -13,18 +13,30 @@ declare global {
     }
 }
 
-export const protect = (req: Request, res: Response, next: NextFunction) => {
+export const protect = async (req: Request, _res: Response, next: NextFunction) => {
 
-    const token = req.headers.authorization?.split(" ")[1]; // "Bearer <token>"
+    const authHeader = req.headers.authorization;
 
-    if (!token) {
+    if (!authHeader || !authHeader.startsWith("Bearer ")) {
+        return next(new AppError("Not authenticated", 401));
+    }
+
+    const token = authHeader.split(" ")[1];
+
+    if (!token?.trim()) {
         return next(new AppError("Not logged in", 401));
     }
 
     try {
-        const decoded = jwt.verify(token, process.env.JWT_SECRET!) as {
+        const secret = process.env.JWT_SECRET;
+
+        if (!secret) {
+            throw new Error("JWT_SECRET is not defined");
+        }
+
+        const decoded = jwt.verify(token, secret) as {
             id: string;
-            role: "patient" | "specialist" | "admin";
+            role: "patient" | "specialist" | "admin"
         };
 
         req.user = decoded;
