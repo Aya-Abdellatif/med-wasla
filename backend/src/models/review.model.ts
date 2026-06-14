@@ -48,6 +48,9 @@ const reviewSchema = new Schema<IReview>(
   }
 );
 
+// Index for faster specialist review queries
+reviewSchema.index({ specialistId: 1 });
+
 const Review = mongoose.model<IReview>("Review", reviewSchema);
 
 export default Review;
