@@ -31,9 +31,13 @@
     "@types/mongoose": "^5.11.96",
     "@types/node": "^25.9.2",
     "@types/nodemailer": "^8.0.0",
+    "@types/supertest": "^7.2.0",
     "eslint": "^10.4.1",
     "globals": "^17.6.0",
+    "mongodb-memory-server": "^11.2.0",
+    "supertest": "^7.2.2",
     "ts-node": "^10.9.2",
-    "typescript": "^6.0.3"
+    "typescript": "^6.0.3",
+    "vitest": "^4.1.8"
   }
 }
