@@ -1,7 +1,7 @@
 import express from "express";
 import cors from "cors";
 import errorHandler from "./middleware/errorHandler.middleware.js";
-
+import reviewsRouter from "./features/reviews/reviews.routes.js";
 
 const app = express();
 
@@ -20,7 +20,7 @@ app.use(express.json());
 // app.use("/api/specialists", specialistsRouter);
 // app.use("/api/appointments", appointmentsRouter);
 // app.use("/api/queue", queueRouter);
-// app.use("/api/reviews", reviewsRouter);
+ //app.use("/api/reviews", reviewsRouter);
 // app.use("/api/admin", adminRouter);
 // app.use("/api/ai", aiRouter);
 app.use(errorHandler);
