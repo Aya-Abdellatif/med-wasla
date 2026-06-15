@@ -1,17 +1,75 @@
 import { useState } from "react";
 import { Link, useNavigate } from "react-router-dom";
 import AuthLayout from "../../components/auth/AuthLayout";
+import { useAuth } from "../../context/useAuth";
+import type { UserRole } from "../../context/AuthContext";
 
 export default function SignIn() {
   const [showPassword, setShowPassword] = useState(false);
+  const [email, setEmail] = useState("");
+  const [password, setPassword] = useState("");
+  const [error, setError] = useState("");
+  const [isLoading, setIsLoading] = useState(false);
   const navigate = useNavigate();
+  const { login } = useAuth();
+
+  const handleLogin = async (e: React.FormEvent) => {
+    e.preventDefault();
+    setError("");
+
+    if (!email) {
+      setError("Please enter your email");
+      return;
+    }
+
+    setIsLoading(true);
+    try {
+      // Deduce role for testing convenience
+      let role: UserRole = "patient";
+      if (email === "admin@medwasla.com" || email.includes("admin")) {
+        role = "admin";
+      } else if (
+        email === "khaled.selim@medwasla.com" ||
+        email === "mona.youssef@medwasla.com" ||
+        email.includes("doctor")
+      ) {
+        role = "doctor";
+      } else if (
+        email === "salma.mourad@medwasla.com" ||
+        email.includes("nurse")
+      ) {
+        role = "nurse";
+      }
+
+      await login(email, password, role);
+
+      // Navigate based on role
+      if (role === "admin") {
+        navigate("/admin-dashboard");
+      } else if (role === "doctor" || role === "nurse") {
+        navigate("/dashboard");
+      } else {
+        navigate("/home");
+      }
+    } catch (err) {
+      setError("Login failed. Please verify credentials.");
+    } finally {
+      setIsLoading(false);
+    }
+  };
 
   return (
     <AuthLayout
       title="Welcome Back"
       subtitle="Sign in to access your account"
     >
-      <form className="space-y-6">
+      <form onSubmit={handleLogin} className="space-y-6">
+        {error && (
+          <div className="p-4 text-sm text-red-600 bg-red-50 rounded-2xl border border-red-100 font-semibold animate-pulse">
+            ⚠️ {error}
+          </div>
+        )}
+        
         <div className="space-y-4">
           <div>
             <label className="block text-sm font-semibold text-slate-700 mb-2">
@@ -27,6 +85,8 @@ export default function SignIn() {
               <input
                 type="email"
                 placeholder="your.email@example.com"
+                value={email}
+                onChange={(e) => setEmail(e.target.value)}
                 className="w-full bg-transparent px-14 py-4 text-slate-900 placeholder:text-slate-400 outline-none rounded-full"
               />
             </div>
@@ -46,6 +106,8 @@ export default function SignIn() {
               <input
                 type={showPassword ? "text" : "password"}
                 placeholder="Enter your password"
+                value={password}
+                onChange={(e) => setPassword(e.target.value)}
                 className="w-full bg-transparent px-14 py-4 text-slate-900 placeholder:text-slate-400 outline-none rounded-full"
               />
               <button 
@@ -86,11 +148,11 @@ export default function SignIn() {
         </div>
 
         <button
-          type="button"
-          onClick={() => navigate("/home")}
-          className="w-full rounded-full bg-teal-500 py-4 text-base font-bold text-white shadow-lg hover:bg-teal-600 transition-colors"
+          type="submit"
+          disabled={isLoading}
+          className="w-full rounded-full bg-teal-500 py-4 text-base font-bold text-white shadow-lg hover:bg-teal-600 transition-colors disabled:opacity-50"
         >
-          Login
+          {isLoading ? "Signing in..." : "Login"}
         </button>
 
         <p className="text-center text-sm text-slate-600">

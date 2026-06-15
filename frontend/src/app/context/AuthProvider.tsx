@@ -20,6 +20,8 @@ export function AuthProvider({ children }: { children: ReactNode }) {
           ? "John Doe"
           : role === "doctor"
           ? "Dr. Sarah Williams"
+          : role === "admin"
+          ? "Admin MedWasla"
           : "Nurse Emily Johnson",
       email,
       role,

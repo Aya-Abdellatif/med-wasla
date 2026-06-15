@@ -4,12 +4,8 @@ import { AppointmentTypeModal } from "../../components/booking/AppointmentTypeMo
 // import { faLinkedin, faWhatsapp } from "@fortawesome/free-brands-svg-icons";
 
 import {
-  CheckIcon,
   coreValues,
   missionVision,
-  stats,
-  UsersIcon,
-  teamMembers,
   servicesHighlight,
 } from "./AboutData";
 

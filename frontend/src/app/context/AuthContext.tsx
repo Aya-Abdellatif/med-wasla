@@ -1,4 +1,4 @@
-export type UserRole = "patient" | "doctor" | "nurse";
+export type UserRole = "patient" | "doctor" | "nurse" | "admin";
 
 export interface Certificate {
   id: string;
