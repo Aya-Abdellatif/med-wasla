@@ -2,14 +2,12 @@ import type { Request, Response, NextFunction } from "express";
 import jwt from "jsonwebtoken";
 import AppError from "../utils/AppError.js";
 
-declare global {
-    namespace Express {
-        interface Request {
-            user?: {
-                id: string;
-                role: "patient" | "specialist" | "admin";
-            };
-        }
+declare module "express-serve-static-core" {
+    interface Request {
+        user?: {
+            id: string;
+            role: "patient" | "specialist" | "admin";
+        };
     }
 }
 
