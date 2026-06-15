@@ -8,15 +8,14 @@
     "build": "tsc",
     "start": "node dist/server.js",
     "lint": "eslint .",
+    "typecheck": "tsc --noEmit",
     "test": "vitest --config src/vitest.config.ts",
     "test:run": "vitest run --config src/vitest.config.ts"
   },
   "keywords": [],
   "author": "",
   "dependencies": {
-    "@types/mongoose": "^5.11.96",
     "bcrypt": "^6.0.0",
-    "bcryptjs": "^2.4.3",
     "cors": "^2.8.6",
     "dotenv": "^17.4.2",
     "express": "^5.2.1",
@@ -27,7 +26,6 @@
   "devDependencies": {
     "@eslint/js": "^10.0.1",
     "@types/bcrypt": "^6.0.0",
-    "@types/bcryptjs": "^2.4.6",
     "@types/cors": "^2.8.19",
     "@types/express": "^5.0.6",
     "@types/jsonwebtoken": "^9.0.10",

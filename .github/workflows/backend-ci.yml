@@ -13,11 +13,16 @@ on:
 
 jobs:
   backend-check:
+    name: Lint, TypeCheck, Test & Build
     runs-on: ubuntu-latest
     timeout-minutes: 10
     concurrency:
       group: backend-ci-${{ github.ref }}
       cancel-in-progress: true
+
+    defaults:
+      run:
+        working-directory: ./backend
 
 
     steps:
@@ -32,9 +37,16 @@ jobs:
           cache-dependency-path: ./backend/package-lock.json
 
       - name: Install dependencies
-        working-directory: ./backend
         run: npm ci
 
+      - name: Type check
+        run: npm run typecheck
+
       - name: ESLint
-        working-directory: ./backend
         run: npm run lint
+
+      - name: Run tests
+        run: npm run test:run
+
+      - name: Build project
+        run: npm run build
