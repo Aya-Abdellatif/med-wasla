@@ -29,6 +29,8 @@ const reviewSchema = new Schema({
 }, {
     timestamps: true,
 });
+// Index for faster specialist review queries
+reviewSchema.index({ specialistId: 1 });
 const Review = mongoose.model("Review", reviewSchema);
 export default Review;
 //# sourceMappingURL=review.model.js.map

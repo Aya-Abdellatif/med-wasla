@@ -16,6 +16,7 @@
     "@fortawesome/react-fontawesome": "^3.3.1",
     "fortawesome": "^0.0.1-security",
     "lucide-react": "^1.17.0",
+    "mongoose": "^9.7.0",
     "react": "^19.2.6",
     "react-dom": "^19.2.6",
     "react-fontawesome": "^1.7.1",

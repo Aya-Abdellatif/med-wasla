@@ -1,13 +1,26 @@
-// backend/src/features/medicalSpecialist/Doctors/specialists.routes.ts
 import { Router } from "express";
-import { SpecialistsController } from "./specialists.controller.js";
+import { protect, restrictTo } from "../../../middleware/auth.middleware.js";
 import { mockAuth } from "../../../middleware/mockAuth.js";
+import { getAllSpecialists, getSpecialistById, getSpecialistsBySpecialization, updateAvailability, updateFees, SpecialistsController, } from "./specialists.controller.js";
 const router = Router();
-router.use(mockAuth); // كل الـ routes هنا هتحتاج الـ Header
-router.get("/me", SpecialistsController.getMe);
-router.put("/profile", SpecialistsController.updateProfile);
-router.put("/availability", SpecialistsController.updateProfile); // بتستخدم نفس الـ logic حالياً
-router.put("/fees", SpecialistsController.updateProfile);
-router.post("/me/certificates", SpecialistsController.addCertificate);
+async function specialistAuth(req, res, next) {
+    if (req.headers["x-user-id"]) {
+        await mockAuth(req, res, next);
+        return;
+    }
+    protect(req, res, () => {
+        restrictTo("specialist")(req, res, next);
+    });
+}
+// ─── Public Routes (main) ─────────────────────────────────────────────────────
+router.get("/", getAllSpecialists);
+router.get("/specialization/:name", getSpecialistsBySpecialization);
+router.get("/me", specialistAuth, SpecialistsController.getMe);
+router.post("/me/certificates", specialistAuth, SpecialistsController.addCertificate);
+router.get("/:id", getSpecialistById);
+// ─── Protected Routes (both branches) ─────────────────────────────────────────
+router.put("/profile", specialistAuth, SpecialistsController.updateProfile);
+router.put("/availability", specialistAuth, updateAvailability);
+router.put("/fees", specialistAuth, updateFees);
 export default router;
 //# sourceMappingURL=specialists.routes.js.map

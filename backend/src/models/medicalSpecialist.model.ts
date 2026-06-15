@@ -23,7 +23,7 @@ export interface IAvailableSlot {
   endTime: string;
 }
 
-export interface IMedicalSpecialist extends Document {
+export interface IMedicalSpecialist extends Document { 
   userId: Types.ObjectId;
   specialistType: SpecialistType;
   specialization?: string;

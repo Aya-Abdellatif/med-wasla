@@ -162,7 +162,7 @@ const AboutPage = () => {
             {servicesHighlight.map((item) => (
               <div
                 key={item.title}
-                className="rounded-2xl border-2 border-[#E6FFFB] bg-gradient-to-br from-[#F0FDFA] to-[#FFFFFF] p-8 transition duration-300 hover:border-[#14B8A6] hover:shadow-lg"
+                className="rounded-2xl border-2 border-[#E6FFFB] bg-linear-to-br from-[#F0FDFA] to-[#FFFFFF] p-8 transition duration-300 hover:border-[#14B8A6] hover:shadow-lg"
               >
                 <div className="flex h-14 w-14 items-center justify-center rounded-xl bg-[#14B8A6]/10 text-[#14B8A6]">
                   <FontAwesomeIcon icon={item.icon} className="text-[28px]" />

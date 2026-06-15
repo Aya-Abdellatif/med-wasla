@@ -37,6 +37,15 @@ const appointmentSchema = new Schema({
         type: String,
         trim: true,
     },
+    reminders: {
+        type: [
+            {
+                type: Schema.Types.ObjectId,
+                ref: "Reminder",
+            },
+        ],
+        default: [],
+    },
 }, {
     timestamps: true,
 });
