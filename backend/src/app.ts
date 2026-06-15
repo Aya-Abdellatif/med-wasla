@@ -1,8 +1,9 @@
 import express from "express";
 import cors from "cors";
+import { patientRouter } from "./features/patient/patient.routes.js";
 import errorHandler from "./middleware/errorHandler.middleware.js";
 import authRouter from "./features/auth/auth.route.js";
-
+import specialistsRouter from "./features/medicalSpecialist/Doctors/specialists.routes.js";
 
 const app = express();
 
@@ -16,8 +17,8 @@ app.use(
 app.use(express.json());
 
 // Routes
-app.use("/api/auth", authRouter);
-// app.use("/api/user", userRouter);
+// app.use("/api/auth", authRouter);
+// app.use("/api/patient", patientRouter);
 // app.use("/api/specialists", specialistsRouter);
 // app.use("/api/appointments", appointmentsRouter);
 // app.use("/api/queue", queueRouter);
