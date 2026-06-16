@@ -139,7 +139,7 @@ export const updateSpecialistProfileService = async (
   const specialist = await MedicalSpecialist.findOneAndUpdate(
     { userId },
     { $set: updateData },
-    { new: true, runValidators: true },
+    { returnDocument: 'after', runValidators: true },
   ).populate("userId", "firstName lastName profilePicture email");
 
   if (!specialist) throw new Error("Specialist profile not found");
@@ -165,7 +165,7 @@ export const updateAvailabilityService = async (
   const specialist = await MedicalSpecialist.findOneAndUpdate(
     { userId },
     { $set: { availableSlots } },
-    { new: true, runValidators: true },
+    { returnDocument: 'after', runValidators: true },
   );
 
   if (!specialist) throw new Error("Specialist profile not found");
@@ -185,7 +185,7 @@ export const updateFeesService = async (
   const specialist = await MedicalSpecialist.findOneAndUpdate(
     { userId },
     { $set: { consultationFee } },
-    { new: true },
+    { returnDocument: 'after'},
   );
 
   if (!specialist) throw new Error("Specialist profile not found");

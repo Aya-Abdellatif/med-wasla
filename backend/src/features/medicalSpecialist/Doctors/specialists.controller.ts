@@ -83,7 +83,7 @@ export const updateProfile = async (
   res: Response,
 ): Promise<void> => {
   try {
-    const userId = (req as any).user._id;
+    const userId = (req as any).user.id;
     const specialist = await updateSpecialistProfileService(
       userId,
       req.body as UpdateProfileBody,
@@ -105,7 +105,7 @@ export const updateAvailability = async (
   res: Response,
 ): Promise<void> => {
   try {
-    const userId = (req as any).user._id;
+    const userId = (req as any).user.id;
     const specialist = await updateAvailabilityService(
       userId,
       req.body as UpdateAvailabilityBody,
@@ -127,7 +127,7 @@ export const updateFees = async (
   res: Response,
 ): Promise<void> => {
   try {
-    const userId = (req as any).user._id;
+    const userId = (req as any).user.id;
     const specialist = await updateFeesService(
       userId,
       req.body as UpdateFeesBody,
