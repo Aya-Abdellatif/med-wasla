@@ -1,11 +1,24 @@
 import type { Request, Response, NextFunction } from "express";
 import AppError from "../utils/AppError.js";
 
+type MongoError = {
+  code?: number;
+};
+
+const isMongoDuplicateKeyError = (err: unknown): err is MongoError => {
+  return (
+    typeof err === "object" &&
+    err !== null &&
+    "code" in err &&
+    (err as MongoError).code === 11000
+  );
+};
+
 const errorHandler = (
   err: Error | AppError,
-  req: Request,
+  _req: Request,
   res: Response,
-  next: NextFunction
+  _next: NextFunction
 ): void => {
   if (err instanceof AppError) {
     res.status(err.statusCode).json({
@@ -24,7 +37,8 @@ const errorHandler = (
     return;
   }
 
-  if ((err as any).code === 11000) {
+  // Duplicate key error (MongoDB)
+  if ((isMongoDuplicateKeyError(err))) {
     res.status(400).json({ status: "error", message: "Email already in use" });
     return;
   }
