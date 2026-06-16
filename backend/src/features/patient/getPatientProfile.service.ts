@@ -1,5 +1,6 @@
 import Patient from "../../models/patient.model.js";
 import type { IUser } from "../../models/user.model.js";
+import AppError from "../../utils/AppError.js";
 
 export interface PatientProfile {
   patientId: string;
@@ -24,15 +25,19 @@ export interface PatientProfile {
 
 
 export const getPatientProfileByUserId = async (userId: string): Promise<PatientProfile> => {
+  console.log("userId:", userId);
+
   const patient = await Patient.findOne({ userId })
     .populate("userId", "name email phone address role photoUrl")
     .exec();
 
+  console.log("collection name: ", Patient.collection.name);
+
   if (!patient || !patient.userId) {
-    throw new Error("Patient profile not found");
+    throw new AppError("Patient profile not found", 404);
   }
 
-  const user = patient.userId as IUser; 
+  const user = patient.userId as IUser;
 
   return {
     patientId: patient._id.toString(),
@@ -48,7 +53,7 @@ export const getPatientProfileByUserId = async (userId: string): Promise<Patient
     medicalHistory: (patient.medicalHistory ?? []).map((entry) => ({
       condition: entry.condition,
       diagnosed: entry.diagnosed,
-      treatedBy: entry.treatedBy.toString(), // ✅ ObjectId → string
+      treatedBy: entry.treatedBy.toString(),
       notes: entry.notes,
     })),
     createdAt: patient.createdAt,

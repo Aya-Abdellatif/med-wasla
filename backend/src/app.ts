@@ -18,7 +18,7 @@ app.use(express.json());
 
 // Routes
 // app.use("/api/auth", authRouter);
-// app.use("/api/patient", patientRouter);
+ app.use("/api/patient", patientRouter);
 // app.use("/api/specialists", specialistsRouter);
 // app.use("/api/appointments", appointmentsRouter);
 // app.use("/api/queue", queueRouter);
