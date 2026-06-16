@@ -16,7 +16,9 @@ const basePatient = {
   name: "Test Patient",
   email: "patient@test.com",
   password: "password123",
+  dob: new Date("1998-05-15"),
   phone: "01234567890",
+  governorate: "Cairo",
   address: "Cairo",
   role: "patient",
 };
