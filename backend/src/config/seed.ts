@@ -1,8 +1,8 @@
 import mongoose from "mongoose";
 import dotenv from "dotenv";
 import User from "../models/user.model.js";
+import Patient from "../models/patient.model.js";
 import MedicalSpecialist from "../models/medicalSpecialist.model.js";
-
 // Load environment variables (supports .env and env)
 dotenv.config();
 if (!process.env.DATABASE_CONNECTION_STRING) {
@@ -26,6 +26,7 @@ const seedDatabase = async () => {
     console.log("Clearing existing users and specialists...");
     await User.deleteMany({});
     await MedicalSpecialist.deleteMany({});
+    await Patient.deleteMany({});
     console.log("Existing data cleared.");
 
     // 1. Create Admin
@@ -36,7 +37,8 @@ const seedDatabase = async () => {
       password: "adminpassword123",
       phone: "01000000001",
       address: "Cairo",
-      role: "admin"
+      role: "admin",
+      isVerified: true,
     });
     await adminUser.save();
     console.log("Admin account created.");
@@ -49,9 +51,12 @@ const seedDatabase = async () => {
       password: "patientpassword123",
       phone: "01123456789",
       address: "Giza",
-      role: "patient"
+      role: "patient",
+      isVerified: true,
     });
     await patientUser.save();
+
+    await Patient.create({ userId: patientUser._id });
     console.log("Patient account created.");
 
     // 3. Create Approved Doctor (Clinic Only)
@@ -62,7 +67,8 @@ const seedDatabase = async () => {
       password: "doctorpassword123",
       phone: "01234567890",
       address: "Cairo",
-      role: "specialist"
+      role: "specialist",
+      isVerified: true,
     });
     await clinicDoctorUser.save();
 
@@ -104,7 +110,8 @@ const seedDatabase = async () => {
       password: "doctorpassword123",
       phone: "01512345678",
       address: "Alexandria",
-      role: "specialist"
+      role: "specialist",
+      isVerified: true,
     });
     await homeDoctorUser.save();
 
@@ -153,7 +160,8 @@ const seedDatabase = async () => {
       password: "nursepassword123",
       phone: "01098765432",
       address: "Giza",
-      role: "specialist"
+      role: "specialist",
+      isVerified: true,
     });
     await nurseUser.save();
 

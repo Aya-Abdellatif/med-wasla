@@ -27,16 +27,19 @@ async function specialistAuth(
   });
 }
 
-// ─── Public Routes (main) ─────────────────────────────────────────────────────
+// ─── Specialist profile routes (must be registered before /:id) ───────────────
 
-router.get("/", getAllSpecialists);
-router.get("/specialization/:name", getSpecialistsBySpecialization);
 router.get("/me", specialistAuth, SpecialistsController.getMe);
 router.post(
   "/me/certificates",
   specialistAuth,
   SpecialistsController.addCertificate,
 );
+
+// ─── Public Routes (main) ─────────────────────────────────────────────────────
+
+router.get("/", getAllSpecialists);
+router.get("/specialization/:name", getSpecialistsBySpecialization);
 router.get("/:id", getSpecialistById);
 
 // ─── Protected Routes (both branches) ─────────────────────────────────────────

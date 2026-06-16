@@ -1,6 +1,10 @@
+import mongoose from "mongoose";
 import MedicalSpecialist, {
   type IAvailableSlot,
 } from "../../../models/medicalSpecialist.model.js";
+import "../../../models/user.model.js";
+
+const toUserObjectId = (userId: string) => new mongoose.Types.ObjectId(userId);
 // ─── Types ────────────────────────────────────────────────────────────────────
 
 export interface GetAllSpecialistsQuery {
@@ -194,29 +198,42 @@ export const updateFeesService = async (
 
 export class SpecialistsService {
   static async getProfile(userId: string) {
-    return MedicalSpecialist.findOne({ userId }).populate("userId", "name email phone address photoUrl");
+    if (!userId) return null;
+
+    return MedicalSpecialist.findOne({ userId: toUserObjectId(userId) }).populate(
+      "userId",
+      "name email phone address photoUrl",
+    );
   }
 
   static async updateProfile(userId: string, updateData: any) {
     // أي تحديث بيرجع الحالة لـ pending
-    return MedicalSpecialist.findOneAndUpdate(
-      { userId },
-      { 
-        ...updateData, 
-        verificationStatus: "pending" 
+    const updated = await MedicalSpecialist.findOneAndUpdate(
+      { userId: toUserObjectId(userId) },
+      {
+        ...updateData,
+        verificationStatus: "pending",
       },
-      { new: true, runValidators: true }
+      { returnDocument: "after", runValidators: true },
     ).populate("userId", "name email phone address photoUrl");
+
+    if (!updated) throw new Error("Specialist profile not found");
+    return updated;
   }
 
   static async addCertificate(userId: string, certificate: any) {
-    return MedicalSpecialist.findOneAndUpdate(
-      { userId },
-      { 
+    if (!userId) throw new Error("User ID is required");
+
+    const updated = await MedicalSpecialist.findOneAndUpdate(
+      { userId: toUserObjectId(userId) },
+      {
         $push: { certifications: certificate },
-        $set: { verificationStatus: "pending" }
+        $set: { verificationStatus: "pending" },
       },
-      { new: true }
-    );
+      { returnDocument: "after", runValidators: true },
+    ).populate("userId", "name email phone address photoUrl");
+
+    if (!updated) throw new Error("Specialist profile not found");
+    return updated;
   }
 }

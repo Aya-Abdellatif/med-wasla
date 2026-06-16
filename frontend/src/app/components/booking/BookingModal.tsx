@@ -1,5 +1,6 @@
 import { useState } from "react";
 import { X, Calendar, Clock, MapPin, AlertCircle } from "lucide-react";
+import { showSuccess, showWarning } from "../../../utils/toast";
 
 interface Provider {
   name: string;
@@ -70,6 +71,7 @@ export function BookingModal({ isOpen, onClose, provider, serviceType }: Booking
     e.preventDefault();
 
     if (!validateForm()) {
+      showWarning("Please fill in all required fields");
       return;
     }
 
@@ -82,8 +84,8 @@ export function BookingModal({ isOpen, onClose, provider, serviceType }: Booking
         provider: provider?.name,
         serviceType,
       });
-      alert(
-        `${serviceType === "nurse" ? "Home service" : "Appointment"} request submitted successfully! ${provider?.name} will contact you shortly.`
+      showSuccess(
+        `${serviceType === "nurse" ? "Home service" : "Appointment"} request submitted! ${provider?.name} will contact you shortly.`,
       );
       setIsSubmitting(false);
       onClose();

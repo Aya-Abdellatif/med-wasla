@@ -3,6 +3,8 @@ import { LogOut, CalendarDays } from "lucide-react";
 import { Link, useNavigate } from "react-router-dom";
 import { AppointmentTypeModal } from "../booking/AppointmentTypeModal";
 import { useAuth } from "../../context/useAuth";
+import { getFirstName } from "../../../utils/displayName";
+import { showInfo } from "../../../utils/toast";
 
 function Navbar() {
   const [isOpen, setIsOpen] = useState(false);
@@ -11,15 +13,15 @@ function Navbar() {
   const [isFirstClick, setIsFirstClick] = useState(true);
   const [isAppointmentModalOpen, setIsAppointmentModalOpen] = useState(false);
   const navigate = useNavigate();
-  const { user } = useAuth();
+  const { user, logout } = useAuth();
 
-  // Role-based navigation links
   const isDoctor = user?.role === "doctor" || user?.role === "nurse";
+  const displayName = getFirstName(user?.name);
 
   const navLinks = isDoctor
     ? [
-        { name: "UI Design", path: "#" },
         { name: "Home", path: "/home" },
+        { name: "Dashboard", path: "/dashboard" },
         { name: "About", path: "/about" },
         { name: "Contact", path: "/contact" },
       ]
@@ -31,8 +33,10 @@ function Navbar() {
         { name: "About", path: "/about" },
         { name: "Contact Us", path: "/contact" },
       ];
+
   const containerRef = useRef<HTMLDivElement | null>(null);
   const linksRef = useRef<Record<string, HTMLElement | null>>({});
+
   useEffect(() => {
     if (!active) return;
     const el = linksRef.current[active];
@@ -46,16 +50,25 @@ function Navbar() {
       });
     }
   }, [active]);
+
   const handleLinkClick = (name: string) => {
     if (active !== null) {
       setIsFirstClick(false);
     }
     setActive(name);
   };
+
   const handleLogoClick = () => {
     setActive(null);
     setIsFirstClick(true);
   };
+
+  const handleLogout = () => {
+    logout();
+    showInfo("Logged out successfully");
+    navigate("/");
+  };
+
   return (
     <>
       <nav className="bg-white shadow-md sticky top-0 z-50">
@@ -66,24 +79,19 @@ function Navbar() {
               onClick={handleLogoClick}
               className="flex items-center gap-3 shrink-0 cursor-pointer group"
             >
-              {/* <svg
-                className="h-8 w-8 text-primary transition-transform duration-300 group-hover:scale-105"
-                fill="currentColor"
-                viewBox="0 0 24 24"
-              >
-                <path d="M19 10.5h-5.5V5c0-.83-.67-1.5-1.5-1.5s-1.5.67-1.5 1.5v5.5H5c-.83 0-1.5.67-1.5 1.5s.67 1.5 1.5 1.5h5.5V19c0 .83.67 1.5 1.5 1.5s1.5-.67 1.5-1.5v-5.5H19c.83 0 1.5-.67 1.5-1.5s-.67-1.5-1.5-1.5z" />
-              </svg> */}
               <img
                 src="src/assets/logo.png"
                 alt="Logo"
-                className="w-10 h-10 "
+                className="w-10 h-10 transition-transform duration-300 group-hover:scale-105"
               />
               <span className="text-3xl font-medium tracking-tight">
                 <span className="text-fg">Med</span>
                 <span className="text-primary font-bold">Wasla</span>
               </span>
             </Link>
+
             <div className="hidden xl:block h-6 w-px bg-border shrink-0" />
+
             <div
               ref={containerRef}
               className="hidden xl:flex items-center gap-1 flex-1 relative h-full"
@@ -117,23 +125,15 @@ function Navbar() {
                 </Link>
               ))}
             </div>
+
             <div className="hidden xl:flex items-center gap-4 ml-auto shrink-0">
-              {isDoctor ? (
-                <>
-                  <Link
-                    to="/dashboard"
-                    className="text-lg font-semibold text-fg-muted hover:text-primary transition-colors duration-300"
-                  >
-                    Dashboard
-                  </Link>
-                  <span className="text-lg font-semibold text-fg-muted">
-                    {user?.role === "doctor" ? "Dr." : "Nurse"}{" "}
-                    {user?.name?.split(" ")[0]}
-                  </span>
-                </>
-              ) : null}
+              {isDoctor && displayName && (
+                <span className="text-lg font-semibold text-fg px-3 py-1.5 rounded-full bg-muted">
+                  {displayName}
+                </span>
+              )}
               <button
-                onClick={() => navigate("/")}
+                onClick={handleLogout}
                 className="flex items-center gap-2 text-lg font-semibold text-fg-muted hover:text-red-500 transition-colors duration-300 cursor-pointer"
               >
                 <LogOut className="h-5 w-5" strokeWidth={2.5} />
@@ -152,44 +152,27 @@ function Navbar() {
                 </button>
               )}
             </div>
+
             <div className="xl:hidden ml-auto">
               <button
                 onClick={() => setIsOpen(!isOpen)}
-                className="text-primary cursor-pointer transition-colors duration-300"
+                className="text-primary cursor-pointer transition-colors duration-300 hover:text-primary/80"
+                aria-label="Toggle menu"
               >
                 {isOpen ? (
-                  <svg
-                    className="h-7 w-7"
-                    fill="none"
-                    viewBox="0 0 24 24"
-                    stroke="currentColor"
-                  >
-                    <path
-                      strokeLinecap="round"
-                      strokeLinejoin="round"
-                      strokeWidth="2.5"
-                      d="M6 18L18 6M6 6l12 12"
-                    />
+                  <svg className="h-7 w-7" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2.5" d="M6 18L18 6M6 6l12 12" />
                   </svg>
                 ) : (
-                  <svg
-                    className="h-7 w-7"
-                    fill="none"
-                    viewBox="0 0 24 24"
-                    stroke="currentColor"
-                  >
-                    <path
-                      strokeLinecap="round"
-                      strokeLinejoin="round"
-                      strokeWidth="2.5"
-                      d="M4 6h16M4 12h16M4 18h16"
-                    />
+                  <svg className="h-7 w-7" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2.5" d="M4 6h16M4 12h16M4 18h16" />
                   </svg>
                 )}
               </button>
             </div>
           </div>
         </div>
+
         {isOpen && (
           <div className="xl:hidden bg-muted border-t border-border px-4 py-4 space-y-2">
             {navLinks.map(({ name, path }) => (
@@ -210,26 +193,13 @@ function Navbar() {
               </Link>
             ))}
             <div className="pt-3 border-t border-border space-y-3">
-              {isDoctor && (
-                <>
-                  <div className="text-lg font-semibold text-fg-muted px-4 py-2">
-                    +1 (234) 567-890
-                  </div>
-                  <Link
-                    to="/dashboard"
-                    onClick={() => setIsOpen(false)}
-                    className="block text-lg font-semibold text-fg-muted hover:text-primary px-4 py-2.5 rounded-lg transition-colors duration-300"
-                  >
-                    Dashboard
-                  </Link>
-                  <div className="text-lg font-semibold text-fg-muted px-4 py-2">
-                    {user?.role === "doctor" ? "Dr." : "Nurse"}{" "}
-                    {user?.name?.split(" ")[0]}
-                  </div>
-                </>
+              {isDoctor && displayName && (
+                <div className="text-lg font-semibold text-fg px-4 py-2 rounded-lg bg-white">
+                  {displayName}
+                </div>
               )}
               <button
-                onClick={() => navigate("/")}
+                onClick={handleLogout}
                 className="flex items-center gap-2 w-full text-xl font-semibold text-fg-muted hover:text-red-500 px-4 py-2.5 rounded-lg transition-colors duration-300 cursor-pointer"
               >
                 <LogOut className="h-5 w-5" strokeWidth={2.5} />
@@ -258,4 +228,5 @@ function Navbar() {
     </>
   );
 }
+
 export default Navbar;

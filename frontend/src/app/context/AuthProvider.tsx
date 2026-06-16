@@ -1,92 +1,181 @@
-import { useState } from "react";
+import { useCallback, useEffect, useState } from "react";
 import type { ReactNode } from "react";
 import { AuthContext } from "./AuthContextType";
-import type { User, UserRole } from "./AuthContext";
+import type { Certificate, User, UserRole } from "./AuthContext";
+import {
+  API_BASE,
+  apiFetch,
+  clearToken,
+  getToken,
+  setToken,
+} from "../../services/api";
+
+interface AuthUserResponse {
+  id: string;
+  name: string;
+  email: string;
+  role: string;
+}
+
+interface LoginResponse {
+  token: string;
+  user: AuthUserResponse;
+}
+
+interface SpecialistProfile {
+  _id: string;
+  specialistType: "doctor" | "nurse";
+  specialization?: string;
+  clinicAddress?: string;
+  bio?: string;
+  verificationStatus: "pending" | "approved" | "rejected";
+  certifications?: Array<{
+    _id?: string;
+    title: string;
+    issuedBy: string;
+    issuedAt?: string;
+    certificateUrl: string;
+    status: "pending" | "approved" | "rejected";
+  }>;
+  userId?: {
+    name: string;
+    email: string;
+    phone: string;
+    address: string;
+    photoUrl?: string;
+  };
+}
+
+function mapCertificates(
+  certifications: SpecialistProfile["certifications"],
+): Certificate[] {
+  return (certifications ?? []).map((cert, index) => ({
+    id: cert._id ?? String(index),
+    name: cert.title,
+    issuer: cert.issuedBy,
+    issueDate: cert.issuedAt ?? new Date().toISOString(),
+    fileUrl: cert.certificateUrl,
+    verified: cert.status === "approved",
+    status: cert.status,
+  }));
+}
+
+function mapBackendRole(role: string, specialistType?: string): UserRole {
+  if (role === "admin") return "admin";
+  if (role === "patient") return "patient";
+  if (specialistType === "nurse") return "nurse";
+  return "doctor";
+}
+
+async function fetchSpecialistProfile(token: string): Promise<SpecialistProfile | null> {
+  const res = await fetch(`${API_BASE}/api/specialists/me`, {
+    headers: { Authorization: `Bearer ${token}` },
+  });
+  const json = await res.json();
+  if (!res.ok) return null;
+  return json.data as SpecialistProfile;
+}
+
+async function buildUser(authUser: AuthUserResponse, token: string): Promise<User> {
+  if (authUser.role === "specialist") {
+    const profile = await fetchSpecialistProfile(token);
+    const userInfo = profile?.userId;
+
+    return {
+      id: authUser.id,
+      name: userInfo?.name ?? authUser.name,
+      email: userInfo?.email ?? authUser.email,
+      phone: userInfo?.phone,
+      role: mapBackendRole(authUser.role, profile?.specialistType),
+      avatar: userInfo?.photoUrl,
+      specialty: profile?.specialization,
+      location: profile?.clinicAddress,
+      bio: profile?.bio,
+      verificationStatus: profile?.verificationStatus ?? "pending",
+      specialistId: profile?._id,
+      certificates: mapCertificates(profile?.certifications),
+    };
+  }
+
+  return {
+    id: authUser.id,
+    name: authUser.name,
+    email: authUser.email,
+    role: mapBackendRole(authUser.role),
+  };
+}
 
 export function AuthProvider({ children }: { children: ReactNode }) {
   const [user, setUser] = useState<User | null>(null);
+  const [isLoading, setIsLoading] = useState(true);
 
-  const login = async (
-    email: string,
-    _password: string,
-    role: UserRole
-  ) => {
-    await new Promise((resolve) => setTimeout(resolve, 1000));
+  const refreshSpecialistProfile = useCallback(async () => {
+    const token = getToken();
+    if (!token) return;
 
-    const mockUser: User = {
-      id: "1",
-      name:
-        role === "patient"
-          ? "John Doe"
-          : role === "doctor"
-          ? "Dr. Sarah Williams"
-          : role === "admin"
-          ? "Admin MedWasla"
-          : "Nurse Emily Johnson",
-      email,
-      role,
-      avatar:
-        role === "doctor"
-          ? "https://images.unsplash.com/photo-1632054224477-c9cb3aae1b7e?crop=entropy&cs=tinysrgb&fit=max&fm=jpg&ixid=M3w3Nzg4Nzd8MHwxfHNlYXJjaHwxfHxmZW1hbGUlMjBkb2N0b3IlMjBwcm9mZXNzaW9uYWx8ZW58MXx8fHwxNzc3NzI3Njk4fDA&ixlib=rb-4.1.0&q=80&w=1080"
-          : role === "nurse"
-          ? "https://images.unsplash.com/photo-1594824476967-48c8b964273f?crop=entropy&cs=tinysrgb&fit=max&fm=jpg&ixid=M3w3Nzg4Nzd8MHwxfHNlYXJjaHwxfHxudXJzZSUyMHByb2Zlc3Npb25hbHxlbnwxfHx8fDE3Nzc3Mjc2OTl8MA&ixlib=rb-4.1.0&q=80&w=1080"
-          : undefined,
-      specialty: role === "doctor" ? "Cardiology" : undefined,
-      experience: role !== "patient" ? "10 years" : undefined,
-      location: role !== "patient" ? "Building A, Floor 3" : undefined,
-      certificates:
-        role === "doctor" || role === "nurse"
-          ? [
-              {
-                id: "1",
-                name: "Board Certification in Cardiology",
-                issuer: "American Board of Internal Medicine",
-                issueDate: "2015-06-15",
-                verified: true,
-              },
-              {
-                id: "2",
-                name: "Advanced Cardiac Life Support (ACLS)",
-                issuer: "American Heart Association",
-                issueDate: "2023-01-10",
-                verified: true,
-              },
-              {
-                id: "3",
-                name: "Fellowship in Cardiology",
-                issuer: "Johns Hopkins University",
-                issueDate: "2018-08-20",
-                verified: false,
-              },
-            ]
-          : undefined,
-      diseaseHistory:
-        role === "patient"
-          ? [
-              {
-                id: "1",
-                disease: "Hypertension",
-                diagnosedDate: "2020-03-15",
-                treatedBy: "Dr. Michael Chen",
-                status: "under_treatment",
-                notes: "Blood pressure controlled with medication",
-              },
-              {
-                id: "2",
-                disease: "Type 2 Diabetes",
-                diagnosedDate: "2019-07-22",
-                treatedBy: "Dr. Sarah Williams",
-                status: "under_treatment",
-                notes: "HbA1c levels stable with diet and medication",
-              },
-            ]
-          : undefined,
+    const profile = await fetchSpecialistProfile(token);
+    if (!profile) return;
+
+    const userInfo = profile.userId;
+    setUser((prev) => {
+      if (!prev || (prev.role !== "doctor" && prev.role !== "nurse")) return prev;
+
+      return {
+        ...prev,
+        name: userInfo?.name ?? prev.name,
+        email: userInfo?.email ?? prev.email,
+        phone: userInfo?.phone ?? prev.phone,
+        avatar: userInfo?.photoUrl ?? prev.avatar,
+        specialty: profile.specialization ?? prev.specialty,
+        location: profile.clinicAddress ?? prev.location,
+        bio: profile.bio ?? prev.bio,
+        verificationStatus: profile.verificationStatus,
+        specialistId: profile._id,
+        certificates: mapCertificates(profile.certifications),
+      };
+    });
+  }, []);
+
+  useEffect(() => {
+    const restoreSession = async () => {
+      const token = getToken();
+      if (!token) {
+        setIsLoading(false);
+        return;
+      }
+
+      try {
+        const data = await apiFetch<{ data: { user: AuthUserResponse } }>(
+          "/api/auth/me",
+        );
+        const restoredUser = await buildUser(data.data.user, token);
+        setUser(restoredUser);
+      } catch {
+        clearToken();
+      } finally {
+        setIsLoading(false);
+      }
     };
 
-    setUser(mockUser);
+    restoreSession();
+  }, []);
+
+  const login = async (email: string, password: string): Promise<User> => {
+    const data = await apiFetch<LoginResponse>("/api/auth/login", {
+      method: "POST",
+      body: JSON.stringify({ email, password }),
+    });
+
+    setToken(data.token);
+    const loggedInUser = await buildUser(data.user, data.token);
+    setUser(loggedInUser);
+    return loggedInUser;
   };
 
-  const logout = () => setUser(null);
+  const logout = () => {
+    clearToken();
+    setUser(null);
+  };
 
   const updateProfile = (data: Partial<User>) => {
     if (user) setUser({ ...user, ...data });
@@ -94,7 +183,15 @@ export function AuthProvider({ children }: { children: ReactNode }) {
 
   return (
     <AuthContext.Provider
-      value={{ user, isAuthenticated: !!user, login, logout, updateProfile }}
+      value={{
+        user,
+        isAuthenticated: !!user,
+        isLoading,
+        login,
+        logout,
+        updateProfile,
+        refreshSpecialistProfile,
+      }}
     >
       {children}
     </AuthContext.Provider>

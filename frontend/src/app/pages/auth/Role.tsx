@@ -1,71 +1,45 @@
 import { Link, useNavigate } from "react-router-dom";
+import { UserRound, Stethoscope } from "lucide-react";
 import AuthLayout from "../../components/auth/AuthLayout";
+import RoleSelectCard from "../../components/auth/RoleSelectCard";
 
 export default function Role() {
   const navigate = useNavigate();
 
-  const selectRole = (role: string) => {
-    navigate(`/signup?role=${role}`);
-  };
-
   return (
     <AuthLayout
-      title="Create Your Account"
-      subtitle="Choose your role to get started"
+      title="Create your account"
+      subtitle="Choose how you want to use MedWasla"
       wide
     >
-      <div className="w-full">
-        <div className="bg-white rounded-2xl border border-slate-100 shadow-sm p-8">
-          <h3 className="text-center text-xl font-semibold mb-6">
-            I want to register as...
-          </h3>
+      <p className="mb-5 text-center text-sm font-medium text-slate-600">
+        I want to register as...
+      </p>
 
-          <div className="max-w-4xl mx-auto">
-            <div className="grid grid-cols-1 sm:grid-cols-2 gap-8">
-              
-              {/* Patient */}
-              <button
-                onClick={() => selectRole("patient")}
-                className="flex flex-col items-center gap-4 p-8 bg-white border border-slate-200 rounded-xl shadow-sm hover:shadow-md transition-shadow text-center"
-                aria-label="Register as patient"
-              >
-                <div className="w-20 h-20 rounded-xl bg-blue-500 flex items-center justify-center text-white text-3xl">
-                  👤
-                </div>
-                <div className="font-semibold text-lg">Patient</div>
-                <div className="text-sm text-slate-500">
-                  Book appointments and manage your health records
-                </div>
-              </button>
+      <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 sm:gap-5">
+        <RoleSelectCard
+          accent="blue"
+          icon={<UserRound className="h-8 w-8" />}
+          title="Patient"
+          description="Book appointments and manage your health records easily."
+          onClick={() => navigate("/signup?role=patient")}
+        />
 
-              {/* Medical Specialist */}
-              <button
-                onClick={() => navigate("/medical-specialist")}
-                className="flex flex-col items-center gap-4 p-8 bg-white border border-slate-200 rounded-xl shadow-sm hover:shadow-md transition-shadow text-center"
-                aria-label="Register as medical specialist"
-              >
-                <div className="w-20 h-20 rounded-xl bg-teal-500 flex items-center justify-center text-white text-3xl">
-                  🩺
-                </div>
-                <div className="font-semibold text-lg">
-                  Medical Specialist
-                </div>
-                <div className="text-sm text-slate-500">
-                  Provide medical services and manage patient care
-                </div>
-              </button>
-
-            </div>
-
-            <p className="text-center text-sm text-slate-600 mt-8">
-              Already have an account?{" "}
-              <Link to="/" className="font-bold text-teal-500 hover:text-teal-600">
-                Sign in
-              </Link>
-            </p>
-          </div>
-        </div>
+        <RoleSelectCard
+          accent="teal"
+          icon={<Stethoscope className="h-8 w-8" />}
+          title="Medical Specialist"
+          description="Join as a doctor or nurse and offer your medical services."
+          onClick={() => navigate("/medical-specialist")}
+        />
       </div>
+
+      <p className="mt-6 text-center text-sm text-slate-600">
+        Already have an account?{" "}
+        <Link to="/" className="font-bold text-teal-600 hover:text-teal-700">
+          Sign in
+        </Link>
+      </p>
     </AuthLayout>
   );
 }

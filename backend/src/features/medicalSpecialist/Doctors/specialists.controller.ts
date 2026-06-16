@@ -13,6 +13,17 @@ import {
   type UpdateFeesBody,
 } from "./specialists.service.js";
 
+function getUserId(req: Request): string {
+  const user = (req as any).user;
+  const id = user?._id?.toString() ?? user?.id;
+
+  if (!id) {
+    throw new Error("Authenticated user id is missing");
+  }
+
+  return id;
+}
+
 // ─── Public Endpoints ─────────────────────────────────────────────────────────
 
 /**
@@ -77,7 +88,7 @@ export const updateProfile = async (
   res: Response,
 ): Promise<void> => {
   try {
-    const userId = (req as any).user._id;
+    const userId = getUserId(req);
     const specialist = await updateSpecialistProfileService(
       userId,
       req.body as UpdateProfileBody,
@@ -94,7 +105,7 @@ export const updateAvailability = async (
   res: Response,
 ): Promise<void> => {
   try {
-    const userId = (req as any).user._id;
+    const userId = getUserId(req);
     const specialist = await updateAvailabilityService(
       userId,
       req.body as UpdateAvailabilityBody,
@@ -111,7 +122,7 @@ export const updateFees = async (
   res: Response,
 ): Promise<void> => {
   try {
-    const userId = (req as any).user._id;
+    const userId = getUserId(req);
     const specialist = await updateFeesService(
       userId,
       req.body as UpdateFeesBody,
@@ -128,9 +139,15 @@ export const updateFees = async (
 export class SpecialistsController {
   static async getMe(req: Request, res: Response) {
     try {
-      const user = (req as any).user;
-      const profile = await SpecialistsService.getProfile(user._id);
-      res.status(200).json({ success: true, data: profile });
+      const userId = getUserId(req);
+      const profile = await SpecialistsService.getProfile(userId);
+
+      if (!profile) {
+        res.status(404).json({ success: false, message: "Specialist profile not found" });
+        return;
+      }
+
+      res.status(200).json({ success: true, data: profile.toObject() });
     } catch (error: any) {
       res.status(500).json({ success: false, message: error.message });
     }
@@ -138,8 +155,7 @@ export class SpecialistsController {
 
   static async updateProfile(req: Request, res: Response) {
     try {
-      const user = (req as any).user;
-      const updated = await SpecialistsService.updateProfile(user._id, req.body);
+      const updated = await SpecialistsService.updateProfile(getUserId(req), req.body);
       res.status(200).json({
         success: true,
         message: "Profile updated and verification status reset to pending",
@@ -152,11 +168,19 @@ export class SpecialistsController {
 
   static async addCertificate(req: Request, res: Response) {
     try {
-      const user = (req as any).user;
-      const updated = await SpecialistsService.addCertificate(user._id, req.body);
-      res.status(200).json({ success: true, data: updated });
+      const updated = await SpecialistsService.addCertificate(getUserId(req), {
+        ...req.body,
+        status: "pending",
+      });
+      res.status(200).json({ success: true, data: updated.toObject() });
     } catch (error: any) {
-      res.status(500).json({ success: false, message: error.message });
+      const status =
+        error.message === "Specialist profile not found" ||
+        error.message === "User ID is required" ||
+        error.message === "Authenticated user id is missing"
+          ? 404
+          : 500;
+      res.status(status).json({ success: false, message: error.message });
     }
   }
 }

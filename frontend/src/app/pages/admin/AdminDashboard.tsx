@@ -2,6 +2,7 @@
 import { useEffect, useState } from "react";
 import { useNavigate } from "react-router-dom";
 import { useAuth } from "../../context/useAuth";
+import { showError, showInfo, showSuccess } from "../../../utils/toast";
 import {
   Check,
   X,
@@ -59,13 +60,12 @@ export default function AdminDashboard() {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState("");
   const [actioningId, setActioningId] = useState<string | null>(null);
-  const [toast, setToast] = useState<{ message: string; type: "success" | "error" } | null>(null);
   
   // الـ state الخاصة بالتاب النشط حالياً
   const [activeTab, setActiveTab] = useState<FilterTab>("all");
 
   // جلب كل الأخصائيين بناءً على الـ Endpoint الشامل الجديد
-  const fetchAllSpecialists = async () => {
+  const fetchAllSpecialists = async (notify = false) => {
     setLoading(true);
     setError("");
     try {
@@ -73,11 +73,18 @@ export default function AdminDashboard() {
       const json = await res.json();
       if (json.success) {
         setSpecialists(json.data);
+        if (notify) showInfo("Specialists list refreshed");
       } else {
-        setError(json.message || "Failed to load specialists");
+        const message = json.message || "Failed to load specialists";
+        setError(message);
+        showError(message);
       }
-    } catch (err: any) {
-      setError("Unable to connect to the backend server. Please verify the backend is running." + (err.message ? ` Error: ${err.message}` : ""));
+    } catch (err: unknown) {
+      const message =
+        "Unable to connect to the backend server. Please verify the backend is running." +
+        (err instanceof Error && err.message ? ` Error: ${err.message}` : "");
+      setError(message);
+      showError(message);
     } finally {
       setLoading(false);
     }
@@ -100,34 +107,27 @@ export default function AdminDashboard() {
       });
       const json = await res.json();
       if (json.success) {
-        setToast({
-          message: `Specialist ${action === "approve" ? "approved" : "rejected"} successfully!`,
-          type: "success"
-        });
-        
-        // بدل ما نحذفه من القائمة، هنحدث حالته في الـ state مباشرة علشان يفضل موجود ويتنقل للتاب المناسب
-        setSpecialists(prev => 
+        showSuccess(`Specialist ${action === "approve" ? "approved" : "rejected"} successfully!`);
+
+        setSpecialists(prev =>
           prev.map(s => s._id === id ? { ...s, verificationStatus: action === "approve" ? "approved" : "rejected" } : s)
         );
       } else {
-        setToast({
-          message: json.message || `Failed to ${action} specialist`,
-          type: "error"
-        });
+        showError(json.message || `Failed to ${action} specialist`);
       }
-    } catch (err: any) {
-      setToast({
-        message: "Network error occurred. Please try again." + (err.message ? ` Error: ${err.message}` : ""),
-        type: "error"
-      });
+    } catch (err: unknown) {
+      showError(
+        "Network error occurred. Please try again." +
+          (err instanceof Error && err.message ? ` Error: ${err.message}` : ""),
+      );
     } finally {
       setActioningId(null);
-      setTimeout(() => setToast(null), 4000);
     }
   };
 
   const handleLogout = () => {
     logout();
+    showInfo("Logged out successfully");
     navigate("/");
   };
 
@@ -198,20 +198,6 @@ export default function AdminDashboard() {
 
       {/* Main Content Area */}
       <main className="flex-1 max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-10 w-full">
-        {/* Toast Notification */}
-        {toast && (
-          <div
-            className={`fixed top-24 right-8 z-50 px-6 py-4 rounded-2xl shadow-xl flex items-center gap-3 border transition-all transform translate-y-0 scale-100 ${
-              toast.type === "success"
-                ? "bg-emerald-50 border-emerald-200 text-emerald-800"
-                : "bg-rose-50 border-rose-200 text-rose-800"
-            }`}
-          >
-            <span className="text-xl">{toast.type === "success" ? "✅" : "❌"}</span>
-            <span className="font-semibold text-sm">{toast.message}</span>
-          </div>
-        )}
-
         <div className="mb-8 flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
           <div>
             <h1 className="text-3xl font-extrabold text-slate-900 tracking-tight">
@@ -223,7 +209,7 @@ export default function AdminDashboard() {
           </div>
 
           <button
-            onClick={fetchAllSpecialists}
+            onClick={() => fetchAllSpecialists(true)}
             className="self-start flex items-center gap-2 bg-white border border-slate-200 px-4 py-2.5 rounded-xl text-slate-700 font-bold hover:bg-slate-100 transition-colors shadow-sm cursor-pointer"
           >
             <RefreshCw className={`w-4 h-4 ${loading ? "animate-spin" : ""}`} />
@@ -272,7 +258,7 @@ export default function AdminDashboard() {
             <h3 className="text-xl font-bold text-rose-900 mb-2">Connection Problem</h3>
             <p className="text-rose-700 font-medium mb-6">{error}</p>
             <button
-              onClick={fetchAllSpecialists}
+              onClick={() => fetchAllSpecialists(true)}
               className="px-6 py-3 bg-rose-600 text-white rounded-full font-bold hover:bg-rose-700 transition-colors cursor-pointer"
             >
               Retry Connection

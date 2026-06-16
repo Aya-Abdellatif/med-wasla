@@ -12,7 +12,6 @@ import {
     Heart,
     AlertCircle
 } from "lucide-react";
-import { ImageWithFallback } from "../../figma/ImageWithFallback";
 import { useState } from "react";
 import { BookingModal } from "../../components/booking/BookingModal";
 
@@ -159,7 +158,7 @@ export function NurseProfile() {
                         {/* nurse Image */}
                         <div className="md:col-span-1">
                             <div className="relative rounded-2xl overflow-hidden shadow-xl">
-                                <ImageWithFallback
+                                <img
                                     src={nurse.image}
                                     alt={nurse.name}
                                     className="w-full aspect-square object-cover"

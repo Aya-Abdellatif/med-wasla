@@ -6,7 +6,8 @@ interface AuthLayoutProps {
   children: ReactNode;
   compact?: boolean;
   small?: boolean;
-  wide?: boolean; 
+  wide?: boolean;
+  center?: boolean;
 }
 
 export default function AuthLayout({
@@ -15,29 +16,42 @@ export default function AuthLayout({
   children,
   compact = false,
   small = false,
-
+  wide = false,
+  center = true,
 }: AuthLayoutProps) {
-  const cardWidthClass = small ? 'max-w-[350px]' : compact ? 'max-w-[420px]' : 'max-w-[560px]';
-  const cardPaddingClass = small ? 'p-4' : compact ? 'p-4 sm:p-5' : 'p-8 sm:p-10';
-  const sectionPaddingClass = small ? 'py-6' : compact ? 'py-6' : 'py-12';
+  const cardWidthClass = wide
+    ? "max-w-3xl"
+    : small
+      ? "max-w-[350px]"
+      : compact
+        ? "max-w-[420px]"
+        : "max-w-[520px]";
+  const cardPaddingClass = small ? "p-4" : compact ? "p-5 sm:p-6" : "p-6 sm:p-8";
 
   return (
-    <div className={`min-h-screen bg-teal-50 px-4 ${sectionPaddingClass}`}>
-      <div className={`mx-auto w-full ${cardWidthClass} py-6`}>
-        <div className="flex flex-row items-center justify-center gap-3 mb-6">
-          <div className="w-14 h-14 bg-teal-500 rounded-2xl flex items-center justify-center shadow-md shrink-0">
-            <div className="w-6 h-6 bg-white rounded-full"></div>
+    <div
+      className={`min-h-screen bg-gradient-to-br from-teal-50 via-white to-slate-50 px-4 py-6 sm:py-8 ${
+        center ? "flex items-center justify-center" : ""
+      }`}
+    >
+      <div className={`w-full ${cardWidthClass}`}>
+        <div className="mb-5 flex items-center justify-center gap-3">
+          <div className="flex h-12 w-12 shrink-0 items-center justify-center rounded-2xl bg-teal-500 shadow-md shadow-teal-500/20">
+            <div className="h-5 w-5 rounded-full bg-white" />
           </div>
-
           <h1 className="text-xl font-semibold">
             <span className="text-slate-900">Med</span>
             <span className="text-teal-500">Wasla</span>
           </h1>
         </div>
 
-        <div className={`bg-white rounded-2xl border border-slate-100 shadow-xl ${cardPaddingClass}`}>
-          <h2 className="text-2xl sm:text-3xl font-semibold text-slate-900 mb-1">{title}</h2>
-          {subtitle && <p className="text-slate-500 text-sm sm:text-base mb-6">{subtitle}</p>}
+        <div
+          className={`rounded-3xl border border-slate-100 bg-white shadow-xl shadow-slate-200/50 ${cardPaddingClass}`}
+        >
+          <div className="mb-5">
+            <h2 className="text-2xl font-bold text-slate-900 sm:text-[1.65rem]">{title}</h2>
+            {subtitle && <p className="mt-1 text-sm text-slate-500 sm:text-base">{subtitle}</p>}
+          </div>
           {children}
         </div>
       </div>

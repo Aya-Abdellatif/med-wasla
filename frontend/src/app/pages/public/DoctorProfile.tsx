@@ -12,7 +12,6 @@ import {
     Watch,
     AlertCircle
 } from "lucide-react";
-import { ImageWithFallback } from "../../figma/ImageWithFallback";
 import { useState } from "react";
 import { BookingModal } from "../../components/booking/BookingModal";
 
@@ -157,7 +156,7 @@ export function DoctorProfile() {
                         {/* doctor Image */}
                         <div className="md:col-span-1">
                             <div className="relative rounded-2xl overflow-hidden shadow-xl">
-                                <ImageWithFallback
+                                <img
                                     src={doctor.image}
                                     alt={doctor.name}
                                     className="w-full aspect-square object-cover"

@@ -1,12 +1,18 @@
 import { useState } from "react";
 import { useNavigate } from "react-router-dom";
 import AuthLayout from "../../components/auth/AuthLayout";
+import { showError, showInfo } from "../../../utils/toast";
 
 export default function ForgotPassword() {
   const [email, setEmail] = useState("");
   const navigate = useNavigate();
 
   const handleSendOtp = () => {
+    if (!email.trim()) {
+      showError("Please enter your email address");
+      return;
+    }
+    showInfo("OTP sent! Check your email.");
     navigate("/reset-password", {
       state: { email },
     });

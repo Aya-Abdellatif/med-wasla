@@ -1,5 +1,7 @@
 export type UserRole = "patient" | "doctor" | "nurse" | "admin";
 
+export type VerificationStatus = "pending" | "approved" | "rejected";
+
 export interface Certificate {
   id: string;
   name: string;
@@ -7,6 +9,7 @@ export interface Certificate {
   issueDate: string;
   fileUrl?: string;
   verified: boolean;
+  status?: VerificationStatus;
 }
 
 export interface DiseaseRecord {
@@ -24,9 +27,13 @@ export interface User {
   email: string;
   role: UserRole;
   avatar?: string;
+  phone?: string;
   specialty?: string;
   experience?: string;
   location?: string;
+  bio?: string;
+  verificationStatus?: VerificationStatus;
+  specialistId?: string;
   certificates?: Certificate[];
   diseaseHistory?: DiseaseRecord[];
 }

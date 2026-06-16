@@ -1,10 +1,13 @@
 import { Link } from "react-router";
 import { Award, GraduationCap, Calendar, Star, MapPin, Eye } from "lucide-react";
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import { BookingModal } from "../../components/booking/BookingModal";
+import { API_BASE } from "../../../services/api";
+import { getFirstName } from "../../../utils/displayName";
+import { showError } from "../../../utils/toast";
 
 interface Doctor {
-  id: number;
+  id: string;
   name: string;
   specialty: string;
   image: string;
@@ -17,100 +20,57 @@ interface Doctor {
   description: string;
 }
 
+const DEFAULT_IMAGE =
+  "https://images.unsplash.com/photo-1632054224477-c9cb3aae1b7e?crop=entropy&cs=tinysrgb&fit=max&fm=jpg&ixid=M3w3Nzg4Nzd8MHwxfHNlYXJjaHwxfHxmZW1hbGUlMjBkb2N0b3IlMjBwcm9mZXNzaW9uYWx8ZW58MXx8fHwxNzc3NzI3Njk4fDA&ixlib=rb-4.1.0&q=80&w=1080";
+
 export function Doctors() {
   const [selectedSpecialty, setSelectedSpecialty] = useState("All");
   const [selectedDoctor, setSelectedDoctor] = useState<Doctor | null>(null);
   const [isBookingModalOpen, setIsBookingModalOpen] = useState(false);
+  const [doctors, setDoctors] = useState<Doctor[]>([]);
+  const [loading, setLoading] = useState(true);
+
+  useEffect(() => {
+    const fetchDoctors = async () => {
+      try {
+        const res = await fetch(
+          `${API_BASE}/api/specialists?verificationStatus=approved&specialistType=doctor&limit=50`,
+        );
+        const json = await res.json();
+
+        if (json.success) {
+          const mapped: Doctor[] = json.data.specialists.map((s: any) => ({
+            id: s._id,
+            name: getFirstName(s.userId?.name) || "Doctor",
+            specialty: s.specialization ?? "General Medicine",
+            image: s.userId?.photoUrl || DEFAULT_IMAGE,
+            education: s.certifications?.[0]?.title ?? "Medical Degree",
+            experience: s.avgWaitMinutes ? `${s.avgWaitMinutes} min wait` : "Experienced",
+            rating: s.rating ?? 0,
+            reviews: s.reviewCount ?? 0,
+            location: s.clinicAddress ?? s.userId?.address ?? "Cairo",
+            availability:
+              s.availableSlots?.map((slot: any) => slot.day).join(", ") || "Contact clinic",
+            description: s.bio ?? "Experienced medical specialist.",
+          }));
+          setDoctors(mapped);
+        } else {
+          showError("Failed to load doctors");
+        }
+      } catch {
+        setDoctors([]);
+        showError("Unable to load doctors. Please try again later.");
+      } finally {
+        setLoading(false);
+      }
+    };
+
+    fetchDoctors();
+  }, []);
 
   const specialties = [
     "All",
-    "Cardiology",
-    "Emergency Care",
-    "Pediatrics",
-    "Neurology",
-    "Orthopedics",
-    "Primary Care",
-  ];
-
-  const doctors = [
-    {
-      id: 1,
-      name: "Dr. Sarah Williams",
-      specialty: "Cardiology",
-      image: "https://images.unsplash.com/photo-1632054224477-c9cb3aae1b7e?crop=entropy&cs=tinysrgb&fit=max&fm=jpg&ixid=M3w3Nzg4Nzd8MHwxfHNlYXJjaHwxfHxmZW1hbGUlMjBkb2N0b3IlMjBwcm9mZXNzaW9uYWx8ZW58MXx8fHwxNzc3NzI3Njk4fDA&ixlib=rb-4.1.0&q=80&w=1080",
-      education: "MD, Harvard Medical School",
-      experience: "15 years",
-      rating: 4.9,
-      reviews: 234,
-      location: "Building A, Floor 3",
-      availability: "Mon, Wed, Fri",
-      description: "Specializes in interventional cardiology and heart disease prevention with extensive experience in complex cardiac procedures.",
-    },
-    {
-      id: 2,
-      name: "Dr. Michael Chen",
-      specialty: "Neurology",
-      image: "https://images.unsplash.com/photo-1575654402720-0af3480d1fad?crop=entropy&cs=tinysrgb&fit=max&fm=jpg&ixid=M3w3Nzg4Nzd8MHwxfHNlYXJjaHwxfHxtYWxlJTIwZG9jdG9yJTIwcHJvZmVzc2lvbmFsfGVufDF8fHx8MTc3NzcwOTY1Nnww&ixlib=rb-4.1.0&q=80&w=1080",
-      education: "MD, PhD, Johns Hopkins University",
-      experience: "12 years",
-      rating: 4.8,
-      reviews: 189,
-      location: "Building B, Floor 2",
-      availability: "Tue, Thu, Sat",
-      description: "Expert in treating neurological disorders, stroke management, and neurodegenerative diseases.",
-    },
-    {
-      id: 3,
-      name: "Dr. Emily Rodriguez",
-      specialty: "Pediatrics",
-      image: "https://images.unsplash.com/photo-1623854767648-e7bb8009f0db?crop=entropy&cs=tinysrgb&fit=max&fm=jpg&ixid=M3w3Nzg4Nzd8MHwxfHNlYXJjaHwxfHxoaXNwYW5pYyUyMGZlbWFsZSUyMGRvY3RvcnxlbnwxfHx8fDE3Nzc3Mjc2OTl8MA&ixlib=rb-4.1.0&q=80&w=1080",
-      education: "MD, Stanford University",
-      experience: "10 years",
-      rating: 5.0,
-      reviews: 312,
-      location: "Building C, Floor 1",
-      availability: "Mon - Fri",
-      description: "Dedicated to providing compassionate care for children from newborns to adolescents.",
-    },
-    {
-      id: 4,
-      name: "Dr. James Thompson",
-      specialty: "Orthopedics",
-      image: "https://images.unsplash.com/photo-1625134673337-519d4d10b313?crop=entropy&cs=tinysrgb&fit=max&fm=jpg&ixid=M3w3Nzg4Nzd8MHwxfHNlYXJjaHwxfHxibGFjayUyMG1hbGUlMjBkb2N0b3J8ZW58MXx8fHwxNzc3NzI3Njk5fDA&ixlib=rb-4.1.0&q=80&w=1080",
-      education: "MD, Yale School of Medicine",
-      experience: "18 years",
-      rating: 4.9,
-      reviews: 267,
-      location: "Building A, Floor 2",
-      availability: "Mon, Wed, Thu",
-      description: "Specializes in sports medicine, joint replacement, and minimally invasive orthopedic surgery.",
-    },
-    {
-      id: 5,
-      name: "Dr. Lisa Park",
-      specialty: "Primary Care",
-      image: "https://images.unsplash.com/photo-1576669802218-d535933f897c?crop=entropy&cs=tinysrgb&fit=max&fm=jpg&ixid=M3w3Nzg4Nzd8MHwxfHNlYXJjaHwxfHxhc2lhbiUyMGZlbWFsZSUyMGRvY3RvcnxlbnwxfHx8fDE3Nzc3Mjc2OTl8MA&ixlib=rb-4.1.0&q=80&w=1080",
-      education: "MD, Columbia University",
-      experience: "8 years",
-      rating: 4.8,
-      reviews: 198,
-      location: "Building C, Floor 3",
-      availability: "Tue - Sat",
-      description: "Focuses on preventive care, chronic disease management, and overall wellness.",
-    },
-    {
-      id: 6,
-      name: "Dr. Robert Anderson",
-      specialty: "Emergency Care",
-      image: "https://images.unsplash.com/photo-1758691461513-88a0aef72160?crop=entropy&cs=tinysrgb&fit=max&fm=jpg&ixid=M3w3Nzg4Nzd8MHwxfHNlYXJjaHwxfHxzZW5pb3IlMjBtYWxlJTIwZG9jdG9yfGVufDF8fHx8MTc3NzcyNzY5OXww&ixlib=rb-4.1.0&q=80&w=1080",
-      education: "MD, University of Pennsylvania",
-      experience: "22 years",
-      rating: 4.9,
-      reviews: 421,
-      location: "Emergency Department",
-      availability: "24/7 On-Call",
-      description: "Veteran emergency physician with expertise in trauma care and critical emergency situations.",
-    },
+    ...Array.from(new Set(doctors.map((doctor) => doctor.specialty).filter(Boolean))),
   ];
 
   const filteredDoctors =
@@ -161,7 +121,11 @@ export function Doctors() {
       {/* Doctors Grid */}
       <section className="py-20 bg-muted/30">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-          {filteredDoctors.length === 0 ? (
+          {loading ? (
+            <div className="text-center py-16">
+              <p className="text-lg text-muted-foreground">Loading approved doctors...</p>
+            </div>
+          ) : filteredDoctors.length === 0 ? (
             <div className="text-center py-16">
               <p className="text-lg text-muted-foreground">
                 No doctors found in this specialty.

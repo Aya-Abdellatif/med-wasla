@@ -1,6 +1,7 @@
 import { Routes, Route } from "react-router-dom";
 import { AuthProvider } from "./app/context/AuthProvider";
 import { ChatBotProvider } from "./app/context/ChatBotProvider";
+import AppToast from "./app/components/common/AppToast";
 import SignIn from "./app/pages/auth/SignIn";
 import SignUp from "./app/pages/auth/SignUp";
 import ForgotPassword from "./app/pages/auth/ForgotPassword";
@@ -26,6 +27,7 @@ function App() {
   return (
     <AuthProvider>
       <ChatBotProvider>
+        <AppToast />
         <Routes>
           <Route path="/" element={<SignIn />} />
           <Route path="/role" element={<Role />} />
