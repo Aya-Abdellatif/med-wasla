@@ -25,13 +25,10 @@ export interface PatientProfile {
 
 
 export const getPatientProfileByUserId = async (userId: string): Promise<PatientProfile> => {
-  console.log("userId:", userId);
 
   const patient = await Patient.findOne({ userId })
     .populate("userId", "name email phone address role photoUrl")
     .exec();
-
-  console.log("collection name: ", Patient.collection.name);
 
   if (!patient || !patient.userId) {
     throw new AppError("Patient profile not found", 404);
