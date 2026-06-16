@@ -11,7 +11,11 @@ import {
   type UpdateAvailabilityBody,
   type UpdateFeesBody,
 } from "./specialists.service.js";
-
+type AuthRequest = Request & {
+  user: {
+    id: string;
+  };
+};
 // ─── Public Endpoints ─────────────────────────────────────────────────────────
 
 /**
@@ -29,8 +33,13 @@ export const getAllSpecialists = async (
       req.query as GetAllSpecialistsQuery,
     );
     res.status(200).json({ success: true, data: result });
-  } catch (error: any) {
-    res.status(500).json({ success: false, message: error.message });
+  } catch (error: unknown) {
+    const message =
+      error instanceof Error ? error.message : "Internal server error";
+    res.status(500).json({
+      success: false,
+      message,
+    });
   }
 };
 
@@ -46,9 +55,14 @@ export const getSpecialistById = async (
     const id = Array.isArray(req.params.id) ? req.params.id[0] : req.params.id;
     const specialist = await getSpecialistByIdService(id);
     res.status(200).json({ success: true, data: specialist });
-  } catch (error: any) {
-    const status = error.message === "Specialist not found" ? 404 : 500;
-    res.status(status).json({ success: false, message: error.message });
+  } catch (error: unknown) {
+    const message =
+      error instanceof Error ? error.message : "Internal server error";
+    const status = message === "Specialist not found" ? 404 : 500;
+    res.status(status).json({
+      success: false,
+      message,
+    });
   }
 };
 
@@ -66,8 +80,13 @@ export const getSpecialistsBySpecialization = async (
       : req.params.name;
     const specialists = await getSpecialistsBySpecializationService(name);
     res.status(200).json({ success: true, data: specialists });
-  } catch (error: any) {
-    res.status(500).json({ success: false, message: error.message });
+  } catch (error: unknown) {
+    const message =
+      error instanceof Error ? error.message : "Internal server error";
+    res.status(500).json({
+      success: false,
+      message,
+    });
   }
 };
 
@@ -83,15 +102,20 @@ export const updateProfile = async (
   res: Response,
 ): Promise<void> => {
   try {
-    const userId = (req as any).user.id;
+    const userId = (req as AuthRequest).user.id;
     const specialist = await updateSpecialistProfileService(
       userId,
       req.body as UpdateProfileBody,
     );
     res.status(200).json({ success: true, data: specialist });
-  } catch (error: any) {
-    const status = error.message === "Specialist profile not found" ? 404 : 400;
-    res.status(status).json({ success: false, message: error.message });
+  } catch (error: unknown) {
+    const message =
+      error instanceof Error ? error.message : "Internal server error";
+    const status = message === "Specialist profile not found" ? 404 : 400;
+    res.status(status).json({
+      success: false,
+      message,
+    });
   }
 };
 
@@ -105,15 +129,20 @@ export const updateAvailability = async (
   res: Response,
 ): Promise<void> => {
   try {
-    const userId = (req as any).user.id;
+    const userId = (req as AuthRequest).user.id;
     const specialist = await updateAvailabilityService(
       userId,
       req.body as UpdateAvailabilityBody,
     );
     res.status(200).json({ success: true, data: specialist });
-  } catch (error: any) {
-    const status = error.message === "Specialist profile not found" ? 404 : 400;
-    res.status(status).json({ success: false, message: error.message });
+  } catch (error: unknown) {
+    const message =
+      error instanceof Error ? error.message : "Internal server error";
+    const status = message === "Specialist profile not found" ? 404 : 400;
+    res.status(status).json({
+      success: false,
+      message,
+    });
   }
 };
 
@@ -127,14 +156,19 @@ export const updateFees = async (
   res: Response,
 ): Promise<void> => {
   try {
-    const userId = (req as any).user.id;
+    const userId = (req as AuthRequest).user.id;
     const specialist = await updateFeesService(
       userId,
       req.body as UpdateFeesBody,
     );
     res.status(200).json({ success: true, data: specialist });
-  } catch (error: any) {
-    const status = error.message === "Specialist profile not found" ? 404 : 400;
-    res.status(status).json({ success: false, message: error.message });
+  } catch (error: unknown) {
+    const message =
+      error instanceof Error ? error.message : "Internal server error";
+    const status = message === "Specialist profile not found" ? 404 : 400;
+    res.status(status).json({
+      success: false,
+      message,
+    });
   }
 };

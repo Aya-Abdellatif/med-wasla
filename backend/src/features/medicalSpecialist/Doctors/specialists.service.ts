@@ -52,7 +52,7 @@ export const getAllSpecialistsService = async (
   } = query;
 
   //   const filter: FilterQuery<typeof MedicalSpecialist> = {};
-  const filter: any = {};
+  const filter: Record<string, unknown> = {};
 
   if (specialistType) filter.specialistType = specialistType;
   if (specialization) filter.specialization = specialization;
@@ -130,16 +130,17 @@ export const updateSpecialistProfileService = async (
     "serviceAreas",
     "homeVisit",
   ];
-
   const updateData: Partial<UpdateProfileBody> = {};
   for (const field of allowedFields) {
-    if (body[field] !== undefined) updateData[field] = body[field] as any;
+    const value = body[field];
+    if (value !== undefined) {
+      Reflect.set(updateData, field, value);
+    }
   }
-
   const specialist = await MedicalSpecialist.findOneAndUpdate(
     { userId },
     { $set: updateData },
-    { returnDocument: 'after', runValidators: true },
+    { returnDocument: "after", runValidators: true },
   ).populate("userId", "firstName lastName profilePicture email");
 
   if (!specialist) throw new Error("Specialist profile not found");
@@ -165,7 +166,7 @@ export const updateAvailabilityService = async (
   const specialist = await MedicalSpecialist.findOneAndUpdate(
     { userId },
     { $set: { availableSlots } },
-    { returnDocument: 'after', runValidators: true },
+    { returnDocument: "after", runValidators: true },
   );
 
   if (!specialist) throw new Error("Specialist profile not found");
@@ -185,7 +186,7 @@ export const updateFeesService = async (
   const specialist = await MedicalSpecialist.findOneAndUpdate(
     { userId },
     { $set: { consultationFee } },
-    { returnDocument: 'after'},
+    { returnDocument: "after" },
   );
 
   if (!specialist) throw new Error("Specialist profile not found");
