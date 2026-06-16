@@ -45,13 +45,13 @@ const createAndSendOtp = async (email: string): Promise<void> => {
 
 // Register a new user and create associated patient or specialist record
 export const registerUser = async (data: RegisterData): Promise<void> => {
-  const { name, email, password, phone, address, role = "patient", ...specialistFields } = data;
+  const { name, email, password, phone, governorate, dob, address, role = "patient", ...specialistFields } = data;
 
   const existing = await User.findOne({ email });
   if (existing)
     throw new AppError("Email already exists", 400);
 
-  const user = await User.create({ name, email, password, phone, address, role });
+  const user = await User.create({ name, email, password, phone, governorate, dob, address, role });
 
   try {
     if (role === "patient") {

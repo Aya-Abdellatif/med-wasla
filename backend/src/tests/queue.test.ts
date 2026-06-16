@@ -27,8 +27,10 @@ async function createUser(
     name: `${role} user`,
     email,
     password: "password123",
+    dob: new Date("1998-05-15"),
     phone: "01234567890",
-    address: "Cairo",
+    governorate: "Cairo",
+    address: "",
     role,
     isVerified: true,
   });

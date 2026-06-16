@@ -1,4 +1,5 @@
 import type { Appointment } from "../../components/patient-appointments/AppointmentTypes";
+
 export const mockAppointments: Appointment[] = [
     {
         id: "1",
