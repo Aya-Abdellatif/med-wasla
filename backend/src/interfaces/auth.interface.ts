@@ -8,6 +8,7 @@ export interface RegisterData {
   password: string;
   phone: string;
   governorate: Governorate;
+  dob: Date;
   address?: string;
   role?: UserRole;
   specialistType?: SpecialistType;
