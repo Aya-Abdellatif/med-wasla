@@ -1,4 +1,3 @@
-import mongoose from "mongoose";
 import Queue from "../../models/queue.model.js";
 import MedicalSpecialist from "../../models/medicalSpecialist.model.js";
 import { Types } from "mongoose";
@@ -52,22 +51,39 @@ export const getMyPosition = async (patientId: string) => {
 	return { position, queue, entry };
 };
 
+type QueueEntryQuery = {
+  date: Date;
+  "entries.patientId": string;
+  "entries.appointmentId"?: string;
+};
+
 export const leaveQueue = async (patientId: string, appointmentId?: string) => {
-	const date = startOfDay(new Date());
-	const query: any = { date };
-	if (appointmentId) query["entries.appointmentId"] = appointmentId;
-	query["entries.patientId"] = patientId;
+  const date = startOfDay(new Date());
 
-	const queue = await Queue.findOne(query);
-	if (!queue) throw new AppError("Queue entry not found", 404);
+  const query: QueueEntryQuery = {
+    date,
+    "entries.patientId": patientId,
+  };
 
-	const idx = queue.entries.findIndex((e) => e.patientId.toString() === patientId && (!appointmentId || e.appointmentId.toString() === appointmentId));
-	if (idx === -1) throw new AppError("Queue entry not found", 404);
+  if (appointmentId) {
+    query["entries.appointmentId"] = appointmentId;
+  }
 
-	// mark as cancelled
-	queue.entries[idx].status = "cancelled";
-	await queue.save();
-	return { success: true };
+  const queue = await Queue.findOne(query);
+  if (!queue) throw new AppError("Queue entry not found", 404);
+
+  const idx = queue.entries.findIndex(
+    (e) =>
+      e.patientId.toString() === patientId &&
+      (!appointmentId || e.appointmentId.toString() === appointmentId)
+  );
+
+  if (idx === -1) throw new AppError("Queue entry not found", 404);
+
+  queue.entries[idx].status = "cancelled";
+  await queue.save();
+
+  return { success: true };
 };
 
 export const callNext = async (specialistUserId: string) => {
