@@ -9,8 +9,8 @@
     "start": "node dist/server.js",
     "lint": "eslint .",
     "typecheck": "tsc --noEmit",
-    "test": "vitest --config src/vitest.config.ts",
-    "test:run": "vitest run --config src/vitest.config.ts"
+    "test": "vitest --config vitest.config.ts",
+    "test:run": "vitest run --config vitest.config.ts"
   },
   "keywords": [],
   "author": "",

@@ -10,7 +10,9 @@ import Role from "./app/pages/auth/Role";
 import AboutPage from "./app/pages/about/AboutPage";
 import { Dashboard } from "./app/pages/Doctor side/Dashboard";
 import ContactPage from "./app/pages/contact/ContactPage";
+
 import { PatientProfile } from "./app/pages/patient/PatientProfile";
+import { MyAppointments } from "./app/pages/patient/PatientAppointments";
 
 import MainLayout from "./app/Layouts/MainLayout";
 import Home from "./app/pages/Home";
@@ -42,7 +44,8 @@ function App() {
             <Route path="/dashboard" element={<Dashboard />} />
             <Route path="/doctors" element={<Doctors />} />
             <Route path="/nurses" element={<Nurses />} />
-            <Route path="/patient-profile" element={<PatientProfile />} />
+            <Route path="/profile" element={<PatientProfile />} />
+            <Route path="/appointments" element={<MyAppointments />} />
           </Route>
         </Routes>
       </ChatBotProvider>

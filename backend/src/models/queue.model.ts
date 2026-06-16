@@ -15,6 +15,7 @@ export interface IQueue extends Document {
   entries: IQueueEntry[];
   currentNumber?: number;
   avgWaitMinutes?: number;
+  isActive?: boolean; // added by ranim
   createdAt?: Date;
   updatedAt?: Date;
 }
@@ -66,6 +67,10 @@ const queueSchema = new Schema<IQueue>(
     avgWaitMinutes: {
       type: Number,
       default: 0,
+    },
+    isActive: {
+      type: Boolean,
+      default: true,
     },
   },
   {
