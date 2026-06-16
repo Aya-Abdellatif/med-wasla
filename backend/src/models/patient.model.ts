@@ -1,4 +1,7 @@
 import mongoose, { Document, Schema, Types } from "mongoose";
+import type { PopulatedDoc } from "mongoose";
+import type { IUser } from "./user.model.js";
+import { User } from "./user.model.js";
 
 export interface IMedicalHistoryEntry {
   condition: string;
@@ -32,7 +35,7 @@ const medicalHistoryEntrySchema = new Schema<IMedicalHistoryEntry>(
 );
 
 export interface IPatient extends Document {
-  userId: Types.ObjectId;
+  userId: PopulatedDoc<IUser & Document>;
   medicalHistory?: IMedicalHistoryEntry[];
   createdAt?: Date;
   updatedAt?: Date;
