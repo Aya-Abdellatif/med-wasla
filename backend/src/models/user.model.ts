@@ -1,7 +1,7 @@
 import mongoose, { Document, Schema } from "mongoose";
 import bcrypt from "bcrypt";
 
-export const governorate = [ "Alexandria", "Aswan", "Asyut", "Beheira", "Beni Suef", "Cairo", "Dakahlia",  "Damietta",  "Faiyum",  "Gharbia",  "Giza",  "Ismailia",  "Kafr El Sheikh",  "Luxor",  "Matruh",  "Minya",  "Monufia",  "New Valley",  "North Sinai",  "Port Said",  "Qalyubia",  "Qena",  "Red Sea",  "Sharqia",  "Sohag",  "South Sinai", "Suez"
+export const governorate = ["Alexandria", "Aswan", "Asyut", "Beheira", "Beni Suef", "Cairo", "Dakahlia", "Damietta", "Faiyum", "Gharbia", "Giza", "Ismailia", "Kafr El Sheikh", "Luxor", "Matruh", "Minya", "Monufia", "New Valley", "North Sinai", "Port Said", "Qalyubia", "Qena", "Red Sea", "Sharqia", "Sohag", "South Sinai", "Suez"
 ];
 
 export type Governorate = (typeof governorate)[number];
@@ -38,6 +38,10 @@ const userSchema = new Schema<IUser>(
       unique: true,
       lowercase: true,
       trim: true,
+      match: [
+        /^[^\s@]+@[^\s@]+\.[^\s@]+$/,
+        "Invalid email format"
+      ]
     },
 
     password: {
@@ -51,6 +55,7 @@ const userSchema = new Schema<IUser>(
       type: String,
       required: [true, "Phone number is required"],
       trim: true,
+      match: [/^01[0125][0-9]{8}$/, "Invalid Egyptian phone number"]
     },
 
     governorate: {
