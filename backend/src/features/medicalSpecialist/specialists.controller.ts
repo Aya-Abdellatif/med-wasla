@@ -1,4 +1,4 @@
-import type { Request, Response } from "express";
+import type { Request, Response, NextFunction } from "express";
 import {
   getAllSpecialistsService,
   getSpecialistByIdService,
@@ -10,6 +10,7 @@ import {
   type UpdateAvailabilityBody,
   type UpdateFeesBody,
 } from "./specialists.service.js";
+import { updateUserPhoto } from "./specialists.service.js";
 
 function getUserId(req: Request): string {
   const user = (req as Request & { user?: { _id?: { toString(): string }; id?: string } }).user;
@@ -160,3 +161,16 @@ export class SpecialistsController {
     }
   }
 }
+
+export const updatePhoto = async (req: Request, res: Response, next: NextFunction) => {
+  try {
+    const user = await updateUserPhoto(req.user!.id, req.body.photoUrl);
+    res.status(200).json({
+      status: "success",
+      message: "Profile photo updated",
+      data: { photoUrl: user.photoUrl },
+    });
+  } catch (err) {
+    next(err);
+  }
+};
