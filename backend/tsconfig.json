@@ -5,8 +5,10 @@
     "module": "nodenext",
     "moduleResolution": "nodenext",
     "target": "es2022",
-    "types": ["node"],
-    "sourceMap": true,
+    "types": [
+      "node"
+    ],
+    "sourceMap": false,
     "declaration": false,
     "strict": true,
     "verbatimModuleSyntax": true,

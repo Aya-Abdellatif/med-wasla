@@ -4,13 +4,13 @@
   "main": "index.js",
   "type": "module",
   "scripts": {
-    "dev": "ts-node src/server.ts",
+    "dev": "tsx watch src/server.ts",
     "build": "tsc",
-    "start": "node dist/src/server.js",
+    "start": "node dist/server.js",
     "lint": "eslint .",
-    "test": "vitest --config src/vitest.config.ts",
-    "test:run": "vitest run --config src/vitest.config.ts",
-    "seed": "npm run build && node --dns-result-order=ipv4first dist/src/config/seed.js"
+    "typecheck": "tsc --noEmit",
+    "test": "vitest --config vitest.config.ts",
+    "test:run": "vitest run --config vitest.config.ts"
   },
   "keywords": [],
   "author": "",
@@ -37,7 +37,9 @@
     "mongodb-memory-server": "^11.2.0",
     "supertest": "^7.2.2",
     "ts-node": "^10.9.2",
+    "tsx": "^4.22.4",
     "typescript": "^6.0.3",
+    "typescript-eslint": "^8.61.1",
     "vitest": "^4.1.8"
   }
 }
