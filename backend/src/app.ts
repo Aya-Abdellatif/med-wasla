@@ -6,6 +6,7 @@ import authRouter from "./features/auth/auth.route.js";
 import specialistsRouter from "./features/medicalSpecialist/specialists.routes.js";
 import reviewsRouter from "./features/reviews/reviews.routes.js";
 import queueRouter from "./features/queue/queue.routes.js";
+import aiRouter from "./features/ai/ai.routes.js";
 
 const app = express();
 
@@ -26,6 +27,6 @@ app.use("/api/specialists", specialistsRouter);
 app.use("/api/queue", queueRouter);
 app.use("/api/reviews", reviewsRouter);
 // app.use("/api/admin", adminRouter);
-// app.use("/api/ai", aiRouter);
+app.use("/api/ai", aiRouter);
 app.use(errorHandler);
 export default app;
