@@ -3,7 +3,7 @@ import cors from "cors";
 import { patientRouter } from "./features/patient/patient.routes.js";
 import errorHandler from "./middleware/errorHandler.middleware.js";
 import authRouter from "./features/auth/auth.route.js";
-import specialistsRouter from "./features/medicalSpecialist/Doctors/specialists.routes.js";
+import specialistsRouter from "./features/medicalSpecialist/specialists.routes.js";
 import reviewsRouter from "./features/reviews/reviews.routes.js";
 import queueRouter from "./features/queue/queue.routes.js";
 
