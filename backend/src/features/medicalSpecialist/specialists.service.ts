@@ -1,6 +1,6 @@
 import MedicalSpecialist, {
   type IAvailableSlot,
-} from "../../../models/medicalSpecialist.model.js";
+} from "../../models/medicalSpecialist.model.js";
 // ─── Types ────────────────────────────────────────────────────────────────────
 
 export interface GetAllSpecialistsQuery {
