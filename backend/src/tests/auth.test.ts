@@ -31,21 +31,12 @@ function extractOtpFromLastEmail(): string {
   return match[1];
 }
 
-async function registerUser(userData = basePatient) {
-  const res = await request(app).post("/api/auth/register").send(userData);
-  return res;
-}
-
-async function createUnverifiedUser(userData = basePatient) {
-  await User.create({
-    name: userData.name,
-    email: userData.email,
-    password: userData.password,
-    phone: userData.phone,
-    address: userData.address as "Cairo",
-    role: userData.role as "patient",
-    isVerified: false,
-  });
+async function registerAndVerify(userData = basePatient) {
+  await request(app).post("/api/auth/register").send(userData);
+  const otp = extractOtpFromLastEmail();
+  await request(app)
+    .post("/api/auth/verify-otp")
+    .send({ email: userData.email, otp });
 }
 
 describe("Auth Routes", () => {
@@ -57,27 +48,22 @@ describe("Auth Routes", () => {
 
   // ─── POST /api/auth/register ───────────────────────────────────────────────
   describe("POST /api/auth/register", () => {
-    it("registers a new patient and returns 201 with token", async () => {
-      const res = await registerUser();
+    it("registers a new patient and returns 201", async () => {
+      const res = await request(app)
+        .post("/api/auth/register")
+        .send(basePatient);
 
       expect(res.status).toBe(201);
       expect(res.body.status).toBe("success");
-      expect(res.body.token).toBeDefined();
-      expect(res.body.user.email).toBe(basePatient.email);
-      expect(mockSendEmail).not.toHaveBeenCalled();
-    });
-
-    it("marks user as verified immediately after registration", async () => {
-      await registerUser();
-
-      const user = await User.findOne({ email: basePatient.email });
-      expect(user?.isVerified).toBe(true);
+      expect(mockSendEmail).toHaveBeenCalledOnce();
     });
 
     it("returns 400 when email already exists", async () => {
-      await registerUser();
+      await request(app).post("/api/auth/register").send(basePatient);
 
-      const res = await registerUser();
+      const res = await request(app)
+        .post("/api/auth/register")
+        .send(basePatient);
 
       expect(res.status).toBe(400);
     });
@@ -94,10 +80,7 @@ describe("Auth Routes", () => {
   // ─── POST /api/auth/verify-otp ────────────────────────────────────────────
   describe("POST /api/auth/verify-otp", () => {
     it("verifies correct OTP and returns token + user", async () => {
-      await createUnverifiedUser();
-      await request(app)
-        .post("/api/auth/resend-otp")
-        .send({ email: basePatient.email });
+      await request(app).post("/api/auth/register").send(basePatient);
       const otp = extractOtpFromLastEmail();
 
       const res = await request(app)
@@ -111,10 +94,7 @@ describe("Auth Routes", () => {
     });
 
     it("returns 400 for wrong OTP", async () => {
-      await createUnverifiedUser();
-      await request(app)
-        .post("/api/auth/resend-otp")
-        .send({ email: basePatient.email });
+      await request(app).post("/api/auth/register").send(basePatient);
 
       const res = await request(app)
         .post("/api/auth/verify-otp")
@@ -132,10 +112,7 @@ describe("Auth Routes", () => {
     });
 
     it("marks user as verified after successful OTP", async () => {
-      await createUnverifiedUser();
-      await request(app)
-        .post("/api/auth/resend-otp")
-        .send({ email: basePatient.email });
+      await request(app).post("/api/auth/register").send(basePatient);
       const otp = extractOtpFromLastEmail();
 
       await request(app)
@@ -150,7 +127,8 @@ describe("Auth Routes", () => {
   // ─── POST /api/auth/resend-otp ────────────────────────────────────────────
   describe("POST /api/auth/resend-otp", () => {
     it("resends OTP for unverified user and returns 200", async () => {
-      await createUnverifiedUser();
+      await request(app).post("/api/auth/register").send(basePatient);
+      mockSendEmail.mockClear();
 
       const res = await request(app)
         .post("/api/auth/resend-otp")
@@ -162,7 +140,7 @@ describe("Auth Routes", () => {
     });
 
     it("returns 400 for already-verified user", async () => {
-      await registerUser();
+      await registerAndVerify();
 
       const res = await request(app)
         .post("/api/auth/resend-otp")
@@ -183,7 +161,7 @@ describe("Auth Routes", () => {
   // ─── POST /api/auth/login ─────────────────────────────────────────────────
   describe("POST /api/auth/login", () => {
     it("logs in a verified user and returns token", async () => {
-      await registerUser();
+      await registerAndVerify();
 
       const res = await request(app)
         .post("/api/auth/login")
@@ -196,7 +174,7 @@ describe("Auth Routes", () => {
     });
 
     it("returns 403 when user is not verified", async () => {
-      await createUnverifiedUser();
+      await request(app).post("/api/auth/register").send(basePatient);
 
       const res = await request(app)
         .post("/api/auth/login")
@@ -206,7 +184,7 @@ describe("Auth Routes", () => {
     });
 
     it("returns 401 for wrong password", async () => {
-      await registerUser();
+      await registerAndVerify();
 
       const res = await request(app)
         .post("/api/auth/login")
@@ -237,7 +215,10 @@ describe("Auth Routes", () => {
   // ─── GET /api/auth/me ─────────────────────────────────────────────────────
   describe("GET /api/auth/me", () => {
     async function getAuthToken(): Promise<string> {
-      const res = await registerUser();
+      await registerAndVerify();
+      const res = await request(app)
+        .post("/api/auth/login")
+        .send({ email: basePatient.email, password: basePatient.password });
       return res.body.token as string;
     }
 
