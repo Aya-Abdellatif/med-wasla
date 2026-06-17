@@ -1,14 +1,30 @@
-import type { Request, Response } from "express";
-import { getPatientProfileByUserId } from "./patient.service.js";
+import type { Request, Response, NextFunction } from "express";
+import { getPatientProfileByUserId } from "./getPatientProfile.service.js";
+import { updatePatientProfileByUserId } from "./updatePatientProfile.service.js";
 
-export const getPatientProfile = async (req: Request, res: Response) => {
+export const getPatientProfile = async (req: Request, res: Response, next: NextFunction) => {
   try {
     const { userId } = req.params;
-    const profile = await getPatientProfileByUserId( userId as string );
+    const profile = await getPatientProfileByUserId(userId as string);
 
-    return res.status(200).json(profile);
+    res.status(200).json(profile);
   } catch (error) {
-    const message = error instanceof Error ? error.message : "Failed to retrieve patient profile";
-    return res.status(404).json({ message });
+    next(error);
+  }
+};
+
+export const updatePatientProfile = async (req: Request, res: Response, next: NextFunction) => {
+  try {
+
+    const { userId, userBody } = req.params;
+
+    const updatedProfile = await updatePatientProfileByUserId(
+      userId as string,
+      req.body
+    );
+
+    res.status(200).json(updatedProfile);
+  } catch (error) {
+    next(error);
   }
 };

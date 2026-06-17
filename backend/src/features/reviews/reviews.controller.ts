@@ -1,4 +1,5 @@
-import type { Request, Response } from "express";
+import type { Request, Response, NextFunction } from "express";
+import AppError from "../../utils/AppError.js";
 import {
   createReviewService,
   getSpecialistReviewsService,
@@ -6,36 +7,32 @@ import {
   deleteReviewService,
 } from "./reviews.service.js";
 
-// POST /api/reviews
-export const createReview = async (req: Request, res: Response) => {
+export const createReview = async (
+  req: Request,
+  res: Response,
+  next: NextFunction
+) => {
   try {
     const patientId = req.user?.id;
 
     if (!patientId) {
-      return res.status(401).json({ success: false, message: "Unauthorized" });
+      return next(new AppError("Unauthorized", 401));
     }
 
     const { specialistId, appointmentId, rating, comment } = req.body;
 
     if (!specialistId || !appointmentId || rating == null) {
-      return res.status(400).json({
-        success: false,
-        message: "specialistId, appointmentId, and rating are required",
-      });
+      return next(
+        new AppError("specialistId, appointmentId, and rating are required", 400)
+      );
     }
 
     if (rating < 1 || rating > 5) {
-      return res.status(400).json({
-        success: false,
-        message: "Rating must be between 1 and 5",
-      });
+      return next(new AppError("Rating must be between 1 and 5", 400));
     }
 
     if (comment && comment.length > 1000) {
-      return res.status(400).json({
-        success: false,
-        message: "Comment must be less than 1000 characters",
-      });
+      return next(new AppError("Comment must be less than 1000 characters", 400));
     }
 
     const review = await createReviewService({
@@ -53,33 +50,27 @@ export const createReview = async (req: Request, res: Response) => {
     });
   } catch (error) {
     if ((error as Error).message === "ALREADY_REVIEWED") {
-      return res.status(409).json({
-        success: false,
-        message: "You already reviewed this appointment",
-      });
+      return next(new AppError("You already reviewed this appointment", 409));
     }
 
-    console.error("[createReview]", error);
-    res.status(500).json({
-      success: false,
-      message: "Failed to create review",
-    });
+    return next(error);
   }
 };
 
-// GET /api/reviews/specialist/:id
-export const getSpecialistReviews = async (req: Request, res: Response) => {
+export const getSpecialistReviews = async (
+  req: Request,
+  res: Response,
+  next: NextFunction
+) => {
   try {
     const specialistId = req.params.id;
 
     if (typeof specialistId !== "string") {
-      return res.status(400).json({
-        success: false,
-        message: "Invalid specialist id",
-      });
+      return next(new AppError("Invalid specialist id", 400));
     }
 
-    const { reviews, averageRating, totalReviews } = await getSpecialistReviewsService(specialistId);
+    const { reviews, averageRating, totalReviews } =
+      await getSpecialistReviewsService(specialistId);
 
     res.status(200).json({
       success: true,
@@ -88,46 +79,36 @@ export const getSpecialistReviews = async (req: Request, res: Response) => {
       data: reviews,
     });
   } catch (error) {
-    console.error("[getSpecialistReviews]", error);
-    res.status(500).json({
-      success: false,
-      message: "Failed to get reviews",
-    });
+    return next(error);
   }
 };
 
-// PUT /api/reviews/:id
-export const updateReview = async (req: Request, res: Response) => {
+export const updateReview = async (
+  req: Request,
+  res: Response,
+  next: NextFunction
+) => {
   try {
     const patientId = req.user?.id;
 
     if (!patientId) {
-      return res.status(401).json({ success: false, message: "Unauthorized" });
+      return next(new AppError("Unauthorized", 401));
     }
 
     const reviewId = req.params.id;
 
     if (typeof reviewId !== "string") {
-      return res.status(400).json({
-        success: false,
-        message: "Invalid review id",
-      });
+      return next(new AppError("Invalid review id", 400));
     }
 
     const { rating, comment } = req.body;
 
     if (rating != null && (rating < 1 || rating > 5)) {
-      return res.status(400).json({
-        success: false,
-        message: "Rating must be between 1 and 5",
-      });
+      return next(new AppError("Rating must be between 1 and 5", 400));
     }
 
     if (comment && comment.length > 1000) {
-      return res.status(400).json({
-        success: false,
-        message: "Comment must be less than 1000 characters",
-      });
+      return next(new AppError("Comment must be less than 1000 characters", 400));
     }
 
     const review = await updateReviewService(reviewId, patientId, {
@@ -136,10 +117,7 @@ export const updateReview = async (req: Request, res: Response) => {
     });
 
     if (!review) {
-      return res.status(404).json({
-        success: false,
-        message: "Review not found",
-      });
+      return next(new AppError("Review not found", 404));
     }
 
     res.status(200).json({
@@ -149,37 +127,30 @@ export const updateReview = async (req: Request, res: Response) => {
     });
   } catch (error) {
     if ((error as Error).message === "FORBIDDEN") {
-      return res.status(403).json({
-        success: false,
-        message: "You can only edit your own reviews",
-      });
+      return next(new AppError("You can only edit your own reviews", 403));
     }
 
-    console.error("[updateReview]", error);
-    res.status(500).json({
-      success: false,
-      message: "Failed to update review",
-    });
+    return next(error);
   }
 };
 
-// DELETE /api/reviews/:id
-export const deleteReview = async (req: Request, res: Response) => {
+export const deleteReview = async (
+  req: Request,
+  res: Response,
+  next: NextFunction
+) => {
   try {
     const requesterId = req.user?.id;
     const requesterRole = req.user?.role;
 
     if (!requesterId) {
-      return res.status(401).json({ success: false, message: "Unauthorized" });
+      return next(new AppError("Unauthorized", 401));
     }
 
     const reviewId = req.params.id;
 
     if (typeof reviewId !== "string") {
-      return res.status(400).json({
-        success: false,
-        message: "Invalid review id",
-      });
+      return next(new AppError("Invalid review id", 400));
     }
 
     const review = await deleteReviewService(
@@ -189,10 +160,7 @@ export const deleteReview = async (req: Request, res: Response) => {
     );
 
     if (!review) {
-      return res.status(404).json({
-        success: false,
-        message: "Review not found",
-      });
+      return next(new AppError("Review not found", 404));
     }
 
     res.status(200).json({
@@ -201,16 +169,9 @@ export const deleteReview = async (req: Request, res: Response) => {
     });
   } catch (error) {
     if ((error as Error).message === "FORBIDDEN") {
-      return res.status(403).json({
-        success: false,
-        message: "You can only delete your own reviews",
-      });
+      return next(new AppError("You can only delete your own reviews", 403));
     }
 
-    console.error("[deleteReview]", error);
-    res.status(500).json({
-      success: false,
-      message: "Failed to delete review",
-    });
+    return next(error);
   }
 };

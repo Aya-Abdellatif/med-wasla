@@ -1,7 +1,7 @@
 import type { Request, Response, NextFunction } from "express";
 import { Router } from "express";
-import { protect, restrictTo } from "../../../middleware/auth.middleware.js";
-import { mockAuth } from "../../../middleware/mockAuth.js";
+import { protect, restrictTo } from "../../middleware/auth.middleware.js";
+import { mockAuth } from "../../middleware/mockAuth.js";
 import {
   getAllSpecialists,
   getSpecialistById,
@@ -27,22 +27,12 @@ async function specialistAuth(
   });
 }
 
-// ─── Specialist profile routes (must be registered before /:id) ───────────────
-
 router.get("/me", specialistAuth, SpecialistsController.getMe);
-router.post(
-  "/me/certificates",
-  specialistAuth,
-  SpecialistsController.addCertificate,
-);
-
-// ─── Public Routes (main) ─────────────────────────────────────────────────────
+router.post("/me/certificates", specialistAuth, SpecialistsController.addCertificate);
 
 router.get("/", getAllSpecialists);
 router.get("/specialization/:name", getSpecialistsBySpecialization);
 router.get("/:id", getSpecialistById);
-
-// ─── Protected Routes (both branches) ─────────────────────────────────────────
 
 router.put("/profile", specialistAuth, SpecialistsController.updateProfile);
 router.put("/availability", specialistAuth, updateAvailability);

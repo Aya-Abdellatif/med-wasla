@@ -1,7 +1,6 @@
 import mongoose, { Document, Schema, Types } from "mongoose";
 import type { PopulatedDoc } from "mongoose";
 import type { IUser } from "./user.model.js";
-import { User } from "./user.model.js";
 
 export interface IMedicalHistoryEntry {
   condition: string;

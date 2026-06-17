@@ -1,7 +1,11 @@
 import mongoose, { Document, Schema } from "mongoose";
 import bcrypt from "bcrypt";
 
-export type Governorate = "Alexandria" | "Cairo" | "Giza";
+export const governorate = ["Alexandria", "Aswan", "Asyut", "Beheira", "Beni Suef", "Cairo", "Dakahlia", "Damietta", "Faiyum", "Gharbia", "Giza", "Ismailia", "Kafr El Sheikh", "Luxor", "Matruh", "Minya", "Monufia", "New Valley", "North Sinai", "Port Said", "Qalyubia", "Qena", "Red Sea", "Sharqia", "Sohag", "South Sinai", "Suez"
+];
+
+export type Governorate = (typeof governorate)[number];
+
 export type UserRole = "patient" | "specialist" | "admin";
 
 export interface IUser extends Document {
@@ -9,7 +13,9 @@ export interface IUser extends Document {
   email: string;
   password: string;
   phone: string;
-  address: Governorate;
+  governorate: Governorate;
+  address: string;
+  dob: Date;
   role: UserRole;
   photoUrl: string;
   isVerified: boolean;
@@ -32,6 +38,10 @@ const userSchema = new Schema<IUser>(
       unique: true,
       lowercase: true,
       trim: true,
+      match: [
+        /^[^\s@]+@[^\s@]+\.[^\s@]+$/,
+        "Invalid email format"
+      ]
     },
 
     password: {
@@ -45,12 +55,23 @@ const userSchema = new Schema<IUser>(
       type: String,
       required: [true, "Phone number is required"],
       trim: true,
+      match: [/^01[0125][0-9]{8}$/, "Invalid Egyptian phone number"]
+    },
+
+    governorate: {
+      type: String,
+      enum: governorate,
+      required: [true, "Governorate is required"],
     },
 
     address: {
       type: String,
-      enum: ["Alexandria", "Cairo", "Giza"],
-      required: [true, "Governorate is required"],
+      required: false
+    },
+
+    dob: {
+      type: Date,
+      required: true,
     },
 
     role: {
@@ -63,7 +84,7 @@ const userSchema = new Schema<IUser>(
       type: String,
       required: false,
     },
-    
+
     isVerified: {
       type: Boolean,
       default: false,

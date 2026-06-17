@@ -16,7 +16,7 @@ export const createReviewService = async (data: {
 
 export const getSpecialistReviewsService = async (specialistId: string) => {
   const reviews = await Review.find({ specialistId })
-    .populate("patientId", "name profileImage")
+    .populate("patientId", "name photoUrl")
     .sort({ createdAt: -1 });
 
   // Calculate average rating

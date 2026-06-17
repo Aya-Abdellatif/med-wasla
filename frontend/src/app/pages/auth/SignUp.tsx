@@ -22,6 +22,7 @@ type FormData = {
   phone: string;
   password: string;
   confirmPassword: string;
+  dob: string;
   address: Governorate;
   specialization: string;
   licenseNumber: string;
@@ -102,6 +103,10 @@ function validateStep1(form: FormData): FieldErrors {
     errors.password = "Password must be at least 8 characters";
   }
 
+  if (!form.dob) {
+    errors.dob = "Date of birth is required";
+  }
+
   if (!form.confirmPassword) {
     errors.confirmPassword = "Please confirm your password";
   } else if (form.password !== form.confirmPassword) {
@@ -164,6 +169,7 @@ export default function SignUp() {
     phone: "",
     password: "",
     confirmPassword: "",
+    dob: "",
     address: "Cairo",
     specialization: "",
     licenseNumber: "",
@@ -241,6 +247,8 @@ export default function SignUp() {
         email: form.email,
         password: form.password,
         phone: form.phone,
+        governorate: form.address,
+        dob: form.dob,
         address: form.address,
         role: isSpecialist ? "specialist" : "patient",
       };
@@ -405,6 +413,15 @@ export default function SignUp() {
                 <option value="Giza">Giza</option>
                 <option value="Alexandria">Alexandria</option>
               </select>
+            </Field>
+
+            <Field label="Date of birth" error={fieldErrors.dob}>
+              <input
+                type="date"
+                value={form.dob}
+                onChange={(e) => handleChange("dob", e.target.value)}
+                className={getInputClass(Boolean(fieldErrors.dob))}
+              />
             </Field>
 
             <div className="grid gap-3 sm:grid-cols-2">

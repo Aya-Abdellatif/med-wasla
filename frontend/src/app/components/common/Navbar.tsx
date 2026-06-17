@@ -1,9 +1,9 @@
 import { useState, useEffect, useRef } from "react";
-import { LogOut, CalendarDays } from "lucide-react";
+import { LogOut, CalendarDays, UserCircle } from "lucide-react";
 import { Link, useNavigate } from "react-router-dom";
 import { AppointmentTypeModal } from "../booking/AppointmentTypeModal";
 import { useAuth } from "../../context/useAuth";
-import { getFirstName } from "../../../utils/displayName";
+import { getSpecialistDisplayName } from "../../../utils/displayName";
 import { showInfo } from "../../../utils/toast";
 
 function Navbar() {
@@ -16,14 +16,14 @@ function Navbar() {
   const { user, logout } = useAuth();
 
   const isDoctor = user?.role === "doctor" || user?.role === "nurse";
-  const displayName = getFirstName(user?.name);
+  const displayName = getSpecialistDisplayName(user?.name);
 
   const navLinks = isDoctor
     ? [
         { name: "Home", path: "/home" },
-        { name: "Dashboard", path: "/dashboard" },
         { name: "About", path: "/about" },
         { name: "Contact", path: "/contact" },
+        { name: "Dashboard", path: "/dashboard" },
       ]
     : [
         { name: "Home", path: "/home" },
@@ -65,7 +65,7 @@ function Navbar() {
 
   const handleLogout = () => {
     logout();
-    showInfo("Logged out successfully");
+    showInfo("Logged out successfully", { userName: user?.name });
     navigate("/");
   };
 
@@ -94,7 +94,7 @@ function Navbar() {
 
             <div
               ref={containerRef}
-              className="hidden xl:flex items-center gap-1 flex-1 relative h-full"
+              className="hidden xl:flex items-center justify-center gap-1 flex-1 relative h-full"
             >
               {active && (
                 <div
@@ -126,11 +126,12 @@ function Navbar() {
               ))}
             </div>
 
-            <div className="hidden xl:flex items-center gap-4 ml-auto shrink-0">
+            <div className="hidden xl:flex items-center gap-4 shrink-0">
               {isDoctor && displayName && (
-                <span className="text-lg font-semibold text-fg px-3 py-1.5 rounded-full bg-muted">
-                  {displayName}
-                </span>
+                <div className="flex items-center gap-2 text-lg font-semibold text-fg px-3 py-1.5 rounded-full bg-muted">
+                  <UserCircle className="h-6 w-6 text-primary shrink-0" strokeWidth={2} />
+                  <span>{displayName}</span>
+                </div>
               )}
               <button
                 onClick={handleLogout}
@@ -194,8 +195,9 @@ function Navbar() {
             ))}
             <div className="pt-3 border-t border-border space-y-3">
               {isDoctor && displayName && (
-                <div className="text-lg font-semibold text-fg px-4 py-2 rounded-lg bg-white">
-                  {displayName}
+                <div className="flex items-center gap-2 text-lg font-semibold text-fg px-4 py-2 rounded-lg bg-white">
+                  <UserCircle className="h-6 w-6 text-primary shrink-0" strokeWidth={2} />
+                  <span>{displayName}</span>
                 </div>
               )}
               <button

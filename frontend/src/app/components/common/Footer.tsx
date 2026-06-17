@@ -145,15 +145,15 @@ function Footer() {
             </h3>
             <div className="space-y-3 text-base font-semibold text-white/80">
               <div className="flex items-center gap-3">
-                <Phone className="h-5 w-5 text-primary flex-shrink-0" />
+                <Phone className="h-5 w-5 text-primary shrink-0" />
                 <span>+20 123 456 7890</span>
               </div>
               <div className="flex items-center gap-3">
-                <Mail className="h-5 w-5 text-primary flex-shrink-0" />
+                <Mail className="h-5 w-5 text-primary shrink-0" />
                 <span>support@medwasla.com</span>
               </div>
               <div className="flex items-center gap-3">
-                <MapPin className="h-5 w-5 text-primary flex-shrink-0" />
+                <MapPin className="h-5 w-5 text-primary shrink-0" />
                 <span>Alexandria, Egypt</span>
               </div>
             </div>

@@ -29,6 +29,7 @@ interface SpecialistProfile {
   clinicAddress?: string;
   bio?: string;
   verificationStatus: "pending" | "approved" | "rejected";
+  homeVisit?: boolean;
   certifications?: Array<{
     _id?: string;
     title: string;
@@ -93,6 +94,7 @@ async function buildUser(authUser: AuthUserResponse, token: string): Promise<Use
       bio: profile?.bio,
       verificationStatus: profile?.verificationStatus ?? "pending",
       specialistId: profile?._id,
+      homeVisit: profile?.homeVisit ?? false,
       certificates: mapCertificates(profile?.certifications),
     };
   }
@@ -131,6 +133,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
         bio: profile.bio ?? prev.bio,
         verificationStatus: profile.verificationStatus,
         specialistId: profile._id,
+        homeVisit: profile.homeVisit ?? prev.homeVisit,
         certificates: mapCertificates(profile.certifications),
       };
     });

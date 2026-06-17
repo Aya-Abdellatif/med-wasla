@@ -112,7 +112,7 @@ const toAppError = (err: unknown): AppError => {
 
 // Register a new user and create associated patient or specialist record
 export const registerUser = async (data: RegisterData): Promise<AuthResult> => {
-  const { name, email, password, phone, address, role = "patient", ...specialistFields } = data;
+  const { name, email, password, phone, governorate, dob, address, role = "patient", ...specialistFields } = data;
 
   const existing = await User.findOne({ email });
   if (existing)
@@ -134,7 +134,7 @@ export const registerUser = async (data: RegisterData): Promise<AuthResult> => {
     }
 
     const existingLicense = await MedicalSpecialist.findOne({
-      licenseNumber: licenseNumber?.trim(),
+      licenseNumber: licenseNumber.trim(),
     });
     if (existingLicense) {
       throw new AppError("This license number is already registered", 400);
@@ -146,6 +146,8 @@ export const registerUser = async (data: RegisterData): Promise<AuthResult> => {
     email,
     password,
     phone,
+    governorate,
+    dob,
     address,
     role,
     isVerified: true,

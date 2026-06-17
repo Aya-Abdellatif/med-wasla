@@ -7,7 +7,9 @@ export interface RegisterData {
   email: string;
   password: string;
   phone: string;
-  address: Governorate;
+  governorate: Governorate;
+  dob: Date;
+  address?: string;
   role?: UserRole;
   specialistType?: SpecialistType;
   licenseNumber?: string;
