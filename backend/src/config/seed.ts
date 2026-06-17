@@ -1,3 +1,6 @@
+import dns from "node:dns";
+dns.setServers(["1.1.1.1", "8.8.8.8"]);
+
 import mongoose from "mongoose";
 import dotenv from "dotenv";
 import User from "../models/user.model.js";
@@ -36,7 +39,9 @@ const seedDatabase = async () => {
       email: "admin@medwasla.com",
       password: "adminpassword123",
       phone: "01000000001",
+      governorate: "Cairo",
       address: "Cairo",
+      dob: new Date("1985-01-15"),
       role: "admin",
       isVerified: true,
     });
@@ -50,7 +55,9 @@ const seedDatabase = async () => {
       email: "ahmed.patient@gmail.com",
       password: "patientpassword123",
       phone: "01123456789",
+      governorate: "Giza",
       address: "Giza",
+      dob: new Date("1995-06-20"),
       role: "patient",
       isVerified: true,
     });
@@ -66,7 +73,9 @@ const seedDatabase = async () => {
       email: "khaled.selim@medwasla.com",
       password: "doctorpassword123",
       phone: "01234567890",
+      governorate: "Cairo",
       address: "Cairo",
+      dob: new Date("1980-03-10"),
       role: "specialist",
       isVerified: true,
     });
@@ -109,7 +118,9 @@ const seedDatabase = async () => {
       email: "mona.youssef@medwasla.com",
       password: "doctorpassword123",
       phone: "01512345678",
+      governorate: "Alexandria",
       address: "Alexandria",
+      dob: new Date("1988-11-05"),
       role: "specialist",
       isVerified: true,
     });
@@ -159,7 +170,9 @@ const seedDatabase = async () => {
       email: "salma.mourad@medwasla.com",
       password: "nursepassword123",
       phone: "01098765432",
+      governorate: "Giza",
       address: "Giza",
+      dob: new Date("1992-08-12"),
       role: "specialist",
       isVerified: true,
     });
