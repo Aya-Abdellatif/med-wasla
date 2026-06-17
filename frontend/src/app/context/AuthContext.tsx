@@ -34,6 +34,7 @@ export interface User {
   bio?: string;
   verificationStatus?: VerificationStatus;
   specialistId?: string;
+  homeVisit?: boolean;
   certificates?: Certificate[];
   diseaseHistory?: DiseaseRecord[];
 }

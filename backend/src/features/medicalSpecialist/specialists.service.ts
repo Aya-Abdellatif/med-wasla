@@ -19,15 +19,6 @@ export interface GetAllSpecialistsQuery {
   sortOrder?: "asc" | "desc";
 }
 
-export interface UpdateProfileBody {
-  bio?: string;
-  clinicAddress?: string;
-  areasOfExpertise?: string[];
-  avgWaitMinutes?: number;
-  serviceAreas?: string[];
-  homeVisit?: boolean;
-}
-
 export interface UpdateAvailabilityBody {
   availableSlots: IAvailableSlot[];
 }

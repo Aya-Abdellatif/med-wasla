@@ -6,13 +6,68 @@ import dotenv from "dotenv";
 import User from "../models/user.model.js";
 import Patient from "../models/patient.model.js";
 import MedicalSpecialist from "../models/medicalSpecialist.model.js";
-// Load environment variables (supports .env and env)
+
 dotenv.config();
 if (!process.env.DATABASE_CONNECTION_STRING) {
   dotenv.config({ path: "env" });
 }
 
 const dbUri = process.env.DATABASE_CONNECTION_STRING;
+
+const SPECIALIZATIONS = [
+  "Cardiology",
+  "Orthopedics",
+  "Dermatology",
+  "Pediatrics",
+  "Neurology",
+  "Psychiatry",
+  "Gynecology",
+  "ENT",
+  "Ophthalmology",
+  "General Practice",
+  "Urology",
+  "Oncology",
+] as const;
+
+const DOCTORS_BY_SPECIALTY: Record<(typeof SPECIALIZATIONS)[number], [string, string, string]> = {
+  Cardiology: ["Dr. Khaled Selim", "Dr. Ahmed Hassan", "Dr. Omar Farid"],
+  Orthopedics: ["Dr. Samir El-Masry", "Dr. Karim Nabil", "Dr. Hani Mostafa"],
+  Dermatology: ["Dr. Mona Youssef", "Dr. Nadia Kamal", "Dr. Rana Adel"],
+  Pediatrics: ["Dr. Salma Fathy", "Dr. Yasmine Ali", "Dr. Heba Mahmoud"],
+  Neurology: ["Dr. Tarek Sobhy", "Dr. Amr Galal", "Dr. Sherif Anwar"],
+  Psychiatry: ["Dr. Dina Rashad", "Dr. Laila Hosny", "Dr. Mariam Saeed"],
+  Gynecology: ["Dr. Noha Ibrahim", "Dr. Reem Ashraf", "Dr. Hala Zaki"],
+  ENT: ["Dr. Mahmoud Farouk", "Dr. Bassem Nader", "Dr. Wael Emad"],
+  Ophthalmology: ["Dr. Eman Lotfy", "Dr. Ghada Samir", "Dr. Inas Hany"],
+  "General Practice": ["Dr. Mena Samy", "Dr. Karim Fawzy", "Dr. Ali Reda"],
+  Urology: ["Dr. Hossam Kamal", "Dr. Youssef Nabil", "Dr. Ramy Saad"],
+  Oncology: ["Dr. Amira Taha", "Dr. Nourhan Magdy", "Dr. Sama Osama"],
+};
+
+const NURSE_CATEGORIES = [
+  { expertise: "Home Care", serviceAreas: ["Giza", "Dokki", "Mohandessin"] },
+  { expertise: "Pediatric", serviceAreas: ["Cairo", "Nasr City", "Heliopolis"] },
+  { expertise: "Geriatric", serviceAreas: ["Giza", "Haram", "Faisal"] },
+  { expertise: "Wound Care", serviceAreas: ["Cairo", "Maadi", "Zamalek"] },
+  { expertise: "IV Therapy", serviceAreas: ["Alexandria", "Smouha", "Stanley"] },
+  { expertise: "Post-Op Care", serviceAreas: ["Giza", "6th October", "Sheikh Zayed"] },
+] as const;
+
+const NURSE_NAMES = [
+  ["Nurse Salma Mourad", "Nurse Aya Mahmoud", "Nurse Nour Hassan"],
+  ["Nurse Mariam Ali", "Nurse Dina Farid", "Nurse Hana Sobhy"],
+  ["Nurse Fatma Nabil", "Nurse Samira Kamal", "Nurse Amal Reda"],
+  ["Nurse Rania Emad", "Nurse Yara Lotfy", "Nurse Passant Adel"],
+  ["Nurse Nada Sherif", "Nurse Malak Tarek", "Nurse Jana Hossam"],
+  ["Nurse Layla Anwar", "Nurse Habiba Saeed", "Nurse Zeina Galal"],
+];
+
+const ADDRESSES = ["Cairo", "Giza", "Alexandria"] as const;
+const DAYS = ["Sunday", "Monday", "Tuesday", "Wednesday", "Thursday"];
+
+function slugify(value: string) {
+  return value.toLowerCase().replace(/[^a-z0-9]+/g, "-").replace(/(^-|-$)/g, "");
+}
 
 if (!dbUri) {
   console.error("Error: DATABASE_CONNECTION_STRING is not defined in environment variables.");
@@ -25,16 +80,14 @@ const seedDatabase = async () => {
     await mongoose.connect(dbUri);
     console.log("Connected to MongoDB.");
 
-    // Clear existing data
     console.log("Clearing existing users and specialists...");
     await User.deleteMany({});
     await MedicalSpecialist.deleteMany({});
     await Patient.deleteMany({});
     console.log("Existing data cleared.");
 
-    // 1. Create Admin
     console.log("Creating Admin account...");
-    const adminUser = new User({
+    await new User({
       name: "Admin MedWasla",
       email: "admin@medwasla.com",
       password: "adminpassword123",
@@ -44,13 +97,10 @@ const seedDatabase = async () => {
       dob: new Date("1985-01-15"),
       role: "admin",
       isVerified: true,
-    });
-    await adminUser.save();
-    console.log("Admin account created.");
+    }).save();
 
-    // 2. Create Patient
     console.log("Creating Patient account...");
-    const patientUser = new User({
+    const patientUser = await new User({
       name: "Ahmed Ali",
       email: "ahmed.patient@gmail.com",
       password: "patientpassword123",
@@ -60,152 +110,115 @@ const seedDatabase = async () => {
       dob: new Date("1995-06-20"),
       role: "patient",
       isVerified: true,
-    });
-    await patientUser.save();
-
+    }).save();
     await Patient.create({ userId: patientUser._id });
-    console.log("Patient account created.");
 
-    // 3. Create Approved Doctor (Clinic Only)
-    console.log("Creating Approved Clinic Doctor...");
-    const clinicDoctorUser = new User({
-      name: "Dr. Khaled Selim",
-      email: "khaled.selim@medwasla.com",
-      password: "doctorpassword123",
-      phone: "01234567890",
-      governorate: "Cairo",
-      address: "Cairo",
-      dob: new Date("1980-03-10"),
-      role: "specialist",
-      isVerified: true,
-    });
-    await clinicDoctorUser.save();
+    console.log("Creating approved doctors (3 per specialty)...");
+    let doctorIndex = 0;
+    for (const specialization of SPECIALIZATIONS) {
+      const names = DOCTORS_BY_SPECIALTY[specialization];
+      for (let i = 0; i < names.length; i++) {
+        doctorIndex += 1;
+        const name = names[i];
+        const slug = slugify(specialization);
+        const email = `doctor.${slug}.${i + 1}@medwasla.com`;
+        const governorate = ADDRESSES[doctorIndex % ADDRESSES.length];
 
-    const clinicDoctorSpecialist = new MedicalSpecialist({
-      userId: clinicDoctorUser._id,
-      specialistType: "doctor",
-      specialization: "Cardiology",
-      clinicAddress: "12 El-Tahrir Sq, Downtown, Cairo",
-      homeVisit: false,
-      licenseNumber: "DOC-12345",
-      bio: "Senior Cardiologist with over 15 years of experience in cardiovascular healthcare.",
-      consultationFee: 300,
-      avgWaitMinutes: 15,
-      rating: 4.8,
-      reviewCount: 24,
-      verificationStatus: "approved",
-      availableSlots: [
-        { day: "Monday", startTime: "10:00", endTime: "14:00" },
-        { day: "Wednesday", startTime: "14:00", endTime: "18:00" }
-      ],
-      certifications: [
-        {
-          title: "MD in Cardiology",
-          issuedBy: "Cairo University",
-          issuedAt: new Date("2010-06-15"),
-          certificateUrl: "https://example.com/certs/khaled_md.pdf",
-          status: "approved"
-        }
-      ]
-    });
-    await clinicDoctorSpecialist.save();
-    console.log("Approved Clinic Doctor created.");
+        const user = await new User({
+          name,
+          email,
+          password: "doctorpassword123",
+          phone: `0120000${String(doctorIndex).padStart(4, "0")}`,
+          governorate,
+          address: governorate,
+          dob: new Date(`198${i}-0${(doctorIndex % 9) + 1}-15`),
+          role: "specialist",
+          isVerified: true,
+        }).save();
 
-    // 4. Create Pending Doctor (Home Visit)
-    console.log("Creating Pending Home Visit Doctor...");
-    const homeDoctorUser = new User({
-      name: "Dr. Mona Youssef",
-      email: "mona.youssef@medwasla.com",
-      password: "doctorpassword123",
-      phone: "01512345678",
-      governorate: "Alexandria",
-      address: "Alexandria",
-      dob: new Date("1988-11-05"),
-      role: "specialist",
-      isVerified: true,
-    });
-    await homeDoctorUser.save();
+        await MedicalSpecialist.create({
+          userId: user._id,
+          specialistType: "doctor",
+          specialization,
+          clinicAddress: `${10 + i} ${specialization} Clinic, ${governorate}`,
+          homeVisit: i === 2,
+          licenseNumber: `DOC-${slug.toUpperCase().slice(0, 3)}-${String(i + 1).padStart(3, "0")}`,
+          bio: `${name} is an experienced ${specialization.toLowerCase()} specialist providing quality patient care.`,
+          consultationFee: 250 + i * 50,
+          avgWaitMinutes: 10 + i * 5,
+          rating: 4.5 + i * 0.1,
+          reviewCount: 10 + doctorIndex,
+          verificationStatus: "approved",
+          availableSlots: [
+            { day: DAYS[i % DAYS.length], startTime: "09:00", endTime: "13:00" },
+            { day: DAYS[(i + 2) % DAYS.length], startTime: "14:00", endTime: "18:00" },
+          ],
+          certifications: [
+            {
+              title: `MD in ${specialization}`,
+              issuedBy: `${governorate} University`,
+              issuedAt: new Date("2012-06-15"),
+              certificateUrl: `https://example.com/certs/${slug}-${i + 1}.pdf`,
+              status: "approved",
+            },
+          ],
+        });
+      }
+    }
 
-    const homeDoctorSpecialist = new MedicalSpecialist({
-      userId: homeDoctorUser._id,
-      specialistType: "doctor",
-      specialization: "Pediatrics",
-      clinicAddress: "45 El-Corniche Road, Alexandria",
-      homeVisit: true,
-      licenseNumber: "DOC-67890",
-      bio: "Pediatrician passionate about children healthcare, offering clinic and home consultations.",
-      consultationFee: 250,
-      avgWaitMinutes: 20,
-      rating: 0,
-      reviewCount: 0,
-      verificationStatus: "pending",
-      availableSlots: [
-        { day: "Sunday", startTime: "09:00", endTime: "13:00" },
-        { day: "Tuesday", startTime: "16:00", endTime: "20:00" }
-      ],
-      certifications: [
-        {
-          title: "Master's Degree in Pediatrics",
-          issuedBy: "Alexandria University",
-          issuedAt: new Date("2015-09-20"),
-          certificateUrl: "https://example.com/certs/mona_masters.pdf",
-          status: "pending"
-        },
-        {
-          title: "Child Care Specialization Fellowship",
-          issuedBy: "Royal College of Pediatrics",
-          issuedAt: new Date("2018-05-10"),
-          certificateUrl: "https://example.com/certs/mona_fellowship.pdf",
-          status: "pending"
-        }
-      ]
-    });
-    await homeDoctorSpecialist.save();
-    console.log("Pending Home Visit Doctor created.");
+    console.log("Creating approved nurses (3 per category)...");
+    let nurseIndex = 0;
+    for (let categoryIndex = 0; categoryIndex < NURSE_CATEGORIES.length; categoryIndex++) {
+      const category = NURSE_CATEGORIES[categoryIndex];
+      const names = NURSE_NAMES[categoryIndex];
 
-    // 5. Create Pending Nurse (Home Visit by default)
-    console.log("Creating Pending Nurse...");
-    const nurseUser = new User({
-      name: "Nurse Salma Mourad",
-      email: "salma.mourad@medwasla.com",
-      password: "nursepassword123",
-      phone: "01098765432",
-      governorate: "Giza",
-      address: "Giza",
-      dob: new Date("1992-08-12"),
-      role: "specialist",
-      isVerified: true,
-    });
-    await nurseUser.save();
+      for (let i = 0; i < names.length; i++) {
+        nurseIndex += 1;
+        const name = names[i];
+        const slug = slugify(category.expertise);
+        const email = `nurse.${slug}.${i + 1}@medwasla.com`;
+        const governorate = ADDRESSES[nurseIndex % ADDRESSES.length];
 
-    const nurseSpecialist = new MedicalSpecialist({
-      userId: nurseUser._id,
-      specialistType: "nurse",
-      homeVisit: true,
-      serviceAreas: ["Giza", "Haram", "Faisal"],
-      licenseNumber: "NUR-98765",
-      bio: "Registered nurse experienced in geriatric and post-operative home care.",
-      consultationFee: 150,
-      avgWaitMinutes: 10,
-      rating: 0,
-      reviewCount: 0,
-      verificationStatus: "pending",
-      availableSlots: [
-        { day: "Saturday", startTime: "08:00", endTime: "16:00" },
-        { day: "Thursday", startTime: "12:00", endTime: "20:00" }
-      ],
-      certifications: [
-        {
-          title: "B.Sc. in Nursing",
-          issuedBy: "Helwan University",
-          issuedAt: new Date("2018-07-01"),
-          certificateUrl: "https://example.com/certs/salma_bsc.pdf",
-          status: "pending"
-        }
-      ]
-    });
-    await nurseSpecialist.save();
-    console.log("Pending Nurse created.");
+        const user = await new User({
+          name,
+          email,
+          password: "nursepassword123",
+          phone: `0109000${String(nurseIndex).padStart(4, "0")}`,
+          governorate,
+          address: governorate,
+          dob: new Date(`199${i}-0${(nurseIndex % 9) + 1}-20`),
+          role: "specialist",
+          isVerified: true,
+        }).save();
+
+        await MedicalSpecialist.create({
+          userId: user._id,
+          specialistType: "nurse",
+          homeVisit: true,
+          serviceAreas: [...category.serviceAreas],
+          areasOfExpertise: [category.expertise],
+          licenseNumber: `NUR-${slug.toUpperCase().slice(0, 3)}-${String(i + 1).padStart(3, "0")}`,
+          bio: `${name} provides professional ${category.expertise.toLowerCase()} services at home.`,
+          consultationFee: 120 + i * 30,
+          avgWaitMinutes: 8 + i * 2,
+          rating: 4.4 + i * 0.15,
+          reviewCount: 8 + nurseIndex,
+          verificationStatus: "approved",
+          availableSlots: [
+            { day: DAYS[i % DAYS.length], startTime: "08:00", endTime: "16:00" },
+          ],
+          certifications: [
+            {
+              title: "B.Sc. in Nursing",
+              issuedBy: `${governorate} University`,
+              issuedAt: new Date("2016-07-01"),
+              certificateUrl: `https://example.com/certs/${slug}-nurse-${i + 1}.pdf`,
+              status: "approved",
+            },
+          ],
+        });
+      }
+    }
 
     console.log("Database seeded successfully.");
     process.exit(0);

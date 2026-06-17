@@ -250,7 +250,7 @@ export function MyAppointments() {
     const [isAppointmentModalOpen, setIsAppointmentModalOpen] = useState(false);
 
 
-    const handleBookAgain = (appt: Appointment) => {
+    const handleBookAgain = (_appt: Appointment) => {
         // Navigate to doctors page — in a real app this would pre-select the doctor
         navigate("/doctors");
     };
