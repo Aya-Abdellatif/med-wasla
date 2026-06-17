@@ -9,6 +9,7 @@ import {
   updateAvailability,
   updateFees,
   SpecialistsController,
+  updatePhoto,
 } from "./specialists.controller.js";
 
 const router = Router();
@@ -28,6 +29,7 @@ async function specialistAuth(
 }
 
 router.get("/me", specialistAuth, SpecialistsController.getMe);
+router.patch("/me/photo", specialistAuth, updatePhoto);
 router.post("/me/certificates", specialistAuth, SpecialistsController.addCertificate);
 
 router.get("/", getAllSpecialists);

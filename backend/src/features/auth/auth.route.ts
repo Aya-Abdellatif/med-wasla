@@ -1,6 +1,6 @@
 import express from "express";
 import { protect } from "../../middleware/auth.middleware.js";
-import { register, verifyOtp, resendOtp, login, logout, getMe, updatePhoto } from "./auth.controller.js";
+import { register, verifyOtp, resendOtp, login, logout, getMe } from "./auth.controller.js";
 
 const router = express.Router();
 
@@ -10,6 +10,5 @@ router.post("/resend-otp", resendOtp);
 router.post("/login", login);
 router.post("/logout", logout);
 router.get("/me", protect, getMe);
-router.patch("/me/photo", protect, updatePhoto);
 
 export default router;
