@@ -1,5 +1,5 @@
 import { Router } from "express";
-import { protect, restrictTo } from "../../../middleware/auth.middleware.js";
+import { protect, restrictTo } from "../../middleware/auth.middleware.js";
 import {
   getAllSpecialists,
   getSpecialistById,

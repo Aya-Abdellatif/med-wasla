@@ -15,9 +15,7 @@ export const join = async (req: Request, res: Response, next: NextFunction) => {
 export const getQueue = async (req: Request, res: Response, next: NextFunction) => {
 	try {
 		const specialistId = req.params.specialistId as string;
-
-		const q = await queueService.getQueue(specialistId);
-
+        const q = await queueService.getQueue(specialistId);
 		res.status(200).json({ status: "success", data: q ?? { entries: [] } });
 	} catch (err) {
 		next(err);
