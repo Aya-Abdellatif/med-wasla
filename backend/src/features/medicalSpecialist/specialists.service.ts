@@ -193,7 +193,8 @@ export class SpecialistsService {
       { returnDocument: "after", runValidators: true },
     ).populate("userId", "name email phone address photoUrl governorate");
 
-    if (!updated) throw new Error("Specialist profile not found");
+    if (!updated) 
+      throw new Error("Specialist profile not found");
     return updated;
   }
 }
@@ -214,7 +215,8 @@ export const updateUserPhoto = async (
           transformation: [{ width: 400, height: 400, crop: "fill" }],
         },
         (err, result) => {
-          if (err || !result) return reject(err ?? new Error("Cloudinary upload failed"));
+          if (err || !result) 
+            return reject(err ?? new Error("Cloudinary upload failed"));
           resolve(result);
         },
       )
@@ -227,6 +229,8 @@ export const updateUserPhoto = async (
     { new: true },
   );
 
-  if (!user) throw new AppError("User not found", 404);
+  if (!user) 
+    throw new AppError("User not found", 404);
+
   return user;
 };
