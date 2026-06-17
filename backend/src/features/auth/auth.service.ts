@@ -246,34 +246,3 @@ export const getUserById = async (id: string): Promise<IUser> => {
 
   return user;
 };
-
-const MAX_PHOTO_URL_LENGTH = 3 * 1024 * 1024;
-
-export const updateUserPhoto = async (
-  userId: string,
-  photoUrl: string,
-): Promise<IUser> => {
-  if (!photoUrl || typeof photoUrl !== "string") {
-    throw new AppError("Photo URL is required", 400);
-  }
-
-  const isDataUrl = photoUrl.startsWith("data:image/");
-  const isHttpUrl = /^https?:\/\//i.test(photoUrl);
-
-  if (!isDataUrl && !isHttpUrl) {
-    throw new AppError("Photo must be an image file or a valid URL", 400);
-  }
-
-  if (photoUrl.length > MAX_PHOTO_URL_LENGTH) {
-    throw new AppError("Image is too large. Please use a smaller photo.", 400);
-  }
-
-  const user = await User.findByIdAndUpdate(
-    userId,
-    { photoUrl },
-    { new: true, runValidators: true },
-  );
-
-  if (!user) throw new AppError("User not found", 404);
-  return user;
-};
