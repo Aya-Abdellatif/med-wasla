@@ -2,6 +2,7 @@ import type { Request, Response, NextFunction } from "express";
 import { Router } from "express";
 import { protect, restrictTo } from "../../middleware/auth.middleware.js";
 import { mockAuth } from "../../middleware/mockAuth.js";
+import { uploadPhoto } from "../../middleware/upload.middleware.js";
 import {
   getAllSpecialists,
   getSpecialistById,
@@ -29,7 +30,7 @@ async function specialistAuth(
 }
 
 router.get("/me", specialistAuth, SpecialistsController.getMe);
-router.patch("/me/photo", specialistAuth, updatePhoto);
+router.patch("/me/photo", specialistAuth, uploadPhoto.single("photo"), updatePhoto);
 router.post("/me/certificates", specialistAuth, SpecialistsController.addCertificate);
 
 router.get("/", getAllSpecialists);

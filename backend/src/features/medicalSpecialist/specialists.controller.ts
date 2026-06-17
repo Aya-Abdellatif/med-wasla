@@ -1,4 +1,5 @@
 import type { Request, Response, NextFunction } from "express";
+import AppError from "../../utils/AppError.js";
 import {
   getAllSpecialistsService,
   getSpecialistByIdService,
@@ -164,7 +165,9 @@ export class SpecialistsController {
 
 export const updatePhoto = async (req: Request, res: Response, next: NextFunction) => {
   try {
-    const user = await updateUserPhoto(req.user!.id, req.body.photoUrl);
+    if (!req.file) throw new AppError("Please upload an image", 400);
+
+    const user = await updateUserPhoto(req.user!.id, req.file.buffer, req.file.mimetype);
     res.status(200).json({
       status: "success",
       message: "Profile photo updated",

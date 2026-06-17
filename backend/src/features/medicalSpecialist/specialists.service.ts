@@ -5,6 +5,7 @@ import MedicalSpecialist, {
 import "../../models/user.model.js";
 import User, { type IUser } from "../../models/user.model.js";
 import AppError from "../../utils/AppError.js";
+import cloudinary from "../../config/cloudinary.js";
 
 const toUserObjectId = (userId: string) => new mongoose.Types.ObjectId(userId);
 
@@ -197,31 +198,33 @@ export class SpecialistsService {
   }
 }
 
-const MAX_PHOTO_URL_LENGTH = 3 * 1024 * 1024;
 
 export const updateUserPhoto = async (
   userId: string,
-  photoUrl: string,
+  fileBuffer: Buffer,
+  mimeType: string,
 ): Promise<IUser> => {
-  if (!photoUrl || typeof photoUrl !== "string") {
-    throw new AppError("Photo URL is required", 400);
-  }
-
-  const isDataUrl = photoUrl.startsWith("data:image/");
-  const isHttpUrl = /^https?:\/\//i.test(photoUrl);
-
-  if (!isDataUrl && !isHttpUrl) {
-    throw new AppError("Photo must be an image file or a valid URL", 400);
-  }
-
-  if (photoUrl.length > MAX_PHOTO_URL_LENGTH) {
-    throw new AppError("Image is too large. Please use a smaller photo.", 400);
-  }
+  const uploadResult = await new Promise<{ secure_url: string }>((resolve, reject) => {
+    cloudinary.uploader
+      .upload_stream(
+        {
+          folder: "medwasla/profiles",
+          resource_type: "image",
+          format: mimeType.split("/")[1],
+          transformation: [{ width: 400, height: 400, crop: "fill" }],
+        },
+        (err, result) => {
+          if (err || !result) return reject(err ?? new Error("Cloudinary upload failed"));
+          resolve(result);
+        },
+      )
+      .end(fileBuffer);
+  });
 
   const user = await User.findByIdAndUpdate(
     userId,
-    { photoUrl },
-    { new: true, runValidators: true },
+    { photoUrl: uploadResult.secure_url },
+    { new: true },
   );
 
   if (!user) throw new AppError("User not found", 404);
