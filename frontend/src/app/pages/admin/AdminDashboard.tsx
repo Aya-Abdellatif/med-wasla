@@ -1,7 +1,8 @@
 // frontend/src/app/pages/admin/AdminDashboard.tsx
-import { useEffect, useState } from "react";
+import { useCallback, useEffect, useState } from "react";
 import { useNavigate } from "react-router-dom";
 import { useAuth } from "../../context/useAuth";
+import { API_BASE } from "../../../services/api";
 import { showError, showInfo, showSuccess } from "../../../utils/toast";
 import {
   Check,
@@ -62,64 +63,118 @@ interface SpecialistOverview {
 
 type FilterTab = "all" | "pending" | "approved" | "rejected";
 
+interface AdminApiResponse {
+  success: boolean;
+  data?: SpecialistOverview[];
+  message?: string;
+}
+
+async function requestSpecialists(signal?: AbortSignal): Promise<{
+  specialists?: SpecialistOverview[];
+  error?: string;
+}> {
+  try {
+    const res = await fetch(`${API_BASE}/api/admin/specialists`, { signal });
+    const json = (await res.json()) as AdminApiResponse;
+
+    if (json.success && json.data) {
+      return { specialists: json.data };
+    }
+
+    return { error: json.message || "Failed to load specialists" };
+  } catch (err: unknown) {
+    if (err instanceof DOMException && err.name === "AbortError") {
+      return {};
+    }
+
+    return {
+      error:
+        "Unable to connect to the backend server. Please verify the backend is running." +
+        (err instanceof Error && err.message ? ` Error: ${err.message}` : ""),
+    };
+  }
+}
+
 export default function AdminDashboard() {
+  const { user } = useAuth();
+  const navigate = useNavigate();
+
+  useEffect(() => {
+    if (user && user.role !== "admin") {
+      navigate("/home");
+    }
+  }, [navigate, user]);
+
+  if (!user || user.role !== "admin") {
+    return null;
+  }
+
+  return <AdminDashboardView key={user.id} />;
+}
+
+function AdminDashboardView() {
   const { logout, user } = useAuth();
   const navigate = useNavigate();
   const [specialists, setSpecialists] = useState<SpecialistOverview[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState("");
   const [actioningId, setActioningId] = useState<string | null>(null);
-  
-  // الـ state الخاصة بالتاب النشط حالياً
   const [activeTab, setActiveTab] = useState<FilterTab>("all");
 
-  // جلب كل الأخصائيين بناءً على الـ Endpoint الشامل الجديد
-  const fetchAllSpecialists = async (notify = false) => {
+  const refreshSpecialists = useCallback(async (notify = false) => {
     setLoading(true);
     setError("");
-    try {
-      const res = await fetch("http://localhost:5000/api/admin/specialists");
-      const json = await res.json();
-      if (json.success) {
-        setSpecialists(json.data);
-        if (notify) showInfo("Specialists list refreshed");
-      } else {
-        const message = json.message || "Failed to load specialists";
-        setError(message);
-        showError(message);
-      }
-    } catch (err: unknown) {
-      const message =
-        "Unable to connect to the backend server. Please verify the backend is running." +
-        (err instanceof Error && err.message ? ` Error: ${err.message}` : "");
-      setError(message);
-      showError(message);
-    } finally {
-      setLoading(false);
+
+    const result = await requestSpecialists();
+
+    if (result.specialists) {
+      setSpecialists(result.specialists);
+      if (notify) showInfo("Specialists list refreshed");
+    } else if (result.error) {
+      setError(result.error);
+      showError(result.error);
     }
-  };
+
+    setLoading(false);
+  }, []);
 
   useEffect(() => {
-    if (user && user.role !== "admin") {
-      navigate("/home");
-      return;
-    }
-    fetchAllSpecialists();
-  }, [navigate, user]);
+    const controller = new AbortController();
+
+    void requestSpecialists(controller.signal).then((result) => {
+      if (controller.signal.aborted) return;
+
+      if (result.specialists) {
+        setSpecialists(result.specialists);
+        setError("");
+      } else if (result.error) {
+        setError(result.error);
+        showError(result.error);
+      }
+
+      setLoading(false);
+    });
+
+    return () => controller.abort();
+  }, []);
 
   const handleAction = async (id: string, action: "approve" | "reject") => {
     setActioningId(id);
     try {
-      const res = await fetch(`http://localhost:5000/api/admin/specialists/${id}/${action}`, {
+      const res = await fetch(`${API_BASE}/api/admin/specialists/${id}/${action}`, {
         method: "PATCH",
-        headers: { "Content-Type": "application/json" }
+        headers: { "Content-Type": "application/json" },
       });
-      const json = await res.json();
+      const json = (await res.json()) as { success: boolean; message?: string };
       if (json.success) {
         showSuccess(`Specialist ${action === "approve" ? "approved" : "rejected"} successfully!`);
 
-        setSpecialists(prev =>
-          prev.map(s => s._id === id ? { ...s, verificationStatus: action === "approve" ? "approved" : "rejected" } : s)
+        setSpecialists((prev) =>
+          prev.map((s) =>
+            s._id === id
+              ? { ...s, verificationStatus: action === "approve" ? "approved" : "rejected" }
+              : s,
+          ),
         );
       } else {
         showError(json.message || `Failed to ${action} specialist`);
@@ -218,7 +273,7 @@ export default function AdminDashboard() {
           </div>
 
           <button
-            onClick={() => fetchAllSpecialists(true)}
+            onClick={() => refreshSpecialists(true)}
             className="self-start flex items-center gap-2 bg-white border border-slate-200 px-4 py-2.5 rounded-xl text-slate-700 font-bold hover:bg-slate-100 transition-colors shadow-sm cursor-pointer"
           >
             <RefreshCw className={`w-4 h-4 ${loading ? "animate-spin" : ""}`} />
@@ -267,7 +322,7 @@ export default function AdminDashboard() {
             <h3 className="text-xl font-bold text-rose-900 mb-2">Connection Problem</h3>
             <p className="text-rose-700 font-medium mb-6">{error}</p>
             <button
-              onClick={() => fetchAllSpecialists(true)}
+              onClick={() => refreshSpecialists(true)}
               className="px-6 py-3 bg-rose-600 text-white rounded-full font-bold hover:bg-rose-700 transition-colors cursor-pointer"
             >
               Retry Connection
