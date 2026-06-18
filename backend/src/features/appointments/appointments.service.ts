@@ -1,6 +1,10 @@
+import { Types } from "mongoose";
+import type { HydratedDocument } from "mongoose";
 import Appointment from "../../models/appointment.model.js";
 import MedicalSpecialist from "../../models/medicalSpecialist.model.js";
 import type { AppointmentStatus, AppointmentType } from "../../models/appointment.model.js";
+import type { IUser } from "../../models/user.model.js";
+import type { IMedicalSpecialist } from "../../models/medicalSpecialist.model.js";
 
 
 export const createAppointmentService = async (data: {
@@ -76,15 +80,20 @@ export const getAppointmentByIdService = async (
   if (!appointment) return null;
 
   if (requesterRole === "patient") {
-    // patientId is now a populated User object; compare _id
-    const patientUserId = (appointment.patientId as any)._id?.toString() ?? appointment.patientId.toString();
-    if (patientUserId !== requesterId) 
+    const patientId = appointment.patientId;
+    const patientUserId = patientId instanceof Types.ObjectId
+      ? patientId.toString()
+      : (patientId as HydratedDocument<IUser>)._id.toString();
+    if (patientUserId !== requesterId)
       throw new Error("FORBIDDEN");
   }
 
   if (requesterRole === "specialist") {
     const specialist = await MedicalSpecialist.findOne({ userId: requesterId });
-    const specialistDocId = (appointment.specialistId as any)._id?.toString() ?? appointment.specialistId.toString();
+    const specId = appointment.specialistId;
+    const specialistDocId = specId instanceof Types.ObjectId
+      ? specId.toString()
+      : (specId as HydratedDocument<IMedicalSpecialist>)._id.toString();
     if (!specialist || specialistDocId !== specialist._id.toString()) {
       throw new Error("FORBIDDEN");
     }
