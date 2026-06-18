@@ -1,11 +1,26 @@
 import type { Request, Response } from "express";
 import { AdminService } from "./admin.service.js";
 
+function getErrorMessage(error: unknown): string {
+  return error instanceof Error ? error.message : "An unexpected error occurred";
+}
+
+function getSpecialistId(req: Request, res: Response): string | null {
+  const id = Array.isArray(req.params.id) ? req.params.id[0] : req.params.id;
+
+  if (!id) {
+    res.status(400).json({ success: false, message: "Specialist id is required" });
+    return null;
+  }
+
+  return id;
+}
+
 export class AdminController {
   /**
    * GET /api/admin/specialists/pending
    */
-  static async getPendingSpecialists(req: Request, res: Response): Promise<void> {
+  static async getPendingSpecialists(_req: Request, res: Response): Promise<void> {
     try {
       const pendingSpecialists = await AdminService.getPendingSpecialists();
       res.status(200).json({
@@ -13,11 +28,30 @@ export class AdminController {
         count: pendingSpecialists.length,
         data: pendingSpecialists,
       });
-    } catch (error: any) {
+    } catch (error: unknown) {
       res.status(500).json({
         success: false,
         message: "Failed to retrieve pending specialists",
-        error: error.message,
+        error: getErrorMessage(error),
+      });
+    }
+  }
+
+  /**
+   * GET /api/admin/specialists
+   */
+  static async getAllSpecialists(_req: Request, res: Response): Promise<void> {
+    try {
+      const specialists = await AdminService.getAllSpecialists();
+      res.status(200).json({
+        success: true,
+        count: specialists.length,
+        data: specialists,
+      });
+    } catch (error: unknown) {
+      res.status(500).json({
+        success: false,
+        message: getErrorMessage(error),
       });
     }
   }
@@ -26,19 +60,22 @@ export class AdminController {
    * PATCH /api/admin/specialists/:id/approve
    */
   static async approveSpecialist(req: Request, res: Response): Promise<void> {
+    const id = getSpecialistId(req, res);
+    if (!id) return;
+
     try {
-      const { id } = req.params;
-      const approvedSpecialist = await AdminService.approveSpecialist(id as string);
+      const approvedSpecialist = await AdminService.approveSpecialist(id);
       res.status(200).json({
         success: true,
         message: "Specialist approved successfully",
         data: approvedSpecialist,
       });
-    } catch (error: any) {
-      const statusCode = error.message === "Medical specialist not found" ? 404 : 500;
+    } catch (error: unknown) {
+      const message = getErrorMessage(error);
+      const statusCode = message === "Medical specialist not found" ? 404 : 500;
       res.status(statusCode).json({
         success: false,
-        message: error.message || "Failed to approve specialist",
+        message: message || "Failed to approve specialist",
       });
     }
   }
@@ -47,30 +84,23 @@ export class AdminController {
    * PATCH /api/admin/specialists/:id/reject
    */
   static async rejectSpecialist(req: Request, res: Response): Promise<void> {
+    const id = getSpecialistId(req, res);
+    if (!id) return;
+
     try {
-      const { id } = req.params;
-      const rejectedSpecialist = await AdminService.rejectSpecialist(id as string);
+      const rejectedSpecialist = await AdminService.rejectSpecialist(id);
       res.status(200).json({
         success: true,
         message: "Specialist rejected successfully",
         data: rejectedSpecialist,
       });
-    } catch (error: any) {
-      const statusCode = error.message === "Medical specialist not found" ? 404 : 500;
+    } catch (error: unknown) {
+      const message = getErrorMessage(error);
+      const statusCode = message === "Medical specialist not found" ? 404 : 500;
       res.status(statusCode).json({
         success: false,
-        message: error.message || "Failed to reject specialist",
+        message: message || "Failed to reject specialist",
       });
     }
   }
-
-  // داخل backend/src/features/admin/admin.controller.ts
-static async getAllSpecialists(req: Request, res: Response): Promise<void> {
-  try {
-    const specialists = await AdminService.getAllSpecialists();
-    res.status(200).json({ success: true, count: specialists.length, data: specialists });
-  } catch (error: any) {
-    res.status(500).json({ success: false, message: error.message });
-  }
-}
 }

@@ -23,6 +23,19 @@ import {
 
 export function DoctorProfile() {
   const { id } = useParams<{ id: string }>();
+
+  if (!id) {
+    return (
+      <div className="min-h-screen bg-muted/30 flex items-center justify-center">
+        <p className="text-lg text-muted-foreground">Invalid doctor profile.</p>
+      </div>
+    );
+  }
+
+  return <DoctorProfileView key={id} id={id} />;
+}
+
+function DoctorProfileView({ id }: { id: string }) {
   const navigate = useNavigate();
   const [isBookingModalOpen, setIsBookingModalOpen] = useState(false);
   const [currentPage, setCurrentPage] = useState(0);
@@ -33,21 +46,27 @@ export function DoctorProfile() {
   const REVIEWS_PER_PAGE = 3;
 
   useEffect(() => {
-    if (!id) return;
-
-    setLoading(true);
-    setError(null);
+    let cancelled = false;
 
     Promise.all([fetchSpecialistProfile(id, "doctor"), fetchSpecialistReviews(id)])
       .then(([profile, profileReviews]) => {
+        if (cancelled) return;
         setDoctor(profile);
         setReviews(profileReviews);
+        setError(null);
       })
       .catch((err) => {
+        if (cancelled) return;
         setDoctor(null);
         setError(err instanceof Error ? err.message : "Failed to load doctor profile");
       })
-      .finally(() => setLoading(false));
+      .finally(() => {
+        if (!cancelled) setLoading(false);
+      });
+
+    return () => {
+      cancelled = true;
+    };
   }, [id]);
 
   const hasReviews = reviews.length > 0;
