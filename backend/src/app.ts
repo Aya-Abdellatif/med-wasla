@@ -1,6 +1,6 @@
 import express from "express";
 import cors from "cors";
-import { patientRouter } from "./features/patient/patient.routes.js";
+import { patientRouter } from "./features/patient-profile/patient-profile.routes.js";
 import errorHandler from "./middleware/errorHandler.middleware.js";
 import authRouter from "./features/auth/auth.route.js";
 import specialistsRouter from "./features/medicalSpecialist/specialists.routes.js";
