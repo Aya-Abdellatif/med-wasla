@@ -2,7 +2,6 @@ import Appointment from "../../models/appointment.model.js";
 import MedicalSpecialist from "../../models/medicalSpecialist.model.js";
 import type { AppointmentStatus, AppointmentType } from "../../models/appointment.model.js";
 
-// ─── Create ────────────────────────────────────────────────────────────────
 
 export const createAppointmentService = async (data: {
   patientId: string;
@@ -14,11 +13,12 @@ export const createAppointmentService = async (data: {
 }) => {
   const specialist = await MedicalSpecialist.findById(data.specialistId);
   if (!specialist) throw new Error("SPECIALIST_NOT_FOUND");
-  if (specialist.verificationStatus !== "approved") throw new Error("SPECIALIST_NOT_APPROVED");
+  if (specialist.verificationStatus !== "approved") 
+    throw new Error("SPECIALIST_NOT_APPROVED");
 
-  if (data.type === "home" && !data.address?.trim()) throw new Error("ADDRESS_REQUIRED");
+  if (data.type === "home" && !data.address?.trim()) 
+    throw new Error("ADDRESS_REQUIRED");
 
-  // Nurses only do home visits; doctors can do clinic (and home if homeVisit is true)
   if (data.type === "clinic" && specialist.specialistType === "nurse") {
     throw new Error("INVALID_TYPE_FOR_NURSE");
   }
@@ -39,19 +39,16 @@ export const createAppointmentService = async (data: {
   });
 };
 
-// ─── Get patient's appointments ────────────────────────────────────────────
 
 export const getPatientAppointmentsService = async (patientId: string) => {
   return Appointment.find({ patientId })
     .populate({
       path: "specialistId",
-      // specialistId → MedicalSpecialist → populate its userId → User (name, photo, phone)
       populate: { path: "userId", select: "name photoUrl phone" },
     })
     .sort({ date: -1 });
 };
 
-// ─── Get specialist's appointments ─────────────────────────────────────────
 
 export const getSpecialistAppointmentsService = async (userId: string) => {
   // The logged-in specialist's req.user.id is a User._id, not a MedicalSpecialist._id
@@ -63,7 +60,6 @@ export const getSpecialistAppointmentsService = async (userId: string) => {
     .sort({ date: -1 });
 };
 
-// ─── Get single appointment ─────────────────────────────────────────────────
 
 export const getAppointmentByIdService = async (
   appointmentId: string,
@@ -82,7 +78,8 @@ export const getAppointmentByIdService = async (
   if (requesterRole === "patient") {
     // patientId is now a populated User object; compare _id
     const patientUserId = (appointment.patientId as any)._id?.toString() ?? appointment.patientId.toString();
-    if (patientUserId !== requesterId) throw new Error("FORBIDDEN");
+    if (patientUserId !== requesterId) 
+      throw new Error("FORBIDDEN");
   }
 
   if (requesterRole === "specialist") {
@@ -96,7 +93,6 @@ export const getAppointmentByIdService = async (
   return appointment;
 };
 
-// ─── Update status (specialist only: pending→confirmed, confirmed→completed) ─
 
 export const updateAppointmentStatusService = async (
   appointmentId: string,
@@ -113,7 +109,6 @@ export const updateAppointmentStatusService = async (
     throw new Error("FORBIDDEN");
   }
 
-  // Allowed transitions: pending→confirmed, confirmed→completed
   const validTransitions: Record<string, AppointmentStatus[]> = {
     pending: ["confirmed"],
     confirmed: ["completed"],
@@ -128,7 +123,6 @@ export const updateAppointmentStatusService = async (
   return appointment;
 };
 
-// ─── Cancel (patient OR specialist) ───────────────────────────────────────
 
 export const cancelAppointmentService = async (
   appointmentId: string,
@@ -158,7 +152,6 @@ export const cancelAppointmentService = async (
   return appointment;
 };
 
-// ─── Reschedule (patient only) ─────────────────────────────────────────────
 
 export const rescheduleAppointmentService = async (
   appointmentId: string,
@@ -185,7 +178,6 @@ export const rescheduleAppointmentService = async (
   return appointment;
 };
 
-// ─── Available slots for a specialist on a given date ──────────────────────
 
 export const getAvailableSlotsService = async (
   specialistId: string,
