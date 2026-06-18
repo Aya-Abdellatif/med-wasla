@@ -7,11 +7,11 @@ import {
   getAppointmentByIdService,
   updateAppointmentStatusService,
   cancelAppointmentService,
+  rescheduleAppointmentService,
   getAvailableSlotsService,
 } from "./appointments.service.js";
 import type { AppointmentStatus } from "../../models/appointment.model.js";
 
-// ─── POST /api/appointments ────────────────────────────────────────────────
 
 export const createAppointment = async (
   req: Request,
@@ -46,17 +46,22 @@ export const createAppointment = async (
     });
   } catch (error) {
     const msg = (error as Error).message;
-    if (msg === "SPECIALIST_NOT_FOUND") return next(new AppError("Specialist not found", 404));
-    if (msg === "SPECIALIST_NOT_APPROVED") return next(new AppError("Specialist is not approved yet", 400));
-    if (msg === "ADDRESS_REQUIRED") return next(new AppError("Address is required for home visits", 400));
-    if (msg === "INVALID_TYPE_FOR_NURSE") return next(new AppError("Nurses only offer home visits", 400));
-    if (msg === "SPECIALIST_NO_HOME_VISIT") return next(new AppError("This specialist does not offer home visits", 400));
-    if (msg === "DATE_IN_PAST") return next(new AppError("Appointment date must be in the future", 400));
+    if (msg === "SPECIALIST_NOT_FOUND") 
+      return next(new AppError("Specialist not found", 404));
+    if (msg === "SPECIALIST_NOT_APPROVED") 
+      return next(new AppError("Specialist is not approved yet", 400));
+    if (msg === "ADDRESS_REQUIRED") 
+      return next(new AppError("Address is required for home visits", 400));
+    if (msg === "INVALID_TYPE_FOR_NURSE") 
+      return next(new AppError("Nurses only offer home visits", 400));
+    if (msg === "SPECIALIST_NO_HOME_VISIT") 
+      return next(new AppError("This specialist does not offer home visits", 400));
+    if (msg === "DATE_IN_PAST") 
+      return next(new AppError("Appointment date must be in the future", 400));
     return next(error);
   }
 };
 
-// ─── GET /api/appointments/my ──────────────────────────────────────────────
 
 export const getMyAppointments = async (
   req: Request,
@@ -71,7 +76,6 @@ export const getMyAppointments = async (
   }
 };
 
-// ─── GET /api/appointments/specialist ─────────────────────────────────────
 
 export const getSpecialistAppointments = async (
   req: Request,
@@ -89,7 +93,6 @@ export const getSpecialistAppointments = async (
   }
 };
 
-// ─── GET /api/appointments/available-slots/:specialistId ──────────────────
 
 export const getAvailableSlots = async (
   req: Request,
@@ -108,14 +111,16 @@ export const getAvailableSlots = async (
     res.status(200).json({ success: true, data: result });
   } catch (error) {
     const msg = (error as Error).message;
-    if (msg === "SPECIALIST_NOT_FOUND") return next(new AppError("Specialist not found", 404));
-    if (msg === "SPECIALIST_NOT_APPROVED") return next(new AppError("Specialist is not approved yet", 400));
-    if (msg === "INVALID_DATE") return next(new AppError("Invalid date format. Use YYYY-MM-DD", 400));
+    if (msg === "SPECIALIST_NOT_FOUND") 
+      return next(new AppError("Specialist not found", 404));
+    if (msg === "SPECIALIST_NOT_APPROVED") 
+      return next(new AppError("Specialist is not approved yet", 400));
+    if (msg === "INVALID_DATE") 
+      return next(new AppError("Invalid date format. Use YYYY-MM-DD", 400));
     return next(error);
   }
 };
 
-// ─── GET /api/appointments/:id ─────────────────────────────────────────────
 
 export const getAppointmentById = async (
   req: Request,
@@ -140,7 +145,6 @@ export const getAppointmentById = async (
   }
 };
 
-// ─── PATCH /api/appointments/:id/status ───────────────────────────────────
 
 export const updateAppointmentStatus = async (
   req: Request,
@@ -164,7 +168,8 @@ export const updateAppointmentStatus = async (
       status
     );
 
-    if (!appointment) return next(new AppError("Appointment not found", 404));
+    if (!appointment) 
+      return next(new AppError("Appointment not found", 404));
 
     res.status(200).json({
       success: true,
@@ -173,8 +178,10 @@ export const updateAppointmentStatus = async (
     });
   } catch (error) {
     const msg = (error as Error).message;
-    if (msg === "SPECIALIST_PROFILE_NOT_FOUND") return next(new AppError("Specialist profile not found", 404));
-    if (msg === "FORBIDDEN") return next(new AppError("You don't have access to this appointment", 403));
+    if (msg === "SPECIALIST_PROFILE_NOT_FOUND") 
+      return next(new AppError("Specialist profile not found", 404));
+    if (msg === "FORBIDDEN") 
+      return next(new AppError("You don't have access to this appointment", 403));
     if (msg === "INVALID_TRANSITION") {
       return next(new AppError("Invalid status transition. pending→confirmed or confirmed→completed only", 400));
     }
@@ -182,7 +189,6 @@ export const updateAppointmentStatus = async (
   }
 };
 
-// ─── DELETE /api/appointments/:id ─────────────────────────────────────────
 
 export const cancelAppointment = async (
   req: Request,
@@ -190,7 +196,8 @@ export const cancelAppointment = async (
   next: NextFunction
 ) => {
   try {
-    const appointment = await cancelAppointmentService(req.params.id as string, req.user!.id);
+    const role = req.user!.role as "patient" | "specialist";
+    const appointment = await cancelAppointmentService(req.params.id as string, req.user!.id, role);
 
     if (!appointment) return next(new AppError("Appointment not found", 404));
 
@@ -201,8 +208,48 @@ export const cancelAppointment = async (
     });
   } catch (error) {
     const msg = (error as Error).message;
-    if (msg === "FORBIDDEN") return next(new AppError("You can only cancel your own appointments", 403));
-    if (msg === "CANNOT_CANCEL") return next(new AppError("Cannot cancel a completed or already cancelled appointment", 400));
+    if (msg === "FORBIDDEN") 
+      return next(new AppError("You can only cancel your own appointments", 403));
+    if (msg === "CANNOT_CANCEL") 
+      return next(new AppError("Cannot cancel a completed or already cancelled appointment", 400));
+    if (msg === "SPECIALIST_PROFILE_NOT_FOUND") 
+      return next(new AppError("Specialist profile not found", 404));
+    return next(error);
+  }
+};
+
+
+export const rescheduleAppointment = async (
+  req: Request,
+  res: Response,
+  next: NextFunction
+) => {
+  try {
+    const { date, notes } = req.body;
+
+    if (!date) {
+      return next(new AppError("New date is required", 400));
+    }
+
+    const appointment = await rescheduleAppointmentService(
+      req.params.id as string,
+      req.user!.id,
+      new Date(date),
+      notes
+    );
+
+    if (!appointment) return next(new AppError("Appointment not found", 404));
+
+    res.status(200).json({
+      success: true,
+      message: "Appointment rescheduled successfully",
+      data: appointment,
+    });
+  } catch (error) {
+    const msg = (error as Error).message;
+    if (msg === "FORBIDDEN") return next(new AppError("You can only reschedule your own appointments", 403));
+    if (msg === "CANNOT_RESCHEDULE") return next(new AppError("Cannot reschedule a completed or cancelled appointment", 400));
+    if (msg === "DATE_IN_PAST") return next(new AppError("New date must be in the future", 400));
     return next(error);
   }
 };

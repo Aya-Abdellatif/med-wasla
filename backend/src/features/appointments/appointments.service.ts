@@ -128,11 +128,43 @@ export const updateAppointmentStatusService = async (
   return appointment;
 };
 
-// ─── Cancel / Delete (patient soft-cancels) ────────────────────────────────
+// ─── Cancel (patient OR specialist) ───────────────────────────────────────
 
 export const cancelAppointmentService = async (
   appointmentId: string,
-  patientId: string
+  requesterId: string,
+  requesterRole: "patient" | "specialist"
+) => {
+  const appointment = await Appointment.findById(appointmentId);
+  if (!appointment) return null;
+
+  if (appointment.status === "completed" || appointment.status === "cancelled") {
+    throw new Error("CANNOT_CANCEL");
+  }
+
+  if (requesterRole === "patient") {
+    if (appointment.patientId.toString() !== requesterId) throw new Error("FORBIDDEN");
+  } else {
+    // Specialist: find their MedicalSpecialist doc and verify ownership
+    const specialist = await MedicalSpecialist.findOne({ userId: requesterId });
+    if (!specialist) throw new Error("SPECIALIST_PROFILE_NOT_FOUND");
+    if (appointment.specialistId.toString() !== specialist._id.toString()) {
+      throw new Error("FORBIDDEN");
+    }
+  }
+
+  appointment.status = "cancelled";
+  await appointment.save();
+  return appointment;
+};
+
+// ─── Reschedule (patient only) ─────────────────────────────────────────────
+
+export const rescheduleAppointmentService = async (
+  appointmentId: string,
+  patientId: string,
+  newDate: Date,
+  notes?: string
 ) => {
   const appointment = await Appointment.findById(appointmentId);
   if (!appointment) return null;
@@ -140,10 +172,15 @@ export const cancelAppointmentService = async (
   if (appointment.patientId.toString() !== patientId) throw new Error("FORBIDDEN");
 
   if (appointment.status === "completed" || appointment.status === "cancelled") {
-    throw new Error("CANNOT_CANCEL");
+    throw new Error("CANNOT_RESCHEDULE");
   }
 
-  appointment.status = "cancelled";
+  if (newDate <= new Date()) throw new Error("DATE_IN_PAST");
+
+  appointment.date = newDate;
+  // Reset to pending so the specialist must re-confirm the new time
+  appointment.status = "pending";
+  if (notes !== undefined) appointment.notes = notes;
   await appointment.save();
   return appointment;
 };
