@@ -5,6 +5,7 @@ import { apiFetch } from "../../../services/api";
 import { showError, showSuccess, showWarning } from "../../../utils/toast";
 import { resizeImageToDataUrl } from "../../../utils/imageToDataUrl";
 import { VerificationStatusNotice } from "../../components/common/VerificationStatusNotice";
+import type { AvailableSlot } from "../../context/AuthContext";
 import type {
   Appointment,
   DashboardTab,
@@ -12,7 +13,11 @@ import type {
   NewCertificateForm,
   ProfileForm,
 } from "./dashboard/dashboardTypes";
-import { buildProfileFormFromUser } from "./dashboard/dashboardTypes";
+import {
+  buildProfileFormFromUser,
+  buildProfileUpdatePayload,
+  createEmptySlot,
+} from "./dashboard/dashboardTypes";
 import {
   countAppointmentsThisWeek,
   countUniquePatients,
@@ -35,7 +40,10 @@ export function Dashboard() {
   const [showCertForm, setShowCertForm] = useState(false);
   const [isUploadingPhoto, setIsUploadingPhoto] = useState(false);
   const [newCert, setNewCert] = useState<NewCertificateForm>({ title: "", issuedBy: "", certificateUrl: "" });
+  const [slotEdits, setSlotEdits] = useState<AvailableSlot[] | null>(null);
+  const [isSavingSlots, setIsSavingSlots] = useState(false);
   const savedProfile = useMemo(() => buildProfileFormFromUser(user), [user]);
+  const availableSlots = slotEdits ?? user?.availableSlots ?? [];
   const [profileData, setProfileData] = useState<ProfileForm>(buildProfileFormFromUser(user));
 
   // Empty until appointments API is connected — new specialists start at zero.
@@ -98,31 +106,44 @@ export function Dashboard() {
       return;
     }
 
+    const payload = buildProfileUpdatePayload(profileData, savedProfile);
+    if (Object.keys(payload).length === 0) {
+      showWarning("No profile changes to submit", { userName: user?.name });
+      return;
+    }
+
     setIsSaving(true);
     try {
       await apiFetch("/api/specialists/profile", {
         method: "PUT",
-        body: JSON.stringify({
-          bio: profileData.bio,
-          clinicAddress: profileData.location,
-          specialization: profileData.specialty,
-        }),
-      });
-      updateProfile({
-        name: profileData.name,
-        email: profileData.email,
-        specialty: profileData.specialty,
-        location: profileData.location,
-        bio: profileData.bio,
-        verificationStatus: "pending",
+        body: JSON.stringify(payload),
       });
       await refreshSpecialistProfile();
       setIsEditingProfile(false);
-      showSuccess("Profile updated successfully! Pending admin review.", { userName: user?.name });
+      showSuccess("Changes submitted for admin review. Your live profile stays unchanged until approved.", {
+        userName: user?.name,
+      });
     } catch (err) {
       showError(err instanceof Error ? err.message : "Failed to update profile", { userName: user?.name });
     } finally {
       setIsSaving(false);
+    }
+  };
+
+  const handleSaveAvailability = async () => {
+    setIsSavingSlots(true);
+    try {
+      await apiFetch("/api/specialists/availability", {
+        method: "PUT",
+        body: JSON.stringify({ availableSlots }),
+      });
+      await refreshSpecialistProfile();
+      setSlotEdits(null);
+      showSuccess("Availability saved and visible on your public profile.", { userName: user?.name });
+    } catch (err) {
+      showError(err instanceof Error ? err.message : "Failed to save availability", { userName: user?.name });
+    } finally {
+      setIsSavingSlots(false);
     }
   };
 
@@ -238,8 +259,11 @@ export function Dashboard() {
             formValues={formValues}
             profileData={profileData}
             onProfileDataChange={setProfileData}
+            availableSlots={availableSlots}
+            onAvailableSlotsChange={setSlotEdits}
             isEditingProfile={isEditingProfile}
             isSaving={isSaving}
+            isSavingSlots={isSavingSlots}
             isUploadingPhoto={isUploadingPhoto}
             showCertForm={showCertForm}
             onShowCertFormChange={setShowCertForm}
@@ -248,6 +272,13 @@ export function Dashboard() {
             onStartEditing={startEditingProfile}
             onCancelEditing={cancelEditingProfile}
             onSaveProfile={handleUpdateProfile}
+            onSaveAvailability={handleSaveAvailability}
+            onAddSlot={() => setSlotEdits((prev) => [...(prev ?? user?.availableSlots ?? []), createEmptySlot()])}
+            onRemoveSlot={(index) =>
+              setSlotEdits((prev) =>
+                (prev ?? user?.availableSlots ?? []).filter((_, slotIndex) => slotIndex !== index),
+              )
+            }
             onPhotoUpload={handlePhotoUpload}
             onAddCertificate={handleAddCertificate}
           />

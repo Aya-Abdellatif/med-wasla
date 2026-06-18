@@ -94,7 +94,11 @@ export function mapSpecialistToCard(
         ? specialist.clinicAddress ?? user.address ?? "Cairo"
         : user.address ?? specialist.serviceAreas?.[0] ?? "Cairo",
     availability:
-      specialist.availableSlots?.map((slot) => slot.day).join(", ") || "Contact for availability",
+      specialist.availableSlots?.length
+        ? specialist.availableSlots
+            .map((slot) => `${slot.day} ${slot.startTime}-${slot.endTime}`)
+            .join(", ")
+        : "Contact for availability",
     description: specialist.bio ?? "Experienced medical specialist.",
     services: specialist.areasOfExpertise ?? specialist.serviceAreas,
   };

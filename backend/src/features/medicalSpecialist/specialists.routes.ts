@@ -1,41 +1,28 @@
-import type { Request, Response, NextFunction } from "express";
 import { Router } from "express";
 import { protect, restrictTo } from "../../middleware/auth.middleware.js";
-import { mockAuth } from "../../middleware/mockAuth.js";
 import {
   getAllSpecialists,
   getSpecialistById,
   getSpecialistsBySpecialization,
+  getMe,
+  updateProfile,
+  addCertificate,
   updateAvailability,
   updateFees,
-  SpecialistsController,
 } from "./specialists.controller.js";
 
 const router = Router();
 
-async function specialistAuth(
-  req: Request,
-  res: Response,
-  next: NextFunction,
-): Promise<void> {
-  if (req.headers["x-user-id"]) {
-    await mockAuth(req, res, next);
-    return;
-  }
-  protect(req, res, () => {
-    restrictTo("specialist")(req, res, next);
-  });
-}
-
-router.get("/me", specialistAuth, SpecialistsController.getMe);
-router.post("/me/certificates", specialistAuth, SpecialistsController.addCertificate);
+const requireSpecialist = [protect, restrictTo("specialist")] as const;
 
 router.get("/", getAllSpecialists);
 router.get("/specialization/:name", getSpecialistsBySpecialization);
+router.get("/me", ...requireSpecialist, getMe);
+router.post("/me/certificates", ...requireSpecialist, addCertificate);
 router.get("/:id", getSpecialistById);
 
-router.put("/profile", specialistAuth, SpecialistsController.updateProfile);
-router.put("/availability", specialistAuth, updateAvailability);
-router.put("/fees", specialistAuth, updateFees);
+router.put("/profile", ...requireSpecialist, updateProfile);
+router.put("/availability", ...requireSpecialist, updateAvailability);
+router.put("/fees", ...requireSpecialist, updateFees);
 
 export default router;

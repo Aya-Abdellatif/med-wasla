@@ -1,5 +1,5 @@
 import type { ComponentType, CSSProperties } from "react";
-import type { User } from "../../../context/AuthContext";
+import type { User, AvailableSlot } from "../../../context/AuthContext";
 
 export interface Appointment {
   id: string;
@@ -58,4 +58,31 @@ export function buildProfileFormFromUser(user?: User | null): ProfileForm {
     location: user?.location || "",
     bio: user?.bio || "",
   };
+}
+
+export const WEEK_DAYS = [
+  "Sunday",
+  "Monday",
+  "Tuesday",
+  "Wednesday",
+  "Thursday",
+  "Friday",
+  "Saturday",
+] as const;
+
+export function buildProfileUpdatePayload(
+  current: ProfileForm,
+  saved: ProfileForm,
+): Record<string, string> {
+  const payload: Record<string, string> = {};
+
+  if (current.bio !== saved.bio) payload.bio = current.bio;
+  if (current.location !== saved.location) payload.clinicAddress = current.location;
+  if (current.specialty !== saved.specialty) payload.specialization = current.specialty;
+
+  return payload;
+}
+
+export function createEmptySlot(): AvailableSlot {
+  return { day: "Sunday", startTime: "09:00", endTime: "17:00" };
 }

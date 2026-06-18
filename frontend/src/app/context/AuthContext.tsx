@@ -37,4 +37,12 @@ export interface User {
   homeVisit?: boolean;
   certificates?: Certificate[];
   diseaseHistory?: DiseaseRecord[];
+  availableSlots?: AvailableSlot[];
+  pendingProfileUpdates?: Partial<Pick<User, "bio" | "location" | "specialty">>;
+}
+
+export interface AvailableSlot {
+  day: string;
+  startTime: string;
+  endTime: string;
 }

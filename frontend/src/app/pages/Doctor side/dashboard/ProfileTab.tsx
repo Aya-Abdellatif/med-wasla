@@ -9,11 +9,14 @@ import {
   FileCheck,
   Upload,
   Clock as ClockIcon,
+  Plus,
+  Trash2,
 } from "lucide-react";
-import type { User } from "../../../context/AuthContext";
+import type { User, AvailableSlot } from "../../../context/AuthContext";
 import { MEDICAL_SPECIALIZATIONS } from "../../../../constants/medicalSpecializations";
 import { getFirstName } from "../../../../utils/displayName";
 import type { NewCertificateForm, ProfileForm } from "./dashboardTypes";
+import { WEEK_DAYS } from "./dashboardTypes";
 import { Avatar } from "./Avatar";
 
 interface ProfileTabProps {
@@ -21,8 +24,11 @@ interface ProfileTabProps {
   formValues: ProfileForm;
   profileData: ProfileForm;
   onProfileDataChange: (data: ProfileForm) => void;
+  availableSlots: AvailableSlot[];
+  onAvailableSlotsChange: (slots: AvailableSlot[]) => void;
   isEditingProfile: boolean;
   isSaving: boolean;
+  isSavingSlots: boolean;
   isUploadingPhoto: boolean;
   showCertForm: boolean;
   onShowCertFormChange: (show: boolean) => void;
@@ -31,6 +37,9 @@ interface ProfileTabProps {
   onStartEditing: () => void;
   onCancelEditing: () => void;
   onSaveProfile: () => void;
+  onSaveAvailability: () => void;
+  onAddSlot: () => void;
+  onRemoveSlot: (index: number) => void;
   onPhotoUpload: (e: React.ChangeEvent<HTMLInputElement>) => Promise<void>;
   onAddCertificate: () => void;
 }
@@ -50,8 +59,14 @@ export function ProfileTab({
   onStartEditing,
   onCancelEditing,
   onSaveProfile,
+  onSaveAvailability,
+  onAddSlot,
+  onRemoveSlot,
   onPhotoUpload,
   onAddCertificate,
+  availableSlots,
+  onAvailableSlotsChange,
+  isSavingSlots,
 }: ProfileTabProps) {
   const photoInputRef = useRef<HTMLInputElement>(null);
   const firstName = getFirstName(user?.name);
@@ -65,6 +80,16 @@ export function ProfileTab({
   const setField = <K extends keyof ProfileForm>(key: K, value: ProfileForm[K]) => {
     onProfileDataChange({ ...profileData, [key]: value });
   };
+
+  const updateSlot = (index: number, field: keyof AvailableSlot, value: string) => {
+    onAvailableSlotsChange(
+      availableSlots.map((slot, slotIndex) =>
+        slotIndex === index ? { ...slot, [field]: value } : slot,
+      ),
+    );
+  };
+
+  const pending = user?.pendingProfileUpdates;
 
   return (
     <div className="bg-white rounded-xl p-8" style={{ boxShadow: "0 1px 3px rgba(0,0,0,0.1)" }}>
@@ -97,6 +122,20 @@ export function ProfileTab({
           </div>
         )}
       </div>
+
+      {pending && Object.keys(pending).length > 0 && (
+        <div className="mb-6 rounded-lg border border-amber-200 bg-amber-50 px-4 py-3 text-sm text-amber-900">
+          <p className="font-semibold">Pending admin review</p>
+          <p className="mt-1 text-amber-800">
+            Your live profile still shows the approved version until the admin approves these changes.
+          </p>
+          <ul className="mt-2 space-y-1">
+            {pending.bio && <li>Bio update submitted</li>}
+            {pending.location && <li>Location update submitted</li>}
+            {pending.specialty && <li>Specialty update submitted</li>}
+          </ul>
+        </div>
+      )}
 
       <div className="space-y-6">
         <div className="flex items-center space-x-6">
@@ -277,6 +316,87 @@ export function ProfileTab({
             }}
           />
         </div>
+
+        {(user?.role === "doctor" || user?.role === "nurse") && (
+          <div className="pt-6 border-t" style={{ borderColor: "#e5e7eb" }}>
+            <div className="flex items-center justify-between mb-4">
+              <div>
+                <h3 className="text-lg font-semibold" style={{ color: "#111827" }}>
+                  Available Slots
+                </h3>
+                <p className="text-sm mt-1" style={{ color: "#6b7280" }}>
+                  Saved immediately and shown on your public doctor/nurse card.
+                </p>
+              </div>
+              <button
+                type="button"
+                onClick={onAddSlot}
+                className="flex items-center space-x-2 px-4 py-2 border rounded-lg text-sm transition-colors border-gray-200 text-gray-700 hover:bg-gray-50"
+              >
+                <Plus className="w-4 h-4" />
+                <span>Add Slot</span>
+              </button>
+            </div>
+
+            <div className="space-y-3">
+              {availableSlots.length > 0 ? (
+                availableSlots.map((slot, index) => (
+                  <div
+                    key={`${slot.day}-${slot.startTime}-${index}`}
+                    className="grid grid-cols-1 md:grid-cols-4 gap-3 p-4 border rounded-lg"
+                    style={{ borderColor: "#e5e7eb" }}
+                  >
+                    <select
+                      value={slot.day}
+                      onChange={(e) => updateSlot(index, "day", e.target.value)}
+                      className="px-3 py-2 border rounded-lg text-sm"
+                    >
+                      {WEEK_DAYS.map((day) => (
+                        <option key={day} value={day}>
+                          {day}
+                        </option>
+                      ))}
+                    </select>
+                    <input
+                      type="time"
+                      value={slot.startTime}
+                      onChange={(e) => updateSlot(index, "startTime", e.target.value)}
+                      className="px-3 py-2 border rounded-lg text-sm"
+                    />
+                    <input
+                      type="time"
+                      value={slot.endTime}
+                      onChange={(e) => updateSlot(index, "endTime", e.target.value)}
+                      className="px-3 py-2 border rounded-lg text-sm"
+                    />
+                    <button
+                      type="button"
+                      onClick={() => onRemoveSlot(index)}
+                      className="flex items-center justify-center gap-2 px-3 py-2 border border-rose-200 text-rose-600 rounded-lg text-sm hover:bg-rose-50"
+                    >
+                      <Trash2 className="w-4 h-4" />
+                      Remove
+                    </button>
+                  </div>
+                ))
+              ) : (
+                <div className="text-center py-6 rounded-lg" style={{ backgroundColor: "#f9fafb" }}>
+                  <ClockIcon className="w-10 h-10 mx-auto mb-2" style={{ color: "#9ca3af" }} />
+                  <p style={{ color: "#6b7280" }}>No availability slots yet</p>
+                </div>
+              )}
+            </div>
+
+            <button
+              type="button"
+              onClick={onSaveAvailability}
+              disabled={isSavingSlots}
+              className="mt-4 px-4 py-2 bg-teal-500 text-white rounded-lg text-sm font-semibold hover:bg-teal-600 transition-colors disabled:opacity-50"
+            >
+              {isSavingSlots ? "Saving availability..." : "Save Availability"}
+            </button>
+          </div>
+        )}
 
         {(user?.role === "doctor" || user?.role === "nurse") && (
           <div className="pt-6 border-t" style={{ borderColor: "#e5e7eb" }}>

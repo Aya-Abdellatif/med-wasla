@@ -48,7 +48,16 @@ interface SpecialistOverview {
   bio?: string;
   consultationFee?: number;
   certifications?: Certification[];
-  verificationStatus: "pending" | "approved" | "rejected"; // إضافة الحقل ده للـ Interface
+  verificationStatus: "pending" | "approved" | "rejected";
+  pendingProfileUpdates?: {
+    bio?: string;
+    clinicAddress?: string;
+    specialization?: string;
+    areasOfExpertise?: string[];
+    avgWaitMinutes?: number;
+    serviceAreas?: string[];
+    homeVisit?: boolean;
+  };
 }
 
 type FilterTab = "all" | "pending" | "approved" | "rejected";
@@ -329,10 +338,37 @@ export default function AdminDashboard() {
                     </div>
 
                     {/* Bio */}
-                    {specialist.bio && (
-                      <p className="text-sm text-slate-600 bg-white p-4 rounded-2xl border border-slate-100 italic">
-                        "{specialist.bio}"
-                      </p>
+                    {specialist.pendingProfileUpdates &&
+                    Object.keys(specialist.pendingProfileUpdates).length > 0 ? (
+                      <div className="space-y-3">
+                        <p className="text-xs font-bold uppercase tracking-wide text-amber-700">
+                          Changes awaiting approval
+                        </p>
+                        {specialist.pendingProfileUpdates.bio && (
+                          <p className="text-sm text-slate-600 bg-white p-4 rounded-2xl border border-amber-100 italic">
+                            <span className="font-semibold not-italic text-slate-800">Bio: </span>
+                            "{specialist.pendingProfileUpdates.bio}"
+                          </p>
+                        )}
+                        {specialist.pendingProfileUpdates.clinicAddress && (
+                          <p className="text-sm text-slate-600 bg-white p-4 rounded-2xl border border-amber-100">
+                            <span className="font-semibold text-slate-800">Clinic address: </span>
+                            {specialist.pendingProfileUpdates.clinicAddress}
+                          </p>
+                        )}
+                        {specialist.pendingProfileUpdates.specialization && (
+                          <p className="text-sm text-slate-600 bg-white p-4 rounded-2xl border border-amber-100">
+                            <span className="font-semibold text-slate-800">Specialization: </span>
+                            {specialist.pendingProfileUpdates.specialization}
+                          </p>
+                        )}
+                      </div>
+                    ) : (
+                      specialist.bio && (
+                        <p className="text-sm text-slate-600 bg-white p-4 rounded-2xl border border-slate-100 italic">
+                          "{specialist.bio}"
+                        </p>
+                      )
                     )}
 
                     {/* Contacts & Info */}
@@ -414,7 +450,13 @@ export default function AdminDashboard() {
 
                   <div className="grid grid-cols-1 md:grid-cols-2 gap-4 flex-1">
                     {specialist.certifications && specialist.certifications.length > 0 ? (
-                      specialist.certifications.map(cert => (
+                      specialist.certifications
+                        .filter((cert) =>
+                          specialist.pendingProfileUpdates
+                            ? cert.status === "pending"
+                            : true,
+                        )
+                        .map(cert => (
                         <div
                           key={cert._id}
                           className="p-5 border border-slate-200 rounded-2xl flex flex-col justify-between hover:border-teal-200 hover:bg-teal-50/20 transition-all"

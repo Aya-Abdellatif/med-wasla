@@ -1,5 +1,17 @@
-import User from "../../models/user.model.js";
-import MedicalSpecialist from "../../models/medicalSpecialist.model.js";
+import MedicalSpecialist, {
+  type IPendingProfileUpdates,
+} from "../../models/medicalSpecialist.model.js";
+
+const applyPendingProfileUpdates = (
+  specialist: InstanceType<typeof MedicalSpecialist>,
+  pending: IPendingProfileUpdates,
+) => {
+  for (const [field, value] of Object.entries(pending)) {
+    if (value !== undefined) {
+      Reflect.set(specialist, field, value);
+    }
+  }
+};
 
 export class AdminService {
   static async getPendingSpecialists() {
@@ -16,10 +28,19 @@ export class AdminService {
       throw new Error("Medical specialist not found");
     }
 
+    if (specialist.pendingProfileUpdates) {
+      applyPendingProfileUpdates(specialist, specialist.pendingProfileUpdates);
+      specialist.pendingProfileUpdates = undefined;
+    }
+
     specialist.verificationStatus = "approved";
+    specialist.revertToApprovedOnReject = false;
+
     if (specialist.certifications?.length) {
       for (const cert of specialist.certifications) {
-        cert.status = "approved";
+        if (cert.status === "pending") {
+          cert.status = "approved";
+        }
       }
     }
 
@@ -34,10 +55,25 @@ export class AdminService {
       throw new Error("Medical specialist not found");
     }
 
-    specialist.verificationStatus = "rejected";
-    if (specialist.certifications?.length) {
-      for (const cert of specialist.certifications) {
-        cert.status = "rejected";
+    if (specialist.revertToApprovedOnReject) {
+      specialist.pendingProfileUpdates = undefined;
+      specialist.revertToApprovedOnReject = false;
+      specialist.verificationStatus = "approved";
+
+      if (specialist.certifications?.length) {
+        specialist.certifications = specialist.certifications.filter(
+          (cert) => cert.status !== "pending",
+        );
+      }
+    } else {
+      specialist.verificationStatus = "rejected";
+
+      if (specialist.certifications?.length) {
+        for (const cert of specialist.certifications) {
+          if (cert.status === "pending") {
+            cert.status = "rejected";
+          }
+        }
       }
     }
 

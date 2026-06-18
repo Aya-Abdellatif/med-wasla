@@ -30,6 +30,12 @@ interface SpecialistProfile {
   bio?: string;
   verificationStatus: "pending" | "approved" | "rejected";
   homeVisit?: boolean;
+  availableSlots?: Array<{ day: string; startTime: string; endTime: string }>;
+  pendingProfileUpdates?: {
+    bio?: string;
+    clinicAddress?: string;
+    specialization?: string;
+  };
   certifications?: Array<{
     _id?: string;
     title: string;
@@ -95,6 +101,14 @@ async function buildUser(authUser: AuthUserResponse, token: string): Promise<Use
       verificationStatus: profile?.verificationStatus ?? "pending",
       specialistId: profile?._id,
       homeVisit: profile?.homeVisit ?? false,
+      availableSlots: profile?.availableSlots ?? [],
+      pendingProfileUpdates: profile?.pendingProfileUpdates
+        ? {
+            bio: profile.pendingProfileUpdates.bio,
+            location: profile.pendingProfileUpdates.clinicAddress,
+            specialty: profile.pendingProfileUpdates.specialization,
+          }
+        : undefined,
       certificates: mapCertificates(profile?.certifications),
     };
   }
@@ -134,6 +148,14 @@ export function AuthProvider({ children }: { children: ReactNode }) {
         verificationStatus: profile.verificationStatus,
         specialistId: profile._id,
         homeVisit: profile.homeVisit ?? prev.homeVisit,
+        availableSlots: profile.availableSlots ?? prev.availableSlots ?? [],
+        pendingProfileUpdates: profile.pendingProfileUpdates
+          ? {
+              bio: profile.pendingProfileUpdates.bio,
+              location: profile.pendingProfileUpdates.clinicAddress,
+              specialty: profile.pendingProfileUpdates.specialization,
+            }
+          : undefined,
         certificates: mapCertificates(profile.certifications),
       };
     });
