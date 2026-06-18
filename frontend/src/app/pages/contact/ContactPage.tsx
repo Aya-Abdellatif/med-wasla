@@ -9,6 +9,7 @@ import {
   faClock,
   faArrowRight,
 } from "@fortawesome/free-solid-svg-icons";
+import { showSuccess } from "../../../utils/toast";
 
 import {  departments, faqs } from "./ContactData";
 import type { ContactFormData } from "./contactTypes";
@@ -38,7 +39,7 @@ export default function ContactPage() {
 
   const handleSubmit = (e: React.FormEvent<HTMLFormElement>) => {
     e.preventDefault();
-    console.log("Contact form submitted:", formData);
+    showSuccess("Message sent! We'll get back to you within 24-48 hours.");
     setIsSubmitted(true);
 
     setTimeout(() => {

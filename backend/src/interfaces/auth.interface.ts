@@ -19,6 +19,12 @@ export interface RegisterData {
   clinicAddress?: string;
   bio?: string;
   consultationFee?: number;
+  certifications?: Array<{
+    title: string;
+    issuedBy: string;
+    certificateUrl: string;
+    issuedAt?: string | Date;
+  }>;
 }
 
 export interface AuthResult {

@@ -1,6 +1,5 @@
 import express from "express";
-import { getPatientProfile } from "./patient.controller.js";
-import { updatePatientProfile } from "./patient.controller.js";
+import { getPatientProfile, updatePatientProfile } from "./patient-profile.controller.js";
 
 export const patientRouter = express.Router();
 

@@ -1,7 +1,11 @@
 import MedicalSpecialist, {
   type IAvailableSlot,
+  type IMedicalSpecialist,
+  type IPendingProfileUpdates,
 } from "../../models/medicalSpecialist.model.js";
-// ─── Types ────────────────────────────────────────────────────────────────────
+import User, { type IUser } from "../../models/user.model.js";
+import AppError from "../../utils/AppError.js";
+import cloudinary from "../../config/cloudinary.js";
 
 export interface GetAllSpecialistsQuery {
   specialistType?: string;
@@ -19,11 +23,56 @@ export interface GetAllSpecialistsQuery {
 export interface UpdateProfileBody {
   bio?: string;
   clinicAddress?: string;
+  specialization?: string;
   areasOfExpertise?: string[];
   avgWaitMinutes?: number;
   serviceAreas?: string[];
   homeVisit?: boolean;
 }
+
+export interface ProfileUpdateResult {
+  updatedFields: IPendingProfileUpdates;
+  verificationStatus: IMedicalSpecialist["verificationStatus"];
+  pendingProfileUpdates?: IPendingProfileUpdates;
+}
+
+const PROFILE_UPDATE_FIELDS: (keyof UpdateProfileBody)[] = [
+  "bio",
+  "clinicAddress",
+  "specialization",
+  "areasOfExpertise",
+  "avgWaitMinutes",
+  "serviceAreas",
+  "homeVisit",
+];
+
+const valuesEqual = (left: unknown, right: unknown): boolean =>
+  JSON.stringify(left) === JSON.stringify(right);
+
+const pickChangedProfileFields = (
+  body: UpdateProfileBody,
+  current: Pick<IMedicalSpecialist, (typeof PROFILE_UPDATE_FIELDS)[number]>,
+): IPendingProfileUpdates => {
+  const changed: IPendingProfileUpdates = {};
+
+  for (const field of PROFILE_UPDATE_FIELDS) {
+    const value = body[field];
+    if (value === undefined) continue;
+    if (!valuesEqual(value, current[field])) {
+      Reflect.set(changed, field, value);
+    }
+  }
+
+  return changed;
+};
+
+const mergePendingProfileUpdates = (
+  existing: IPendingProfileUpdates | undefined,
+  changed: IPendingProfileUpdates,
+): IPendingProfileUpdates => ({
+  ...(existing ?? {}),
+  ...changed,
+});
 
 export interface UpdateAvailabilityBody {
   availableSlots: IAvailableSlot[];
@@ -33,10 +82,16 @@ export interface UpdateFeesBody {
   consultationFee: number;
 }
 
-// ─── Service Functions ────────────────────────────────────────────────────────
+export interface AddCertificateBody {
+  title: string;
+  issuedBy: string;
+  issuedAt?: string | Date;
+  certificateUrl: string;
+}
 
 export const getAllSpecialistsService = async (
   query: GetAllSpecialistsQuery,
+  options: { publicOnly?: boolean } = {},
 ) => {
   const {
     specialistType,
@@ -51,25 +106,36 @@ export const getAllSpecialistsService = async (
     sortOrder = "desc",
   } = query;
 
-  //   const filter: FilterQuery<typeof MedicalSpecialist> = {};
   const filter: Record<string, unknown> = {};
 
   if (specialistType) filter.specialistType = specialistType;
   if (specialization) filter.specialization = specialization;
-  if (verificationStatus) filter.verificationStatus = verificationStatus;
+  if (options.publicOnly) {
+    filter.verificationStatus = "approved";
+  } else if (verificationStatus) {
+    filter.verificationStatus = verificationStatus;
+  }
   if (homeVisit !== undefined) filter.homeVisit = homeVisit === "true";
   if (serviceArea) filter.serviceAreas = { $in: [serviceArea] };
 
-  // Search across bio, clinicAddress, areasOfExpertise
   if (search) {
+    const searchTerm = search.trim();
+  
+    const matchingUsers = await User.find({
+      name: { $regex: searchTerm, $options: "i" },
+    }).select("_id");
+  
+    const userIds = matchingUsers.map((user) => user._id);
+  
     filter.$or = [
-      { bio: { $regex: search, $options: "i" } },
-      { clinicAddress: { $regex: search, $options: "i" } },
-      { areasOfExpertise: { $regex: search, $options: "i" } },
-      { specialization: { $regex: search, $options: "i" } },
+      { bio: { $regex: searchTerm, $options: "i" } },
+      { clinicAddress: { $regex: searchTerm, $options: "i" } },
+      { areasOfExpertise: { $regex: searchTerm, $options: "i" } },
+      { specialization: { $regex: searchTerm, $options: "i" } },
+      ...(userIds.length > 0 ? [{ userId: { $in: userIds } }] : []),
     ];
   }
-
+  
   const pageNum = Math.max(1, parseInt(page));
   const limitNum = Math.min(50, Math.max(1, parseInt(limit)));
   const skip = (pageNum - 1) * limitNum;
@@ -79,7 +145,7 @@ export const getAllSpecialistsService = async (
 
   const [specialists, total] = await Promise.all([
     MedicalSpecialist.find(filter)
-      .populate("userId", "firstName lastName profilePicture email")
+      .populate("userId", "name email phone address photoUrl governorate")
       .sort(sort)
       .skip(skip)
       .limit(limitNum)
@@ -98,53 +164,31 @@ export const getAllSpecialistsService = async (
   };
 };
 
-export const getSpecialistByIdService = async (id: string) => {
+export const getSpecialistByIdService = async (
+  id: string,
+  options: { publicOnly?: boolean } = {},
+) => {
   const specialist = await MedicalSpecialist.findById(id)
-    .populate("userId", "firstName lastName profilePicture email phone")
+    .populate("userId", "name email phone address photoUrl governorate")
     .lean();
 
   if (!specialist) throw new Error("Specialist not found");
+
+  if (options.publicOnly && specialist.verificationStatus !== "approved") {
+    throw new Error("Specialist not found");
+  }
+
   return specialist;
 };
-
 export const getSpecialistsBySpecializationService = async (name: string) => {
   const specialists = await MedicalSpecialist.find({
     specialization: { $regex: name, $options: "i" },
     verificationStatus: "approved",
   })
-    .populate("userId", "firstName lastName profilePicture email")
+    .populate("userId", "name email phone address photoUrl governorate")
     .lean();
 
   return specialists;
-};
-
-export const updateSpecialistProfileService = async (
-  userId: string,
-  body: UpdateProfileBody,
-) => {
-  const allowedFields: (keyof UpdateProfileBody)[] = [
-    "bio",
-    "clinicAddress",
-    "areasOfExpertise",
-    "avgWaitMinutes",
-    "serviceAreas",
-    "homeVisit",
-  ];
-  const updateData: Partial<UpdateProfileBody> = {};
-  for (const field of allowedFields) {
-    const value = body[field];
-    if (value !== undefined) {
-      Reflect.set(updateData, field, value);
-    }
-  }
-  const specialist = await MedicalSpecialist.findOneAndUpdate(
-    { userId },
-    { $set: updateData },
-    { returnDocument: "after", runValidators: true },
-  ).populate("userId", "firstName lastName profilePicture email");
-
-  if (!specialist) throw new Error("Specialist profile not found");
-  return specialist;
 };
 
 export const updateAvailabilityService = async (
@@ -170,7 +214,7 @@ export const updateAvailabilityService = async (
   );
 
   if (!specialist) throw new Error("Specialist profile not found");
-  return specialist;
+  return { availableSlots: specialist.availableSlots ?? [] };
 };
 
 export const updateFeesService = async (
@@ -186,9 +230,145 @@ export const updateFeesService = async (
   const specialist = await MedicalSpecialist.findOneAndUpdate(
     { userId },
     { $set: { consultationFee } },
-    { returnDocument: "after" },
+    { returnDocument: "after", runValidators: true },
   );
 
   if (!specialist) throw new Error("Specialist profile not found");
   return specialist;
+};
+
+export const getSpecialistProfileService = async (userId: string) => {
+  if (!userId) {
+    throw new Error("User ID is required");
+  }
+
+  const specialist = await MedicalSpecialist.findOne({ userId }).populate(
+    "userId",
+    "name email phone address photoUrl governorate",
+  );
+
+  if (!specialist) {
+    throw new Error("Specialist profile not found");
+  }
+
+  return specialist;
+};
+
+export const updateSpecialistProfileService = async (
+  userId: string,
+  body: UpdateProfileBody,
+): Promise<ProfileUpdateResult> => {
+  const specialist = await MedicalSpecialist.findOne({ userId });
+
+  if (!specialist) throw new Error("Specialist profile not found");
+
+  const changedFields = pickChangedProfileFields(body, specialist);
+
+  if (Object.keys(changedFields).length === 0) {
+    throw new Error("No profile changes to submit");
+  }
+
+  const wasApproved = specialist.verificationStatus === "approved";
+
+  if (wasApproved) {
+    const pendingProfileUpdates = mergePendingProfileUpdates(
+      specialist.pendingProfileUpdates,
+      changedFields,
+    );
+
+    specialist.pendingProfileUpdates = pendingProfileUpdates;
+    specialist.revertToApprovedOnReject = true;
+    specialist.verificationStatus = "pending";
+    await specialist.save();
+
+    return {
+      updatedFields: changedFields,
+      verificationStatus: specialist.verificationStatus,
+      pendingProfileUpdates,
+    };
+  }
+
+  for (const field of PROFILE_UPDATE_FIELDS) {
+    const value = changedFields[field as keyof IPendingProfileUpdates];
+    if (value !== undefined) {
+      Reflect.set(specialist, field, value);
+    }
+  }
+
+  specialist.verificationStatus = "pending";
+  specialist.pendingProfileUpdates = undefined;
+  specialist.revertToApprovedOnReject = false;
+  await specialist.save();
+
+  return {
+    updatedFields: changedFields,
+    verificationStatus: specialist.verificationStatus,
+  };
+};
+
+export const addSpecialistCertificateService = async (
+  userId: string,
+  certificate: AddCertificateBody,
+) => {
+  if (!userId) throw new Error("User ID is required");
+
+  const specialist = await MedicalSpecialist.findOne({ userId });
+  if (!specialist) throw new Error("Specialist profile not found");
+
+  const wasApproved = specialist.verificationStatus === "approved";
+  const newCertificate = {
+    ...certificate,
+    issuedAt: certificate.issuedAt ? new Date(certificate.issuedAt) : undefined,
+    status: "pending" as const,
+  };
+
+  specialist.certifications = [...(specialist.certifications ?? []), newCertificate];
+  specialist.verificationStatus = "pending";
+  if (wasApproved) {
+    specialist.revertToApprovedOnReject = true;
+  }
+
+  await specialist.save();
+
+  return {
+    certificate: newCertificate,
+    verificationStatus: specialist.verificationStatus,
+  };
+};
+
+export const updateUserPhoto = async (
+  userId: string,
+  fileBuffer: Buffer,
+  mimeType: string,
+): Promise<IUser> => {
+  const uploadResult = await new Promise<{ secure_url: string }>((resolve, reject) => {
+    cloudinary.uploader
+      .upload_stream(
+        {
+          folder: "medwasla/profiles",
+          resource_type: "image",
+          format: mimeType.split("/")[1],
+          transformation: [{ width: 400, height: 400, crop: "fill" }],
+        },
+        (err, result) => {
+          if (err || !result) {
+            return reject(err ?? new Error("Cloudinary upload failed"));
+          }
+          resolve(result);
+        },
+      )
+      .end(fileBuffer);
+  });
+
+  const user = await User.findByIdAndUpdate(
+    userId,
+    { photoUrl: uploadResult.secure_url },
+    { new: true },
+  );
+
+  if (!user) {
+    throw new AppError("User not found", 404);
+  }
+
+  return user;
 };

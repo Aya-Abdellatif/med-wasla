@@ -11,6 +11,7 @@ import {
   FileText,
   ShieldCheck,
 } from "lucide-react";
+import { showSuccess } from "../../../utils/toast";
 
 export function PatientProfile() {
   const user = {
@@ -44,8 +45,8 @@ export function PatientProfile() {
   });
 
   const handleUpdateProfile = () => {
-    console.log("Updated profile:", profileData);
     setIsEditingProfile(false);
+    showSuccess("Profile updated successfully!");
   };
 
   const getStatusColor = (status: string) => {

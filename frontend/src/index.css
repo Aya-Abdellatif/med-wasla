@@ -17,6 +17,19 @@ body,
 body {
   background-color: #ffffff;
 }
+
+button:not(:disabled),
+a,
+[role="button"],
+label[for],
+select,
+summary {
+  cursor: pointer;
+}
+
+button:disabled {
+  cursor: not-allowed;
+}
 /* Tailwind v4 import syntax; global visuals are handled through HTML/body class utilities. */
 @theme {
   --color-primary: #14b8a6;

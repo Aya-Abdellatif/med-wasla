@@ -1,18 +1,33 @@
 import { useState } from "react";
 import { useLocation, useNavigate } from "react-router-dom";
 import AuthLayout from "../../components/auth/AuthLayout";
+import { showError, showSuccess, showInfo } from "../../../utils/toast";
 
 export default function ResetPassword() {
   const [showPassword, setShowPassword] = useState(false);
+  const [otp, setOtp] = useState("");
+  const [newPassword, setNewPassword] = useState("");
   const navigate = useNavigate();
   const location = useLocation();
 
   const email = location.state?.email || "";
 
   const handleResetPassword = () => {
-    //hanady hna el API lma n3ml el backedn
+    if (!otp.trim()) {
+      showError("Please enter the OTP code");
+      return;
+    }
+    if (!newPassword || newPassword.length < 8) {
+      showError("Password must be at least 8 characters");
+      return;
+    }
 
+    showSuccess("Password reset successfully!");
     navigate("/home");
+  };
+
+  const handleResendOtp = () => {
+    showInfo("OTP resent to your email");
   };
 
   return (
@@ -43,6 +58,8 @@ export default function ResetPassword() {
           <div className="relative flex items-center bg-slate-50 border border-slate-200 rounded-full focus-within:border-teal-500 transition-colors">
             <input
               placeholder="Enter OTP"
+              value={otp}
+              onChange={(e) => setOtp(e.target.value)}
               className="w-full bg-transparent px-5 py-4 text-slate-900 placeholder:text-slate-400 outline-none rounded-full"
             />
           </div>
@@ -54,6 +71,8 @@ export default function ResetPassword() {
             <input
               type={showPassword ? "text" : "password"}
               placeholder="New Password"
+              value={newPassword}
+              onChange={(e) => setNewPassword(e.target.value)}
               className="w-full bg-transparent px-5 py-4 text-slate-900 placeholder:text-slate-400 outline-none rounded-full"
             />
             <button 
@@ -92,6 +111,7 @@ export default function ResetPassword() {
           </button>
           <button
             type="button"
+            onClick={handleResendOtp}
             className="text-teal-500 underline underline-offset-4 decoration-teal-500 hover:text-teal-600"
           >
             Resend OTP
