@@ -10,8 +10,8 @@ export const sendMessageToAI = async (message: string) => {
 
     return response.data.response;
   } catch (error: unknown) {
-  const message = error instanceof Error ? error.message : "Unknown error";
-
-  throw new Error(`AI service failed: ${message}`);
+    throw new Error("AI service failed", {
+      cause: error,
+    });
 }
 };
