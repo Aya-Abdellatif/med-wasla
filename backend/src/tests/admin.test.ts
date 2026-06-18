@@ -30,7 +30,6 @@ async function createSpecialist(
 
   const specialist = await MedicalSpecialist.create({
     userId: user._id,
-    title: "Dr",
     specialistType: "doctor",
     specialization: "Cardiology",
     homeVisit: false,
@@ -109,7 +108,7 @@ describe("Admin Routes", () => {
       expect(res.body.message).toBe("Specialist approved successfully");
       expect(res.body.data.verificationStatus).toBe("approved");
 
-      const updated = await MedicalSpecialist.findById(specialist._id);
+      const updated = await MedicalSpecialist.findById(idOf(specialist));
 
       expect(updated?.verificationStatus).toBe("approved");
       expect(updated?.certifications?.[0]?.status).toBe("approved");
@@ -141,7 +140,7 @@ describe("Admin Routes", () => {
       expect(res.body.message).toBe("Specialist rejected successfully");
       expect(res.body.data.verificationStatus).toBe("rejected");
 
-      const updated = await MedicalSpecialist.findById(specialist._id);
+      const updated = await MedicalSpecialist.findById(idOf(specialist));
 
       expect(updated?.verificationStatus).toBe("rejected");
       expect(updated?.certifications?.[0]?.status).toBe("rejected");
