@@ -9,8 +9,9 @@ export const sendMessageToAI = async (message: string) => {
     });
 
     return response.data.response;
-  } catch (error: any) {
-    console.error("Flask AI Error:", error?.message);
+  } catch (error: unknown) {
+    const err = error as Error;
+    console.error("Flask AI Error:", err.message);
     throw new Error("AI service unavailable");
   }
 };

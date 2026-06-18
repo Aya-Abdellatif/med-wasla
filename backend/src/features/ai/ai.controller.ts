@@ -15,8 +15,10 @@ export const chatWithAI = async (req: Request, res: Response) => {
       success: true,
       message: aiResponse,
     });
-  } catch (error: any) {
-    console.error("AI Error:", error.message);
+  } catch (error: unknown) {
+    const err = error as Error;
+
+    console.error("AI Error:", err.message);    
     return res.status(500).json({
       success: false,
       error: "AI service failed",
