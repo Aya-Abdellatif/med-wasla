@@ -4,6 +4,7 @@ import { ChatBotProvider } from "./app/context/ChatBotProvider";
 import AppToast from "./app/components/common/AppToast";
 import SignIn from "./app/pages/auth/SignIn";
 import SignUp from "./app/pages/auth/SignUp";
+import VerifyOtp from "./app/pages/auth/VerifyOtp";
 import ForgotPassword from "./app/pages/auth/ForgotPassword";
 import ResetPassword from "./app/pages/auth/ResetPassword";
 import Role from "./app/pages/auth/Role";
@@ -34,6 +35,7 @@ function App() {
           <Route path="/" element={<SignIn />} />
           <Route path="/role" element={<Role />} />
           <Route path="/signup" element={<SignUp />} />
+          <Route path="/verify-otp" element={<VerifyOtp />} />
           <Route path="/medical-specialist" element={<MedicalSpecialist />} />
           <Route path="/forgot-password" element={<ForgotPassword />} />
           <Route path="/reset-password" element={<ResetPassword />} />

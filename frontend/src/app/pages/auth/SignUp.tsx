@@ -9,7 +9,7 @@ import {
   ChevronDown,
 } from "lucide-react";
 import AuthLayout from "../../components/auth/AuthLayout";
-import { apiFetch, setToken } from "../../../services/api";
+import { apiFetch } from "../../../services/api";
 import { MEDICAL_SPECIALIZATIONS } from "../../../constants/medicalSpecializations";
 import { showError, showSuccess, showWarning } from "../../../utils/toast";
 
@@ -281,28 +281,13 @@ export default function SignUp() {
         }
       }
 
-      const data = await apiFetch<{
-        token?: string;
-        user?: { id: string; name: string; email: string; role: string };
-      }>("/api/auth/register", {
+      await apiFetch("/api/auth/register", {
         method: "POST",
         body: JSON.stringify(payload),
       });
 
-      if (!data.token) {
-        throw new Error(
-          "Registration succeeded but login failed. Restart the backend (npm run build && npm start).",
-        );
-      }
-
-      setToken(data.token);
-      showSuccess("Account created! Welcome to MedWasla.");
-
-      if (isSpecialist) {
-        window.location.assign("/dashboard");
-      } else {
-        window.location.assign("/home");
-      }
+      showSuccess("Check your email for the verification code.");
+      navigate(`/verify-otp?email=${encodeURIComponent(form.email.trim())}`);
     } catch (err) {
       const message = err instanceof Error ? err.message : "Registration failed";
       if (message.toLowerCase().includes("email")) {

@@ -22,8 +22,8 @@ export interface RegisterData {
   certifications?: Array<{
     title: string;
     issuedBy: string;
-    issuedAt?: string;
     certificateUrl: string;
+    issuedAt?: string | Date;
   }>;
 }
 

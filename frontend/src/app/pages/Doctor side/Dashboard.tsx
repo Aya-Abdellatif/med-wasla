@@ -1,9 +1,8 @@
 import { useState, useEffect, useMemo } from "react";
 import { Calendar, Users, TrendingUp, CheckCircle, Home as HomeIcon } from "lucide-react";
 import { useAuth } from "../../context/useAuth";
-import { apiFetch } from "../../../services/api";
+import { apiFetch, API_BASE, getToken } from "../../../services/api";
 import { showError, showSuccess, showWarning } from "../../../utils/toast";
-import { resizeImageToDataUrl } from "../../../utils/imageToDataUrl";
 import { VerificationStatusNotice } from "../../components/common/VerificationStatusNotice";
 import type { AvailableSlot } from "../../context/AuthContext";
 import type {
@@ -84,13 +83,31 @@ export function Dashboard() {
 
     setIsUploadingPhoto(true);
     try {
-      const photoUrl = await resizeImageToDataUrl(file);
-      const data = await apiFetch<{ data: { photoUrl: string } }>("/api/auth/me/photo", {
+      const token = getToken();
+      const formData = new FormData();
+      formData.append("photo", file);
+
+      const res = await fetch(`${API_BASE}/api/specialists/me/photo`, {
         method: "PATCH",
-        body: JSON.stringify({ photoUrl }),
+        headers: token ? { Authorization: `Bearer ${token}` } : {},
+        body: formData,
       });
 
-      updateProfile({ avatar: data.data.photoUrl });
+      const data = (await res.json().catch(() => ({}))) as {
+        data?: { photoUrl?: string };
+        message?: string;
+      };
+
+      if (!res.ok) {
+        throw new Error(data.message ?? "Failed to upload photo");
+      }
+
+      const photoUrl = data.data?.photoUrl;
+      if (!photoUrl) {
+        throw new Error("Failed to upload photo");
+      }
+
+      updateProfile({ avatar: photoUrl });
       await refreshSpecialistProfile();
       showSuccess("Profile photo updated successfully!", { userName: user?.name });
     } catch (err) {

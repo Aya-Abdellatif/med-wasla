@@ -11,7 +11,6 @@ import type { RegisterData, AuthResult } from "../../interfaces/auth.interface.j
 
 const OTP_TTL_MS = 10 * 60 * 1000; // 10 minutes
 
-// generate JWT token for authenticated user {id, role}
 const signToken = (id: string, role: string): string => {
   const secret = process.env.JWT_SECRET;
 
@@ -23,7 +22,6 @@ const signToken = (id: string, role: string): string => {
   });
 };
 
-// Create and send OTP for email verification
 const createAndSendOtp = async (email: string): Promise<void> => {
   await OTP.deleteMany({ email });
 
@@ -35,20 +33,6 @@ const createAndSendOtp = async (email: string): Promise<void> => {
     expiresAt: new Date(Date.now() + OTP_TTL_MS),
   });
 
-  const hasEmailConfig = Boolean(process.env.EMAIL_USER && process.env.EMAIL_PASS);
-
-  if (!hasEmailConfig) {
-    if (process.env.NODE_ENV === "production") {
-      throw new AppError(
-        "Email service is not configured. Please contact support.",
-        503,
-      );
-    }
-
-    console.log(`[DEV] OTP for ${email}: ${code}`);
-    return;
-  }
-
   try {
     await sendEmail({
       to: email,
@@ -57,11 +41,6 @@ const createAndSendOtp = async (email: string): Promise<void> => {
     });
   } catch (emailErr) {
     console.error("Failed to send OTP email:", emailErr);
-
-    if (process.env.NODE_ENV !== "production") {
-      console.log(`[DEV] OTP for ${email}: ${code}`);
-      return;
-    }
 
     throw new AppError(
       "Could not send verification email. Please try again later.",
@@ -110,8 +89,7 @@ const toAppError = (err: unknown): AppError => {
 };
 
 
-// Register a new user and create associated patient or specialist record
-export const registerUser = async (data: RegisterData): Promise<AuthResult> => {
+export const registerUser = async (data: RegisterData): Promise<void> => {
   const { name, email, password, phone, governorate, dob, address, role = "patient", ...specialistFields } = data;
 
   const existing = await User.findOne({ email });
@@ -150,7 +128,6 @@ export const registerUser = async (data: RegisterData): Promise<AuthResult> => {
     dob,
     address,
     role,
-    isVerified: true,
   });
 
   try {
@@ -180,25 +157,12 @@ export const registerUser = async (data: RegisterData): Promise<AuthResult> => {
         clinicAddress,
         bio,
         consultationFee,
-        verificationStatus: "pending",
-        certifications: (certifications ?? []).map((cert) => ({
-          title: cert.title,
-          issuedBy: cert.issuedBy,
-          issuedAt: cert.issuedAt ? new Date(cert.issuedAt) : undefined,
-          certificateUrl: cert.certificateUrl,
-          status: "pending",
+        certifications: certifications?.map((cert) => ({
+          ...cert,
+          status: "pending" as const,
         })),
+        verificationStatus: "pending",
       });
-    }
-
-    return {
-      token: signToken(user.id, user.role),
-      user: {
-        id: user.id,
-        name: user.name,
-        email: user.email,
-        role: user.role,
-      },
     };
   } catch (err) {
     await MedicalSpecialist.deleteOne({ userId: user._id });
@@ -206,6 +170,7 @@ export const registerUser = async (data: RegisterData): Promise<AuthResult> => {
     await User.deleteOne({ _id: user._id });
     throw toAppError(err);
   }
+  await createAndSendOtp(email);
 };
 
 export const verifyUserOtp = async (email: string, otp: string): Promise<AuthResult> => {
@@ -253,7 +218,6 @@ export const resendUserOtp = async (email: string): Promise<void> => {
   await createAndSendOtp(email);
 };
 
-// Login / Authenticate user and return JWT token
 export const loginUser = async (email: string, password: string): Promise<AuthResult> => {
   const user = await User.findOne({ email }).select("+password");
   if (!user)
@@ -285,36 +249,5 @@ export const getUserById = async (id: string): Promise<IUser> => {
   if (!user)
     throw new AppError("User not found", 404);
 
-  return user;
-};
-
-const MAX_PHOTO_URL_LENGTH = 3 * 1024 * 1024;
-
-export const updateUserPhoto = async (
-  userId: string,
-  photoUrl: string,
-): Promise<IUser> => {
-  if (!photoUrl || typeof photoUrl !== "string") {
-    throw new AppError("Photo URL is required", 400);
-  }
-
-  const isDataUrl = photoUrl.startsWith("data:image/");
-  const isHttpUrl = /^https?:\/\//i.test(photoUrl);
-
-  if (!isDataUrl && !isHttpUrl) {
-    throw new AppError("Photo must be an image file or a valid URL", 400);
-  }
-
-  if (photoUrl.length > MAX_PHOTO_URL_LENGTH) {
-    throw new AppError("Image is too large. Please use a smaller photo.", 400);
-  }
-
-  const user = await User.findByIdAndUpdate(
-    userId,
-    { photoUrl },
-    { new: true, runValidators: true },
-  );
-
-  if (!user) throw new AppError("User not found", 404);
   return user;
 };

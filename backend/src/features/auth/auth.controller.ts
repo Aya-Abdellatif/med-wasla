@@ -1,13 +1,12 @@
 import type { Request, Response, NextFunction } from "express";
-import { registerUser, verifyUserOtp, resendUserOtp, loginUser, getUserById, updateUserPhoto } from "./auth.service.js";
+import { registerUser, verifyUserOtp, resendUserOtp, loginUser, getUserById } from "./auth.service.js";
 
 export const register = async (req: Request, res: Response, next: NextFunction) => {
   try {
-    const result = await registerUser(req.body);
+    await registerUser(req.body);
     res.status(201).json({
       status: "success",
-      message: "Registration successful.",
-      ...result,
+      message: "Registration successful. Check your email for the OTP.",
     });
   } catch (err) {
     next(err);
@@ -51,19 +50,6 @@ export const getMe = async (req: Request, res: Response, next: NextFunction) => 
   try {
     const user = await getUserById(req.user!.id);
     res.status(200).json({ status: "success", data: { user } });
-  } catch (err) {
-    next(err);
-  }
-};
-
-export const updatePhoto = async (req: Request, res: Response, next: NextFunction) => {
-  try {
-    const user = await updateUserPhoto(req.user!.id, req.body.photoUrl);
-    res.status(200).json({
-      status: "success",
-      message: "Profile photo updated",
-      data: { photoUrl: user.photoUrl },
-    });
   } catch (err) {
     next(err);
   }

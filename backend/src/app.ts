@@ -1,31 +1,43 @@
 import express from "express";
 import cors from "cors";
-import adminRouter from "./features/admin/admin.routes.js";
-import specialistsRouter from "./features/medicalSpecialist/specialists.routes.js";
-import { patientRouter } from "./features/patient/patient.routes.js";
+import { patientRouter } from "./features/patient-profile/patient-profile.routes.js";
 import errorHandler from "./middleware/errorHandler.middleware.js";
 import authRouter from "./features/auth/auth.route.js";
+import specialistsRouter from "./features/medicalSpecialist/specialists.routes.js";
 import reviewsRouter from "./features/reviews/reviews.routes.js";
 import queueRouter from "./features/queue/queue.routes.js";
+import adminRouter from "./features/admin/admin.routes.js";
 
 const app = express();
 
+const allowedOrigins = [
+  process.env.FRONTEND_URL ?? "http://localhost:5173",
+];
+
 app.use(
   cors({
-    origin: "http://localhost:5173",
+    origin: (origin, callback) => {
+      if (!origin || allowedOrigins.includes(origin)) {
+        callback(null, true);
+      } else {
+        callback(new Error(`CORS: origin ${origin} not allowed`));
+      }
+    },
     credentials: true,
   }),
 );
 
-app.use(express.json({ limit: "5mb" }));
+app.use(express.json());
 
 // Routes
-app.use("/api/admin", adminRouter);
 app.use("/api/auth", authRouter);
 app.use("/api/patient", patientRouter);
 app.use("/api/specialists", specialistsRouter);
+// app.use("/api/appointments", appointmentsRouter);
 app.use("/api/queue", queueRouter);
 app.use("/api/reviews", reviewsRouter);
+app.use("/api/admin", adminRouter);
+// app.use("/api/ai", aiRouter);
 app.use(errorHandler);
 
 export default app;

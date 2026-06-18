@@ -3,7 +3,9 @@ import MedicalSpecialist, {
   type IMedicalSpecialist,
   type IPendingProfileUpdates,
 } from "../../models/medicalSpecialist.model.js";
-import User from "../../models/user.model.js";
+import User, { type IUser } from "../../models/user.model.js";
+import AppError from "../../utils/AppError.js";
+import cloudinary from "../../config/cloudinary.js";
 
 export interface GetAllSpecialistsQuery {
   specialistType?: string;
@@ -332,4 +334,41 @@ export const addSpecialistCertificateService = async (
     certificate: newCertificate,
     verificationStatus: specialist.verificationStatus,
   };
+};
+
+export const updateUserPhoto = async (
+  userId: string,
+  fileBuffer: Buffer,
+  mimeType: string,
+): Promise<IUser> => {
+  const uploadResult = await new Promise<{ secure_url: string }>((resolve, reject) => {
+    cloudinary.uploader
+      .upload_stream(
+        {
+          folder: "medwasla/profiles",
+          resource_type: "image",
+          format: mimeType.split("/")[1],
+          transformation: [{ width: 400, height: 400, crop: "fill" }],
+        },
+        (err, result) => {
+          if (err || !result) {
+            return reject(err ?? new Error("Cloudinary upload failed"));
+          }
+          resolve(result);
+        },
+      )
+      .end(fileBuffer);
+  });
+
+  const user = await User.findByIdAndUpdate(
+    userId,
+    { photoUrl: uploadResult.secure_url },
+    { new: true },
+  );
+
+  if (!user) {
+    throw new AppError("User not found", 404);
+  }
+
+  return user;
 };

@@ -1,4 +1,5 @@
-import type { Request, Response } from "express";
+import type { Request, Response, NextFunction } from "express";
+import AppError from "../../utils/AppError.js";
 import {
   getAllSpecialistsService,
   getSpecialistByIdService,
@@ -13,6 +14,7 @@ import {
   type UpdateAvailabilityBody,
   type UpdateFeesBody,
   type AddCertificateBody,
+  updateUserPhoto,
 } from "./specialists.service.js";
 
 function getUserId(req: Request): string {
@@ -223,5 +225,20 @@ export const addCertificate = async (
     });
   } catch (error: unknown) {
     sendError(res, error);
+  }
+};
+
+export const updatePhoto = async (req: Request, res: Response, next: NextFunction) => {
+  try {
+    if (!req.file) throw new AppError("Please upload an image", 400);
+
+    const user = await updateUserPhoto(req.user!.id, req.file.buffer, req.file.mimetype);
+    res.status(200).json({
+      status: "success",
+      message: "Profile photo updated",
+      data: { photoUrl: user.photoUrl },
+    });
+  } catch (err) {
+    next(err);
   }
 };
