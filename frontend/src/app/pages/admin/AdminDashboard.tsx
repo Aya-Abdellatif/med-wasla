@@ -2,7 +2,11 @@
 import { useCallback, useEffect, useState } from "react";
 import { useNavigate } from "react-router-dom";
 import { useAuth } from "../../context/useAuth";
-import { API_BASE } from "../../../services/api";
+import {
+  fetchAdminSpecialists,
+  updateSpecialistVerification,
+  type AdminSpecialist,
+} from "../../../services/adminApi";
 import { showError, showInfo, showSuccess } from "../../../utils/toast";
 import {
   Check,
@@ -19,81 +23,7 @@ import {
   Users // ضفنا أيكونة جديدة مناسبة للتبويبات
 } from "lucide-react";
 
-interface UserInfo {
-  _id: string;
-  name: string;
-  email: string;
-  phone: string;
-  address: string;
-  photoUrl?: string;
-}
-
-interface Certification {
-  _id: string;
-  title: string;
-  issuedBy: string;
-  issuedAt?: string;
-  certificateUrl: string;
-  status: "pending" | "approved" | "rejected";
-}
-
-// قمنا بتغيير الإسم ليكون أشمل لأن القائمة ستضم الجميع وليس الـ pending فقط
-interface SpecialistOverview {
-  _id: string;
-  userId: UserInfo;
-  specialistType: "doctor" | "nurse";
-  specialization?: string;
-  clinicAddress?: string;
-  homeVisit: boolean;
-  licenseNumber: string;
-  bio?: string;
-  consultationFee?: number;
-  certifications?: Certification[];
-  verificationStatus: "pending" | "approved" | "rejected";
-  pendingProfileUpdates?: {
-    bio?: string;
-    clinicAddress?: string;
-    specialization?: string;
-    areasOfExpertise?: string[];
-    avgWaitMinutes?: number;
-    serviceAreas?: string[];
-    homeVisit?: boolean;
-  };
-}
-
 type FilterTab = "all" | "pending" | "approved" | "rejected";
-
-interface AdminApiResponse {
-  success: boolean;
-  data?: SpecialistOverview[];
-  message?: string;
-}
-
-async function requestSpecialists(signal?: AbortSignal): Promise<{
-  specialists?: SpecialistOverview[];
-  error?: string;
-}> {
-  try {
-    const res = await fetch(`${API_BASE}/api/admin/specialists`, { signal });
-    const json = (await res.json()) as AdminApiResponse;
-
-    if (json.success && json.data) {
-      return { specialists: json.data };
-    }
-
-    return { error: json.message || "Failed to load specialists" };
-  } catch (err: unknown) {
-    if (err instanceof DOMException && err.name === "AbortError") {
-      return {};
-    }
-
-    return {
-      error:
-        "Unable to connect to the backend server. Please verify the backend is running." +
-        (err instanceof Error && err.message ? ` Error: ${err.message}` : ""),
-    };
-  }
-}
 
 export default function AdminDashboard() {
   const { user } = useAuth();
@@ -115,7 +45,7 @@ export default function AdminDashboard() {
 function AdminDashboardView() {
   const { logout, user } = useAuth();
   const navigate = useNavigate();
-  const [specialists, setSpecialists] = useState<SpecialistOverview[]>([]);
+  const [specialists, setSpecialists] = useState<AdminSpecialist[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState("");
   const [actioningId, setActioningId] = useState<string | null>(null);
@@ -125,35 +55,37 @@ function AdminDashboardView() {
     setLoading(true);
     setError("");
 
-    const result = await requestSpecialists();
-
-    if (result.specialists) {
-      setSpecialists(result.specialists);
+    try {
+      const data = await fetchAdminSpecialists();
+      setSpecialists(data);
       if (notify) showInfo("Specialists list refreshed");
-    } else if (result.error) {
-      setError(result.error);
-      showError(result.error);
+    } catch (err) {
+      const message = err instanceof Error ? err.message : "Failed to load specialists";
+      setError(message);
+      showError(message);
+    } finally {
+      setLoading(false);
     }
-
-    setLoading(false);
   }, []);
 
   useEffect(() => {
     const controller = new AbortController();
 
-    void requestSpecialists(controller.signal).then((result) => {
-      if (controller.signal.aborted) return;
-
-      if (result.specialists) {
-        setSpecialists(result.specialists);
+    fetchAdminSpecialists(controller.signal)
+      .then((data) => {
+        if (controller.signal.aborted) return;
+        setSpecialists(data);
         setError("");
-      } else if (result.error) {
-        setError(result.error);
-        showError(result.error);
-      }
-
-      setLoading(false);
-    });
+      })
+      .catch((err) => {
+        if (controller.signal.aborted) return;
+        const message = err instanceof Error ? err.message : "Failed to load specialists";
+        setError(message);
+        showError(message);
+      })
+      .finally(() => {
+        if (!controller.signal.aborted) setLoading(false);
+      });
 
     return () => controller.abort();
   }, []);
@@ -161,29 +93,18 @@ function AdminDashboardView() {
   const handleAction = async (id: string, action: "approve" | "reject") => {
     setActioningId(id);
     try {
-      const res = await fetch(`${API_BASE}/api/admin/specialists/${id}/${action}`, {
-        method: "PATCH",
-        headers: { "Content-Type": "application/json" },
-      });
-      const json = (await res.json()) as { success: boolean; message?: string };
-      if (json.success) {
-        showSuccess(`Specialist ${action === "approve" ? "approved" : "rejected"} successfully!`);
+      await updateSpecialistVerification(id, action);
+      showSuccess(`Specialist ${action === "approve" ? "approved" : "rejected"} successfully!`);
 
-        setSpecialists((prev) =>
-          prev.map((s) =>
-            s._id === id
-              ? { ...s, verificationStatus: action === "approve" ? "approved" : "rejected" }
-              : s,
-          ),
-        );
-      } else {
-        showError(json.message || `Failed to ${action} specialist`);
-      }
-    } catch (err: unknown) {
-      showError(
-        "Network error occurred. Please try again." +
-          (err instanceof Error && err.message ? ` Error: ${err.message}` : ""),
+      setSpecialists((prev) =>
+        prev.map((s) =>
+          s._id === id
+            ? { ...s, verificationStatus: action === "approve" ? "approved" : "rejected" }
+            : s,
+        ),
       );
+    } catch (err) {
+      showError(err instanceof Error ? err.message : `Failed to ${action} specialist`);
     } finally {
       setActioningId(null);
     }

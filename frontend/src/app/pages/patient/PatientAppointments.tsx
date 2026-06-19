@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useState, useEffect, useCallback } from "react";
 import { Link, useNavigate } from "react-router";
 import {
     Calendar,
@@ -29,7 +29,11 @@ import { ViewReviewModal } from "../../components/patient-appointments/ViewRevie
 import { AppointmentTypeModal } from "../../components/booking/AppointmentTypeModal";
 
 import type { Appointment, AppointmentReview,  AppointmentStatus, AppointmentType } from "../../components/patient-appointments/AppointmentTypes";
-import { mockAppointments } from "./mockAppointments";
+import { fetchMyAppointments, cancelAppointment, rescheduleAppointment } from "../../../services/appointmentsApi";
+import { createReview } from "../../../services/reviewsApi";
+import { buildRescheduleIsoDate } from "../../../utils/appointmentReschedule";
+import { useAuth } from "../../context/useAuth";
+import { showError, showSuccess } from "../../../utils/toast";
 
 const statusConfig: Record<AppointmentStatus, { label: string; color: string; bgColor: string; icon: React.ElementType }> = {
     upcoming: { label: "Upcoming", color: "text-blue-700", bgColor: "bg-blue-50 border border-blue-200", icon: Clock },
@@ -66,7 +70,7 @@ function AppointmentCard({
         <div className="bg-white rounded-2xl border border-border shadow-sm hover:shadow-md transition-shadow p-5">
             <div className="flex items-start gap-4">
                 {/* Doctor photo */}
-                <div className="relative flex-shrink-0">
+                <div className="relative shrink-0">
                     <ImageWithFallback
                         src={appointment.doctor.photo}
                         alt={appointment.doctor.name}
@@ -84,7 +88,7 @@ function AppointmentCard({
                             <h4 className="font-semibold text-foreground leading-tight">{appointment.doctor.name}</h4>
                             <p className="text-sm text-primary">{appointment.doctor.specialty}</p>
                         </div>
-                        <span className={`flex items-center gap-1 px-2.5 py-1 rounded-full text-xs font-medium flex-shrink-0 ${status.bgColor} ${status.color}`}>
+                        <span className={`flex items-center gap-1 px-2.5 py-1 rounded-full text-xs font-medium shrink-0 ${status.bgColor} ${status.color}`}>
                             <StatusIcon className="w-3 h-3" />
                             {status.label}
                         </span>
@@ -107,7 +111,7 @@ function AppointmentCard({
 
                     {appointment.address && (
                         <p className="flex items-start gap-1.5 mt-1.5 text-xs text-muted-foreground">
-                            <MapPin className="w-3.5 h-3.5 mt-0.5 flex-shrink-0" />
+                            <MapPin className="w-3.5 h-3.5 mt-0.5 shrink-0" />
                             <span className="truncate">{appointment.address}</span>
                         </p>
                     )}
@@ -137,7 +141,7 @@ function AppointmentCard({
                 </button>
 
                 <Link
-                    to={`/provider/doctor/${appointment.id}`}
+                    to={`/doctor/${appointment.specialistId}`}
                     className="flex items-center gap-1.5 px-3 py-1.5 bg-secondary/5 hover:bg-secondary/10 text-secondary rounded-lg text-xs font-medium transition-colors"
                 >
                     <User className="w-3.5 h-3.5" />
@@ -195,7 +199,6 @@ function AppointmentCard({
 
 // ─── Empty State ───────────────────────────────────────────────
 function EmptyState({ filterStatus }: { filterStatus: string }) {
-    const sampleDoctor = mockAppointments[0].doctor;
     return (
         <div className="flex flex-col items-center justify-center py-20 text-center">
             <div className="w-20 h-20 bg-primary/10 rounded-full flex items-center justify-center mb-5">
@@ -211,23 +214,11 @@ function EmptyState({ filterStatus }: { filterStatus: string }) {
             </p>
 
             {filterStatus === "all" && (
-                <div className="bg-white rounded-2xl border border-border shadow-sm p-5 flex items-center gap-4 max-w-sm w-full mb-6">
-                    <ImageWithFallback src={sampleDoctor.photo} alt={sampleDoctor.name} className="w-14 h-14 rounded-full object-cover" />
-                    <div className="flex-1 text-left">
-                        <p className="font-semibold text-foreground">{sampleDoctor.name}</p>
-                        <p className="text-sm text-primary">{sampleDoctor.specialty}</p>
-                        <div className="flex items-center gap-1 mt-0.5">
-                            <Star className="w-3.5 h-3.5 fill-amber-400 text-amber-400" />
-                            <span className="text-xs text-muted-foreground">{sampleDoctor.rating}</span>
-                        </div>
-                    </div>
-                </div>
+                <button className="flex items-center gap-2 bg-primary text-white px-6 py-3 rounded-xl hover:bg-primary/90 transition-colors font-medium">
+                    <CalendarPlus className="w-5 h-5" />
+                    Book Appointment
+                </button>
             )}
-
-            <button className="flex items-center gap-2 bg-primary text-white px-6 py-3 rounded-xl hover:bg-primary/90 transition-colors font-medium">
-                <CalendarPlus className="w-5 h-5" />
-                Book Appointment
-            </button>
         </div>
     );
 }
@@ -235,7 +226,9 @@ function EmptyState({ filterStatus }: { filterStatus: string }) {
 
 // ─── Main Page ─────────────────────────────────────────────────
 export function MyAppointments() {
-    const [appointments, setAppointments] = useState<Appointment[]>(mockAppointments);
+    const { user } = useAuth();
+    const [appointments, setAppointments] = useState<Appointment[]>([]);
+    const [loading, setLoading] = useState(true);
     const [search, setSearch] = useState("");
     const [statusFilter, setStatusFilter] = useState<"all" | AppointmentStatus>("all");
     const [typeFilter, setTypeFilter] = useState<"all" | AppointmentType>("all");
@@ -249,15 +242,60 @@ export function MyAppointments() {
     const [viewReviewModal, setViewReviewModal] = useState<Appointment | null>(null);
     const [isAppointmentModalOpen, setIsAppointmentModalOpen] = useState(false);
 
+    const loadAppointments = useCallback(async (silent = false) => {
+        if (!user || user.role !== "patient") {
+            setAppointments([]);
+            if (!silent) setLoading(false);
+            return;
+        }
 
-    const handleBookAgain = (_appt: Appointment) => {
-        // Navigate to doctors page — in a real app this would pre-select the doctor
-        navigate("/doctors");
+        if (!silent) setLoading(true);
+
+        try {
+            const data = await fetchMyAppointments();
+            setAppointments(data);
+        } catch (err) {
+            showError(err instanceof Error ? err.message : "Failed to load appointments");
+        } finally {
+            if (!silent) setLoading(false);
+        }
+    }, [user]);
+
+    useEffect(() => {
+        const timer = window.setTimeout(() => {
+            void loadAppointments();
+        }, 0);
+
+        return () => {
+            window.clearTimeout(timer);
+        };
+    }, [user?.id, user?.role, loadAppointments]);
+
+    const handleBookAgain = (appt: Appointment) => {
+        navigate(`/doctor/${appt.specialistId}`);
     };
 
-    const handleSubmitReview = (id: string, review: AppointmentReview) => {
-    setAppointments((prev) => prev.map((a) => (a.id === id ? { ...a, review } : a)));
-    setReviewModal(null);
+    const handleSubmitReview = async (id: string, review: AppointmentReview) => {
+        const appointment = appointments.find((item) => item.id === id);
+        if (!appointment) return;
+
+        try {
+            await createReview({
+                specialistId: appointment.specialistId,
+                appointmentId: id,
+                rating: review.rating,
+                comment: review.comment,
+            });
+
+            setAppointments((prev) =>
+                prev.map((item) => (item.id === id ? { ...item, review } : item)),
+            );
+            setReviewModal(null);
+            showSuccess("Review submitted successfully");
+        } catch (err) {
+            showError(err instanceof Error ? err.message : "Failed to submit review");
+            throw err;
+        }
     };
 
     const counts = {
@@ -277,9 +315,27 @@ export function MyAppointments() {
         return matchSearch && matchStatus && matchType;
     });
 
-    const handleCancel = (id: string) => {
-        setAppointments((prev) => prev.map((a) => (a.id === id ? { ...a, status: "cancelled" as AppointmentStatus } : a)));
-        setCancelModal(null);
+    const handleCancel = async (id: string) => {
+        try {
+            await cancelAppointment(id);
+            await loadAppointments(true);
+            setCancelModal(null);
+            showSuccess("Appointment cancelled");
+        } catch (err) {
+            showError(err instanceof Error ? err.message : "Failed to cancel appointment");
+        }
+    };
+
+    const handleReschedule = async (id: string, date: string, time: string) => {
+        try {
+            await rescheduleAppointment(id, buildRescheduleIsoDate(date, time));
+            await loadAppointments(true);
+            setRescheduleModal(null);
+            showSuccess("Appointment rescheduled");
+        } catch (err) {
+            showError(err instanceof Error ? err.message : "Failed to reschedule appointment");
+            throw err;
+        }
     };
 
     const summaryCards = [
@@ -292,7 +348,7 @@ export function MyAppointments() {
     return (
         <div className="min-h-screen bg-muted/20">
             {/* Page Header */}
-            <div className="bg-gradient-to-r from-primary to-secondary py-10 px-4">
+            <div className="bg-linear-to-r from-primary to-secondary py-10 px-4">
                 <div className="max-w-5xl mx-auto">
                     <div className="flex items-center gap-3 mb-1">
                         <div className="w-9 h-9 bg-white/20 rounded-xl flex items-center justify-center">
@@ -411,7 +467,9 @@ export function MyAppointments() {
                 </div>
 
                 {/* Appointments list */}
-                {filtered.length === 0 ? (
+                {loading ? (
+                    <div className="py-20 text-center text-muted-foreground">Loading appointments...</div>
+                ) : filtered.length === 0 ? (
                     <EmptyState filterStatus={statusFilter} />
                 ) : (
                     <div className="space-y-3">
@@ -431,8 +489,8 @@ export function MyAppointments() {
 
                 {/* Book new appointment CTA */}
                 {filtered.length > 0 && (
-                    <div className="bg-gradient-to-r from-primary/5 to-secondary/5 border border-primary/10 rounded-2xl p-6 flex flex-col sm:flex-row items-center gap-4 text-center sm:text-left">
-                        <div className="w-12 h-12 bg-primary/10 rounded-xl flex items-center justify-center flex-shrink-0">
+                    <div className="bg-linear-to-r from-primary/5 to-secondary/5 border border-primary/10 rounded-2xl p-6 flex flex-col sm:flex-row items-center gap-4 text-center sm:text-left">
+                        <div className="w-12 h-12 bg-primary/10 rounded-xl flex items-center justify-center shrink-0">
                             <CalendarPlus className="w-6 h-6 text-primary" />
                         </div>
                         <div className="flex-1">
@@ -441,7 +499,7 @@ export function MyAppointments() {
                         </div>
                         <button
                             onClick={() => setIsAppointmentModalOpen(true)}
-                            className="flex items-center gap-2 bg-primary text-white px-5 py-2.5 rounded-xl hover:bg-primary/90 transition-colors text-sm font-medium flex-shrink-0"
+                            className="flex items-center gap-2 bg-primary text-white px-5 py-2.5 rounded-xl hover:bg-primary/90 transition-colors text-sm font-medium shrink-0"
                         >
                             <CalendarPlus className="w-4 h-4" />
                             Book Now
@@ -452,7 +510,13 @@ export function MyAppointments() {
 
             {/* Modals */}
             {detailsModal && <DetailsModal appointment={detailsModal} onClose={() => setDetailsModal(null)} />}
-            {rescheduleModal && <RescheduleModal appointment={rescheduleModal} onClose={() => setRescheduleModal(null)} />}
+            {rescheduleModal && (
+                <RescheduleModal
+                    appointment={rescheduleModal}
+                    onClose={() => setRescheduleModal(null)}
+                    onConfirm={(date, time) => handleReschedule(rescheduleModal.id, date, time)}
+                />
+            )}
             {cancelModal && <CancelModal appointment={cancelModal} onClose={() => setCancelModal(null)} onConfirm={() => handleCancel(cancelModal.id)} />}
             {reviewModal && (
                 <ReviewModal
@@ -462,7 +526,7 @@ export function MyAppointments() {
                 />
             )}
             {viewReviewModal && <ViewReviewModal appointment={viewReviewModal} onClose={() => setViewReviewModal(null)} />}
-            {AppointmentTypeModal && <AppointmentTypeModal isOpen={isAppointmentModalOpen} onClose={() => setIsAppointmentModalOpen(false)} />}
+            <AppointmentTypeModal isOpen={isAppointmentModalOpen} onClose={() => setIsAppointmentModalOpen(false)} />
         </div>
     );
 }

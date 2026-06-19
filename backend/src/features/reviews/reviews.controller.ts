@@ -3,6 +3,7 @@ import AppError from "../../utils/AppError.js";
 import {
   createReviewService,
   getSpecialistReviewsService,
+  getPatientReviewsService,
   updateReviewService,
   deleteReviewService,
 } from "./reviews.service.js";
@@ -49,8 +50,28 @@ export const createReview = async (
       data: review,
     });
   } catch (error) {
-    if ((error as Error).message === "ALREADY_REVIEWED") {
+    const message = (error as Error).message;
+
+    if (message === "ALREADY_REVIEWED") {
       return next(new AppError("You already reviewed this appointment", 409));
+    }
+
+    if (message === "APPOINTMENT_NOT_FOUND") {
+      return next(new AppError("Appointment not found", 404));
+    }
+
+    if (message === "APPOINTMENT_NOT_COMPLETED") {
+      return next(
+        new AppError("You can only review completed appointments", 400),
+      );
+    }
+
+    if (message === "SPECIALIST_MISMATCH") {
+      return next(new AppError("Specialist does not match this appointment", 400));
+    }
+
+    if (message === "FORBIDDEN") {
+      return next(new AppError("You can only review your own appointments", 403));
     }
 
     return next(error);
@@ -76,6 +97,30 @@ export const getSpecialistReviews = async (
       success: true,
       count: totalReviews,
       averageRating,
+      data: reviews,
+    });
+  } catch (error) {
+    return next(error);
+  }
+};
+
+export const getMyReviews = async (
+  req: Request,
+  res: Response,
+  next: NextFunction
+) => {
+  try {
+    const patientId = req.user?.id;
+
+    if (!patientId) {
+      return next(new AppError("Unauthorized", 401));
+    }
+
+    const reviews = await getPatientReviewsService(patientId);
+
+    res.status(200).json({
+      success: true,
+      count: reviews.length,
       data: reviews,
     });
   } catch (error) {
