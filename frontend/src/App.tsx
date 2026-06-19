@@ -26,13 +26,15 @@ import { DoctorProfile } from "./app/pages/public/DoctorProfile";
 import { NurseProfile } from "./app/pages/public/NurseProfile";
 import AdminDashboard from "./app/pages/admin/AdminDashboard";
 
+import { ProtectedRoute } from "./app/components/common/ProtectedRoute";
+
 function App() {
   return (
     <AuthProvider>
       <ChatBotProvider>
         <AppToast />
         <Routes>
-          <Route path="/" element={<SignIn />} />
+          <Route path="/login" element={<SignIn />} />
           <Route path="/role" element={<Role />} />
           <Route path="/signup" element={<SignUp />} />
           <Route path="/verify-otp" element={<VerifyOtp />} />
@@ -44,15 +46,18 @@ function App() {
           <Route path="/admin-dashboard" element={<AdminDashboard />} />
 
           <Route element={<MainLayout />}>
-            <Route path="/home" element={<Home />} />
+            <Route path="/" element={<Home />} />
             <Route path="/about" element={<AboutPage />} />
             <Route path="/contact" element={<ContactPage />} />
             <Route path="/services" element={<ServicesPage />} />
-            <Route path="/dashboard" element={<Dashboard />} />
             <Route path="/doctors" element={<Doctors />} />
             <Route path="/nurses" element={<Nurses />} />
-            <Route path="/profile" element={<PatientProfile />} />
-            <Route path="/appointments" element={<MyAppointments />} />
+
+            <Route element={<ProtectedRoute />}>
+              <Route path="/dashboard" element={<Dashboard />} />
+              <Route path="/profile" element={<PatientProfile />} />
+              <Route path="/appointments" element={<MyAppointments />} />
+            </Route>
           </Route>
         </Routes>
       </ChatBotProvider>

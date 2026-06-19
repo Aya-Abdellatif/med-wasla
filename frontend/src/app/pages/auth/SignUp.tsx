@@ -41,7 +41,8 @@ type FieldErrors = Partial<Record<FieldName, string>>;
 
 const inputBaseClass =
   "w-full rounded-xl border bg-slate-50 px-3.5 py-2.5 text-sm transition-colors focus:bg-white focus:outline-none focus:ring-2";
-const labelClass = "mb-1.5 block text-xs font-semibold uppercase tracking-wide text-slate-500";
+const labelClass =
+  "mb-1.5 block text-xs font-semibold uppercase tracking-wide text-slate-500";
 
 function getInputClass(hasError?: boolean) {
   return `${inputBaseClass} ${
@@ -66,15 +67,29 @@ function Field({
     <div className={className}>
       <label className={labelClass}>{label}</label>
       {children}
-      {error && <p className="mt-1.5 text-xs font-medium text-red-500">{error}</p>}
+      {error && (
+        <p className="mt-1.5 text-xs font-medium text-red-500">{error}</p>
+      )}
     </div>
   );
 }
 
 const roleMeta = {
-  patient: { label: "Patient", icon: UserRound, color: "bg-blue-100 text-blue-700" },
-  doctor: { label: "Doctor", icon: Stethoscope, color: "bg-indigo-100 text-indigo-700" },
-  nurse: { label: "Nurse", icon: HeartPulse, color: "bg-emerald-100 text-emerald-700" },
+  patient: {
+    label: "Patient",
+    icon: UserRound,
+    color: "bg-blue-100 text-blue-700",
+  },
+  doctor: {
+    label: "Doctor",
+    icon: Stethoscope,
+    color: "bg-indigo-100 text-indigo-700",
+  },
+  nurse: {
+    label: "Nurse",
+    icon: HeartPulse,
+    color: "bg-emerald-100 text-emerald-700",
+  },
 } as const;
 
 const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
@@ -116,7 +131,11 @@ function validateStep1(form: FormData): FieldErrors {
   return errors;
 }
 
-function validateStep2(form: FormData, isDoctor: boolean, isNurse: boolean): FieldErrors {
+function validateStep2(
+  form: FormData,
+  isDoctor: boolean,
+  isNurse: boolean,
+): FieldErrors {
   const errors: FieldErrors = {};
 
   if (isDoctor && !form.specialization) {
@@ -131,9 +150,12 @@ function validateStep2(form: FormData, isDoctor: boolean, isNurse: boolean): Fie
     errors.serviceArea = "Enter at least one service area";
   }
 
-  const hasCertInput = Boolean(form.certTitle || form.certIssuer || form.certUrl);
+  const hasCertInput = Boolean(
+    form.certTitle || form.certIssuer || form.certUrl,
+  );
   if (hasCertInput) {
-    if (!form.certTitle.trim()) errors.certTitle = "Certificate title is required";
+    if (!form.certTitle.trim())
+      errors.certTitle = "Certificate title is required";
     if (!form.certIssuer.trim()) errors.certIssuer = "Issuer is required";
     if (!form.certUrl.trim()) errors.certUrl = "Certificate URL is required";
   }
@@ -148,10 +170,8 @@ function hasErrors(errors: FieldErrors) {
 export default function SignUp() {
   const location = useLocation();
   const navigate = useNavigate();
-  const roleParam = (new URLSearchParams(location.search).get("role") ?? "patient") as
-    | "patient"
-    | "doctor"
-    | "nurse";
+  const roleParam = (new URLSearchParams(location.search).get("role") ??
+    "patient") as "patient" | "doctor" | "nurse";
   const isDoctor = roleParam === "doctor";
   const isNurse = roleParam === "nurse";
   const isSpecialist = isDoctor || isNurse;
@@ -194,7 +214,11 @@ export default function SignUp() {
 
   const showValidationToast = (errors: FieldErrors) => {
     const count = Object.keys(errors).length;
-    showWarning(count === 1 ? "Please fix the highlighted field" : `Please fix ${count} highlighted fields`);
+    showWarning(
+      count === 1
+        ? "Please fix the highlighted field"
+        : `Please fix ${count} highlighted fields`,
+    );
   };
 
   const handleChange = (field: keyof FormData, value: string | boolean) => {
@@ -289,7 +313,8 @@ export default function SignUp() {
       showSuccess("Check your email for the verification code.");
       navigate(`/verify-otp?email=${encodeURIComponent(form.email.trim())}`);
     } catch (err) {
-      const message = err instanceof Error ? err.message : "Registration failed";
+      const message =
+        err instanceof Error ? err.message : "Registration failed";
       if (message.toLowerCase().includes("email")) {
         setFieldErrors({ email: message });
         setFormStep(1);
@@ -311,7 +336,11 @@ export default function SignUp() {
   return (
     <AuthLayout
       title="Create account"
-      subtitle={isSpecialist ? "Set up your professional profile" : "Join MedWasla in a few steps"}
+      subtitle={
+        isSpecialist
+          ? "Set up your professional profile"
+          : "Join MedWasla in a few steps"
+      }
       wide={isSpecialist}
       compact={!isSpecialist}
     >
@@ -338,7 +367,11 @@ export default function SignUp() {
               <div
                 key={n}
                 className={`h-2 rounded-full transition-all duration-300 ${
-                  n === formStep ? "w-8 bg-teal-500" : n < formStep ? "w-2 bg-teal-300" : "w-2 bg-slate-200"
+                  n === formStep
+                    ? "w-8 bg-teal-500"
+                    : n < formStep
+                      ? "w-2 bg-teal-300"
+                      : "w-2 bg-slate-200"
                 }`}
               />
             ))}
@@ -350,7 +383,6 @@ export default function SignUp() {
       </div>
 
       <form onSubmit={handleRegister} className="space-y-4" noValidate>
-
         {formStep === 1 && (
           <div className="space-y-3">
             <div className="grid gap-3 sm:grid-cols-2">
@@ -418,12 +450,19 @@ export default function SignUp() {
                   className={getInputClass(Boolean(fieldErrors.password))}
                 />
               </Field>
-              <Field label="Confirm password" error={fieldErrors.confirmPassword}>
+              <Field
+                label="Confirm password"
+                error={fieldErrors.confirmPassword}
+              >
                 <input
                   type="password"
                   value={form.confirmPassword}
-                  onChange={(e) => handleChange("confirmPassword", e.target.value)}
-                  className={getInputClass(Boolean(fieldErrors.confirmPassword))}
+                  onChange={(e) =>
+                    handleChange("confirmPassword", e.target.value)
+                  }
+                  className={getInputClass(
+                    Boolean(fieldErrors.confirmPassword),
+                  )}
                 />
               </Field>
             </div>
@@ -435,11 +474,18 @@ export default function SignUp() {
             {isDoctor && (
               <>
                 <div className="grid gap-3 sm:grid-cols-2">
-                  <Field label="Medical specialty" error={fieldErrors.specialization}>
+                  <Field
+                    label="Medical specialty"
+                    error={fieldErrors.specialization}
+                  >
                     <select
                       value={form.specialization}
-                      onChange={(e) => handleChange("specialization", e.target.value)}
-                      className={getInputClass(Boolean(fieldErrors.specialization))}
+                      onChange={(e) =>
+                        handleChange("specialization", e.target.value)
+                      }
+                      className={getInputClass(
+                        Boolean(fieldErrors.specialization),
+                      )}
                     >
                       <option value="" disabled>
                         Select specialty
@@ -451,18 +497,27 @@ export default function SignUp() {
                       ))}
                     </select>
                   </Field>
-                  <Field label="License number" error={fieldErrors.licenseNumber}>
+                  <Field
+                    label="License number"
+                    error={fieldErrors.licenseNumber}
+                  >
                     <input
                       value={form.licenseNumber}
-                      onChange={(e) => handleChange("licenseNumber", e.target.value)}
-                      className={getInputClass(Boolean(fieldErrors.licenseNumber))}
+                      onChange={(e) =>
+                        handleChange("licenseNumber", e.target.value)
+                      }
+                      className={getInputClass(
+                        Boolean(fieldErrors.licenseNumber),
+                      )}
                     />
                   </Field>
                 </div>
                 <Field label="Clinic address">
                   <input
                     value={form.clinicAddress}
-                    onChange={(e) => handleChange("clinicAddress", e.target.value)}
+                    onChange={(e) =>
+                      handleChange("clinicAddress", e.target.value)
+                    }
                     className={getInputClass()}
                   />
                 </Field>
@@ -485,18 +540,27 @@ export default function SignUp() {
 
             {isNurse && (
               <div className="grid gap-3 sm:grid-cols-2">
-                <Field label="Nursing license" error={fieldErrors.licenseNumber}>
+                <Field
+                  label="Nursing license"
+                  error={fieldErrors.licenseNumber}
+                >
                   <input
                     value={form.licenseNumber}
-                    onChange={(e) => handleChange("licenseNumber", e.target.value)}
-                    className={getInputClass(Boolean(fieldErrors.licenseNumber))}
+                    onChange={(e) =>
+                      handleChange("licenseNumber", e.target.value)
+                    }
+                    className={getInputClass(
+                      Boolean(fieldErrors.licenseNumber),
+                    )}
                   />
                 </Field>
                 <Field label="Service areas" error={fieldErrors.serviceArea}>
                   <input
                     placeholder="e.g. Maadi, Nasr City"
                     value={form.serviceArea}
-                    onChange={(e) => handleChange("serviceArea", e.target.value)}
+                    onChange={(e) =>
+                      handleChange("serviceArea", e.target.value)
+                    }
                     className={getInputClass(Boolean(fieldErrors.serviceArea))}
                   />
                 </Field>
@@ -508,7 +572,9 @@ export default function SignUp() {
                 <input
                   type="number"
                   value={form.consultationFee}
-                  onChange={(e) => handleChange("consultationFee", e.target.value)}
+                  onChange={(e) =>
+                    handleChange("consultationFee", e.target.value)
+                  }
                   className={getInputClass()}
                 />
               </Field>
@@ -524,7 +590,9 @@ export default function SignUp() {
 
             <div
               className={`rounded-xl border ${
-                fieldErrors.certTitle || fieldErrors.certIssuer || fieldErrors.certUrl
+                fieldErrors.certTitle ||
+                fieldErrors.certIssuer ||
+                fieldErrors.certUrl
                   ? "border-red-200"
                   : "border-slate-200"
               }`}
@@ -544,7 +612,9 @@ export default function SignUp() {
                   <Field label="Title" error={fieldErrors.certTitle}>
                     <input
                       value={form.certTitle}
-                      onChange={(e) => handleChange("certTitle", e.target.value)}
+                      onChange={(e) =>
+                        handleChange("certTitle", e.target.value)
+                      }
                       className={getInputClass(Boolean(fieldErrors.certTitle))}
                     />
                   </Field>
@@ -552,14 +622,20 @@ export default function SignUp() {
                     <Field label="Issued by" error={fieldErrors.certIssuer}>
                       <input
                         value={form.certIssuer}
-                        onChange={(e) => handleChange("certIssuer", e.target.value)}
-                        className={getInputClass(Boolean(fieldErrors.certIssuer))}
+                        onChange={(e) =>
+                          handleChange("certIssuer", e.target.value)
+                        }
+                        className={getInputClass(
+                          Boolean(fieldErrors.certIssuer),
+                        )}
                       />
                     </Field>
                     <Field label="Certificate URL" error={fieldErrors.certUrl}>
                       <input
                         value={form.certUrl}
-                        onChange={(e) => handleChange("certUrl", e.target.value)}
+                        onChange={(e) =>
+                          handleChange("certUrl", e.target.value)
+                        }
                         className={getInputClass(Boolean(fieldErrors.certUrl))}
                       />
                     </Field>
@@ -593,7 +669,10 @@ export default function SignUp() {
 
         <p className="text-center text-sm text-slate-600">
           Already have an account?{" "}
-          <Link to="/" className="font-bold text-teal-600 hover:text-teal-700">
+          <Link
+            to="/login"
+            className="font-bold text-teal-600 hover:text-teal-700"
+          >
             Sign in
           </Link>
         </p>
