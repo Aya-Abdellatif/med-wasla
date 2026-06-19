@@ -8,6 +8,10 @@ interface ScheduleTabProps {
   onSelectedDateChange: (date: string) => void;
   filteredUpcoming: Appointment[];
   filteredCompleted: Appointment[];
+  pendingAppointments: Appointment[];
+  onConfirm?: (appointmentId: string) => void;
+  onComplete?: (appointmentId: string) => void;
+  updatingAppointmentId?: string | null;
 }
 
 export function ScheduleTab({
@@ -15,6 +19,10 @@ export function ScheduleTab({
   onSelectedDateChange,
   filteredUpcoming,
   filteredCompleted,
+  pendingAppointments,
+  onConfirm,
+  onComplete,
+  updatingAppointmentId,
 }: ScheduleTabProps) {
   return (
     <div className="bg-white rounded-xl p-6" style={{ boxShadow: "0 1px 3px rgba(0,0,0,0.1)" }}>
@@ -37,6 +45,28 @@ export function ScheduleTab({
       </p>
 
       <div className="space-y-8">
+        {pendingAppointments.length > 0 && (
+          <div>
+            <h3 className="text-lg font-semibold mb-4" style={{ color: "#111827" }}>
+              Pending Requests
+              <span className="ml-2 text-sm font-normal" style={{ color: "#6b7280" }}>
+                ({pendingAppointments.length})
+              </span>
+            </h3>
+            <div className="space-y-3">
+              {pendingAppointments.map((appointment) => (
+                <AppointmentRow
+                  key={appointment.id}
+                  appointment={appointment}
+                  showDate
+                  onConfirm={onConfirm}
+                  isUpdating={updatingAppointmentId === appointment.id}
+                />
+              ))}
+            </div>
+          </div>
+        )}
+
         <div>
           <h3 className="text-lg font-semibold mb-4" style={{ color: "#111827" }}>
             Upcoming
@@ -47,7 +77,13 @@ export function ScheduleTab({
           <div className="space-y-3">
             {filteredUpcoming.length > 0 ? (
               filteredUpcoming.map((appointment) => (
-                <AppointmentRow key={appointment.id} appointment={appointment} />
+                <AppointmentRow
+                  key={appointment.id}
+                  appointment={appointment}
+                  onConfirm={onConfirm}
+                  onComplete={onComplete}
+                  isUpdating={updatingAppointmentId === appointment.id}
+                />
               ))
             ) : (
               <p

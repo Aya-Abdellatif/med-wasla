@@ -1,7 +1,11 @@
-import { useState, useEffect, useMemo } from "react";
-import { Calendar, Users, TrendingUp, CheckCircle, Home as HomeIcon } from "lucide-react";
+import { useState, useEffect, useMemo, useCallback } from "react";
+import { Calendar, Users, CheckCircle, AlertCircle } from "lucide-react";
 import { useAuth } from "../../context/useAuth";
 import { apiFetch, API_BASE, getToken } from "../../../services/api";
+import {
+  fetchSpecialistAppointments,
+  updateAppointmentStatus,
+} from "../../../services/appointmentsApi";
 import { showError, showSuccess, showWarning } from "../../../utils/toast";
 import { VerificationStatusNotice } from "../../components/common/VerificationStatusNotice";
 import type { AvailableSlot } from "../../context/AuthContext";
@@ -18,7 +22,6 @@ import {
   createEmptySlot,
 } from "./dashboard/dashboardTypes";
 import {
-  countAppointmentsThisWeek,
   countUniquePatients,
   getDateStrWithOffset,
   getFormattedToday,
@@ -45,15 +48,48 @@ export function Dashboard() {
   const availableSlots = slotEdits ?? user?.availableSlots ?? [];
   const [profileData, setProfileData] = useState<ProfileForm>(buildProfileFormFromUser(user));
 
-  // Empty until appointments API is connected — new specialists start at zero.
-  const [appointments] = useState<Appointment[]>([]);
+  // Loaded from /api/appointments/specialist for the logged-in specialist.
+  const [appointments, setAppointments] = useState<Appointment[]>([]);
+  const [loadingAppointments, setLoadingAppointments] = useState(true);
+  const [updatingAppointmentId, setUpdatingAppointmentId] = useState<string | null>(null);
   const [homeServiceRequests, setHomeServiceRequests] = useState<HomeServiceRequest[]>([]);
 
-  useEffect(() => {
-    if (user?.role === "doctor" || user?.role === "nurse") {
-      refreshSpecialistProfile();
+  const loadAppointments = useCallback(async (silent = false) => {
+    if (user?.role !== "doctor" && user?.role !== "nurse") {
+      setAppointments([]);
+      if (!silent) setLoadingAppointments(false);
+      return;
     }
-  }, [user?.id, user?.role, refreshSpecialistProfile]);
+
+    if (!silent) setLoadingAppointments(true);
+
+    try {
+      const data = await fetchSpecialistAppointments();
+      setAppointments(data);
+    } catch (err) {
+      showError(err instanceof Error ? err.message : "Failed to load appointments", {
+        userName: user?.name,
+      });
+    } finally {
+      if (!silent) setLoadingAppointments(false);
+    }
+  }, [user?.role, user?.name]);
+
+  useEffect(() => {
+    if (user?.role !== "doctor" && user?.role !== "nurse") {
+      return;
+    }
+
+    refreshSpecialistProfile();
+
+    const timer = window.setTimeout(() => {
+      void loadAppointments();
+    }, 0);
+
+    return () => {
+      window.clearTimeout(timer);
+    };
+  }, [user?.id, user?.role, refreshSpecialistProfile, loadAppointments]);
 
   const todayStr = getDateStrWithOffset(0);
   const formValues = isEditingProfile ? profileData : savedProfile;
@@ -191,7 +227,37 @@ export function Dashboard() {
     showSuccess(action === "accepted" ? "Request accepted!" : "Request declined.", { userName: user?.name });
   };
 
-  const pendingRequestsCount = homeServiceRequests.filter((r) => r.status === "pending").length;
+  const handleConfirmAppointment = async (appointmentId: string) => {
+    setUpdatingAppointmentId(appointmentId);
+    try {
+      await updateAppointmentStatus(appointmentId, "confirmed");
+      await loadAppointments(true);
+      showSuccess("Appointment confirmed.", { userName: user?.name });
+    } catch (err) {
+      showError(err instanceof Error ? err.message : "Failed to confirm appointment", {
+        userName: user?.name,
+      });
+    } finally {
+      setUpdatingAppointmentId(null);
+    }
+  };
+
+  const handleCompleteAppointment = async (appointmentId: string) => {
+    setUpdatingAppointmentId(appointmentId);
+    try {
+      await updateAppointmentStatus(appointmentId, "completed");
+      await loadAppointments(true);
+      showSuccess("Appointment marked as completed.", { userName: user?.name });
+    } catch (err) {
+      showError(err instanceof Error ? err.message : "Failed to complete appointment", {
+        userName: user?.name,
+      });
+    } finally {
+      setUpdatingAppointmentId(null);
+    }
+  };
+
+  const pendingAppointments = appointments.filter((a) => a.status === "pending");
   const showHomeServiceTab = offersHomeService(user);
 
   const stats = [
@@ -217,15 +283,17 @@ export function Dashboard() {
       bgColor: "#f5f3ff",
     },
     {
-      label: showHomeServiceTab ? "Pending Requests" : "This Week",
-      value: showHomeServiceTab ? pendingRequestsCount : countAppointmentsThisWeek(appointments),
-      icon: showHomeServiceTab ? HomeIcon : TrendingUp,
-      iconColor: "#ea580c",
-      bgColor: "#fff7ed",
+      label: "Pending Requests",
+      value: pendingAppointments.length,
+      icon: AlertCircle,
+      iconColor: "#d97706",
+      bgColor: "#fffbeb",
     },
   ];
 
-  const todayUpcoming = appointments.filter((a) => a.date === todayStr && a.status === "scheduled");
+  const todayUpcoming = appointments.filter(
+    (a) => a.date === todayStr && a.status === "scheduled",
+  );
   const filteredUpcoming = appointments.filter(
     (a) => a.date === selectedScheduleDate && a.status === "scheduled",
   );
@@ -249,15 +317,20 @@ export function Dashboard() {
         onTabChange={setActiveTab}
         formattedDate={getFormattedToday()}
         showRequestsTab={showHomeServiceTab}
-        pendingRequestsCount={pendingRequestsCount}
+        pendingRequestsCount={pendingAppointments.length}
       />
 
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
         {activeTab === "overview" && (
           <OverviewTab
             stats={stats}
+            pendingAppointments={pendingAppointments}
             todayUpcoming={todayUpcoming}
             onViewAllSchedule={openScheduleTab}
+            onConfirm={handleConfirmAppointment}
+            onComplete={handleCompleteAppointment}
+            updatingAppointmentId={updatingAppointmentId}
+            loading={loadingAppointments}
           />
         )}
 
@@ -267,6 +340,10 @@ export function Dashboard() {
             onSelectedDateChange={setSelectedScheduleDate}
             filteredUpcoming={filteredUpcoming}
             filteredCompleted={filteredCompleted}
+            pendingAppointments={pendingAppointments}
+            onConfirm={handleConfirmAppointment}
+            onComplete={handleCompleteAppointment}
+            updatingAppointmentId={updatingAppointmentId}
           />
         )}
 

@@ -43,13 +43,6 @@ export default function SignIn() {
     <AuthLayout title="Welcome Back" subtitle="Sign in to access your account">
       <form onSubmit={handleLogin} className="space-y-6">
 
-        <div className="rounded-2xl border border-teal-100 bg-teal-50 p-4 text-xs text-teal-800">
-          <p className="font-bold mb-1">Test accounts (run npm run seed in backend):</p>
-          <p>Admin: admin@medwasla.com / adminpassword123</p>
-          <p>Doctor: khaled.selim@medwasla.com / doctorpassword123</p>
-          <p>Pending doctor: mona.youssef@medwasla.com / doctorpassword123</p>
-        </div>
-
         <div className="space-y-4">
           <div>
             <label className="block text-sm font-semibold text-slate-700 mb-2">

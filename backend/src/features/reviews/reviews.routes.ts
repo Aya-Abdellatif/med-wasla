@@ -2,6 +2,7 @@ import { Router } from "express";
 import {
   createReview,
   getSpecialistReviews,
+  getMyReviews,
   updateReview,
   deleteReview,
 } from "./reviews.controller.js";
@@ -11,6 +12,8 @@ import { protect, restrictTo } from "../../middleware/auth.middleware.js";
 const router = Router();
 
 router.post("/", protect, restrictTo("patient"), createReview);
+
+router.get("/my", protect, restrictTo("patient"), getMyReviews);
 
 router.get("/specialist/:id", getSpecialistReviews);
 

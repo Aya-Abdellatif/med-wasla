@@ -1,19 +1,76 @@
-import { useState } from "react";
-import { X, RefreshCw } from "lucide-react";
+import { useState, useEffect } from "react";
+import { X, RefreshCw, Loader2 } from "lucide-react";
 import type { Appointment } from "./AppointmentTypes";
 import { ImageWithFallback } from "../../figma/ImageWithFallback";
+import { fetchAvailableSlots } from "../../../services/appointmentsApi";
+import { formatSlotLabel } from "../../../utils/appointmentReschedule";
+import { showError } from "../../../utils/toast";
 
 function formatDate(dateStr: string) {
     const d = new Date(dateStr);
     return d.toLocaleDateString("en-US", { weekday: "short", month: "short", day: "numeric", year: "numeric" });
 }
 
-export function RescheduleModal({ appointment, onClose }: { appointment: Appointment; onClose: () => void }) {
+export function RescheduleModal({
+  appointment,
+  onClose,
+  onConfirm,
+}: {
+  appointment: Appointment;
+  onClose: () => void;
+  onConfirm: (date: string, time: string) => Promise<void>;
+}) {
     const [date, setDate] = useState("");
     const [time, setTime] = useState("");
     const [submitted, setSubmitted] = useState(false);
+    const [submitting, setSubmitting] = useState(false);
+    const [loadingSlots, setLoadingSlots] = useState(false);
+    const [availableTimes, setAvailableTimes] = useState<string[]>([]);
 
-    const timeSlots = ["09:00 AM", "10:00 AM", "11:00 AM", "12:00 PM", "02:00 PM", "03:00 PM", "04:00 PM", "05:00 PM"];
+    useEffect(() => {
+        if (!date) return;
+
+        let cancelled = false;
+
+        const timer = window.setTimeout(() => {
+            setLoadingSlots(true);
+
+            fetchAvailableSlots(appointment.specialistId, date)
+                .then((result) => {
+                    if (cancelled) return;
+                    setAvailableTimes(result.availableSlots);
+                    setTime((prev) => (result.availableSlots.includes(prev) ? prev : ""));
+                })
+                .catch((err) => {
+                    if (cancelled) return;
+                    setAvailableTimes([]);
+                    setTime("");
+                    showError(err instanceof Error ? err.message : "Failed to load available times");
+                })
+                .finally(() => {
+                    if (!cancelled) setLoadingSlots(false);
+                });
+        }, 0);
+
+        return () => {
+            cancelled = true;
+            window.clearTimeout(timer);
+        };
+    }, [appointment.specialistId, date]);
+
+    const handleConfirm = async () => {
+      if (!date || !time || submitting) return;
+
+      setSubmitting(true);
+      try {
+        await onConfirm(date, time);
+        setSubmitted(true);
+      } catch {
+        // Parent handles error toast.
+      } finally {
+        setSubmitting(false);
+      }
+    };
 
     if (submitted) {
         return (
@@ -23,7 +80,9 @@ export function RescheduleModal({ appointment, onClose }: { appointment: Appoint
                         <RefreshCw className="w-8 h-8 text-blue-600" />
                     </div>
                     <h3 className="text-xl font-bold text-foreground mb-2">Appointment Rescheduled!</h3>
-                    <p className="text-muted-foreground mb-6">Your appointment has been successfully rescheduled to {formatDate(date)} at {time}.</p>
+                    <p className="text-muted-foreground mb-6">
+                        Your appointment has been successfully rescheduled to {formatDate(date)} at {formatSlotLabel(time)}.
+                    </p>
                     <button onClick={onClose} className="bg-primary text-white px-6 py-2.5 rounded-xl hover:bg-primary/90 transition-colors">Done</button>
                 </div>
             </div>
@@ -52,9 +111,15 @@ export function RescheduleModal({ appointment, onClose }: { appointment: Appoint
                         <input
                             type="date"
                             value={date}
-                            onChange={(e) => setDate(e.target.value)}
+                            onChange={(e) => {
+                                const nextDate = e.target.value;
+                                setDate(nextDate);
+                                setTime("");
+                                if (!nextDate) setAvailableTimes([]);
+                            }}
                             min={new Date().toISOString().split("T")[0]}
-                            className="w-full px-4 py-3 bg-input-background border border-border rounded-xl focus:outline-none focus:ring-2 focus:ring-primary"
+                            disabled={submitting}
+                            className="w-full px-4 py-3 bg-input-background border border-border rounded-xl focus:outline-none focus:ring-2 focus:ring-primary disabled:opacity-50"
                         />
                     </div>
                     <div>
@@ -62,19 +127,39 @@ export function RescheduleModal({ appointment, onClose }: { appointment: Appoint
                         <select
                             value={time}
                             onChange={(e) => setTime(e.target.value)}
-                            className="w-full px-4 py-3 bg-input-background border border-border rounded-xl focus:outline-none focus:ring-2 focus:ring-primary"
+                            disabled={submitting || !date || loadingSlots || availableTimes.length === 0}
+                            className="w-full px-4 py-3 bg-input-background border border-border rounded-xl focus:outline-none focus:ring-2 focus:ring-primary disabled:opacity-50"
                         >
-                            <option value="">Select a time</option>
-                            {timeSlots.map((s) => <option key={s} value={s}>{s}</option>)}
+                            <option value="">
+                                {loadingSlots
+                                    ? "Loading times..."
+                                    : !date
+                                      ? "Select a date first"
+                                      : availableTimes.length === 0
+                                        ? "No slots available"
+                                        : "Select a time"}
+                            </option>
+                            {availableTimes.map((slot) => (
+                                <option key={slot} value={slot}>
+                                    {formatSlotLabel(slot)}
+                                </option>
+                            ))}
                         </select>
                     </div>
                 </div>
                 <button
-                    onClick={() => date && time && setSubmitted(true)}
-                    disabled={!date || !time}
-                    className="w-full bg-primary text-white py-2.5 rounded-xl hover:bg-primary/90 transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
+                    onClick={handleConfirm}
+                    disabled={!date || !time || submitting || loadingSlots}
+                    className="w-full bg-primary text-white py-2.5 rounded-xl hover:bg-primary/90 transition-colors disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center gap-2"
                 >
-                    Confirm Reschedule
+                    {submitting ? (
+                      <>
+                        <Loader2 className="w-4 h-4 animate-spin" />
+                        Rescheduling...
+                      </>
+                    ) : (
+                      "Confirm Reschedule"
+                    )}
                 </button>
             </div>
         </div>

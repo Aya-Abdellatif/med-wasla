@@ -1,15 +1,18 @@
 import mongoose, { Document, Schema, Types } from "mongoose";
+import type { PopulatedDoc } from "mongoose";
+import type { IUser } from "./user.model.js";
+import type { IMedicalSpecialist } from "./medicalSpecialist.model.js";
 import type { IReminder } from "./reminder.model.js";
 
 const appointmentTypes = ["clinic", "home"] as const;
-export type AppointmentType = (typeof appointmentTypes)[number];    
+export type AppointmentType = (typeof appointmentTypes)[number];
 
 const appointmentStatuses = ["pending", "confirmed", "completed", "cancelled"] as const;
 export type AppointmentStatus = (typeof appointmentStatuses)[number];
 
 export interface IAppointment extends Document {
-  patientId: Types.ObjectId;
-  specialistId: Types.ObjectId;
+  patientId: PopulatedDoc<IUser & Document, Types.ObjectId>;
+  specialistId: PopulatedDoc<IMedicalSpecialist & Document, Types.ObjectId>;
   date: Date;
   type: AppointmentType;
   status: AppointmentStatus;

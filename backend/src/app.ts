@@ -7,6 +7,7 @@ import specialistsRouter from "./features/medicalSpecialist/specialists.routes.j
 import reviewsRouter from "./features/reviews/reviews.routes.js";
 import queueRouter from "./features/queue/queue.routes.js";
 import adminRouter from "./features/admin/admin.routes.js";
+import appointmentsRouter from "./features/appointments/appointments.routes.js";
 
 const app = express();
 
@@ -33,7 +34,7 @@ app.use(express.json());
 app.use("/api/auth", authRouter);
 app.use("/api/patient", patientRouter);
 app.use("/api/specialists", specialistsRouter);
-// app.use("/api/appointments", appointmentsRouter);
+app.use("/api/appointments", appointmentsRouter);
 app.use("/api/queue", queueRouter);
 app.use("/api/reviews", reviewsRouter);
 app.use("/api/admin", adminRouter);

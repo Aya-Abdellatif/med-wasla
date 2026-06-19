@@ -8,7 +8,8 @@ export interface Appointment {
   time: string;
   date: string;
   type: string;
-  status: "scheduled" | "completed" | "cancelled";
+  status: "pending" | "scheduled" | "completed" | "cancelled";
+  backendStatus?: "pending" | "confirmed" | "completed" | "cancelled";
 }
 
 export interface HomeServiceRequest {

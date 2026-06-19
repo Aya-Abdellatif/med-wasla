@@ -16,10 +16,9 @@ import { useEffect, useState } from "react";
 import { BookingModal } from "../../components/booking/BookingModal";
 import {
   fetchSpecialistProfile,
-  fetchSpecialistReviews,
-  type ReviewItem,
   type SpecialistProfile,
 } from "../../../utils/specialistMapper";
+import { fetchSpecialistReviews, type ReviewItem } from "../../../services/reviewsApi";
 
 function NurseProfileView({ id }: { id: string }) {
   const navigate = useNavigate();
@@ -27,6 +26,7 @@ function NurseProfileView({ id }: { id: string }) {
   const [currentPage, setCurrentPage] = useState(0);
   const [nurse, setNurse] = useState<SpecialistProfile | null>(null);
   const [reviews, setReviews] = useState<ReviewItem[]>([]);
+  const [reviewStats, setReviewStats] = useState({ averageRating: 0, totalReviews: 0 });
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
   const REVIEWS_PER_PAGE = 3;
@@ -38,7 +38,11 @@ function NurseProfileView({ id }: { id: string }) {
       .then(([profile, profileReviews]) => {
         if (cancelled) return;
         setNurse(profile);
-        setReviews(profileReviews);
+        setReviews(profileReviews.reviews);
+        setReviewStats({
+          averageRating: profileReviews.averageRating || profile.rating,
+          totalReviews: profileReviews.totalReviews || profile.reviews,
+        });
         setError(null);
       })
       .catch((err) => {
@@ -115,8 +119,8 @@ function NurseProfileView({ id }: { id: string }) {
                 <img src={nurse.image} alt={nurse.name} className="w-full aspect-square object-cover" />
                 <div className="absolute top-4 right-4 bg-white px-3 py-1.5 rounded-full shadow-lg flex items-center space-x-1">
                   <Star className="w-4 h-4 text-yellow-400 fill-current" />
-                  <span className="font-semibold text-foreground">{nurse.rating}</span>
-                  <span className="text-sm text-muted-foreground">({nurse.reviews})</span>
+                  <span className="font-semibold text-foreground">{reviewStats.averageRating || nurse.rating}</span>
+                  <span className="text-sm text-muted-foreground">({reviewStats.totalReviews || nurse.reviews})</span>
                 </div>
               </div>
             </div>
