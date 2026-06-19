@@ -1,10 +1,10 @@
-import { useState, useEffect } from "react";
+import { useState, useEffect, useMemo, useCallback } from "react";
 import { useNavigate } from "react-router";
 import { X, Calendar, Clock, MapPin, AlertCircle, Loader2 } from "lucide-react";
 import { showSuccess, showWarning, showError } from "../../../utils/toast";
 import { bookAppointment, fetchAvailableSlots } from "../../../services/appointmentsApi";
+import { formatSlotLabel } from "../../../utils/appointmentReschedule";
 import { useAuth } from "../../context/useAuth";
-
 interface AvailableSlot {
   day: string;
   startTime: string;
@@ -27,19 +27,14 @@ interface BookingModalProps {
   serviceType?: "doctor" | "nurse";
 }
 
-function formatSlotLabel(time: string) {
-  const [hours, minutes] = time.split(":").map(Number);
-  const date = new Date();
-  date.setHours(hours, minutes, 0, 0);
-  return date.toLocaleTimeString("en-US", {
-    hour: "numeric",
-    minute: "2-digit",
-    hour12: true,
-  });
-}
+const initialFormData = {
+  date: "",
+  time: "",
+  reason: "",
+  address: "",
+};
 
-function isWorkingDay(dateStr: string, availableSlots: AvailableSlot[]) {
-  if (!dateStr || availableSlots.length === 0) return false;
+function isWorkingDay(dateStr: string, availableSlots: AvailableSlot[]) {  if (!dateStr || availableSlots.length === 0) return false;
   const dayName = new Date(`${dateStr}T12:00:00`).toLocaleDateString("en-US", {
     weekday: "long",
   });
@@ -49,12 +44,7 @@ function isWorkingDay(dateStr: string, availableSlots: AvailableSlot[]) {
 export function BookingModal({ isOpen, onClose, provider, serviceType }: BookingModalProps) {
   const navigate = useNavigate();
   const { user } = useAuth();
-  const [formData, setFormData] = useState({
-    date: "",
-    time: "",
-    reason: "",
-    address: "",
-  });
+  const [formData, setFormData] = useState(initialFormData);
 
   const [errors, setErrors] = useState<Record<string, string>>({});
   const [isSubmitting, setIsSubmitting] = useState(false);
@@ -64,59 +54,59 @@ export function BookingModal({ isOpen, onClose, provider, serviceType }: Booking
     null,
   );
 
-  const specialistSlots = provider?.availableSlots ?? [];
+  const specialistSlots = useMemo(
+    () => provider?.availableSlots ?? [],
+    [provider?.availableSlots],
+  );
+
+  const resetForm = useCallback(() => {
+    setFormData(initialFormData);
+    setErrors({});
+    setAvailableTimes([]);
+    setWorkingHours(null);
+    setLoadingSlots(false);
+  }, []);
+
+  const handleClose = useCallback(() => {
+    resetForm();
+    onClose();
+  }, [onClose, resetForm]);
 
   useEffect(() => {
-    if (!isOpen) {
-      setFormData({ date: "", time: "", reason: "", address: "" });
-      setErrors({});
-      setAvailableTimes([]);
-      setWorkingHours(null);
-    }
-  }, [isOpen]);
-
-  useEffect(() => {
-    if (!isOpen || !provider?.id || !formData.date) {
-      setAvailableTimes([]);
-      setWorkingHours(null);
-      return;
-    }
-
-    if (!isWorkingDay(formData.date, specialistSlots)) {
-      setAvailableTimes([]);
-      setWorkingHours(null);
-      setFormData((prev) => ({ ...prev, time: "" }));
-      return;
-    }
+    if (!isOpen || !provider?.id || !formData.date) return;
+    if (!isWorkingDay(formData.date, specialistSlots)) return;
 
     let cancelled = false;
-    setLoadingSlots(true);
 
-    fetchAvailableSlots(provider.id, formData.date)
-      .then((result) => {
-        if (cancelled) return;
-        setAvailableTimes(result.availableSlots);
-        setWorkingHours(result.workingHours);
-        setFormData((prev) => ({
-          ...prev,
-          time: result.availableSlots.includes(prev.time) ? prev.time : "",
-        }));
-      })
-      .catch((err) => {
-        if (cancelled) return;
-        setAvailableTimes([]);
-        setWorkingHours(null);
-        showError(err instanceof Error ? err.message : "Failed to load available times");
-      })
-      .finally(() => {
-        if (!cancelled) setLoadingSlots(false);
-      });
+    const timer = window.setTimeout(() => {
+      setLoadingSlots(true);
+
+      fetchAvailableSlots(provider.id!, formData.date)
+        .then((result) => {
+          if (cancelled) return;
+          setAvailableTimes(result.availableSlots);
+          setWorkingHours(result.workingHours);
+          setFormData((prev) => ({
+            ...prev,
+            time: result.availableSlots.includes(prev.time) ? prev.time : "",
+          }));
+        })
+        .catch((err) => {
+          if (cancelled) return;
+          setAvailableTimes([]);
+          setWorkingHours(null);
+          showError(err instanceof Error ? err.message : "Failed to load available times");
+        })
+        .finally(() => {
+          if (!cancelled) setLoadingSlots(false);
+        });
+    }, 0);
 
     return () => {
       cancelled = true;
+      window.clearTimeout(timer);
     };
   }, [isOpen, provider?.id, formData.date, specialistSlots]);
-
   const validateForm = () => {
     const newErrors: Record<string, string> = {};
 
@@ -171,9 +161,8 @@ export function BookingModal({ isOpen, onClose, provider, serviceType }: Booking
       showSuccess(
         `${serviceType === "nurse" ? "Home service" : "Appointment"} booked successfully! Check My Appointments to track it.`,
       );
-      onClose();
-    } catch (err) {
-      showError(err instanceof Error ? err.message : "Failed to book appointment");
+      handleClose();
+    } catch (err) {      showError(err instanceof Error ? err.message : "Failed to book appointment");
     } finally {
       setIsSubmitting(false);
     }
@@ -190,6 +179,20 @@ export function BookingModal({ isOpen, onClose, provider, serviceType }: Booking
     }
   };
 
+  const handleDateChange = (nextDate: string) => {
+    setFormData((prev) => ({ ...prev, date: nextDate, time: "" }));
+    setAvailableTimes([]);
+    setWorkingHours(null);
+
+    if (errors.date || errors.time) {
+      setErrors((prev) => {
+        const newErrors = { ...prev };
+        delete newErrors.date;
+        delete newErrors.time;
+        return newErrors;
+      });
+    }
+  };
   if (!isOpen) return null;
 
   const workingDaysText =
@@ -211,8 +214,7 @@ export function BookingModal({ isOpen, onClose, provider, serviceType }: Booking
               </p>
             )}
           </div>
-          <button onClick={onClose} className="p-2 hover:bg-muted rounded-lg transition-colors">
-            <X className="w-5 h-5" />
+          <button onClick={handleClose} className="p-2 hover:bg-muted rounded-lg transition-colors">            <X className="w-5 h-5" />
           </button>
         </div>
 
@@ -262,8 +264,7 @@ export function BookingModal({ isOpen, onClose, provider, serviceType }: Booking
                   id="date"
                   type="date"
                   value={formData.date}
-                  onChange={(e) => handleChange("date", e.target.value)}
-                  min={new Date().toISOString().split("T")[0]}
+                  onChange={(e) => handleDateChange(e.target.value)}                  min={new Date().toISOString().split("T")[0]}
                   className={`w-full pl-12 pr-4 py-3 border rounded-lg focus:outline-none focus:ring-2 transition-colors ${
                     errors.date
                       ? "border-red-500 focus:ring-red-500"
@@ -375,8 +376,7 @@ export function BookingModal({ isOpen, onClose, provider, serviceType }: Booking
           <div className="flex space-x-3 pt-4">
             <button
               type="button"
-              onClick={onClose}
-              className="flex-1 px-6 py-3 border border-border rounded-lg hover:bg-muted transition-colors font-medium"
+              onClick={handleClose}              className="flex-1 px-6 py-3 border border-border rounded-lg hover:bg-muted transition-colors font-medium"
             >
               Cancel
             </button>

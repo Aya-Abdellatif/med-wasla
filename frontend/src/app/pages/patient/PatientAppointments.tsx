@@ -31,7 +31,7 @@ import { AppointmentTypeModal } from "../../components/booking/AppointmentTypeMo
 import type { Appointment, AppointmentReview,  AppointmentStatus, AppointmentType } from "../../components/patient-appointments/AppointmentTypes";
 import { fetchMyAppointments, cancelAppointment, rescheduleAppointment } from "../../../services/appointmentsApi";
 import { createReview } from "../../../services/reviewsApi";
-import { buildRescheduleIsoDate } from "../../components/patient-appointments/RescheduleModal";
+import { buildRescheduleIsoDate } from "../../../utils/appointmentReschedule";
 import { useAuth } from "../../context/useAuth";
 import { showError, showSuccess } from "../../../utils/toast";
 
