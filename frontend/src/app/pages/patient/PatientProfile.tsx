@@ -1,348 +1,630 @@
 import { useState } from "react";
+import { useAuth } from "../../context/useAuth";
 import {
   User as UserIcon,
-  Edit,
-  Save,
-  Phone,
   Mail,
+  Phone,
+  Lock,
+  Eye,
+  EyeOff,
+  CheckCircle2,
   AlertCircle,
   Activity,
   Calendar,
   FileText,
   ShieldCheck,
+  ChevronDown,
+  MapPin,
+  Save,
+  X,
+  Edit,
 } from "lucide-react";
-import { showSuccess } from "../../../utils/toast";
+import { ImageWithFallback } from "../../figma/ImageWithFallback";
 
-export function PatientProfile() {
-  const user = {
-    name: "John Doe",
-    email: "john.doe@example.com",
-    avatar: "https://randomuser.me/api/portraits/men/75.jpg",
-    dob: "1990-05-20",
-    address: null,
-    diseaseHistory: [
-      {
-        id: 1,
-        disease: "Diabetes",
-        status: "active",
-        diagnosedDate: "2022-01-15",
-        diagnosedBy: "Dr. Smith",
-        treatedBy: "Dr. Smith",
-        notes:
-          "Patient is managing diabetes with medication and lifestyle changes.",
-      },
-    ],
-  };
+const EGYPTIAN_GOVERNORATES = [
+  "Cairo", "Giza", "Alexandria", "Dakahlia", "Red Sea", "Beheira",
+  "Fayoum", "Gharbia", "Ismailia", "Menofia", "Minya", "Qaliubiya",
+  "New Valley", "Suez", "Aswan", "Assiut", "Beni Suef", "Port Said",
+  "Damietta", "Sharqia", "South Sinai", "Kafr El Sheikh", "Matruh",
+  "Luxor", "Qena", "North Sinai", "Sohag",
+];
 
-  const [isEditingProfile, setIsEditingProfile] = useState(false);
+type Tab = "personal" | "security";
 
-  const [profileData, setProfileData] = useState({
+function FieldError({ msg }: { msg?: string }) {
+  if (!msg) return null;
+  return (
+    <p className="flex items-center gap-1 text-xs text-red-600 mt-1">
+      <AlertCircle className="w-3.5 h-3.5 flex-shrink-0" />
+      {msg}
+    </p>
+  );
+}
+
+function SuccessBanner({ message, onDismiss }: { message: string; onDismiss: () => void }) {
+  return (
+    <div className="flex items-center gap-3 px-4 py-3 bg-emerald-50 border border-emerald-200 rounded-xl text-sm text-emerald-700">
+      <CheckCircle2 className="w-4 h-4 flex-shrink-0" />
+      <span className="flex-1">{message}</span>
+      <button onClick={onDismiss}>
+        <X className="w-4 h-4 opacity-60 hover:opacity-100" />
+      </button>
+    </div>
+  );
+}
+
+// ─── Read-only info row ────────────────────────────────────────
+function InfoRow({ label, value, icon: Icon }: { label: string; value?: string; icon?: React.ElementType }) {
+  return (
+    <div>
+      <p className="text-xs font-medium text-muted-foreground uppercase tracking-wider mb-1">{label}</p>
+      <div className="flex items-center gap-2">
+        {Icon && <Icon className="w-4 h-4 text-muted-foreground flex-shrink-0" />}
+        <p className="text-sm text-foreground">{value || <span className="text-muted-foreground italic">Not set</span>}</p>
+      </div>
+    </div>
+  );
+}
+
+// ─── Personal Info Tab ──────────────────────────────────────────
+function PersonalTab({ user, updateProfile }: { user: any; updateProfile: (data: any) => void }) {
+  const [editing, setEditing] = useState(false);
+  const [saved, setSaved] = useState({
     name: user?.name || "",
-    email: user?.email || "",
-    phone: "+1 (234) 567-890",
+    phone: user?.phone || "1234567890",
     dob: user?.dob || "",
+    governorate: user?.governorate || "",
     address: user?.address || "",
   });
+  const [form, setForm] = useState(saved);
+  const [errors, setErrors] = useState<Record<string, string>>({});
+  const [govOpen, setGovOpen] = useState(false);
+  const [govSearch, setGovSearch] = useState("");
+  const [success, setSuccess] = useState(false);
 
-  const handleUpdateProfile = () => {
-    setIsEditingProfile(false);
-    showSuccess("Profile updated successfully!");
+  const filteredGovs = EGYPTIAN_GOVERNORATES.filter((g) =>
+    g.toLowerCase().includes(govSearch.toLowerCase())
+  );
+
+  const validate = () => {
+    const e: Record<string, string> = {};
+    if (!form.name.trim()) e.name = "Full name is required.";
+    else if (form.name.trim().length < 3) e.name = "Name must be at least 3 characters.";
+    if (!form.phone.trim()) e.phone = "Phone number is required.";
+    else if (!/^\d{7,15}$/.test(form.phone.replace(/\s/g, ""))) e.phone = "Enter a valid phone number.";
+    return e;
   };
+
+  const handleSave = () => {
+    const e = validate();
+    if (Object.keys(e).length) { setErrors(e); return; }
+    updateProfile({ name: form.name, phone: `+20${form.phone}` });
+    setSaved(form);
+    setErrors({});
+    setEditing(false);
+    setSuccess(true);
+  };
+
+  const handleCancel = () => {
+    setForm(saved);
+    setErrors({});
+    setEditing(false);
+  };
+
+  // ── View mode ──
+  if (!editing) {
+    return (
+      <div className="space-y-6">
+        {success && <SuccessBanner message="Personal information saved successfully." onDismiss={() => setSuccess(false)} />}
+
+        <div className="flex items-center justify-between">
+          <p className="text-sm text-muted-foreground">Your personal details as registered on MedWasla.</p>
+          <button
+            onClick={() => setEditing(true)}
+            className="flex items-center gap-2 px-4 py-2 bg-primary text-white rounded-xl hover:bg-primary/90 transition-colors text-sm font-medium"
+          >
+            <Edit className="w-3.5 h-3.5" />
+            Edit Profile
+          </button>
+        </div>
+
+        <div className="grid grid-cols-1 md:grid-cols-2 gap-x-8 gap-y-5">
+          <div className="md:col-span-2">
+            <InfoRow label="Full Name" value={saved.name} icon={UserIcon} />
+          </div>
+          <InfoRow label="Phone Number" value={saved.phone ? `+20 ${saved.phone}` : undefined} icon={Phone} />
+          <InfoRow label="Date of Birth" value={saved.dob ? new Date(saved.dob).toLocaleDateString("en-US", { year: "numeric", month: "long", day: "numeric" }) : undefined} icon={Calendar} />
+          <InfoRow label="Governorate" value={saved.governorate} icon={MapPin} />
+          <InfoRow label="Address Details" value={saved.address} icon={MapPin} />
+        </div>
+      </div>
+    );
+  }
+
+  // ── Edit mode ──
+  return (
+    <div className="space-y-6">
+      <div className="flex items-center justify-between">
+        <p className="text-sm text-muted-foreground">Update your personal details below.</p>
+        <span className="text-xs text-primary bg-primary/5 px-2.5 py-1 rounded-full">Editing</span>
+      </div>
+
+      {/* Row 1 — Full Name */}
+      <div>
+        <label className="block text-sm font-medium text-foreground mb-1.5">Full Name</label>
+        <input
+          type="text"
+          value={form.name}
+          onChange={(e) => { setForm({ ...form, name: e.target.value }); setErrors({ ...errors, name: "" }); }}
+          placeholder="e.g. Ahmed Mohamed"
+          className={`w-full px-4 py-3 bg-input-background border rounded-xl focus:outline-none focus:ring-2 focus:ring-primary transition-colors ${errors.name ? "border-red-400 focus:ring-red-300" : "border-border"}`}
+        />
+        <FieldError msg={errors.name} />
+      </div>
+
+      {/* Row 2 — Phone + DOB */}
+      <div className="grid grid-cols-1 md:grid-cols-2 gap-5">
+        <div>
+          <label className="block text-sm font-medium text-foreground mb-1.5">Phone Number</label>
+          <div className={`flex rounded-xl border overflow-hidden focus-within:ring-2 focus-within:ring-primary transition-colors ${errors.phone ? "border-red-400" : "border-border"}`}>
+            <div className="flex items-center gap-2 px-3 py-3 bg-muted/50 border-r border-border flex-shrink-0 select-none">
+              <span className="text-lg leading-none">🇪🇬</span>
+              <span className="text-sm font-medium text-foreground">+20</span>
+              <ChevronDown className="w-3.5 h-3.5 text-muted-foreground" />
+            </div>
+            <input
+              type="tel"
+              value={form.phone}
+              onChange={(e) => { setForm({ ...form, phone: e.target.value }); setErrors({ ...errors, phone: "" }); }}
+              placeholder="1234567890"
+              className="flex-1 px-4 py-3 bg-input-background focus:outline-none text-sm"
+            />
+          </div>
+          <FieldError msg={errors.phone} />
+        </div>
+
+        <div>
+          <label className="block text-sm font-medium text-foreground mb-1.5">Date of Birth</label>
+          <input
+            type="date"
+            value={form.dob}
+            max={new Date().toISOString().split("T")[0]}
+            onChange={(e) => setForm({ ...form, dob: e.target.value })}
+            className="w-full px-4 py-3 bg-input-background border border-border rounded-xl focus:outline-none focus:ring-2 focus:ring-primary transition-colors text-sm"
+          />
+        </div>
+      </div>
+
+      {/* Row 3 — Governorate + Address */}
+      <div className="grid grid-cols-1 md:grid-cols-2 gap-5">
+        <div className="relative">
+          <label className="block text-sm font-medium text-foreground mb-1.5">Governorate</label>
+          <button
+            type="button"
+            onClick={() => { setGovOpen(!govOpen); setGovSearch(""); }}
+            className="w-full flex items-center justify-between px-4 py-3 bg-input-background border border-border rounded-xl focus:outline-none focus:ring-2 focus:ring-primary transition-colors text-sm text-left"
+          >
+            <span className={form.governorate ? "text-foreground" : "text-muted-foreground"}>
+              {form.governorate || "Select governorate"}
+            </span>
+            <ChevronDown className={`w-4 h-4 text-muted-foreground transition-transform ${govOpen ? "rotate-180" : ""}`} />
+          </button>
+          {govOpen && (
+            <div className="w-full mt-2 bg-white border border-border rounded-xl shadow-lg overflow-hidden">
+              <div className="p-2 border-b border-border">
+                <input
+                  type="text"
+                  value={govSearch}
+                  onChange={(e) => setGovSearch(e.target.value)}
+                  placeholder="Search governorate..."
+                  autoFocus
+                  className="w-full px-3 py-2 bg-input-background border border-border rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-primary"
+                />
+              </div>
+              <ul className="max-h-40 overflow-y-auto">
+                {filteredGovs.length === 0 && (
+                  <li className="px-4 py-3 text-sm text-muted-foreground text-center">No results</li>
+                )}
+                {filteredGovs.map((g) => (
+                  <li key={g}>
+                    <button
+                      type="button"
+                      onClick={() => { setForm({ ...form, governorate: g }); setGovOpen(false); }}
+                      className={`w-full text-left px-4 py-2.5 text-sm hover:bg-primary/5 transition-colors ${form.governorate === g ? "text-primary bg-primary/5" : "text-foreground"}`}
+                    >
+                      {g}
+                    </button>
+                  </li>
+                ))}
+              </ul>
+            </div>
+          )}
+        </div>
+
+        <div>
+          <label className="block text-sm font-medium text-foreground mb-1.5">
+            Address Details
+            <span className="ml-1 text-muted-foreground">(Optional)</span>
+          </label>
+          <div className="relative">
+            <MapPin className="absolute left-3 top-3.5 w-4 h-4 text-muted-foreground" />
+            <input
+              type="text"
+              value={form.address}
+              onChange={(e) => setForm({ ...form, address: e.target.value })}
+              placeholder="Street, building, apartment..."
+              className="w-full pl-9 pr-4 py-3 bg-input-background border border-border rounded-xl focus:outline-none focus:ring-2 focus:ring-primary transition-colors text-sm"
+            />
+          </div>
+        </div>
+      </div>
+
+      {/* Actions */}
+      <div className="flex items-center gap-3 pt-2">
+        <button
+          onClick={handleSave}
+          className="flex items-center gap-2 px-6 py-2.5 bg-primary text-white rounded-xl hover:bg-primary/90 transition-colors text-sm font-medium"
+        >
+          <Save className="w-4 h-4" />
+          Save Changes
+        </button>
+        <button
+          onClick={handleCancel}
+          className="px-5 py-2.5 border border-border text-foreground rounded-xl hover:bg-muted/50 transition-colors text-sm"
+        >
+          Cancel
+        </button>
+      </div>
+    </div>
+  );
+}
+
+// ─── Security Tab ───────────────────────────────────────────────
+function SecurityTab({ user }: { user: any }) {
+  const [editing, setEditing] = useState(false);
+  const [savedEmail, setSavedEmail] = useState(user?.email || "");
+  const [form, setForm] = useState({
+    email: user?.email || "",
+    currentPassword: "",
+    newPassword: "",
+    confirmPassword: "",
+  });
+  const [show, setShow] = useState({ current: false, newPw: false, confirm: false });
+  const [errors, setErrors] = useState<Record<string, string>>({});
+  const [success, setSuccess] = useState(false);
+
+  const getStrength = (pw: string) => {
+    if (!pw) return 0;
+    let s = 0;
+    if (pw.length >= 8) s++;
+    if (/[A-Z]/.test(pw)) s++;
+    if (/[0-9]/.test(pw)) s++;
+    if (/[^A-Za-z0-9]/.test(pw)) s++;
+    return s;
+  };
+
+  const strengthLabel = ["Password must be at least 8 characters", "Weak password", "Fair password", "Good password", "Strong password"];
+  const strengthColor = ["", "bg-red-400", "bg-amber-400", "bg-blue-400", "bg-emerald-400"];
+  const strengthText = ["", "text-red-600", "text-amber-600", "text-blue-600", "text-emerald-600"];
+  const strength = getStrength(form.newPassword);
+
+  const validate = () => {
+    const e: Record<string, string> = {};
+    if (!form.email.trim()) e.email = "Email is required.";
+    else if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(form.email)) e.email = "Enter a valid email address.";
+    if (form.newPassword || form.currentPassword || form.confirmPassword) {
+      if (!form.currentPassword) e.currentPassword = "Current password is required to make changes.";
+      if (!form.newPassword) e.newPassword = "New password is required.";
+      else if (form.newPassword.length < 8) e.newPassword = "Password must be at least 8 characters.";
+      if (form.newPassword !== form.confirmPassword) e.confirmPassword = "Passwords do not match.";
+    }
+    return e;
+  };
+
+  const handleSave = () => {
+    const e = validate();
+    if (Object.keys(e).length) { setErrors(e); return; }
+    setSavedEmail(form.email);
+    setErrors({});
+    setForm({ ...form, currentPassword: "", newPassword: "", confirmPassword: "" });
+    setEditing(false);
+    setSuccess(true);
+  };
+
+  const handleCancel = () => {
+    setForm({ email: savedEmail, currentPassword: "", newPassword: "", confirmPassword: "" });
+    setErrors({});
+    setEditing(false);
+  };
+
+  // ── View mode ──
+  if (!editing) {
+    return (
+      <div className="space-y-6">
+        {success && <SuccessBanner message="Account & security settings saved successfully." onDismiss={() => setSuccess(false)} />}
+
+        <div className="flex items-center justify-between">
+          <p className="text-sm text-muted-foreground">Manage your login email and password.</p>
+          <button
+            onClick={() => setEditing(true)}
+            className="flex items-center gap-2 px-4 py-2 bg-primary text-white rounded-xl hover:bg-primary/90 transition-colors text-sm font-medium"
+          >
+            <Edit className="w-3.5 h-3.5" />
+            Edit Security
+          </button>
+        </div>
+
+        <div className="space-y-5">
+          <InfoRow label="Email Address" value={savedEmail} icon={Mail} />
+          <div>
+            <p className="text-xs font-medium text-muted-foreground uppercase tracking-wider mb-1">Password</p>
+            <div className="flex items-center gap-2">
+              <Lock className="w-4 h-4 text-muted-foreground" />
+              <p className="text-sm text-foreground tracking-widest">••••••••••</p>
+            </div>
+          </div>
+        </div>
+      </div>
+    );
+  }
+
+  // ── Edit mode ──
+  return (
+    <div className="space-y-6">
+      <div className="flex items-center justify-between">
+        <p className="text-sm text-muted-foreground">Update your email or change your password.</p>
+        <span className="text-xs text-primary bg-primary/5 px-2.5 py-1 rounded-full">Editing</span>
+      </div>
+
+      {/* Email */}
+      <div>
+        <label className="block text-sm font-medium text-foreground mb-1.5">Email Address</label>
+        <div className="relative">
+          <Mail className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground" />
+          <input
+            type="email"
+            value={form.email}
+            onChange={(e) => { setForm({ ...form, email: e.target.value }); setErrors({ ...errors, email: "" }); }}
+            placeholder="you@example.com"
+            className={`w-full pl-9 pr-4 py-3 bg-input-background border rounded-xl focus:outline-none focus:ring-2 focus:ring-primary transition-colors text-sm ${errors.email ? "border-red-400 focus:ring-red-300" : "border-border"}`}
+          />
+        </div>
+        <FieldError msg={errors.email} />
+      </div>
+
+      {/* Divider */}
+      <div className="flex items-center gap-3">
+        <div className="flex-1 h-px bg-border" />
+        <span className="text-xs text-muted-foreground px-2">Change Password</span>
+        <div className="flex-1 h-px bg-border" />
+      </div>
+
+      {/* Current Password */}
+      <div>
+        <label className="block text-sm font-medium text-foreground mb-1.5">Current Password</label>
+        <div className="relative">
+          <Lock className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground" />
+          <input
+            type={show.current ? "text" : "password"}
+            value={form.currentPassword}
+            onChange={(e) => { setForm({ ...form, currentPassword: e.target.value }); setErrors({ ...errors, currentPassword: "" }); }}
+            placeholder="Enter current password"
+            className={`w-full pl-9 pr-10 py-3 bg-input-background border rounded-xl focus:outline-none focus:ring-2 focus:ring-primary transition-colors text-sm ${errors.currentPassword ? "border-red-400 focus:ring-red-300" : "border-border"}`}
+          />
+          <button type="button" onClick={() => setShow({ ...show, current: !show.current })} className="absolute right-3 top-1/2 -translate-y-1/2 text-muted-foreground hover:text-foreground">
+            {show.current ? <EyeOff className="w-4 h-4" /> : <Eye className="w-4 h-4" />}
+          </button>
+        </div>
+        <FieldError msg={errors.currentPassword} />
+      </div>
+
+      {/* New Password */}
+      <div>
+        <label className="block text-sm font-medium text-foreground mb-1.5">New Password</label>
+        <div className="relative">
+          <Lock className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground" />
+          <input
+            type={show.newPw ? "text" : "password"}
+            value={form.newPassword}
+            onChange={(e) => { setForm({ ...form, newPassword: e.target.value }); setErrors({ ...errors, newPassword: "" }); }}
+            placeholder="Enter new password"
+            className={`w-full pl-9 pr-10 py-3 bg-input-background border rounded-xl focus:outline-none focus:ring-2 focus:ring-primary transition-colors text-sm ${errors.newPassword ? "border-red-400 focus:ring-red-300" : "border-border"}`}
+          />
+          <button type="button" onClick={() => setShow({ ...show, newPw: !show.newPw })} className="absolute right-3 top-1/2 -translate-y-1/2 text-muted-foreground hover:text-foreground">
+            {show.newPw ? <EyeOff className="w-4 h-4" /> : <Eye className="w-4 h-4" />}
+          </button>
+        </div>
+        {form.newPassword && (
+          <div className="mt-2">
+            <div className="flex gap-1 mb-1">
+              {[1,2,3,4].map((i) => (
+                <div key={i} className={`h-1 flex-1 rounded-full transition-colors ${i <= strength ? strengthColor[strength] : "bg-border"}`} />
+              ))}
+            </div>
+            <p className={`text-xs ${strengthText[strength]}`}>{strengthLabel[strength]}</p>
+          </div>
+        )}
+        <FieldError msg={errors.newPassword} />
+      </div>
+
+      {/* Confirm Password */}
+      <div>
+        <label className="block text-sm font-medium text-foreground mb-1.5">Confirm New Password</label>
+        <div className="relative">
+          <Lock className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground" />
+          <input
+            type={show.confirm ? "text" : "password"}
+            value={form.confirmPassword}
+            onChange={(e) => { setForm({ ...form, confirmPassword: e.target.value }); setErrors({ ...errors, confirmPassword: "" }); }}
+            placeholder="Repeat new password"
+            className={`w-full pl-9 pr-10 py-3 bg-input-background border rounded-xl focus:outline-none focus:ring-2 focus:ring-primary transition-colors text-sm ${errors.confirmPassword ? "border-red-400 focus:ring-red-300" : "border-border"}`}
+          />
+          <button type="button" onClick={() => setShow({ ...show, confirm: !show.confirm })} className="absolute right-3 top-1/2 -translate-y-1/2 text-muted-foreground hover:text-foreground">
+            {show.confirm ? <EyeOff className="w-4 h-4" /> : <Eye className="w-4 h-4" />}
+          </button>
+        </div>
+        {form.confirmPassword && form.newPassword && form.confirmPassword === form.newPassword && (
+          <p className="flex items-center gap-1 text-xs text-emerald-600 mt-1">
+            <CheckCircle2 className="w-3.5 h-3.5" /> Passwords match
+          </p>
+        )}
+        <FieldError msg={errors.confirmPassword} />
+      </div>
+
+      {/* Actions */}
+      <div className="flex items-center gap-3 pt-2">
+        <button
+          onClick={handleSave}
+          className="flex items-center gap-2 px-6 py-2.5 bg-primary text-white rounded-xl hover:bg-primary/90 transition-colors text-sm font-medium"
+        >
+          <Save className="w-4 h-4" />
+          Save Changes
+        </button>
+        <button
+          onClick={handleCancel}
+          className="px-5 py-2.5 border border-border text-foreground rounded-xl hover:bg-muted/50 transition-colors text-sm"
+        >
+          Cancel
+        </button>
+      </div>
+    </div>
+  );
+}
+
+// ─── Main Page ──────────────────────────────────────────────────
+export function PatientProfile() {
+  const { user, updateProfile } = useAuth();
+  const [activeTab, setActiveTab] = useState<Tab>("personal");
 
   const getStatusColor = (status: string) => {
     switch (status) {
-      case "active":
-        return "bg-red-100 text-red-700 border-red-200";
-      case "under_treatment":
-        return "bg-blue-100 text-blue-700 border-blue-200";
-      case "treated":
-        return "bg-green-100 text-green-700 border-green-200";
-      default:
-        return "bg-gray-100 text-gray-700 border-gray-200";
+      case "active": return "bg-red-100 text-red-700 border-red-200";
+      case "under_treatment": return "bg-blue-100 text-blue-700 border-blue-200";
+      case "resolved": return "bg-emerald-100 text-emerald-700 border-emerald-200";
+      default: return "bg-gray-100 text-gray-700 border-gray-200";
     }
   };
 
   const getStatusLabel = (status: string) => {
     switch (status) {
-      case "active":
-        return "Active";
-      case "under_treatment":
-        return "Under Treatment";
-      case "treated":
-        return "Treated";
-      default:
-        return status;
+      case "active": return "Active";
+      case "under_treatment": return "Under Treatment";
+      case "resolved": return "Resolved";
+      default: return status;
     }
   };
 
+  const tabs: { id: Tab; label: string; icon: React.ElementType }[] = [
+    { id: "personal", label: "Personal Information", icon: UserIcon },
+    { id: "security", label: "Account & Security", icon: Lock },
+  ];
+
   return (
-    <div className="min-h-screen bg-muted/30 overflow-y-auto">
-      {/* Header */}
-      <div className="bg-white border-b border-border">
-        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-6">
-          <div className="flex items-center justify-between">
-            <div className="flex items-center space-x-4">
-              <div className="w-16 h-16 rounded-full overflow-hidden bg-primary/10">
-                {user?.avatar ? (
-                  <img
-                    src={user.avatar}
-                    alt={user.name}
-                    className="w-full h-full object-cover"
-                  />
-                ) : (
-                  <div className="w-full h-full flex items-center justify-center text-primary text-2xl font-semibold">
-                    {user?.name.charAt(0)}
-                  </div>
-                )}
-              </div>
-              <div>
-                <h1 className="text-2xl font-bold text-foreground">
-                  My Profile
-                </h1>
-                <p className="text-muted-foreground">
-                  Manage your health information
-                </p>
-              </div>
-            </div>
+    <div className="min-h-screen bg-muted/20">
+      {/* Header banner */}
+      <div className="bg-gradient-to-r from-primary to-secondary py-10 px-4">
+        <div className="max-w-3xl mx-auto flex items-center gap-5">
+          <div className="w-16 h-16 rounded-full bg-white/20 flex items-center justify-center flex-shrink-0 overflow-hidden ring-2 ring-white/30">
+            {user?.avatar ? (
+              <ImageWithFallback src={user.avatar} alt={user.name} className="w-full h-full object-cover" />
+            ) : (
+              <span className="text-white text-2xl font-bold">{user?.name?.charAt(0) ?? "P"}</span>
+            )}
+          </div>
+          <div>
+            <h1 className="text-xl font-bold text-white">{user?.name ?? "Patient"}</h1>
+            <p className="text-white/70 text-sm mt-0.5">Patient · MedWasla</p>
           </div>
         </div>
       </div>
 
-      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
-        {/* Profile Information Card */}
-        <div className="bg-white rounded-xl shadow-sm p-8 mb-6">
-          <div className="flex items-center justify-between mb-8">
-            <h2 className="text-xl font-bold text-foreground">
-              Personal Information
-            </h2>
-            {!isEditingProfile ? (
-              <button
-                onClick={() => setIsEditingProfile(true)}
-                className="flex items-center space-x-2 px-4 py-2 bg-primary text-white rounded-lg hover:bg-primary/90 transition-colors"
-              >
-                <Edit className="w-4 h-4" />
-                <span>Edit Profile</span>
-              </button>
-            ) : (
-              <div className="flex space-x-2">
+      <div className="max-w-3xl mx-auto px-4 py-8 space-y-6">
+        {/* Tab card */}
+        <div className="bg-white rounded-2xl border border-border shadow-sm overflow-hidden">
+          {/* Tab header */}
+          <div className="flex border-b border-border">
+            {tabs.map((tab) => {
+              const Icon = tab.icon;
+              const active = activeTab === tab.id;
+              return (
                 <button
-                  onClick={() => setIsEditingProfile(false)}
-                  className="px-4 py-2 border border-border rounded-lg hover:bg-muted transition-colors"
+                  key={tab.id}
+                  onClick={() => setActiveTab(tab.id)}
+                  className={`flex-1 flex items-center justify-center gap-2 px-4 py-4 text-sm font-medium transition-colors relative ${
+                    active ? "text-primary" : "text-muted-foreground hover:text-foreground"
+                  }`}
                 >
-                  Cancel
+                  <Icon className="w-4 h-4" />
+                  {tab.label}
+                  {active && (
+                    <span className="absolute bottom-0 left-0 right-0 h-0.5 bg-primary rounded-t-full" />
+                  )}
                 </button>
-                <button
-                  onClick={handleUpdateProfile}
-                  className="flex items-center space-x-2 px-4 py-2 bg-primary text-white rounded-lg hover:bg-primary/90 transition-colors"
-                >
-                  <Save className="w-4 h-4" />
-                  <span>Save</span>
-                </button>
-              </div>
-            )}
+              );
+            })}
           </div>
 
-          <div className="space-y-6">
-            {/* Avatar Section */}
-            <div className="flex items-center space-x-6">
-              <div className="w-24 h-24 rounded-full overflow-hidden bg-primary/10">
-                {user?.avatar ? (
-                  <img
-                    src={user.avatar}
-                    alt={user.name}
-                    className="w-full h-full object-cover"
-                  />
-                ) : (
-                  <div className="w-full h-full flex items-center justify-center text-primary text-3xl font-semibold">
-                    {user?.name.charAt(0)}
-                  </div>
-                )}
-              </div>
-              <div>
-                <h3 className="text-lg font-semibold text-foreground">
-                  {user?.name}
-                </h3>
-                <p className="text-muted-foreground">Patient</p>
-              </div>
-            </div>
-
-            {/* Form Fields */}
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-              <div>
-                <label className="block mb-2 font-medium text-foreground">
-                  Full Name
-                </label>
-                <input
-                  type="text"
-                  value={profileData.name}
-                  onChange={(e) =>
-                    setProfileData({ ...profileData, name: e.target.value })
-                  }
-                  disabled={!isEditingProfile}
-                  className="w-full px-4 py-3 border border-border rounded-lg focus:outline-none focus:ring-2 focus:ring-primary disabled:bg-muted disabled:cursor-not-allowed"
-                />
-              </div>
-
-              <div>
-                <label className="block mb-2 font-medium text-foreground">
-                  Email
-                </label>
-                <div className="relative">
-                  <Mail className="absolute left-4 top-1/2 -translate-y-1/2 w-5 h-5 text-muted-foreground" />
-                  <input
-                    type="email"
-                    value={profileData.email}
-                    onChange={(e) =>
-                      setProfileData({ ...profileData, email: e.target.value })
-                    }
-                    disabled={!isEditingProfile}
-                    className="w-full pl-12 pr-4 py-3 border border-border rounded-lg focus:outline-none focus:ring-2 focus:ring-primary disabled:bg-muted disabled:cursor-not-allowed"
-                  />
-                </div>
-              </div>
-
-              <div>
-                <label className="block mb-2 font-medium text-foreground">
-                  Phone
-                </label>
-                <div className="relative">
-                  <Phone className="absolute left-4 top-1/2 -translate-y-1/2 w-5 h-5 text-muted-foreground" />
-                  <input
-                    type="tel"
-                    value={profileData.phone}
-                    onChange={(e) =>
-                      setProfileData({ ...profileData, phone: e.target.value })
-                    }
-                    disabled={!isEditingProfile}
-                    className="w-full pl-12 pr-4 py-3 border border-border rounded-lg focus:outline-none focus:ring-2 focus:ring-primary disabled:bg-muted disabled:cursor-not-allowed"
-                  />
-                </div>
-              </div>
-
-              <div>
-                <label className="block mb-2 font-medium text-foreground">
-                  Date of Birth
-                </label>
-                <input
-                  type="date"
-                  value={profileData.dob}
-                  onChange={(e) =>
-                    setProfileData({ ...profileData, dob: e.target.value })
-                  }
-                  disabled={!isEditingProfile}
-                  className="w-full px-4 py-3 border border-border rounded-lg focus:outline-none focus:ring-2 focus:ring-primary disabled:bg-muted disabled:cursor-not-allowed"
-                />
-              </div>
-
-              <div>
-                <label className="block mb-2 font-medium text-foreground">
-                  Address (optional)
-                </label>
-                <textarea
-                  value={profileData.address}
-                  onChange={(e) =>
-                    setProfileData({ ...profileData, address: e.target.value })
-                  }
-                  disabled={!isEditingProfile}
-                  rows={3}
-                  className="w-full px-4 py-3 border border-border rounded-lg focus:outline-none focus:ring-2 focus:ring-primary disabled:bg-muted disabled:cursor-not-allowed"
-                />
-              </div>
-            </div>
+          {/* Tab body */}
+          <div className="p-6 md:p-8">
+            {activeTab === "personal" && <PersonalTab user={user} updateProfile={updateProfile} />}
+            {activeTab === "security" && <SecurityTab user={user} />}
           </div>
         </div>
 
-        {/* Disease History Card */}
-        <div className="bg-white rounded-xl shadow-sm p-8">
-          <div className="flex items-center justify-between mb-6">
-            <div className="flex items-center space-x-3">
-              <Activity className="w-6 h-6 text-primary" />
-              <h2 className="text-xl font-bold text-foreground">
-                Medical History
-              </h2>
+        {/* Medical History (read-only, always visible) */}
+        <div className="bg-white rounded-2xl border border-border shadow-sm p-6 md:p-8">
+          <div className="flex items-center justify-between mb-5">
+            <div className="flex items-center gap-2">
+              <Activity className="w-5 h-5 text-primary" />
+              <h2 className="font-bold text-foreground">Medical History</h2>
             </div>
-            <div className="flex items-center space-x-2 px-3 py-1.5 bg-blue-50 border border-blue-200 rounded-lg">
-              <ShieldCheck className="w-4 h-4 text-blue-600" />
-              <span className="text-sm text-blue-600 font-medium">
-                Read-only for patients
-              </span>
-            </div>
+            <span className="flex items-center gap-1.5 px-3 py-1 bg-blue-50 border border-blue-200 rounded-lg text-xs text-blue-600 font-medium">
+              <ShieldCheck className="w-3.5 h-3.5" />
+              Read-only for patients
+            </span>
           </div>
 
-          <div className="mb-4 p-4 bg-yellow-50 border border-yellow-200 rounded-lg flex items-start space-x-3">
-            <AlertCircle className="w-5 h-5 text-yellow-600 shrink-0 mt-0.5" />
-            <div>
-              <p className="text-sm text-yellow-800 font-medium">
-                Restricted Access
-              </p>
-              <p className="text-sm text-yellow-700 mt-1">
-                Your medical history can only be updated by your doctor or
-                administrator for accuracy and security purposes.
-              </p>
-            </div>
+          <div className="flex items-start gap-3 p-3 bg-amber-50 border border-amber-100 rounded-xl mb-5 text-sm text-amber-800">
+            <AlertCircle className="w-4 h-4 text-amber-500 flex-shrink-0 mt-0.5" />
+            <p>Your medical history can only be updated by your doctor or administrator for accuracy and security.</p>
           </div>
 
-          <div className="space-y-4">
-            {user?.diseaseHistory && user.diseaseHistory.length > 0 ? (
-              user.diseaseHistory.map((record) => (
-                <div
-                  key={record.id}
-                  className="p-6 border-2 rounded-lg border-border bg-muted/20"
-                >
-                  <div className="flex items-start justify-between mb-4">
-                    <div className="flex-1">
-                      <div className="flex items-center space-x-3 mb-2">
-                        <h3 className="text-lg font-semibold text-foreground">
-                          {record.disease}
-                        </h3>
-                        <span
-                          className={`px-3 py-1 text-xs rounded-full font-medium border ${getStatusColor(record.status)}`}
-                        >
-                          {getStatusLabel(record.status)}
-                        </span>
-                      </div>
-                      <div className="space-y-2">
-                        <div className="flex items-center space-x-2 text-sm text-muted-foreground">
-                          <Calendar className="w-4 h-4" />
-                          <span>
-                            Diagnosed:{" "}
-                            {new Date(record.diagnosedDate).toLocaleDateString(
-                              "en-US",
-                              {
-                                year: "numeric",
-                                month: "long",
-                                day: "numeric",
-                              },
-                            )}
-                          </span>
-                        </div>
-                        <div className="flex items-center space-x-2 text-sm text-muted-foreground">
-                          <UserIcon className="w-4 h-4" />
-                          <span>Treated by: {record.treatedBy}</span>
-                        </div>
-                        {record.notes && (
-                          <div className="flex items-start space-x-2 text-sm text-muted-foreground mt-3">
-                            <FileText className="w-4 h-4 shrink-0 mt-0.5" />
-                            <span>{record.notes}</span>
-                          </div>
-                        )}
-                      </div>
-                    </div>
+          {user?.diseaseHistory && user.diseaseHistory.length > 0 ? (
+            <div className="space-y-3">
+              {user.diseaseHistory.map((record: any) => (
+                <div key={record.id} className="p-4 border border-border rounded-xl bg-muted/10">
+                  <div className="flex items-start justify-between mb-2">
+                    <h3 className="font-semibold text-foreground">{record.disease}</h3>
+                    <span className={`px-2.5 py-0.5 text-xs rounded-full font-medium border ${getStatusColor(record.status)}`}>
+                      {getStatusLabel(record.status)}
+                    </span>
+                  </div>
+                  <div className="space-y-1.5 text-sm text-muted-foreground">
+                    <span className="flex items-center gap-2">
+                      <Calendar className="w-3.5 h-3.5" />
+                      Diagnosed: {new Date(record.diagnosedDate).toLocaleDateString("en-US", { year: "numeric", month: "long", day: "numeric" })}
+                    </span>
+                    <span className="flex items-center gap-2">
+                      <UserIcon className="w-3.5 h-3.5" />
+                      Treated by: {record.treatedBy}
+                    </span>
+                    {record.notes && (
+                      <span className="flex items-start gap-2">
+                        <FileText className="w-3.5 h-3.5 flex-shrink-0 mt-0.5" />
+                        {record.notes}
+                      </span>
+                    )}
                   </div>
                 </div>
-              ))
-            ) : (
-              <div className="text-center py-12 bg-muted/30 rounded-lg">
-                <Activity className="w-12 h-12 text-muted-foreground mx-auto mb-3" />
-                <p className="text-muted-foreground">
-                  No medical history recorded yet
-                </p>
-                <p className="text-sm text-muted-foreground mt-1">
-                  Your doctor will add records during consultations
-                </p>
-              </div>
-            )}
-          </div>
+              ))}
+            </div>
+          ) : (
+            <div className="text-center py-10 bg-muted/20 rounded-xl">
+              <Activity className="w-10 h-10 text-muted-foreground/50 mx-auto mb-2" />
+              <p className="text-muted-foreground text-sm">No medical history recorded yet.</p>
+              <p className="text-xs text-muted-foreground mt-1">Your doctor will add records during consultations.</p>
+            </div>
+          )}
         </div>
       </div>
     </div>
