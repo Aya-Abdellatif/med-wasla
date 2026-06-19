@@ -1,0 +1,274 @@
+import { Types } from "mongoose";
+import type { HydratedDocument } from "mongoose";
+import Appointment from "../../models/appointment.model.js";
+import MedicalSpecialist from "../../models/medicalSpecialist.model.js";
+import type { AppointmentStatus, AppointmentType } from "../../models/appointment.model.js";
+import type { IUser } from "../../models/user.model.js";
+import type { IMedicalSpecialist } from "../../models/medicalSpecialist.model.js";
+
+export function parseLocalAppointment(dateStr: string, timeStr: string) {
+  const [year, month, day] = dateStr.split("-").map(Number);
+  const [hours, minutes] = timeStr.split(":").map(Number);
+  return new Date(year, month - 1, day, hours, minutes, 0, 0);
+}
+
+export const createAppointmentService = async (data: {
+  patientId: string;
+  specialistId: string;
+  date: Date;
+  dateStr: string;
+  timeStr: string;
+  type: AppointmentType;
+  address?: string;
+  notes?: string;
+}) => {
+  const specialist = await MedicalSpecialist.findById(data.specialistId);
+  if (!specialist) throw new Error("SPECIALIST_NOT_FOUND");
+  if (specialist.verificationStatus !== "approved") 
+    throw new Error("SPECIALIST_NOT_APPROVED");
+
+  if (data.type === "home" && !data.address?.trim()) 
+    throw new Error("ADDRESS_REQUIRED");
+
+  if (data.type === "clinic" && specialist.specialistType === "nurse") {
+    throw new Error("INVALID_TYPE_FOR_NURSE");
+  }
+  if (data.type === "home" && !specialist.homeVisit) {
+    throw new Error("SPECIALIST_NO_HOME_VISIT");
+  }
+
+  if (data.date <= new Date()) throw new Error("DATE_IN_PAST");
+
+  const dayName = data.date.toLocaleDateString("en-US", { weekday: "long" });
+  const worksOnDay = specialist.availableSlots?.some((slot) => slot.day === dayName);
+  if (!worksOnDay) throw new Error("DAY_NOT_AVAILABLE");
+
+  const { availableSlots } = await getAvailableSlotsService(
+    data.specialistId,
+    data.dateStr,
+  );
+
+  if (!availableSlots.includes(data.timeStr)) {
+    throw new Error("SLOT_NOT_AVAILABLE");
+  }
+
+  return Appointment.create({
+    patientId: data.patientId,
+    specialistId: data.specialistId,
+    date: data.date,
+    type: data.type,
+    address: data.address,
+    notes: data.notes,
+    status: "pending",
+  });
+};
+
+
+export const getPatientAppointmentsService = async (patientId: string) => {
+  return Appointment.find({ patientId })
+    .populate({
+      path: "specialistId",
+      populate: { path: "userId", select: "name photoUrl phone" },
+    })
+    .sort({ date: -1 });
+};
+
+
+export const getSpecialistAppointmentsService = async (userId: string) => {
+  // The logged-in specialist's req.user.id is a User._id, not a MedicalSpecialist._id
+  const specialist = await MedicalSpecialist.findOne({ userId });
+  if (!specialist) throw new Error("SPECIALIST_PROFILE_NOT_FOUND");
+
+  return Appointment.find({ specialistId: specialist._id })
+    .populate("patientId", "name photoUrl phone")
+    .sort({ date: -1 });
+};
+
+
+export const getAppointmentByIdService = async (
+  appointmentId: string,
+  requesterId: string,
+  requesterRole: "patient" | "specialist" | "admin"
+) => {
+  const appointment = await Appointment.findById(appointmentId)
+    .populate({
+      path: "specialistId",
+      populate: { path: "userId", select: "name photoUrl phone" },
+    })
+    .populate("patientId", "name photoUrl phone");
+
+  if (!appointment) return null;
+
+  if (requesterRole === "patient") {
+    const patientId = appointment.patientId;
+    const patientUserId = patientId instanceof Types.ObjectId
+      ? patientId.toString()
+      : (patientId as HydratedDocument<IUser>)._id.toString();
+    if (patientUserId !== requesterId)
+      throw new Error("FORBIDDEN");
+  }
+
+  if (requesterRole === "specialist") {
+    const specialist = await MedicalSpecialist.findOne({ userId: requesterId });
+    const specId = appointment.specialistId;
+    const specialistDocId = specId instanceof Types.ObjectId
+      ? specId.toString()
+      : (specId as HydratedDocument<IMedicalSpecialist>)._id.toString();
+    if (!specialist || specialistDocId !== specialist._id.toString()) {
+      throw new Error("FORBIDDEN");
+    }
+  }
+
+  return appointment;
+};
+
+
+export const updateAppointmentStatusService = async (
+  appointmentId: string,
+  specialistUserId: string,
+  newStatus: AppointmentStatus
+) => {
+  const specialist = await MedicalSpecialist.findOne({ userId: specialistUserId });
+  if (!specialist) throw new Error("SPECIALIST_PROFILE_NOT_FOUND");
+
+  const appointment = await Appointment.findById(appointmentId);
+  if (!appointment) return null;
+
+  if (appointment.specialistId.toString() !== specialist._id.toString()) {
+    throw new Error("FORBIDDEN");
+  }
+
+  const validTransitions: Record<string, AppointmentStatus[]> = {
+    pending: ["confirmed"],
+    confirmed: ["completed"],
+  };
+
+  if (!validTransitions[appointment.status]?.includes(newStatus)) {
+    throw new Error("INVALID_TRANSITION");
+  }
+
+  appointment.status = newStatus;
+  await appointment.save();
+  return appointment;
+};
+
+
+export const cancelAppointmentService = async (
+  appointmentId: string,
+  requesterId: string,
+  requesterRole: "patient" | "specialist"
+) => {
+  const appointment = await Appointment.findById(appointmentId);
+  if (!appointment) return null;
+
+  if (appointment.status === "completed" || appointment.status === "cancelled") {
+    throw new Error("CANNOT_CANCEL");
+  }
+
+  if (requesterRole === "patient") {
+    if (appointment.patientId.toString() !== requesterId) throw new Error("FORBIDDEN");
+  } else {
+    // Specialist: find their MedicalSpecialist doc and verify ownership
+    const specialist = await MedicalSpecialist.findOne({ userId: requesterId });
+    if (!specialist) throw new Error("SPECIALIST_PROFILE_NOT_FOUND");
+    if (appointment.specialistId.toString() !== specialist._id.toString()) {
+      throw new Error("FORBIDDEN");
+    }
+  }
+
+  appointment.status = "cancelled";
+  await appointment.save();
+  return appointment;
+};
+
+
+export const rescheduleAppointmentService = async (
+  appointmentId: string,
+  patientId: string,
+  newDate: Date,
+  notes?: string
+) => {
+  const appointment = await Appointment.findById(appointmentId);
+  if (!appointment) return null;
+
+  if (appointment.patientId.toString() !== patientId) throw new Error("FORBIDDEN");
+
+  if (appointment.status === "completed" || appointment.status === "cancelled") {
+    throw new Error("CANNOT_RESCHEDULE");
+  }
+
+  if (newDate <= new Date()) throw new Error("DATE_IN_PAST");
+
+  appointment.date = newDate;
+  // Reset to pending so the specialist must re-confirm the new time
+  appointment.status = "pending";
+  if (notes !== undefined) appointment.notes = notes;
+  await appointment.save();
+  return appointment;
+};
+
+
+export const getAvailableSlotsService = async (
+  specialistId: string,
+  dateStr: string,
+): Promise<{
+  workingHours: { start: string; end: string } | null;
+  availableSlots: string[];
+}> => {
+  const specialist = await MedicalSpecialist.findById(specialistId);
+  if (!specialist) throw new Error("SPECIALIST_NOT_FOUND");
+  if (specialist.verificationStatus !== "approved") throw new Error("SPECIALIST_NOT_APPROVED");
+
+  const date = new Date(dateStr);
+  if (isNaN(date.getTime())) throw new Error("INVALID_DATE");
+
+  // Get the day name (e.g. "Monday") for the requested date
+  const dayName = date.toLocaleDateString("en-US", { weekday: "long" });
+
+  const slot = specialist.availableSlots?.find((s) => s.day === dayName);
+  if (!slot) {
+    // Specialist doesn't work on this day
+    return { availableSlots: [], workingHours: null };
+  }
+
+  // Find all existing non-cancelled appointments on this date
+  const startOfDay = new Date(date);
+  startOfDay.setHours(0, 0, 0, 0);
+  const endOfDay = new Date(date);
+  endOfDay.setHours(23, 59, 59, 999);
+
+  const booked = await Appointment.find({
+    specialistId,
+    date: { $gte: startOfDay, $lte: endOfDay },
+    status: { $ne: "cancelled" },
+  }).select("date");
+
+  // Build 30-minute slots between startTime and endTime
+  const [startH, startM] = slot.startTime.split(":").map(Number);
+  const [endH, endM] = slot.endTime.split(":").map(Number);
+
+  const bookedTimes = new Set(
+    booked.map((a) => {
+      const d = new Date(a.date);
+      return `${String(d.getHours()).padStart(2, "0")}:${String(d.getMinutes()).padStart(2, "0")}`;
+    })
+  );
+
+  const availableSlots: string[] = [];
+  let h = startH;
+  let m = startM;
+
+  while (h * 60 + m < endH * 60 + endM) {
+    const timeStr = `${String(h).padStart(2, "0")}:${String(m).padStart(2, "0")}`;
+    if (!bookedTimes.has(timeStr)) {
+      availableSlots.push(timeStr);
+    }
+    m += 30;
+    if (m >= 60) { h += 1; m -= 60; }
+  }
+
+  return {
+    workingHours: { start: slot.startTime, end: slot.endTime },
+    availableSlots,
+  };
+};

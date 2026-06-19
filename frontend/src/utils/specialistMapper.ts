@@ -45,6 +45,7 @@ export interface SpecialistCard {
   reviews: number;
   location: string;
   availability: string;
+  availableSlots?: { day: string; startTime: string; endTime: string }[];
   description: string;
   services?: string[];
 }
@@ -99,6 +100,7 @@ export function mapSpecialistToCard(
             .map((slot) => `${slot.day} ${slot.startTime}-${slot.endTime}`)
             .join(", ")
         : "Contact for availability",
+    availableSlots: specialist.availableSlots ?? [],
     description: specialist.bio ?? "Experienced medical specialist.",
     services: specialist.areasOfExpertise ?? specialist.serviceAreas,
   };
@@ -153,26 +155,4 @@ export async function fetchSpecialistProfile(id: string, type: "doctor" | "nurse
   }
 
   return mapSpecialistToProfile(specialist, type);
-}
-
-export interface ReviewItem {
-  text: string;
-  name: string;
-  role: string;
-  rating: number;
-  img: string;
-}
-
-export async function fetchSpecialistReviews(specialistId: string): Promise<ReviewItem[]> {
-  const res = await fetch(`${API_BASE}/api/reviews/specialist/${specialistId}`);
-  const json = await res.json();
-  if (!json.success || !Array.isArray(json.data)) return [];
-
-  return json.data.map((review: any) => ({
-    text: review.comment ?? "",
-    name: review.patientId?.name ?? "Patient",
-    role: "Patient",
-    rating: review.rating ?? 5,
-    img: review.patientId?.photoUrl ?? DEFAULT_SPECIALIST_IMAGE,
-  }));
 }

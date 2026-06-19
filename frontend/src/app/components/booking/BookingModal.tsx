@@ -1,12 +1,23 @@
-import { useState } from "react";
-import { X, Calendar, Clock, MapPin, AlertCircle } from "lucide-react";
-import { showSuccess, showWarning } from "../../../utils/toast";
+import { useState, useEffect } from "react";
+import { useNavigate } from "react-router";
+import { X, Calendar, Clock, MapPin, AlertCircle, Loader2 } from "lucide-react";
+import { showSuccess, showWarning, showError } from "../../../utils/toast";
+import { bookAppointment, fetchAvailableSlots } from "../../../services/appointmentsApi";
+import { useAuth } from "../../context/useAuth";
+
+interface AvailableSlot {
+  day: string;
+  startTime: string;
+  endTime: string;
+}
 
 interface Provider {
+  id?: string;
   name: string;
   specialty?: string;
   certification?: string;
   location?: string;
+  availableSlots?: AvailableSlot[];
 }
 
 interface BookingModalProps {
@@ -16,48 +27,107 @@ interface BookingModalProps {
   serviceType?: "doctor" | "nurse";
 }
 
+function formatSlotLabel(time: string) {
+  const [hours, minutes] = time.split(":").map(Number);
+  const date = new Date();
+  date.setHours(hours, minutes, 0, 0);
+  return date.toLocaleTimeString("en-US", {
+    hour: "numeric",
+    minute: "2-digit",
+    hour12: true,
+  });
+}
+
+function isWorkingDay(dateStr: string, availableSlots: AvailableSlot[]) {
+  if (!dateStr || availableSlots.length === 0) return false;
+  const dayName = new Date(`${dateStr}T12:00:00`).toLocaleDateString("en-US", {
+    weekday: "long",
+  });
+  return availableSlots.some((slot) => slot.day === dayName);
+}
+
 export function BookingModal({ isOpen, onClose, provider, serviceType }: BookingModalProps) {
+  const navigate = useNavigate();
+  const { user } = useAuth();
   const [formData, setFormData] = useState({
-    //patientName: "",
-    //email: "",
-    //phone: "",
     date: "",
     time: "",
     reason: "",
-    address: "", // Only for nurse/home service
+    address: "",
   });
 
   const [errors, setErrors] = useState<Record<string, string>>({});
   const [isSubmitting, setIsSubmitting] = useState(false);
+  const [loadingSlots, setLoadingSlots] = useState(false);
+  const [availableTimes, setAvailableTimes] = useState<string[]>([]);
+  const [workingHours, setWorkingHours] = useState<{ start: string; end: string } | null>(
+    null,
+  );
+
+  const specialistSlots = provider?.availableSlots ?? [];
+
+  useEffect(() => {
+    if (!isOpen) {
+      setFormData({ date: "", time: "", reason: "", address: "" });
+      setErrors({});
+      setAvailableTimes([]);
+      setWorkingHours(null);
+    }
+  }, [isOpen]);
+
+  useEffect(() => {
+    if (!isOpen || !provider?.id || !formData.date) {
+      setAvailableTimes([]);
+      setWorkingHours(null);
+      return;
+    }
+
+    if (!isWorkingDay(formData.date, specialistSlots)) {
+      setAvailableTimes([]);
+      setWorkingHours(null);
+      setFormData((prev) => ({ ...prev, time: "" }));
+      return;
+    }
+
+    let cancelled = false;
+    setLoadingSlots(true);
+
+    fetchAvailableSlots(provider.id, formData.date)
+      .then((result) => {
+        if (cancelled) return;
+        setAvailableTimes(result.availableSlots);
+        setWorkingHours(result.workingHours);
+        setFormData((prev) => ({
+          ...prev,
+          time: result.availableSlots.includes(prev.time) ? prev.time : "",
+        }));
+      })
+      .catch((err) => {
+        if (cancelled) return;
+        setAvailableTimes([]);
+        setWorkingHours(null);
+        showError(err instanceof Error ? err.message : "Failed to load available times");
+      })
+      .finally(() => {
+        if (!cancelled) setLoadingSlots(false);
+      });
+
+    return () => {
+      cancelled = true;
+    };
+  }, [isOpen, provider?.id, formData.date, specialistSlots]);
 
   const validateForm = () => {
     const newErrors: Record<string, string> = {};
 
-    /*if (!formData.patientName.trim()) {
-      newErrors.patientName = "Name is required";
-    }*/
-
-    /*if (!formData.email) {
-      newErrors.email = "Email is required";
-    } else if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(formData.email)) {
-      newErrors.email = "Please enter a valid email address";
-    }*/
-
-    /*if (!formData.phone) {
-      newErrors.phone = "Phone number is required";
-    }*/
-
-    if (!formData.date) {
-      newErrors.date = "Date is required";
+    if (!formData.date) newErrors.date = "Date is required";
+    else if (!isWorkingDay(formData.date, specialistSlots)) {
+      newErrors.date = "Doctor is not available on this day";
     }
 
-    if (!formData.time) {
-      newErrors.time = "Time is required";
-    }
+    if (!formData.time) newErrors.time = "Time is required";
 
-    if (!formData.reason.trim()) {
-      newErrors.reason = "Reason for visit is required";
-    }
+    if (!formData.reason.trim()) newErrors.reason = "Reason for visit is required";
 
     if (serviceType === "nurse" && !formData.address.trim()) {
       newErrors.address = "Address is required for home service";
@@ -75,32 +145,38 @@ export function BookingModal({ isOpen, onClose, provider, serviceType }: Booking
       return;
     }
 
+    if (!user || user.role !== "patient") {
+      showWarning("Please sign in as a patient to book an appointment");
+      navigate("/");
+      return;
+    }
+
+    if (!provider?.id) {
+      showError("Unable to book: specialist information is missing");
+      return;
+    }
+
     setIsSubmitting(true);
 
-    // Simulate API call
-    setTimeout(() => {
-      console.log("Booking submitted:", {
-        ...formData,
-        provider: provider?.name,
-        serviceType,
+    try {
+      await bookAppointment({
+        specialistId: provider.id,
+        date: formData.date,
+        time: formData.time,
+        type: serviceType === "nurse" ? "home" : "clinic",
+        address: serviceType === "nurse" ? formData.address : undefined,
+        notes: formData.reason,
       });
+
       showSuccess(
-        `${serviceType === "nurse" ? "Home service" : "Appointment"} request submitted! ${provider?.name} will contact you shortly.`,
+        `${serviceType === "nurse" ? "Home service" : "Appointment"} booked successfully! Check My Appointments to track it.`,
       );
-      setIsSubmitting(false);
       onClose();
-      // Reset form
-      setFormData({
-        //patientName: "",
-        //email: "",
-        //phone: "",
-        date: "",
-        time: "",
-        reason: "",
-        address: "",
-      });
-      setErrors({});
-    }, 1500);
+    } catch (err) {
+      showError(err instanceof Error ? err.message : "Failed to book appointment");
+    } finally {
+      setIsSubmitting(false);
+    }
   };
 
   const handleChange = (field: string, value: string) => {
@@ -116,10 +192,14 @@ export function BookingModal({ isOpen, onClose, provider, serviceType }: Booking
 
   if (!isOpen) return null;
 
+  const workingDaysText =
+    specialistSlots.length > 0
+      ? specialistSlots.map((slot) => `${slot.day} (${slot.startTime}-${slot.endTime})`).join(", ")
+      : "No schedule published yet";
+
   return (
     <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/50">
       <div className="bg-white rounded-2xl shadow-2xl max-w-2xl w-full max-h-[90vh] overflow-y-auto">
-        {/* Header */}
         <div className="sticky top-0 bg-white border-b border-border px-6 py-4 flex items-center justify-between">
           <div>
             <h2 className="text-2xl font-bold text-foreground">
@@ -131,101 +211,17 @@ export function BookingModal({ isOpen, onClose, provider, serviceType }: Booking
               </p>
             )}
           </div>
-          <button
-            onClick={onClose}
-            className="p-2 hover:bg-muted rounded-lg transition-colors"
-          >
+          <button onClick={onClose} className="p-2 hover:bg-muted rounded-lg transition-colors">
             <X className="w-5 h-5" />
           </button>
         </div>
 
-        {/* Form */}
         <form onSubmit={handleSubmit} className="p-6 space-y-6">
-          {/* Patient Name */}
-          {/*<div>
-            <label htmlFor="patientName" className="block mb-2 font-medium text-foreground">
-              Patient Name *
-            </label>
-            <div className="relative">
-              <User className="absolute left-4 top-1/2 -translate-y-1/2 w-5 h-5 text-muted-foreground" />
-              <input
-                id="patientName"
-                type="text"
-                value={formData.patientName}
-                onChange={(e) => handleChange("patientName", e.target.value)}
-                placeholder="Enter your full name"
-                className={`w-full pl-12 pr-4 py-3 border rounded-lg focus:outline-none focus:ring-2 transition-colors ${
-                  errors.patientName
-                    ? "border-red-500 focus:ring-red-500"
-                    : "border-border focus:ring-primary"
-                }`}
-              />
-            </div>
-            {errors.patientName && (
-              <div className="flex items-center space-x-2 mt-2 text-red-500 text-sm">
-                <AlertCircle className="w-4 h-4" />
-                <span>{errors.patientName}</span>
-              </div>
-            )}
-          </div>*/}
+          <div className="rounded-lg border border-primary/20 bg-primary/5 p-4 text-sm text-foreground">
+            <p className="font-medium mb-1">Doctor availability</p>
+            <p className="text-muted-foreground">{workingDaysText}</p>
+          </div>
 
-          {/* Email */}
-          {/*<div>
-            <label htmlFor="email" className="block mb-2 font-medium text-foreground">
-              Email Address *
-            </label>
-            <div className="relative">
-              <Mail className="absolute left-4 top-1/2 -translate-y-1/2 w-5 h-5 text-muted-foreground" />
-              <input
-                id="email"
-                type="email"
-                value={formData.email}
-                onChange={(e) => handleChange("email", e.target.value)}
-                placeholder="your.email@example.com"
-                className={`w-full pl-12 pr-4 py-3 border rounded-lg focus:outline-none focus:ring-2 transition-colors ${
-                  errors.email
-                    ? "border-red-500 focus:ring-red-500"
-                    : "border-border focus:ring-primary"
-                }`}
-              />
-            </div>
-            {errors.email && (
-              <div className="flex items-center space-x-2 mt-2 text-red-500 text-sm">
-                <AlertCircle className="w-4 h-4" />
-                <span>{errors.email}</span>
-              </div>
-            )}
-          </div>*/}
-
-          {/* Phone */}
-          {/*<div>
-            <label htmlFor="phone" className="block mb-2 font-medium text-foreground">
-              Phone Number *
-            </label>
-            <div className="relative">
-              <Phone className="absolute left-4 top-1/2 -translate-y-1/2 w-5 h-5 text-muted-foreground" />
-              <input
-                id="phone"
-                type="tel"
-                value={formData.phone}
-                onChange={(e) => handleChange("phone", e.target.value)}
-                placeholder="+1 (234) 567-890"
-                className={`w-full pl-12 pr-4 py-3 border rounded-lg focus:outline-none focus:ring-2 transition-colors ${
-                  errors.phone
-                    ? "border-red-500 focus:ring-red-500"
-                    : "border-border focus:ring-primary"
-                }`}
-              />
-            </div>
-            {errors.phone && (
-              <div className="flex items-center space-x-2 mt-2 text-red-500 text-sm">
-                <AlertCircle className="w-4 h-4" />
-                <span>{errors.phone}</span>
-              </div>
-            )}
-          </div>*/}
-
-          {/* Address (for home service only) */}
           {serviceType === "nurse" && (
             <div>
               <label htmlFor="address" className="block mb-2 font-medium text-foreground">
@@ -255,11 +251,10 @@ export function BookingModal({ isOpen, onClose, provider, serviceType }: Booking
             </div>
           )}
 
-          {/* Date and Time */}
-          <div className="grid grid-cols-2 gap-4">
+          <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
             <div>
               <label htmlFor="date" className="block mb-2 font-medium text-foreground">
-                Preferred Date *
+                Date *
               </label>
               <div className="relative">
                 <Calendar className="absolute left-4 top-1/2 -translate-y-1/2 w-5 h-5 text-muted-foreground" />
@@ -286,22 +281,42 @@ export function BookingModal({ isOpen, onClose, provider, serviceType }: Booking
 
             <div>
               <label htmlFor="time" className="block mb-2 font-medium text-foreground">
-                Preferred Time *
+                Available Time *
               </label>
               <div className="relative">
-                <Clock className="absolute left-4 top-1/2 -translate-y-1/2 w-5 h-5 text-muted-foreground" />
-                <input
+                <Clock className="absolute left-4 top-1/2 -translate-y-1/2 w-5 h-5 text-muted-foreground z-10" />
+                <select
                   id="time"
-                  type="time"
                   value={formData.time}
                   onChange={(e) => handleChange("time", e.target.value)}
-                  className={`w-full pl-12 pr-4 py-3 border rounded-lg focus:outline-none focus:ring-2 transition-colors ${
+                  disabled={!formData.date || loadingSlots || availableTimes.length === 0}
+                  className={`w-full pl-12 pr-4 py-3 border rounded-lg focus:outline-none focus:ring-2 transition-colors appearance-none ${
                     errors.time
                       ? "border-red-500 focus:ring-red-500"
                       : "border-border focus:ring-primary"
-                  }`}
-                />
+                  } disabled:opacity-50`}
+                >
+                  <option value="">
+                    {loadingSlots
+                      ? "Loading times..."
+                      : !formData.date
+                        ? "Select a date first"
+                        : availableTimes.length === 0
+                          ? "No slots available"
+                          : "Select a time"}
+                  </option>
+                  {availableTimes.map((slot) => (
+                    <option key={slot} value={slot}>
+                      {formatSlotLabel(slot)}
+                    </option>
+                  ))}
+                </select>
               </div>
+              {workingHours && (
+                <p className="text-xs text-muted-foreground mt-2">
+                  Working hours: {workingHours.start} - {workingHours.end}
+                </p>
+              )}
               {errors.time && (
                 <div className="flex items-center space-x-2 mt-2 text-red-500 text-sm">
                   <AlertCircle className="w-4 h-4" />
@@ -311,7 +326,6 @@ export function BookingModal({ isOpen, onClose, provider, serviceType }: Booking
             </div>
           </div>
 
-          {/* Reason */}
           <div>
             <label htmlFor="reason" className="block mb-2 font-medium text-foreground">
               Reason for {serviceType === "nurse" ? "Service" : "Visit"} *
@@ -336,7 +350,6 @@ export function BookingModal({ isOpen, onClose, provider, serviceType }: Booking
             )}
           </div>
 
-          {/* Provider Info (Read-only) */}
           {provider && (
             <div className="bg-muted/50 rounded-lg p-4 border border-border">
               <h3 className="font-semibold text-foreground mb-2">
@@ -347,9 +360,7 @@ export function BookingModal({ isOpen, onClose, provider, serviceType }: Booking
                   <span className="font-medium">Name:</span> {provider.name}
                 </p>
                 <p className="text-foreground">
-                  <span className="font-medium">
-                    {serviceType === "nurse" ? "Specialty" : "Specialty"}:
-                  </span>{" "}
+                  <span className="font-medium">Specialty:</span>{" "}
                   {provider.specialty || provider.certification}
                 </p>
                 {provider.location && (
@@ -361,7 +372,6 @@ export function BookingModal({ isOpen, onClose, provider, serviceType }: Booking
             </div>
           )}
 
-          {/* Buttons */}
           <div className="flex space-x-3 pt-4">
             <button
               type="button"
@@ -372,10 +382,17 @@ export function BookingModal({ isOpen, onClose, provider, serviceType }: Booking
             </button>
             <button
               type="submit"
-              disabled={isSubmitting}
-              className="flex-1 px-6 py-3 bg-primary text-white rounded-lg hover:bg-primary/90 transition-colors disabled:opacity-50 disabled:cursor-not-allowed font-medium"
+              disabled={isSubmitting || loadingSlots || !formData.time}
+              className="flex-1 px-6 py-3 bg-primary text-white rounded-lg hover:bg-primary/90 transition-colors disabled:opacity-50 disabled:cursor-not-allowed font-medium flex items-center justify-center gap-2"
             >
-              {isSubmitting ? "Submitting..." : "Submit Request"}
+              {isSubmitting ? (
+                <>
+                  <Loader2 className="w-4 h-4 animate-spin" />
+                  Booking...
+                </>
+              ) : (
+                "Book Appointment"
+              )}
             </button>
           </div>
         </form>

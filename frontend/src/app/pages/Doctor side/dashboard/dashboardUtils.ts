@@ -31,6 +31,7 @@ export function getDateStrWithOffset(offset: number): string {
 }
 
 export function getStatusBadgeStyle(status: Appointment["status"]) {
+  if (status === "pending") return { backgroundColor: "#fffbeb", color: "#d97706" };
   if (status === "scheduled") return { backgroundColor: "#eff6ff", color: "#2563eb" };
   if (status === "completed") return { backgroundColor: "#f0fdf4", color: "#16a34a" };
   return { backgroundColor: "#fef2f2", color: "#dc2626" };
