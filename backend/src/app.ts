@@ -8,6 +8,7 @@ import reviewsRouter from "./features/reviews/reviews.routes.js";
 import appointmentsRouter from "./features/appointments/appointments.routes.js";
 import queueRouter from "./features/queue/queue.routes.js";
 import adminRouter from "./features/admin/admin.routes.js";
+import appointmentsRouter from "./features/appointments/appointments.routes.js";
 
 const app = express();
 
