@@ -6,11 +6,18 @@ import type { AppointmentStatus, AppointmentType } from "../../models/appointmen
 import type { IUser } from "../../models/user.model.js";
 import type { IMedicalSpecialist } from "../../models/medicalSpecialist.model.js";
 
+export function parseLocalAppointment(dateStr: string, timeStr: string) {
+  const [year, month, day] = dateStr.split("-").map(Number);
+  const [hours, minutes] = timeStr.split(":").map(Number);
+  return new Date(year, month - 1, day, hours, minutes, 0, 0);
+}
 
 export const createAppointmentService = async (data: {
   patientId: string;
   specialistId: string;
   date: Date;
+  dateStr: string;
+  timeStr: string;
   type: AppointmentType;
   address?: string;
   notes?: string;
@@ -31,6 +38,19 @@ export const createAppointmentService = async (data: {
   }
 
   if (data.date <= new Date()) throw new Error("DATE_IN_PAST");
+
+  const dayName = data.date.toLocaleDateString("en-US", { weekday: "long" });
+  const worksOnDay = specialist.availableSlots?.some((slot) => slot.day === dayName);
+  if (!worksOnDay) throw new Error("DAY_NOT_AVAILABLE");
+
+  const { availableSlots } = await getAvailableSlotsService(
+    data.specialistId,
+    data.dateStr,
+  );
+
+  if (!availableSlots.includes(data.timeStr)) {
+    throw new Error("SLOT_NOT_AVAILABLE");
+  }
 
   return Appointment.create({
     patientId: data.patientId,
@@ -190,8 +210,11 @@ export const rescheduleAppointmentService = async (
 
 export const getAvailableSlotsService = async (
   specialistId: string,
-  dateStr: string
-) => {
+  dateStr: string,
+): Promise<{
+  workingHours: { start: string; end: string } | null;
+  availableSlots: string[];
+}> => {
   const specialist = await MedicalSpecialist.findById(specialistId);
   if (!specialist) throw new Error("SPECIALIST_NOT_FOUND");
   if (specialist.verificationStatus !== "approved") throw new Error("SPECIALIST_NOT_APPROVED");

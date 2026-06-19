@@ -9,6 +9,7 @@ import {
   cancelAppointmentService,
   rescheduleAppointmentService,
   getAvailableSlotsService,
+  parseLocalAppointment,
 } from "./appointments.service.js";
 import type { AppointmentStatus } from "../../models/appointment.model.js";
 
@@ -20,20 +21,34 @@ export const createAppointment = async (
 ) => {
   try {
     const patientId = req.user!.id;
-    const { specialistId, date, type, address, notes } = req.body;
+    const { specialistId, date, time, type, address, notes } = req.body;
 
-    if (!specialistId || !date || !type) {
-      return next(new AppError("specialistId, date, and type are required", 400));
+    if (!specialistId || !date || !time || !type) {
+      return next(
+        new AppError("specialistId, date, time, and type are required", 400),
+      );
+    }
+
+    if (!/^\d{4}-\d{2}-\d{2}$/.test(date)) {
+      return next(new AppError("date must be in YYYY-MM-DD format", 400));
+    }
+
+    if (!/^\d{2}:\d{2}$/.test(time)) {
+      return next(new AppError("time must be in HH:mm format", 400));
     }
 
     if (!["clinic", "home"].includes(type)) {
       return next(new AppError("type must be 'clinic' or 'home'", 400));
     }
 
+    const appointmentDate = parseLocalAppointment(date, time);
+
     const appointment = await createAppointmentService({
       patientId,
       specialistId,
-      date: new Date(date),
+      date: appointmentDate,
+      dateStr: date,
+      timeStr: time,
       type,
       address,
       notes,
@@ -58,6 +73,10 @@ export const createAppointment = async (
       return next(new AppError("This specialist does not offer home visits", 400));
     if (msg === "DATE_IN_PAST") 
       return next(new AppError("Appointment date must be in the future", 400));
+    if (msg === "DAY_NOT_AVAILABLE")
+      return next(new AppError("The doctor is not available on this day", 400));
+    if (msg === "SLOT_NOT_AVAILABLE")
+      return next(new AppError("This time slot is not available", 400));
     return next(error);
   }
 };

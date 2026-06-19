@@ -16,10 +16,9 @@ import { useEffect, useState } from "react";
 import { BookingModal } from "../../components/booking/BookingModal";
 import {
   fetchSpecialistProfile,
-  fetchSpecialistReviews,
-  type ReviewItem,
   type SpecialistProfile,
 } from "../../../utils/specialistMapper";
+import { fetchSpecialistReviews, type ReviewItem } from "../../../services/reviewsApi";
 
 export function DoctorProfile() {
   const { id } = useParams<{ id: string }>();
@@ -41,6 +40,7 @@ function DoctorProfileView({ id }: { id: string }) {
   const [currentPage, setCurrentPage] = useState(0);
   const [doctor, setDoctor] = useState<SpecialistProfile | null>(null);
   const [reviews, setReviews] = useState<ReviewItem[]>([]);
+  const [reviewStats, setReviewStats] = useState({ averageRating: 0, totalReviews: 0 });
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
   const REVIEWS_PER_PAGE = 3;
@@ -52,7 +52,11 @@ function DoctorProfileView({ id }: { id: string }) {
       .then(([profile, profileReviews]) => {
         if (cancelled) return;
         setDoctor(profile);
-        setReviews(profileReviews);
+        setReviews(profileReviews.reviews);
+        setReviewStats({
+          averageRating: profileReviews.averageRating || profile.rating,
+          totalReviews: profileReviews.totalReviews || profile.reviews,
+        });
         setError(null);
       })
       .catch((err) => {
@@ -129,8 +133,8 @@ function DoctorProfileView({ id }: { id: string }) {
                 <img src={doctor.image} alt={doctor.name} className="w-full aspect-square object-cover" />
                 <div className="absolute top-4 right-4 bg-white px-3 py-1.5 rounded-full shadow-lg flex items-center space-x-1">
                   <Star className="w-4 h-4 text-yellow-400 fill-current" />
-                  <span className="font-semibold text-foreground">{doctor.rating}</span>
-                  <span className="text-sm text-muted-foreground">({doctor.reviews})</span>
+                  <span className="font-semibold text-foreground">{reviewStats.averageRating || doctor.rating}</span>
+                  <span className="text-sm text-muted-foreground">({reviewStats.totalReviews || doctor.reviews})</span>
                 </div>
               </div>
             </div>
