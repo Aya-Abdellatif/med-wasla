@@ -30,7 +30,7 @@ export default function SignIn() {
       } else if (loggedInUser.role === "doctor" || loggedInUser.role === "nurse") {
         navigate("/dashboard");
       } else {
-        navigate("/home");
+        navigate("/");
       }
     } catch (err) {
       showError(err instanceof Error ? err.message : "Login failed. Please verify credentials.");

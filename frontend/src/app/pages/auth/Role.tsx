@@ -36,7 +36,10 @@ export default function Role() {
 
       <p className="mt-6 text-center text-sm text-slate-600">
         Already have an account?{" "}
-        <Link to="/" className="font-bold text-teal-600 hover:text-teal-700">
+        <Link
+          to="/login"
+          className="font-bold text-teal-600 hover:text-teal-700"
+        >
           Sign in
         </Link>
       </p>
