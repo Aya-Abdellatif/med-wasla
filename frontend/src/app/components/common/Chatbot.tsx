@@ -1,8 +1,56 @@
 import { X, Bot, Send } from "lucide-react";
 import { useChatBot } from "../../context/useChatBot";
+import { useState } from "react";
+import { sendMessageToAI } from "../../Services/chatbot.service";
 
 function ChatBot() {
   const { isOpen, openChatBot, closeChatBot } = useChatBot();
+  const [message, setMessage] = useState("");
+  const [messages, setMessages] = useState([
+    {
+      sender: "ai",
+      text: "Hi! I am WaslaBot. How can I help you today?"
+    }
+  ]);
+
+  const handleSend = async () => {
+    if (!message.trim()) return;
+
+    const userMessage = message;
+
+    setMessages((prev) => [
+      ...prev,
+      {
+        sender: "user",
+        text: userMessage,
+      },
+    ]);
+
+    setMessage("");
+
+    try {
+      const aiReply = await sendMessageToAI(userMessage);
+
+      setMessages((prev) => [
+        ...prev,
+        {
+          sender: "ai",
+          text: aiReply,
+        },
+      ]);
+    } catch (error) {
+      console.error(error);
+
+      setMessages((prev) => [
+        ...prev,
+        {
+          sender: "ai",
+          text: "Something went wrong.",
+        },
+      ]);
+    }
+  };
+
 
   return (
     <>
@@ -49,7 +97,28 @@ function ChatBot() {
           </button>
         </div>
 
-        <div className="flex-1 px-4 py-6 flex flex-col items-center justify-center gap-3 bg-muted">
+<div className="flex-1 overflow-y-auto p-4 bg-muted">
+  {messages.map((msg, index) => (
+    <div
+      key={index}
+      className={`mb-3 ${
+        msg.sender === "user"
+          ? "text-right"
+          : "text-left"
+      }`}
+    >
+      <div
+        className={`inline-block px-3 py-2 rounded-xl ${
+          msg.sender === "user"
+            ? "bg-primary text-white"
+            : "bg-white"
+        }`}
+      >
+        {msg.text}
+      </div>
+    </div>
+  ))}
+</div>
           <div className="h-14 w-14 rounded-full bg-primary/10 flex items-center justify-center">
             <Bot className="h-7 w-7 text-primary" />
           </div>
@@ -59,15 +128,19 @@ function ChatBot() {
           <p className="text-xs text-fg-muted text-center">
             Ask me anything about doctors, services, or appointments.
           </p>
-        </div>
 
         <div className="px-4 py-4 border-t border-border flex items-center gap-2 shrink-0">
-          <input
-            type="text"
-            placeholder="Type a message..."
-            className="flex-1 text-sm px-4 py-2.5 rounded-xl border border-border bg-muted text-fg placeholder:text-fg-muted focus:outline-none focus:border-primary transition-colors"
-          />
-          <button className="h-10 w-10 rounded-xl bg-primary hover:bg-primary-deep text-white flex items-center justify-center transition-colors cursor-pointer shrink-0">
+<input
+  type="text"
+  value={message}
+  onChange={(e) => setMessage(e.target.value)}
+  placeholder="Type a message..."
+  className="flex-1 text-sm px-4 py-2.5 rounded-xl border border-border bg-muted text-fg placeholder:text-fg-muted focus:outline-none focus:border-primary transition-colors"
+/>
+<button 
+  onClick={handleSend}
+  className="h-10 w-10 rounded-xl bg-primary hover:bg-primary-deep text-white flex items-center justify-center transition-colors cursor-pointer shrink-0"
+>
             <Send className="h-4 w-4" />
           </button>
         </div>
