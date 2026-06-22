@@ -38,6 +38,7 @@ function Navbar() {
         { name: "Nurses", path: "/nurses" },
         { name: "About", path: "/about" },
         { name: "Contact Us", path: "/contact" },
+        { name: "Profile", path: "/profile" },
       ];
 
   const containerRef = useRef<HTMLDivElement | null>(null);
@@ -142,11 +143,10 @@ function Navbar() {
                   <span>{displayName}</span>
                 </div>
               )}
-
               {isAuthenticated ? (
                 <button
                   onClick={handleLogout}
-                  className="flex items-center gap-2 text-lg font-semibold text-fg-muted hover:text-red-500 transition-colors duration-300 cursor-pointer"
+                  className="group flex items-center gap-2 bg-primary text-white border-2 border-primary font-bold text-base px-4 py-2 rounded-xl cursor-pointer transition-all duration-300 ease-in-out hover:border-primary hover:-translate-y-0.5 hover:bg-transparent hover:text-primary hover:shadow-md whitespace-nowrap"
                 >
                   <LogOut className="h-5 w-5" strokeWidth={2.5} />
                   Logout
@@ -170,7 +170,7 @@ function Navbar() {
                 </>
               )}
 
-              {isAuthenticated && !isDoctor && (
+              {/* {isAuthenticated && !isDoctor && (
                 <button
                   onClick={() => setIsAppointmentModalOpen(true)}
                   className="group flex items-center gap-2 bg-primary text-white border-2 border-primary font-bold text-base px-4 py-2 rounded-xl cursor-pointer transition-all duration-300 ease-in-out hover:-translate-y-0.5 hover:bg-transparent hover:text-primary hover:shadow-md whitespace-nowrap"
@@ -181,7 +181,7 @@ function Navbar() {
                   />
                   Book Appointment
                 </button>
-              )}
+              )} */}
             </div>
 
             <div className="lg:hidden ml-auto relative">
@@ -254,7 +254,7 @@ function Navbar() {
                     {isAuthenticated ? (
                       <button
                         onClick={handleLogout}
-                        className="flex items-center gap-2 w-full text-base font-semibold text-fg-muted hover:text-red-500 px-4 py-2.5 rounded-lg transition-colors duration-300 cursor-pointer"
+                        className="group flex items-center justify-center gap-2 w-full bg-transparent text-primary border-2 border-primary font-bold text-base px-4 py-2 rounded-xl cursor-pointer transition-all duration-300 ease-in-out hover:border-primary hover:-translate-y-0.5 hover:bg-primary hover:text-white hover:shadow-md whitespace-nowrap"
                       >
                         <LogOut className="h-5 w-5" strokeWidth={2.5} />
                         Logout
@@ -264,7 +264,7 @@ function Navbar() {
                         <Link
                           to="/login"
                           onClick={() => setIsOpen(false)}
-                          className="group flex items-center gap-2 bg-transparent text-primary border-2 border-primary font-bold text-base px-4 py-2 rounded-xl cursor-pointer transition-all duration-300 ease-in-out hover:border-primary hover:-translate-y-0.5 hover:bg-primary hover:text-white hover:shadow-md whitespace-nowrap"
+                          className="group flex items-center justify-center gap-2 w-full bg-transparent text-primary border-2 border-primary font-bold text-base px-4 py-2 rounded-xl cursor-pointer transition-all duration-300 ease-in-out hover:border-primary hover:-translate-y-0.5 hover:bg-primary hover:text-white hover:shadow-md whitespace-nowrap"
                         >
                           <LogIn className="h-5 w-5" strokeWidth={2.5} />
                           Login
@@ -272,7 +272,7 @@ function Navbar() {
                         <Link
                           to="/signup"
                           onClick={() => setIsOpen(false)}
-                          className="group flex items-center gap-2 bg-primary text-white border-2 border-primary font-bold text-base px-4 py-2 rounded-xl cursor-pointer transition-all duration-300 ease-in-out hover:border-primary hover:-translate-y-0.5 hover:bg-transparent hover:text-primary hover:shadow-md whitespace-nowrap"
+                          className="group flex items-center justify-center gap-2 w-full bg-primary text-white border-2 border-primary font-bold text-base px-4 py-2 rounded-xl cursor-pointer transition-all duration-300 ease-in-out hover:border-primary hover:-translate-y-0.5 hover:bg-transparent hover:text-primary hover:shadow-md whitespace-nowrap"
                         >
                           <UserPlus className="h-5 w-5" strokeWidth={2.5} />
                           Sign Up
@@ -283,7 +283,7 @@ function Navbar() {
                     {isAuthenticated && !isDoctor && (
                       <button
                         onClick={() => setIsAppointmentModalOpen(true)}
-                        className="group flex items-center justify-center gap-2 w-full bg-primary text-white border-2 border-primary font-bold text-base px-4 py-3 rounded-xl transition-all duration-300 hover:-translate-y-0.5 hover:bg-transparent hover:text-primary cursor-pointer"
+                        className="group flex items-center justify-center gap-2 w-full bg-primary text-white border-2 border-primary font-bold text-base px-4 py-2 rounded-xl cursor-pointer transition-all duration-300 ease-in-out hover:border-primary hover:-translate-y-0.5 hover:bg-transparent hover:text-primary hover:shadow-md whitespace-nowrap"
                       >
                         <CalendarDays
                           className="h-5 w-5 text-brand-teal group-hover:text-primary transition-colors duration-300"
