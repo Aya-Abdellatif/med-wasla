@@ -83,12 +83,12 @@ function Navbar() {
             <Link
               to="/"
               onClick={handleLogoClick}
-              className="flex items-center gap-3 shrink-0 cursor-pointer group"
+              className="flex items-center shrink-0 cursor-pointer group"
             >
               <img
-                src="src/assets/logo.png"
+                src="src/assets/Logo.png"
                 alt="Logo"
-                className="w-10 h-10 transition-transform duration-300 group-hover:scale-105"
+                className="w-20 h-17 -mr-4 transition-transform duration-300"
               />
               <span className="text-3xl font-medium tracking-tight">
                 <span className="text-fg">Med</span>
