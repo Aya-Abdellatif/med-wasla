@@ -93,13 +93,16 @@ export function Doctors() {
       })
       .finally(() => setLoading(false));
   }, [debouncedSearch, selectedSpecialty, sortIndex, page]);
+  const isFirstRender = useRef(true);
   useEffect(() => {
-    if (page > 1) {
-      resultsRef.current?.scrollIntoView({
-        behavior: "smooth",
-        block: "start",
-      });
+    if (isFirstRender.current) {
+      isFirstRender.current = false;
+      return;
     }
+    resultsRef.current?.scrollIntoView({
+      behavior: "smooth",
+      block: "start",
+    });
   }, [page]);
   const specialties = ["All", ...MEDICAL_SPECIALIZATIONS];
 
