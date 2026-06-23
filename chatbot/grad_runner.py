@@ -1,22 +1,19 @@
 # -*- coding: utf-8 -*-
 """
 grad_runner.py
-
-Refactored for Flask API usage with safe initialization.
+Refactored RAG pipeline with hybrid retrieval (FAISS + keyword boosting + reranking)
 """
 
 import os
 from dotenv import load_dotenv
 import json
-import numpy as np
 import faiss
-from sentence_transformers import SentenceTransformer
 import requests
+from sentence_transformers import SentenceTransformer
 
 # ----------------------------
-# LOAD ENVIRONMENT VARIABLES
+# ENV
 # ----------------------------
-
 load_dotenv()
 
 CORPUS_PATH = os.environ.get(
@@ -25,144 +22,148 @@ CORPUS_PATH = os.environ.get(
 )
 
 # ----------------------------
-# GLOBALS (lazy initialized)
+# GLOBALS
 # ----------------------------
-
 embedder = None
 index = None
 nhs_docs = None
 
-# ----------------------------
-# INITIALIZER FUNCTION
-# ----------------------------
 
+# ----------------------------
+# INIT MODEL
+# ----------------------------
 def initialize_model():
-    """
-    Loads embeddings and builds the FAISS index if not already loaded.
-    """
     global embedder, index, nhs_docs
 
     if embedder is not None:
-        # Already initialized
         return
 
-    # Load NHS corpus
     print("⚙️ Loading NHS corpus from:", CORPUS_PATH)
-    with open(CORPUS_PATH, "r", encoding="utf-8") as f:
-        nhs_docs_raw = json.load(f)
 
-    # Deduplicate documents
+    with open(CORPUS_PATH, "r", encoding="utf-8") as f:
+        raw_docs = json.load(f)
+
+    # deduplicate
+    seen = set()
     unique_docs = []
-    seen_texts = set()
-    for doc in nhs_docs_raw:
-        text = doc["text"].strip()
-        if text not in seen_texts:
-            seen_texts.add(text)
-            unique_docs.append(doc)
+
+    for d in raw_docs:
+        text = d["text"].strip()
+        if text not in seen:
+            seen.add(text)
+            unique_docs.append(d)
 
     nhs_docs = unique_docs
-    doc_texts = [doc["text"] for doc in nhs_docs]
+    texts = [d["text"] for d in nhs_docs]
 
-    # Load embedding model
     print("⚙️ Loading SentenceTransformer model...")
     embedder = SentenceTransformer("multi-qa-MiniLM-L6-cos-v1")
 
-    # Embed all documents
-    print("⚙️ Generating embeddings for corpus...")
-    doc_embeddings = embedder.encode(
-        doc_texts,
-        normalize_embeddings=True,
-        show_progress_bar=True
-    )
+    print("⚙️ Generating embeddings...")
+    embeddings = embedder.encode(texts, normalize_embeddings=True)
 
-    # Build FAISS index
-    dimension = doc_embeddings.shape[1]
-    index_local = faiss.IndexFlatIP(dimension)
-    index_local.add(doc_embeddings)
+    dim = embeddings.shape[1]
+    index_local = faiss.IndexFlatIP(dim)
+    index_local.add(embeddings)
 
     index = index_local
+
     print(f"✅ FAISS index built with {index.ntotal} vectors.")
+
+
+# ----------------------------
+# KEYWORD BOOSTING
+# ----------------------------
+def keyword_boost_score(query, doc):
+    query_words = set(query.lower().split())
+    title_words = set(doc["title"].lower().split())
+    text_words = set(doc["text"].lower().split())
+
+    title_match = len(query_words & title_words)
+    text_match = len(query_words & text_words)
+
+    return (title_match * 2) + text_match
+
 
 # ----------------------------
 # PROMPT BUILDER
 # ----------------------------
-
 def build_combined_prompt(context_docs, user_query):
     context_text = ""
 
     for doc in context_docs:
-        snippet = doc["text"][:800]  # Limit to first 800 characters
-        context_text += f"[NHS] {doc['title']}. {snippet}\n\n"
-
+        snippet = doc["text"][:800]
+        context_text += f"[NHS] {doc['title']}: {snippet}\n\n"
 
     prompt = f"""
+You are HealthMate, a strict medical assistant for Med-Wasla.
 
-You are HealthMate, a healthcare assistant for the Med-Wasla platform, a system for booking doctors and nurses and arranging home visits.
+RULES:
+- Do NOT greet the user.
+- Do NOT introduce yourself.
+- Answer ONLY using the provided medical context.
+- Be concise and medically accurate.
+- If context is insufficient, say:
+  "I don’t have enough medical information in the database to answer this accurately."
+- Do NOT mention retrieval systems.
 
-Your role:
-- Help users describe and understand symptoms in simple, clear language
-- Help decide whether the user needs a doctor visit, nurse visit, or self-care advice
-- Support booking requests for doctors, nurses, and home visits
-- Ask short, clear follow-up questions when information is missing
-
-Rules:
-- Always keep responses simple and easy to understand
-- Do NOT give dangerous, invasive, or complex medical instructions
-- Always prioritize patient safety
-- If symptoms may be serious, recommend seeing a doctor immediately
-- Do NOT confirm bookings directly (the backend system handles booking)
-
-When the user wants to book or request a visit, try to extract:
-- condition / symptoms
-- urgency (low / medium / high)
-- service type (doctor / nurse / home visit)
-- specialty if relevant
-
-Use the information below if it answers the user's question.
-If it doesn't fully answer the question, also use your own medical knowledge.
-If information is missing, ask only the necessary questions.
-If the request is not medical or not related to the platform, politely say you only support healthcare and booking services.
-Do not discuss surgery, invasive interventions, or complex specialist treatments unless explicitly required by the context or asked by the user. Prefer conservative recommendations like self-care, physical therapy, or seeing a primary care doctor.
-Only if you mentioned any medical informations, end your answer with: "This information is not a replacement for a doctor’s advice. Please consult a healthcare professional for your specific needs."
-
-Context:
-
+CONTEXT:
 {context_text}
 
-User question:
+USER QUESTION:
 {user_query}
+
+ANSWER:
 """
     return prompt.strip()
+
 
 # ----------------------------
 # PREDICT FUNCTION
 # ----------------------------
-
 def predict(user_query):
-    """
-    Takes a user query string, performs retrieval and sends the prompt
-    to the LlamaMedicine model via Ollama API. Returns the model's response.
-    """
+    initialize_model()
 
-    initialize_model()   # Make sure model is loaded
-
-    # Embed user query
+    # embed query
     query_emb = embedder.encode([user_query], normalize_embeddings=True)[0]
 
-    # Search top 1 matching document
-    k = 1
+    # ----------------------------
+    # RETRIEVAL (top_k = 3)
+    # ----------------------------
+    k = 3
     D, I = index.search(query_emb.reshape(1, -1), k=k)
 
-    filtered_docs = []
+    candidates = []
+
     for idx, score in zip(I[0], D[0]):
         doc = nhs_docs[idx]
-        filtered_docs.append(doc)
-        print(f"✅ Match found: {doc['title']} (score={score:.3f})")
 
-    # Build the combined prompt
+        semantic_score = float(score)
+        boost = keyword_boost_score(user_query, doc)
+
+        final_score = (semantic_score * 0.7) + (boost * 0.3)
+
+        candidates.append((final_score, doc))
+
+    # sort best first
+    candidates.sort(key=lambda x: x[0], reverse=True)
+
+    # keep top 2 docs
+    filtered_docs = [doc for _, doc in candidates[:2]]
+
+    # debug logs
+    for score, doc in candidates:
+        print(f"🔎 {doc['title']} | score={score:.3f}")
+
+    if not filtered_docs:
+        return "I don’t have enough medical information in the database to answer this accurately."
+
+    # build prompt
     prompt = build_combined_prompt(filtered_docs, user_query)
 
-    # Send request to Ollama API
+    # ----------------------------
+    # CALL LLM
+    # ----------------------------
     payload = {
         "model": "elixpo/llamamedicine",
         "prompt": prompt,
@@ -177,13 +178,8 @@ def predict(user_query):
         json=payload,
         timeout=300
     )
+
     response.raise_for_status()
     result = response.json()
 
-    final_answer = result.get("response", "").strip()
-
-    print("\n=== LlamaMedicine's Answer ===\n")
-    print(final_answer)
-
-    return final_answer
-
+    return result.get("response", "").strip()
