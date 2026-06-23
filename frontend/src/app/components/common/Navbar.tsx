@@ -162,7 +162,7 @@ function Navbar() {
                     Login
                   </Link>
                   <Link
-                    to="/signup"
+                    to="/role"
                     className="group flex items-center gap-2 bg-primary text-white border-2 border-primary font-bold text-base px-4 py-2 rounded-xl cursor-pointer transition-all duration-300 ease-in-out hover:border-primary hover:-translate-y-0.5 hover:bg-transparent hover:text-primary hover:shadow-md whitespace-nowrap"
                   >
                     <UserPlus className="h-5 w-5" strokeWidth={2.5} />
@@ -271,7 +271,7 @@ function Navbar() {
                           Login
                         </Link>
                         <Link
-                          to="/signup"
+                          to="/role"
                           onClick={() => setIsOpen(false)}
                           className="group flex items-center justify-center gap-2 w-full bg-primary text-white border-2 border-primary font-bold text-base px-4 py-2 rounded-xl cursor-pointer transition-all duration-300 ease-in-out hover:border-primary hover:-translate-y-0.5 hover:bg-transparent hover:text-primary hover:shadow-md whitespace-nowrap"
                         >

@@ -4,7 +4,6 @@ import {
   CalendarDays,
   Star,
   MapPin,
-  Heart,
   Eye,
   Clock,
 } from "lucide-react";
@@ -63,12 +62,8 @@ export function Nurses() {
 
   return (
     <div className="flex flex-col">
-      <section className="relative bg-linear-to-br from-primary/10 to-accent/10 py-20">
+      <section className="relative bg-linear-to-br from-[#F6FFFB] via-[#ECFEFF] to-[#F0FDFA] py-20 px-5 text-center">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 text-center">
-          <div className="inline-flex items-center justify-center w-16 h-16 bg-pink-100 rounded-full mb-6">
-            <Heart className="w-8 h-8 text-pink-600" />
-          </div>
-
           <h1 className="text-4xl md:text-5xl font-bold text-foreground mb-6">
             Our Professional Nurses
           </h1>
