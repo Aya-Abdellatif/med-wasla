@@ -23,6 +23,16 @@ export interface IAvailableSlot {
   endTime: string;
 }
 
+export interface IPendingProfileUpdates {
+  bio?: string;
+  clinicAddress?: string;
+  specialization?: string;
+  areasOfExpertise?: string[];
+  avgWaitMinutes?: number;
+  serviceAreas?: string[];
+  homeVisit?: boolean;
+}
+
 export interface IMedicalSpecialist extends Document { 
   userId: Types.ObjectId;
   specialistType: SpecialistType;
@@ -40,6 +50,8 @@ export interface IMedicalSpecialist extends Document {
   rating?: number;
   reviewCount?: number;
   verificationStatus?: VerificationStatus;
+  pendingProfileUpdates?: IPendingProfileUpdates;
+  revertToApprovedOnReject?: boolean;
   createdAt?: Date;
   updatedAt?: Date;
 }
@@ -66,6 +78,19 @@ const availableSlotSchema = new Schema<IAvailableSlot>(
     endTime: { type: String, required: true },
   },
   { _id: false }
+);
+
+const pendingProfileUpdatesSchema = new Schema<IPendingProfileUpdates>(
+  {
+    bio: { type: String },
+    clinicAddress: { type: String },
+    specialization: { type: String },
+    areasOfExpertise: { type: [String] },
+    avgWaitMinutes: { type: Number },
+    serviceAreas: { type: [String] },
+    homeVisit: { type: Boolean },
+  },
+  { _id: false },
 );
 
 const medicalSpecialistSchema = new Schema<IMedicalSpecialist>(
@@ -129,6 +154,16 @@ const medicalSpecialistSchema = new Schema<IMedicalSpecialist>(
       type: String,
       enum: verificationStatuses,
       default: "pending",
+    },
+
+    pendingProfileUpdates: {
+      type: pendingProfileUpdatesSchema,
+      default: undefined,
+    },
+
+    revertToApprovedOnReject: {
+      type: Boolean,
+      default: false,
     },
   },
   { timestamps: true }

@@ -1,6 +1,5 @@
 import type { Request, Response, NextFunction } from "express";
-import { getPatientProfileByUserId } from "./getPatientProfile.service.js";
-import { updatePatientProfileByUserId } from "./updatePatientProfile.service.js";
+import { getPatientProfileByUserId, updatePatientProfileByUserId } from "./patient-profile.service.js";
 
 export const getPatientProfile = async (req: Request, res: Response, next: NextFunction) => {
   try {
@@ -16,7 +15,7 @@ export const getPatientProfile = async (req: Request, res: Response, next: NextF
 export const updatePatientProfile = async (req: Request, res: Response, next: NextFunction) => {
   try {
 
-    const { userId, userBody } = req.params;
+    const { userId } = req.params;
 
     const updatedProfile = await updatePatientProfileByUserId(
       userId as string,

@@ -1,5 +1,5 @@
 import { useState } from "react";
-import { Star, X, CheckCircle2 } from "lucide-react";
+import { Star, X, CheckCircle2, Loader2 } from "lucide-react";
 import type { AppointmentReview, Appointment } from "./AppointmentTypes";
 import { ImageWithFallback } from "../../figma/ImageWithFallback";
 
@@ -11,17 +11,26 @@ export function ReviewModal({
 }: {
   appointment: Appointment;
   onClose: () => void;
-  onSubmit: (review: AppointmentReview) => void;
+  onSubmit: (review: AppointmentReview) => Promise<void>;
 }) {
   const [rating, setRating] = useState(0);
   const [hovered, setHovered] = useState(0);
   const [comment, setComment] = useState("");
   const [submitted, setSubmitted] = useState(false);
+  const [submitting, setSubmitting] = useState(false);
 
-  const handleSubmit = () => {
-    if (rating === 0) return;
-    onSubmit({ rating, comment });
-    setSubmitted(true);
+  const handleSubmit = async () => {
+    if (rating === 0 || submitting) return;
+
+    setSubmitting(true);
+    try {
+      await onSubmit({ rating, comment });
+      setSubmitted(true);
+    } catch {
+      // Parent shows the error toast.
+    } finally {
+      setSubmitting(false);
+    }
   };
 
   if (submitted) {
@@ -68,7 +77,8 @@ export function ReviewModal({
               onMouseEnter={() => setHovered(s)}
               onMouseLeave={() => setHovered(0)}
               onClick={() => setRating(s)}
-              className="transition-transform hover:scale-110"
+              disabled={submitting}
+              className="transition-transform hover:scale-110 disabled:opacity-50"
             >
               <Star className={`w-8 h-8 ${(hovered || rating) >= s ? "fill-amber-400 text-amber-400" : "text-gray-300"}`} />
             </button>
@@ -78,15 +88,24 @@ export function ReviewModal({
           value={comment}
           onChange={(e) => setComment(e.target.value)}
           rows={3}
+          maxLength={1000}
           placeholder="Share your experience (optional)..."
-          className="w-full px-4 py-3 bg-input-background border border-border rounded-xl focus:outline-none focus:ring-2 focus:ring-primary resize-none text-sm mb-4"
+          disabled={submitting}
+          className="w-full px-4 py-3 bg-input-background border border-border rounded-xl focus:outline-none focus:ring-2 focus:ring-primary resize-none text-sm mb-4 disabled:opacity-50"
         />
         <button
           onClick={handleSubmit}
-          disabled={rating === 0}
-          className="w-full bg-primary text-white py-2.5 rounded-xl hover:bg-primary/90 transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
+          disabled={rating === 0 || submitting}
+          className="w-full bg-primary text-white py-2.5 rounded-xl hover:bg-primary/90 transition-colors disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center gap-2"
         >
-          Submit Review
+          {submitting ? (
+            <>
+              <Loader2 className="w-4 h-4 animate-spin" />
+              Submitting...
+            </>
+          ) : (
+            "Submit Review"
+          )}
         </button>
       </div>
     </div>

@@ -1,4 +1,6 @@
-export type UserRole = "patient" | "doctor" | "nurse";
+export type UserRole = "patient" | "doctor" | "nurse" | "admin";
+
+export type VerificationStatus = "pending" | "approved" | "rejected";
 
 export interface Certificate {
   id: string;
@@ -7,6 +9,7 @@ export interface Certificate {
   issueDate: string;
   fileUrl?: string;
   verified: boolean;
+  status?: VerificationStatus;
 }
 
 export interface DiseaseRecord {
@@ -24,9 +27,22 @@ export interface User {
   email: string;
   role: UserRole;
   avatar?: string;
+  phone?: string;
   specialty?: string;
   experience?: string;
   location?: string;
+  bio?: string;
+  verificationStatus?: VerificationStatus;
+  specialistId?: string;
+  homeVisit?: boolean;
   certificates?: Certificate[];
   diseaseHistory?: DiseaseRecord[];
+  availableSlots?: AvailableSlot[];
+  pendingProfileUpdates?: Partial<Pick<User, "bio" | "location" | "specialty">>;
+}
+
+export interface AvailableSlot {
+  day: string;
+  startTime: string;
+  endTime: string;
 }

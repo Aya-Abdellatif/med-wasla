@@ -4,25 +4,31 @@ import {
   getAllSpecialists,
   getSpecialistById,
   getSpecialistsBySpecialization,
+  getMe,
   updateProfile,
+  addCertificate,
   updateAvailability,
   updateFees,
 } from "./specialists.controller.js";
 
 const router = Router();
 
-// ─── Public Routes ────────────────────────────────────────────────────────────
+const requireSpecialist = [
+  protect,
+  restrictTo("specialist"),
+] as const;
 
 router.get("/", getAllSpecialists);
+
 router.get("/specialization/:name", getSpecialistsBySpecialization);
+
+router.get("/me", ...requireSpecialist, getMe);
+router.post("/me/certificates", ...requireSpecialist, addCertificate);
+
+router.put("/profile", ...requireSpecialist, updateProfile);
+router.put("/availability", ...requireSpecialist, updateAvailability);
+router.put("/fees", ...requireSpecialist, updateFees);
+
 router.get("/:id", getSpecialistById);
-
-// ─── Protected Routes (specialist only) ──────────────────────────────────────
-
-router.use(protect, restrictTo("specialist"));
-
-router.put("/profile", updateProfile);
-router.put("/availability", updateAvailability);
-router.put("/fees", updateFees);
 
 export default router;

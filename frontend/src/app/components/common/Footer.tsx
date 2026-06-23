@@ -22,13 +22,11 @@ function Footer() {
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-8 mb-12">
           <div className="space-y-4">
             <div className="flex items-center gap-3">
-              <svg
-                className="h-8 w-8 text-white animate-pulse"
-                fill="currentColor"
-                viewBox="0 0 24 24"
-              >
-                <path d="M19 10.5h-5.5V5c0-.83-.67-1.5-1.5-1.5s-1.5.67-1.5 1.5v5.5H5c-.83 0-1.5.67-1.5 1.5s.67 1.5 1.5 1.5h5.5V19c0 .83.67 1.5 1.5 1.5s1.5-.67 1.5-1.5v-5.5H19c.83 0 1.5-.67 1.5-1.5s-.67-1.5-1.5-1.5z" />
-              </svg>
+              <img
+                src="src/assets/Logo.png"
+                alt="Logo"
+                className="w-20 h-17 -mr-6 transition-transform duration-300"
+              />
               <span className="text-2xl font-medium tracking-tight text-white">
                 <span>Med</span>
                 <span className="text-primary font-bold">Wasla</span>
@@ -145,15 +143,15 @@ function Footer() {
             </h3>
             <div className="space-y-3 text-base font-semibold text-white/80">
               <div className="flex items-center gap-3">
-                <Phone className="h-5 w-5 text-primary flex-shrink-0" />
+                <Phone className="h-5 w-5 text-primary shrink-0" />
                 <span>+20 123 456 7890</span>
               </div>
               <div className="flex items-center gap-3">
-                <Mail className="h-5 w-5 text-primary flex-shrink-0" />
+                <Mail className="h-5 w-5 text-primary shrink-0" />
                 <span>support@medwasla.com</span>
               </div>
               <div className="flex items-center gap-3">
-                <MapPin className="h-5 w-5 text-primary flex-shrink-0" />
+                <MapPin className="h-5 w-5 text-primary shrink-0" />
                 <span>Alexandria, Egypt</span>
               </div>
             </div>

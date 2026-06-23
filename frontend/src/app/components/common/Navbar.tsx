@@ -1,8 +1,16 @@
 import { useState, useEffect, useRef } from "react";
-import { LogOut, CalendarDays } from "lucide-react";
+import {
+  LogOut,
+  CalendarDays,
+  UserCircle,
+  LogIn,
+  UserPlus,
+} from "lucide-react";
 import { Link, useNavigate } from "react-router-dom";
 import { AppointmentTypeModal } from "../booking/AppointmentTypeModal";
 import { useAuth } from "../../context/useAuth";
+import { getSpecialistDisplayName } from "../../../utils/displayName";
+import { showInfo } from "../../../utils/toast";
 
 function Navbar() {
   const [isOpen, setIsOpen] = useState(false);
@@ -11,28 +19,31 @@ function Navbar() {
   const [isFirstClick, setIsFirstClick] = useState(true);
   const [isAppointmentModalOpen, setIsAppointmentModalOpen] = useState(false);
   const navigate = useNavigate();
-  const { user } = useAuth();
+  const { user, logout, isAuthenticated } = useAuth();
 
-  // Role-based navigation links
   const isDoctor = user?.role === "doctor" || user?.role === "nurse";
+  const displayName = getSpecialistDisplayName(user?.name);
 
   const navLinks = isDoctor
     ? [
-        { name: "UI Design", path: "#" },
-        { name: "Home", path: "/home" },
+        { name: "Home", path: "/" },
         { name: "About", path: "/about" },
         { name: "Contact", path: "/contact" },
+        { name: "Dashboard", path: "/dashboard" },
       ]
     : [
-        { name: "Home", path: "/home" },
+        { name: "Home", path: "/" },
         { name: "Services", path: "/services" },
         { name: "Doctors", path: "/doctors" },
         { name: "Nurses", path: "/nurses" },
         { name: "About", path: "/about" },
         { name: "Contact Us", path: "/contact" },
+        { name: "Profile", path: "/profile" },
       ];
+
   const containerRef = useRef<HTMLDivElement | null>(null);
   const linksRef = useRef<Record<string, HTMLElement | null>>({});
+
   useEffect(() => {
     if (!active) return;
     const el = linksRef.current[active];
@@ -46,47 +57,51 @@ function Navbar() {
       });
     }
   }, [active]);
+
   const handleLinkClick = (name: string) => {
     if (active !== null) {
       setIsFirstClick(false);
     }
     setActive(name);
   };
+
   const handleLogoClick = () => {
     setActive(null);
     setIsFirstClick(true);
   };
+
+  const handleLogout = () => {
+    logout();
+    showInfo("Logged out successfully", { userName: user?.name });
+    navigate("/");
+  };
+
   return (
     <>
       <nav className="bg-white shadow-md sticky top-0 z-50">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
           <div className="flex h-20 items-center gap-6">
             <Link
-              to="/home"
+              to="/"
               onClick={handleLogoClick}
-              className="flex items-center gap-3 shrink-0 cursor-pointer group"
+              className="flex items-center shrink-0 cursor-pointer group"
             >
-              {/* <svg
-                className="h-8 w-8 text-primary transition-transform duration-300 group-hover:scale-105"
-                fill="currentColor"
-                viewBox="0 0 24 24"
-              >
-                <path d="M19 10.5h-5.5V5c0-.83-.67-1.5-1.5-1.5s-1.5.67-1.5 1.5v5.5H5c-.83 0-1.5.67-1.5 1.5s.67 1.5 1.5 1.5h5.5V19c0 .83.67 1.5 1.5 1.5s1.5-.67 1.5-1.5v-5.5H19c.83 0 1.5-.67 1.5-1.5s-.67-1.5-1.5-1.5z" />
-              </svg> */}
               <img
-                src="src/assets/logo.png"
+                src="src/assets/Logo.png"
                 alt="Logo"
-                className="w-10 h-10 "
+                className="w-20 h-17 -mr-4 transition-transform duration-300"
               />
               <span className="text-3xl font-medium tracking-tight">
                 <span className="text-fg">Med</span>
                 <span className="text-primary font-bold">Wasla</span>
               </span>
             </Link>
-            <div className="hidden xl:block h-6 w-px bg-border shrink-0" />
+
+            <div className="hidden lg:block h-6 w-px bg-border shrink-0" />
+
             <div
               ref={containerRef}
-              className="hidden xl:flex items-center gap-1 flex-1 relative h-full"
+              className="hidden lg:flex items-center justify-center gap-1 flex-1 relative h-full"
             >
               {active && (
                 <div
@@ -117,32 +132,48 @@ function Navbar() {
                 </Link>
               ))}
             </div>
-            <div className="hidden xl:flex items-center gap-4 ml-auto shrink-0">
-              {isDoctor ? (
+
+            <div className="hidden lg:flex items-center gap-2 shrink-0">
+              {isDoctor && displayName && (
+                <div className="flex items-center gap-2 text-lg font-semibold text-fg px-3 py-1.5 rounded-full bg-muted">
+                  <UserCircle
+                    className="h-6 w-6 text-primary shrink-0"
+                    strokeWidth={2}
+                  />
+                  <span>{displayName}</span>
+                </div>
+              )}
+              {isAuthenticated ? (
+                <button
+                  onClick={handleLogout}
+                  className="group flex items-center gap-2 bg-primary text-white border-2 border-primary font-bold text-base px-4 py-2 rounded-xl cursor-pointer transition-all duration-300 ease-in-out hover:border-primary hover:-translate-y-0.5 hover:bg-transparent hover:text-primary hover:shadow-md whitespace-nowrap"
+                >
+                  <LogOut className="h-5 w-5" strokeWidth={2.5} />
+                  Logout
+                </button>
+              ) : (
                 <>
                   <Link
-                    to="/dashboard"
-                    className="text-lg font-semibold text-fg-muted hover:text-primary transition-colors duration-300"
+                    to="/login"
+                    className="group flex items-center gap-2 bg-transparent text-primary border-2 border-primary font-bold text-base px-4 py-2 rounded-xl cursor-pointer transition-all duration-300 ease-in-out hover:border-primary hover:-translate-y-0.5 hover:bg-primary hover:text-white hover:shadow-md whitespace-nowrap"
                   >
-                    Dashboard
+                    <LogIn className="h-5 w-5" strokeWidth={2.5} />
+                    Login
                   </Link>
-                  <span className="text-lg font-semibold text-fg-muted">
-                    {user?.role === "doctor" ? "Dr." : "Nurse"}{" "}
-                    {user?.name?.split(" ")[0]}
-                  </span>
+                  <Link
+                    to="/signup"
+                    className="group flex items-center gap-2 bg-primary text-white border-2 border-primary font-bold text-base px-4 py-2 rounded-xl cursor-pointer transition-all duration-300 ease-in-out hover:border-primary hover:-translate-y-0.5 hover:bg-transparent hover:text-primary hover:shadow-md whitespace-nowrap"
+                  >
+                    <UserPlus className="h-5 w-5" strokeWidth={2.5} />
+                    Sign Up
+                  </Link>
                 </>
-              ) : null}
-              <button
-                onClick={() => navigate("/")}
-                className="flex items-center gap-2 text-lg font-semibold text-fg-muted hover:text-red-500 transition-colors duration-300 cursor-pointer"
-              >
-                <LogOut className="h-5 w-5" strokeWidth={2.5} />
-                Logout
-              </button>
-              {!isDoctor && (
+              )}
+
+              {/* {isAuthenticated && !isDoctor && (
                 <button
                   onClick={() => setIsAppointmentModalOpen(true)}
-                  className="group flex items-center gap-2 bg-primary text-white border-2 border-primary font-bold text-lg px-6 py-3 rounded-xl cursor-pointer transition-all duration-300 ease-in-out hover:-translate-y-0.5 hover:bg-transparent hover:text-primary hover:shadow-md"
+                  className="group flex items-center gap-2 bg-primary text-white border-2 border-primary font-bold text-base px-4 py-2 rounded-xl cursor-pointer transition-all duration-300 ease-in-out hover:-translate-y-0.5 hover:bg-transparent hover:text-primary hover:shadow-md whitespace-nowrap"
                 >
                   <CalendarDays
                     className="h-5 w-5 text-brand-teal group-hover:text-primary transition-colors duration-300"
@@ -150,12 +181,14 @@ function Navbar() {
                   />
                   Book Appointment
                 </button>
-              )}
+              )} */}
             </div>
-            <div className="xl:hidden ml-auto">
+
+            <div className="lg:hidden ml-auto relative">
               <button
                 onClick={() => setIsOpen(!isOpen)}
-                className="text-primary cursor-pointer transition-colors duration-300"
+                className="text-primary cursor-pointer transition-colors duration-300 hover:text-primary/80"
+                aria-label="Toggle menu"
               >
                 {isOpen ? (
                   <svg
@@ -187,69 +220,84 @@ function Navbar() {
                   </svg>
                 )}
               </button>
+
+              {isOpen && (
+                <div className="absolute right-0 top-12 w-72 max-w-[calc(100vw-2rem)] bg-white rounded-xl shadow-xl border border-border p-4 space-y-2 z-50">
+                  {navLinks.map(({ name, path }) => (
+                    <Link
+                      key={name}
+                      to={path}
+                      onClick={() => {
+                        handleLinkClick(name);
+                        setIsOpen(false);
+                      }}
+                      className={`block text-base font-semibold px-4 py-2.5 rounded-lg transition-all duration-300 ease-in-out ${
+                        active === name
+                          ? "text-primary bg-primary/10"
+                          : "text-fg-muted hover:text-fg hover:bg-muted"
+                      }`}
+                    >
+                      {name}
+                    </Link>
+                  ))}
+                  <div className="pt-3 border-t border-border space-y-3">
+                    {isDoctor && displayName && (
+                      <div className="flex items-center gap-2 text-base font-semibold text-fg px-4 py-2 rounded-lg bg-muted">
+                        <UserCircle
+                          className="h-5 w-5 text-primary shrink-0"
+                          strokeWidth={2}
+                        />
+                        <span>{displayName}</span>
+                      </div>
+                    )}
+
+                    {isAuthenticated ? (
+                      <button
+                        onClick={handleLogout}
+                        className="group flex items-center justify-center gap-2 w-full bg-transparent text-primary border-2 border-primary font-bold text-base px-4 py-2 rounded-xl cursor-pointer transition-all duration-300 ease-in-out hover:border-primary hover:-translate-y-0.5 hover:bg-primary hover:text-white hover:shadow-md whitespace-nowrap"
+                      >
+                        <LogOut className="h-5 w-5" strokeWidth={2.5} />
+                        Logout
+                      </button>
+                    ) : (
+                      <>
+                        <Link
+                          to="/login"
+                          onClick={() => setIsOpen(false)}
+                          className="group flex items-center justify-center gap-2 w-full bg-transparent text-primary border-2 border-primary font-bold text-base px-4 py-2 rounded-xl cursor-pointer transition-all duration-300 ease-in-out hover:border-primary hover:-translate-y-0.5 hover:bg-primary hover:text-white hover:shadow-md whitespace-nowrap"
+                        >
+                          <LogIn className="h-5 w-5" strokeWidth={2.5} />
+                          Login
+                        </Link>
+                        <Link
+                          to="/signup"
+                          onClick={() => setIsOpen(false)}
+                          className="group flex items-center justify-center gap-2 w-full bg-primary text-white border-2 border-primary font-bold text-base px-4 py-2 rounded-xl cursor-pointer transition-all duration-300 ease-in-out hover:border-primary hover:-translate-y-0.5 hover:bg-transparent hover:text-primary hover:shadow-md whitespace-nowrap"
+                        >
+                          <UserPlus className="h-5 w-5" strokeWidth={2.5} />
+                          Sign Up
+                        </Link>
+                      </>
+                    )}
+
+                    {isAuthenticated && !isDoctor && (
+                      <button
+                        onClick={() => setIsAppointmentModalOpen(true)}
+                        className="group flex items-center justify-center gap-2 w-full bg-primary text-white border-2 border-primary font-bold text-base px-4 py-2 rounded-xl cursor-pointer transition-all duration-300 ease-in-out hover:border-primary hover:-translate-y-0.5 hover:bg-transparent hover:text-primary hover:shadow-md whitespace-nowrap"
+                      >
+                        <CalendarDays
+                          className="h-5 w-5 text-brand-teal group-hover:text-primary transition-colors duration-300"
+                          strokeWidth={2.5}
+                        />
+                        Book Appointment
+                      </button>
+                    )}
+                  </div>
+                </div>
+              )}
             </div>
           </div>
         </div>
-        {isOpen && (
-          <div className="xl:hidden bg-muted border-t border-border px-4 py-4 space-y-2">
-            {navLinks.map(({ name, path }) => (
-              <Link
-                key={name}
-                to={path}
-                onClick={() => {
-                  handleLinkClick(name);
-                  setIsOpen(false);
-                }}
-                className={`block text-xl font-semibold px-4 py-2.5 rounded-lg transition-all duration-300 ease-in-out ${
-                  active === name
-                    ? "text-primary bg-primary/10"
-                    : "text-fg-muted hover:text-fg hover:bg-white pl-6"
-                }`}
-              >
-                {name}
-              </Link>
-            ))}
-            <div className="pt-3 border-t border-border space-y-3">
-              {isDoctor && (
-                <>
-                  <div className="text-lg font-semibold text-fg-muted px-4 py-2">
-                    +1 (234) 567-890
-                  </div>
-                  <Link
-                    to="/dashboard"
-                    onClick={() => setIsOpen(false)}
-                    className="block text-lg font-semibold text-fg-muted hover:text-primary px-4 py-2.5 rounded-lg transition-colors duration-300"
-                  >
-                    Dashboard
-                  </Link>
-                  <div className="text-lg font-semibold text-fg-muted px-4 py-2">
-                    {user?.role === "doctor" ? "Dr." : "Nurse"}{" "}
-                    {user?.name?.split(" ")[0]}
-                  </div>
-                </>
-              )}
-              <button
-                onClick={() => navigate("/")}
-                className="flex items-center gap-2 w-full text-xl font-semibold text-fg-muted hover:text-red-500 px-4 py-2.5 rounded-lg transition-colors duration-300 cursor-pointer"
-              >
-                <LogOut className="h-5 w-5" strokeWidth={2.5} />
-                Logout
-              </button>
-              {!isDoctor && (
-                <button
-                  onClick={() => setIsAppointmentModalOpen(true)}
-                  className="group flex items-center justify-center gap-2 w-full bg-primary text-white border-2 border-primary font-bold text-base px-4 py-3 rounded-xl transition-all duration-300 hover:-translate-y-0.5 hover:bg-transparent hover:text-primary cursor-pointer"
-                >
-                  <CalendarDays
-                    className="h-5 w-5 text-brand-teal group-hover:text-primary transition-colors duration-300"
-                    strokeWidth={2.5}
-                  />
-                  Book Appointment
-                </button>
-              )}
-            </div>
-          </div>
-        )}
       </nav>
       <AppointmentTypeModal
         isOpen={isAppointmentModalOpen}
@@ -258,4 +306,5 @@ function Navbar() {
     </>
   );
 }
+
 export default Navbar;

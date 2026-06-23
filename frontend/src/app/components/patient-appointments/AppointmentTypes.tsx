@@ -8,6 +8,7 @@ export interface AppointmentReview {
 
 export interface Appointment {
     id: string;
+    specialistId: string;
     doctor: {
         name: string;
         specialty: string;

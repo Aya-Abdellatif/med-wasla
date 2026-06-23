@@ -155,6 +155,99 @@ describe("Reviews Routes", () => {
 
       expect(res.status).toBe(409);
     });
+
+    it("returns 403 when appointment belongs to another patient", async () => {
+      const patient = await createPatient();
+      const otherPatient = await createPatient("other@test.com");
+      const { specialist } = await createSpecialist();
+      const appointment = await createAppointment(idOf(patient), idOf(specialist));
+      const token = createToken(idOf(otherPatient), "patient");
+
+      const res = await request(app)
+        .post("/api/reviews")
+        .set("Authorization", `Bearer ${token}`)
+        .send({
+          specialistId: idOf(specialist),
+          appointmentId: idOf(appointment),
+          rating: 5,
+        });
+
+      expect(res.status).toBe(403);
+    });
+
+    it("returns 400 when appointment is not completed", async () => {
+      const patient = await createPatient();
+      const { specialist } = await createSpecialist();
+      const appointment = await Appointment.create({
+        patientId: patient._id,
+        specialistId: specialist._id,
+        date: new Date(),
+        type: "clinic",
+        status: "pending",
+      });
+      const token = createToken(idOf(patient), "patient");
+
+      const res = await request(app)
+        .post("/api/reviews")
+        .set("Authorization", `Bearer ${token}`)
+        .send({
+          specialistId: idOf(specialist),
+          appointmentId: idOf(appointment),
+          rating: 5,
+        });
+
+      expect(res.status).toBe(400);
+    });
+
+    it("returns 400 when specialist does not match appointment", async () => {
+      const patient = await createPatient();
+      const { specialist } = await createSpecialist();
+      const otherUser = await createUser("specialist", "other-doctor@test.com");
+      const otherSpecialist = await MedicalSpecialist.create({
+        userId: otherUser._id,
+        specialistType: "doctor",
+        specialization: "Dermatology",
+        homeVisit: false,
+        licenseNumber: "LIC-99999",
+        verificationStatus: "approved",
+      });
+      const appointment = await createAppointment(idOf(patient), idOf(specialist));
+      const token = createToken(idOf(patient), "patient");
+
+      const res = await request(app)
+        .post("/api/reviews")
+        .set("Authorization", `Bearer ${token}`)
+        .send({
+          specialistId: idOf(otherSpecialist),
+          appointmentId: idOf(appointment),
+          rating: 5,
+        });
+
+      expect(res.status).toBe(400);
+    });
+
+    it("updates specialist rating and review count after create", async () => {
+      const patient = await createPatient();
+      const { specialist } = await createSpecialist();
+      const appointment = await createAppointment(idOf(patient), idOf(specialist));
+      const token = createToken(idOf(patient), "patient");
+
+      const res = await request(app)
+        .post("/api/reviews")
+        .set("Authorization", `Bearer ${token}`)
+        .send({
+          specialistId: idOf(specialist),
+          appointmentId: idOf(appointment),
+          rating: 5,
+          comment: "Great doctor",
+        });
+
+      expect(res.status).toBe(201);
+
+      const updatedSpecialist = await MedicalSpecialist.findById(specialist._id);
+      expect(updatedSpecialist?.reviewCount).toBe(1);
+      expect(updatedSpecialist?.rating).toBe(5);
+    });
   });
 
   describe("GET /api/reviews/specialist/:id", () => {
