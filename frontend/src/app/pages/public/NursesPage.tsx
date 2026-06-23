@@ -174,7 +174,7 @@ export function Nurses() {
         </div>
       </section>
 
-      <section className="py-20 bg-secondary text-white">
+      {/* <section className="py-20 bg-secondary text-white">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 text-center">
           <Heart className="w-12 h-12 mx-auto mb-6 text-pink-300" />
           <h2 className="text-3xl md:text-4xl font-bold mb-6">Need Home Healthcare?</h2>
@@ -189,7 +189,7 @@ export function Nurses() {
             <span>Contact Us</span>
           </Link>
         </div>
-      </section>
+      </section> */}
 
       <BookingModal
         isOpen={isBookingModalOpen}
