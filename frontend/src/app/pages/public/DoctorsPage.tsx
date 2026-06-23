@@ -63,12 +63,12 @@ export function Doctors() {
   }, [searchInput]);
 
   // any filter change resets back to page 1
-  useEffect(() => {
-    setPage(1);
-  }, [debouncedSearch, selectedSpecialty, sortIndex]);
+  // useEffect(() => {
+  //   setPage(1);
+  // }, [debouncedSearch, selectedSpecialty, sortIndex]);
 
   useEffect(() => {
-    setLoading(true);
+    // setLoading(true);
     const { sortBy, sortOrder } = SORT_OPTIONS[sortIndex];
 
     fetchApprovedSpecialists("doctor", {
@@ -133,7 +133,11 @@ export function Doctors() {
               <input
                 type="text"
                 value={searchInput}
-                onChange={(e) => setSearchInput(e.target.value)}
+                onChange={(e) => {
+                  setSearchInput(e.target.value);
+                  setPage(1);
+                  setLoading(true);
+                }}
                 placeholder="Search by name, bio, or specialization..."
                 className="w-full pl-10 pr-4 py-2.5 rounded-2xl border border-border focus:outline-none focus:ring-2 focus:ring-primary/80"
               />
@@ -142,7 +146,11 @@ export function Doctors() {
             <div className="relative">
               <select
                 value={sortIndex}
-                onChange={(e) => setSortIndex(Number(e.target.value))}
+                onChange={(e) => {
+                  setSortIndex(Number(e.target.value));
+                  setPage(1);
+                  setLoading(true);
+                }}
                 className="appearance-none px-4 py-2.5 pr-10 rounded-2xl border border-border bg-white focus:outline-none focus:ring-2 focus:ring-primary/80"
               >
                 {SORT_OPTIONS.map((opt, idx) => (
@@ -164,7 +172,11 @@ export function Doctors() {
             {specialties.map((specialty) => (
               <button
                 key={specialty}
-                onClick={() => setSelectedSpecialty(specialty)}
+                onClick={() => {
+                  setSelectedSpecialty(specialty);
+                  setPage(1);
+                  setLoading(true);
+                }}
                 className={`px-6 py-2.5 rounded-lg transition-all ${
                   selectedSpecialty === specialty
                     ? "bg-primary text-white shadow-md"
