@@ -8,7 +8,7 @@ import ChatMessage from "./ChatMessage";
 import ChatInput from "./ChatInput";
 import ChatHistory from "./ChatHistory";
 
-import type { Chat, Message } from "../../../types/chat.types";
+import type { Chat } from "../../../types/chat.types";
 
 function ChatBot() {
   const { isOpen, openChatBot, closeChatBot } = useChatBot();
@@ -19,105 +19,150 @@ function ChatBot() {
   const [selectedChatId, setSelectedChatId] = useState<string | null>(null);
 
   const [showHistory, setShowHistory] = useState(false);
+  const [isLoading, setIsLoading] = useState(false);
 
   const currentChat = chats.find((c) => c.id === selectedChatId);
+
+  const isFirstUserMessage =
+    currentChat?.messages.length === 1;
 
   // ---------------- CREATE FIRST CHAT ----------------
   useEffect(() => {
     createNewChat();
   }, []);
 
-const createNewChat = () => {
-  const newIndex = chats.length + 1;
+  const createNewChat = () => {
+    const newChat: Chat = {
+      id: crypto.randomUUID(),
+      title: `Chat ${chats.length + 1}`,
+      messages: [
+        {
+          sender: "ai",
+          text: "Hi! I am WaslaBot. How can I help you today?",
+        },
+      ],
+    };
 
-  const newChat: Chat = {
-    id: crypto.randomUUID(),
-    title: `Chat ${newIndex}`,
-    messages: [
-      {
-        sender: "ai",
-        text: "Hi! I am WaslaBot. How can I help you today?",
-      },
-    ],
+    setChats((prev) => [newChat, ...prev]);
+    setSelectedChatId(newChat.id);
   };
-
-  setChats((prev) => [newChat, ...prev]);
-  setSelectedChatId(newChat.id);
-};
 
   // ---------------- SEND MESSAGE ----------------
-  const handleSend = async () => {
-    if (!message.trim() || !selectedChatId) return;
+const handleSend = async () => {
+  if (!message.trim() || !selectedChatId) return;
 
-    const userMessage = message;
-    setMessage("");
+  const userMessage = message;
+  setMessage("");
+setChats((prev) =>
+  prev.map((chat) => {
+    if (chat.id !== selectedChatId) return chat;
 
-    // USER MESSAGE
+    // if this is first user interaction (only AI welcome exists)
+    if (
+      chat.messages.length === 1 &&
+      chat.messages[0].sender === "ai"
+    ) {
+      return {
+        ...chat,
+        messages: [],
+      };
+    }
+
+    return chat;
+  })
+);
+
+  // 1️⃣ ADD USER MESSAGE FIRST
+  setChats((prev) =>
+    prev.map((chat) =>
+      chat.id === selectedChatId
+        ? {
+            ...chat,
+            messages: [
+              ...chat.messages,
+              {
+                sender: "user" as const,
+                text: userMessage,
+              },
+            ],
+          }
+        : chat
+    )
+  );
+
+  // 2️⃣ THEN ADD "THINKING..." AFTER USER MESSAGE
+  setChats((prev) =>
+    prev.map((chat) =>
+      chat.id === selectedChatId
+        ? {
+            ...chat,
+            messages: [
+              ...chat.messages,
+              {
+                sender: "ai" as const,
+                text: "Thinking...",
+              },
+            ],
+          }
+        : chat
+    )
+  );
+
+  setIsLoading(true);
+
+  try {
+    // 3️⃣ GET AI RESPONSE
+    const aiReply = await sendMessageToAI(userMessage);
+
+    // 4️⃣ REPLACE "THINKING..." WITH AI RESPONSE
     setChats((prev) =>
-      prev.map((chat) =>
-        chat.id === selectedChatId
-          ? {
-              ...chat,
-              messages: [
-                ...chat.messages,
-                {
-                  sender: "user" as const,
-                  text: userMessage,
-                },
-              ],
-            }
-          : chat
-      )
+      prev.map((chat) => {
+        if (chat.id !== selectedChatId) return chat;
+
+        const updatedMessages = [...chat.messages];
+
+        // remove last message (Thinking...)
+        updatedMessages.pop();
+
+        return {
+          ...chat,
+          messages: [
+            ...updatedMessages,
+            {
+              sender: "ai" as const,
+              text: aiReply,
+            },
+          ],
+        };
+      })
     );
 
-    try {
-      const aiReply = await sendMessageToAI(userMessage);
+    setIsLoading(false);
+  } catch (error) {
+    setChats((prev) =>
+      prev.map((chat) => {
+        if (chat.id !== selectedChatId) return chat;
 
-      setChats((prev) => {
-        const updated = prev.map((chat) =>
-          chat.id === selectedChatId
-            ? {
-                ...chat,
-                messages: [
-                  ...chat.messages,
-                  {
-                    sender: "ai" as const,
-                    text: aiReply,
-                  },
-                ],
-              }
-            : chat
-        );
+        const updatedMessages = [...chat.messages];
 
-        // MOVE ACTIVE CHAT TO TOP
-        const activeChat = updated.find(
-          (c) => c.id === selectedChatId
-        );
-        const others = updated.filter(
-          (c) => c.id !== selectedChatId
-        );
+        updatedMessages.pop(); // remove Thinking...
 
-        return activeChat ? [activeChat, ...others] : updated;
-      });
-    } catch (error) {
-      setChats((prev) =>
-        prev.map((chat) =>
-          chat.id === selectedChatId
-            ? {
-                ...chat,
-                messages: [
-                  ...chat.messages,
-                  {
-                    sender: "ai" as const,
-                    text: "Something went wrong.",
-                  },
-                ],
-              }
-            : chat
-        )
-      );
-    }
-  };
+        return {
+          ...chat,
+          messages: [
+            ...updatedMessages,
+            {
+              sender: "ai" as const,
+              text: "Something went wrong.",
+            },
+          ],
+        };
+      })
+    );
+
+    setIsLoading(false);
+  }
+};
 
   return (
     <>

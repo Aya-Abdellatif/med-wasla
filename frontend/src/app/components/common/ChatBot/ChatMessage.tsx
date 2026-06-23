@@ -4,12 +4,21 @@ interface ChatMessageProps {
 }
 
 function ChatMessage({ sender, text }: ChatMessageProps) {
+  // ✅ SPECIAL CASE: Thinking message
+  if (text === "Thinking...") {
+    return (
+      <div className="mb-3 text-left">
+        <div className="inline-block px-3 py-2 rounded-xl bg-white text-xs text-gray-400 italic">
+          ● ● ● thinking
+        </div>
+      </div>
+    );
+  }
+
   return (
     <div
       className={`mb-3 ${
-        sender === "user"
-          ? "text-right"
-          : "text-left"
+        sender === "user" ? "text-right" : "text-left"
       }`}
     >
       <div
