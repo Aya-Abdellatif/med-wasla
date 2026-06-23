@@ -20,7 +20,6 @@ import whyImg from "/src/assets/trust.jpg";
 import sarah from "/src/assets/sarah.avif";
 import michael from "/src/assets/micheal.png";
 import emily from "/src/assets/emily.jpg";
-
 function useCounter(target: number, duration: number = 2000) {
   const [count, setCount] = useState<number>(0);
 

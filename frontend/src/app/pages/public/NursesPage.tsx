@@ -1,5 +1,5 @@
 import { useEffect, useState } from "react";
-import { Award, Calendar, Star, MapPin, Heart, Phone, Eye } from "lucide-react";
+import { Award, Calendar, Star, MapPin, Heart, Eye } from "lucide-react";
 import { BookingModal } from "../../components/booking/BookingModal";
 import { Link } from "react-router";
 import { fetchApprovedSpecialists, type SpecialistCard } from "../../../utils/specialistMapper";
@@ -174,7 +174,7 @@ export function Nurses() {
         </div>
       </section>
 
-      <section className="py-20 bg-secondary text-white">
+      {/* <section className="py-20 bg-secondary text-white">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 text-center">
           <Heart className="w-12 h-12 mx-auto mb-6 text-pink-300" />
           <h2 className="text-3xl md:text-4xl font-bold mb-6">Need Home Healthcare?</h2>
@@ -189,7 +189,7 @@ export function Nurses() {
             <span>Contact Us</span>
           </Link>
         </div>
-      </section>
+      </section> */}
 
       <BookingModal
         isOpen={isBookingModalOpen}
