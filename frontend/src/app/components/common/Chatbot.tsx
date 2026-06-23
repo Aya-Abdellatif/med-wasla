@@ -130,17 +130,17 @@ function ChatBot() {
           </p>
 
         <div className="px-4 py-4 border-t border-border flex items-center gap-2 shrink-0">
-<input
-  type="text"
-  value={message}
-  onChange={(e) => setMessage(e.target.value)}
-  placeholder="Type a message..."
-  className="flex-1 text-sm px-4 py-2.5 rounded-xl border border-border bg-muted text-fg placeholder:text-fg-muted focus:outline-none focus:border-primary transition-colors"
-/>
-<button 
-  onClick={handleSend}
-  className="h-10 w-10 rounded-xl bg-primary hover:bg-primary-deep text-white flex items-center justify-center transition-colors cursor-pointer shrink-0"
->
+            <input
+              type="text"
+              value={message}
+              onChange={(e) => setMessage(e.target.value)}
+              placeholder="Type a message..."
+              className="flex-1 text-sm px-4 py-2.5 rounded-xl border border-border bg-muted text-fg placeholder:text-fg-muted focus:outline-none focus:border-primary transition-colors"
+            />
+            <button 
+              onClick={handleSend}
+              className="h-10 w-10 rounded-xl bg-primary hover:bg-primary-deep text-white flex items-center justify-center transition-colors cursor-pointer shrink-0"
+            >
             <Send className="h-4 w-4" />
           </button>
         </div>
