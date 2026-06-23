@@ -29,7 +29,8 @@ export const topFeatures: ServiceFeature[] = [
   {
     icon: faShieldHeart,
     title: "Trusted Care",
-    description: "Secure, reliable, and patient-centered healthcare services.",
+    description:
+      "Every healthcare professional here is verified to ensure safe, reliable, and quality care.",
   },
 ];
 
@@ -43,7 +44,7 @@ export const services: ServiceItem[] = [
       "Specialist Search",
       "Online Booking",
       "Appointment Reminders",
-      "Doctor Profiles",
+      "Home Visit Scheduling",
     ],
     color: "bg-teal-50 text-[#14B8A6]",
     image:
@@ -51,14 +52,14 @@ export const services: ServiceItem[] = [
   },
   {
     icon: faUserNurse,
-    title: "Home Visit",
+    title: "Nursing Care",
     description:
       "Schedule professional nursing services at home for follow-up care, monitoring, injections, and medical support.",
     features: [
-      "Home Care Services",
-      "Medication Administration",
-      "Patient Monitoring",
-      "Flexible Scheduling",
+    "Home Nursing Services",
+    "Medication & Injection Support",
+    "Patient Monitoring",
+    "Flexible Nurse Scheduling",
     ],
     color: "bg-blue-50 text-blue-500",
     image:
