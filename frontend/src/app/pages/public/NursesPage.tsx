@@ -1,5 +1,5 @@
 import { useEffect, useState } from "react";
-import { Award, Calendar, Star, MapPin, Heart, Phone, Eye } from "lucide-react";
+import { Award, Calendar, Star, MapPin, Heart, Eye } from "lucide-react";
 import { BookingModal } from "../../components/booking/BookingModal";
 import { Link } from "react-router";
 import { fetchApprovedSpecialists, type SpecialistCard } from "../../../utils/specialistMapper";
