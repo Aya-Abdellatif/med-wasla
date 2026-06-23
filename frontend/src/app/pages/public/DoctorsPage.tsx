@@ -2,7 +2,6 @@ import { Link } from "react-router";
 import {
   GraduationCap,
   CalendarDays,
-  Calendar,
   Star,
   Clock,
   MapPin,
