@@ -12,7 +12,7 @@ import {
 
 
 // ── Team data ── swap placeholders with real info
-export const team = [
+const team = [
   {
     name: "Dr. Sarah Mitchell",
     title: "Chief Medical Officer",
