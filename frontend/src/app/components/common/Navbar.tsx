@@ -11,7 +11,7 @@ import { AppointmentTypeModal } from "../booking/AppointmentTypeModal";
 import { useAuth } from "../../context/useAuth";
 import { getSpecialistDisplayName } from "../../../utils/displayName";
 import { showInfo } from "../../../utils/toast";
-import Logo from "../../../assets/Logo.png";
+import Logo from "../../../assets/logo.png";
 
 function Navbar() {
   const [isOpen, setIsOpen] = useState(false);

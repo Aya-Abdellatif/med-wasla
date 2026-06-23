@@ -1,5 +1,5 @@
 import type { ReactNode } from "react";
-import Logo from "../../../assets/Logo.png";
+import Logo from "../../../assets/logo.png";
 interface AuthLayoutProps {
   title: string;
   subtitle?: string;
