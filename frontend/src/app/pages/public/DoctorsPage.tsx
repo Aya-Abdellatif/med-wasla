@@ -152,7 +152,7 @@ export function Doctors() {
         </div>
       </section>
 
-      <section className="py-20 bg-secondary text-white">
+      {/* <section className="py-20 bg-secondary text-white">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 text-center">
           <h2 className="text-3xl md:text-4xl font-bold mb-6">Ready to Schedule Your Visit?</h2>
           <p className="text-xl text-white/90 mb-8 max-w-2xl mx-auto">
@@ -166,7 +166,7 @@ export function Doctors() {
             <span>Book Appointment</span>
           </Link>
         </div>
-      </section>
+      </section> */}
 
       <BookingModal
         isOpen={isBookingModalOpen}

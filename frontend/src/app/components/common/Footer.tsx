@@ -1,5 +1,5 @@
 import { CalendarDays, Phone, Mail, MapPin } from "lucide-react";
-
+import Logo from "/src/assets/LogoFooter.png";
 function Footer() {
   const companyLinks = [
     "About Us",
@@ -17,13 +17,13 @@ function Footer() {
   ];
 
   return (
-    <footer className="bg-[#1D3BA5] text-white shadow-[0_-4px_10px_rgba(0,0,0,0.1)] mt-auto w-full">
+    <footer className="bg-fg text-white shadow-[0_-4px_10px_rgba(0,0,0,0.1)] mt-auto w-full">
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-12">
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-8 mb-12">
           <div className="space-y-4">
             <div className="flex items-center gap-3">
               <img
-                src="src/assets/Logo.png"
+                src={Logo}
                 alt="Logo"
                 className="w-20 h-17 -mr-6 transition-transform duration-300"
               />

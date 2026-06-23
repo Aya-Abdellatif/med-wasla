@@ -11,6 +11,7 @@ import { AppointmentTypeModal } from "../booking/AppointmentTypeModal";
 import { useAuth } from "../../context/useAuth";
 import { getSpecialistDisplayName } from "../../../utils/displayName";
 import { showInfo } from "../../../utils/toast";
+import Logo from "../../../assets/logo.png";
 
 function Navbar() {
   const [isOpen, setIsOpen] = useState(false);
@@ -87,7 +88,7 @@ function Navbar() {
               className="flex items-center shrink-0 cursor-pointer group"
             >
               <img
-                src="src/assets/Logo.png"
+                src={Logo}
                 alt="Logo"
                 className="w-20 h-17 -mr-4 transition-transform duration-300"
               />
@@ -146,7 +147,7 @@ function Navbar() {
               {isAuthenticated ? (
                 <button
                   onClick={handleLogout}
-                  className="group flex items-center gap-2 bg-primary text-white border-2 border-primary font-bold text-base px-4 py-2 rounded-xl cursor-pointer transition-all duration-300 ease-in-out hover:border-primary hover:-translate-y-0.5 hover:bg-transparent hover:text-primary hover:shadow-md whitespace-nowrap"
+                  className="group flex items-center gap-2 bg-transparent text-primary border-2 border-primary font-bold text-base px-4 py-2 rounded-xl cursor-pointer transition-all duration-300 ease-in-out hover:border-primary hover:-translate-y-0.5 hover:bg-primary hover:text-white hover:shadow-md whitespace-nowrap"
                 >
                   <LogOut className="h-5 w-5" strokeWidth={2.5} />
                   Logout
