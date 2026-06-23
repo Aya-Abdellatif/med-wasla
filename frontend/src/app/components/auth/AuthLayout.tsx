@@ -1,5 +1,5 @@
 import type { ReactNode } from "react";
-
+import Logo from "/src/assets/Logo.png";
 interface AuthLayoutProps {
   title: string;
   subtitle?: string;
@@ -26,7 +26,11 @@ export default function AuthLayout({
       : compact
         ? "max-w-[420px]"
         : "max-w-[520px]";
-  const cardPaddingClass = small ? "p-4" : compact ? "p-5 sm:p-6" : "p-6 sm:p-8";
+  const cardPaddingClass = small
+    ? "p-4"
+    : compact
+      ? "p-5 sm:p-6"
+      : "p-6 sm:p-8";
 
   return (
     <div
@@ -36,9 +40,11 @@ export default function AuthLayout({
     >
       <div className={`w-full ${cardWidthClass}`}>
         <div className="mb-5 flex items-center justify-center gap-3">
-          <div className="flex h-12 w-12 shrink-0 items-center justify-center rounded-2xl bg-teal-500 shadow-md shadow-teal-500/20">
-            <div className="h-5 w-5 rounded-full bg-white" />
-          </div>
+          <img
+            src={Logo}
+            alt="MedWasla Logo"
+            className="w-17 h-15 -mr-6 transition-transform duration-300"
+          />
           <h1 className="text-xl font-semibold">
             <span className="text-slate-900">Med</span>
             <span className="text-teal-500">Wasla</span>
@@ -49,8 +55,14 @@ export default function AuthLayout({
           className={`rounded-3xl border border-slate-100 bg-white shadow-xl shadow-slate-200/50 ${cardPaddingClass}`}
         >
           <div className="mb-5">
-            <h2 className="text-2xl font-bold text-slate-900 sm:text-[1.65rem]">{title}</h2>
-            {subtitle && <p className="mt-1 text-sm text-slate-500 sm:text-base">{subtitle}</p>}
+            <h2 className="text-2xl font-bold text-slate-900 sm:text-[1.65rem]">
+              {title}
+            </h2>
+            {subtitle && (
+              <p className="mt-1 text-sm text-slate-500 sm:text-base">
+                {subtitle}
+              </p>
+            )}
           </div>
           {children}
         </div>
