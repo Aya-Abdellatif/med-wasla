@@ -4,7 +4,6 @@ import {
   CalendarDays,
   Star,
   MapPin,
-  Eye,
   Clock,
 } from "lucide-react";
 import { BookingModal } from "../../components/booking/BookingModal";
