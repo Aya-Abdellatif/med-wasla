@@ -176,15 +176,14 @@ export function Nurses() {
                     <div className="grid grid-cols-2 gap-3 mt-auto">
                       <Link
                         to={`/nurse/${nurse.id}`}
-                        className="flex items-center justify-center gap-2 bg-transparent text-primary border-2 border-primary font-bold px-4 py-2 rounded-xl hover:bg-primary hover:text-white transition"
+                        className="group flex items-center justify-center gap-2 bg-transparent text-primary border-2 border-primary font-bold text-base px-4 py-2 rounded-xl cursor-pointer transition-all duration-300 ease-in-out hover:border-primary hover:-translate-y-0.5 hover:bg-primary hover:text-white hover:shadow-md whitespace-nowrap"
                       >
-                        <Eye className="w-4 h-4" />
                         View Details
                       </Link>
 
                       <button
                         onClick={() => handleBookNurse(nurse)}
-                        className="bg-primary text-white border-2 border-primary font-bold px-4 py-2 rounded-xl hover:bg-transparent hover:text-primary transition"
+                        className="group flex items-center justify-center gap-2 bg-primary text-white border-2 border-primary font-bold text-base px-4 py-2 rounded-xl cursor-pointer transition-all duration-300 ease-in-out hover:border-primary hover:-translate-y-0.5 hover:bg-transparent hover:text-primary hover:shadow-md whitespace-nowrap"
                       >
                         Book Now
                       </button>
