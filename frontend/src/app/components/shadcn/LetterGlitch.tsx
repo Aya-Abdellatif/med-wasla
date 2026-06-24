@@ -177,6 +177,7 @@ const LetterGlitch = ({
   };
 
   const animate = () => {
+    // eslint-disable-next-line react-hooks/purity
     const now = performance.now();
     if (now - lastGlitchTime.current >= glitchSpeed) {
       updateLetters();
