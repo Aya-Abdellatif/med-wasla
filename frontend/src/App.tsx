@@ -28,6 +28,8 @@ import AdminDashboard from "./app/pages/admin/AdminDashboard";
 
 import { ProtectedRoute } from "./app/components/common/ProtectedRoute";
 
+import NotFound from "./app/pages/NotFound";
+
 function App() {
   return (
     <AuthProvider>
@@ -59,6 +61,7 @@ function App() {
               <Route path="/appointments" element={<MyAppointments />} />
             </Route>
           </Route>
+          <Route path="*" element={<NotFound />} />
         </Routes>
       </ChatBotProvider>
     </AuthProvider>
