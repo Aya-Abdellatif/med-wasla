@@ -41,10 +41,11 @@ export interface SpecialistCard {
   specialty: string;
   image: string;
   education: string;
-  experience: string;
+  experience?: string;
   rating: number;
   reviews: number;
-  location: string;
+  location?: string;
+  serviceAreas?: string[];
   availability: string;
   availableSlots?: { day: string; startTime: string; endTime: string }[];
   description: string;
@@ -64,6 +65,7 @@ export interface SpecialistProfile extends SpecialistCard {
 export interface FetchSpecialistsParams {
   search?: string;
   specialization?: string;
+  expertise?: string;
   sortBy?:
     | "rating"
     | "reviewCount"
@@ -94,34 +96,48 @@ function resolveUser(specialist: ApiSpecialist): ApiUserRef {
   return {};
 }
 
+function pickEducationTitle(
+  specialist: ApiSpecialist,
+  type: "doctor" | "nurse",
+): string {
+  const certs = specialist.certifications ?? [];
+  const approved = certs.find((cert) => cert.status === "approved");
+  const chosen = approved ?? certs[0];
+
+  if (chosen?.title) return chosen.title;
+  return type === "doctor" ? "Medical Degree" : "Nursing License";
+}
+
 export function mapSpecialistToCard(
   specialist: ApiSpecialist,
   type: "doctor" | "nurse",
 ): SpecialistCard {
   const user = resolveUser(specialist);
-  const defaultImage =
-    type === "doctor" ? DEFAULT_SPECIALIST_IMAGE : DEFAULT_NURSE_IMAGE;
+  const isDoctor = type === "doctor";
+  const defaultImage = isDoctor
+    ? DEFAULT_SPECIALIST_IMAGE
+    : DEFAULT_NURSE_IMAGE;
 
-  const specialty =
-    type === "doctor"
-      ? (specialist.specialization ?? "General Practice")
-      : (specialist.areasOfExpertise?.[0] ?? "Home Care");
+  const specialty = isDoctor
+    ? (specialist.specialization ?? "General Practice")
+    : (specialist.areasOfExpertise?.[0] ?? "Home Care");
 
   return {
     id: specialist._id,
     name: formatSpecialistName(user.name, type),
     specialty,
     image: user.photoUrl || defaultImage,
-    education: specialist.certifications?.[0]?.title ?? "Medical Degree",
-    experience: specialist.avgWaitMinutes
-      ? `${specialist.avgWaitMinutes} min avg wait`
-      : "Experienced",
+    education: pickEducationTitle(specialist, type),
+    experience:
+      isDoctor && specialist.avgWaitMinutes
+        ? `${specialist.avgWaitMinutes} min avg wait`
+        : undefined,
     rating: specialist.rating ?? 0,
     reviews: specialist.reviewCount ?? 0,
-    location:
-      type === "doctor"
-        ? (specialist.clinicAddress ?? user.address ?? "Cairo")
-        : (user.address ?? specialist.serviceAreas?.[0] ?? "Cairo"),
+    location: isDoctor
+      ? (specialist.clinicAddress ?? user.address ?? "Address not listed")
+      : undefined,
+    serviceAreas: isDoctor ? undefined : (specialist.serviceAreas ?? []),
     availability: specialist.availableSlots?.length
       ? specialist.availableSlots
           .map((slot) => `${slot.day} ${slot.startTime}-${slot.endTime}`)
@@ -167,6 +183,7 @@ export async function fetchApprovedSpecialists(
   const {
     search,
     specialization,
+    expertise,
     sortBy,
     sortOrder,
     page = 1,
@@ -181,6 +198,7 @@ export async function fetchApprovedSpecialists(
       limit,
       ...(search ? { search } : {}),
       ...(specialization ? { specialization } : {}),
+      ...(expertise ? { expertise } : {}),
       ...(sortBy ? { sortBy } : {}),
       ...(sortOrder ? { sortOrder } : {}),
     },

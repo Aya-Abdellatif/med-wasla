@@ -54,14 +54,13 @@ function App() {
             <Route path="/services" element={<ServicesPage />} />
             <Route path="/doctors" element={<Doctors />} />
             <Route path="/nurses" element={<Nurses />} />
-
             <Route element={<ProtectedRoute />}>
               <Route path="/dashboard" element={<Dashboard />} />
               <Route path="/profile" element={<PatientProfile />} />
               <Route path="/appointments" element={<MyAppointments />} />
             </Route>
+            <Route path="*" element={<NotFound />} />
           </Route>
-          <Route path="*" element={<NotFound />} />
         </Routes>
       </ChatBotProvider>
     </AuthProvider>
