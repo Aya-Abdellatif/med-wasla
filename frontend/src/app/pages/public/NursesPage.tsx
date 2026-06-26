@@ -7,12 +7,14 @@ import {
   Clock,
 } from "lucide-react";
 import { BookingModal } from "../../components/booking/BookingModal";
-import { Link } from "react-router";
+import { Link, useNavigate } from "react-router";
 import {
   fetchApprovedSpecialists,
   type SpecialistCard,
 } from "../../../utils/specialistMapper";
 import { showError } from "../../../utils/toast";
+import { useAuth } from "../../context/useAuth";
+import { canBookAppointments, handleBookClick } from "../../../utils/bookingAccess";
 
 const NURSE_CATEGORIES = [
   "All",
@@ -25,6 +27,9 @@ const NURSE_CATEGORIES = [
 ];
 
 export function Nurses() {
+  const navigate = useNavigate();
+  const { user } = useAuth();
+  const showBooking = canBookAppointments(user);
   const [selectedSpecialty, setSelectedSpecialty] = useState("All");
   const [selectedNurse, setSelectedNurse] = useState<SpecialistCard | null>(
     null,
@@ -55,8 +60,10 @@ export function Nurses() {
       : nurses.filter((nurse) => nurse.specialty === selectedSpecialty);
 
   const handleBookNurse = (nurse: SpecialistCard) => {
-    setSelectedNurse(nurse);
-    setIsBookingModalOpen(true);
+    handleBookClick(user, navigate, () => {
+      setSelectedNurse(nurse);
+      setIsBookingModalOpen(true);
+    });
   };
 
   return (
@@ -172,7 +179,7 @@ export function Nurses() {
                       </div>
                     </div>
 
-                    <div className="grid grid-cols-2 gap-3 mt-auto">
+                    <div className={`grid gap-3 mt-auto ${showBooking ? "grid-cols-2" : "grid-cols-1"}`}>
                       <Link
                         to={`/nurse/${nurse.id}`}
                         className="group flex items-center justify-center gap-2 bg-transparent text-primary border-2 border-primary font-bold text-base px-4 py-2 rounded-xl cursor-pointer transition-all duration-300 ease-in-out hover:border-primary hover:-translate-y-0.5 hover:bg-primary hover:text-white hover:shadow-md whitespace-nowrap"
@@ -180,12 +187,14 @@ export function Nurses() {
                         View Details
                       </Link>
 
-                      <button
-                        onClick={() => handleBookNurse(nurse)}
-                        className="group flex items-center justify-center gap-2 bg-primary text-white border-2 border-primary font-bold text-base px-4 py-2 rounded-xl cursor-pointer transition-all duration-300 ease-in-out hover:border-primary hover:-translate-y-0.5 hover:bg-transparent hover:text-primary hover:shadow-md whitespace-nowrap"
-                      >
-                        Book Now
-                      </button>
+                      {showBooking && (
+                        <button
+                          onClick={() => handleBookNurse(nurse)}
+                          className="group flex items-center justify-center gap-2 bg-primary text-white border-2 border-primary font-bold text-base px-4 py-2 rounded-xl cursor-pointer transition-all duration-300 ease-in-out hover:border-primary hover:-translate-y-0.5 hover:bg-transparent hover:text-primary hover:shadow-md whitespace-nowrap"
+                        >
+                          Book Now
+                        </button>
+                      )}
                     </div>
                   </div>
                 </div>
@@ -195,15 +204,17 @@ export function Nurses() {
         </div>
       </section>
 
-      <BookingModal
-        isOpen={isBookingModalOpen}
-        onClose={() => {
-          setIsBookingModalOpen(false);
-          setSelectedNurse(null);
-        }}
-        provider={selectedNurse ?? undefined}
-        serviceType="nurse"
-      />
+      {user?.role === "patient" && (
+        <BookingModal
+          isOpen={isBookingModalOpen}
+          onClose={() => {
+            setIsBookingModalOpen(false);
+            setSelectedNurse(null);
+          }}
+          provider={selectedNurse ?? undefined}
+          serviceType="nurse"
+        />
+      )}
     </div>
   );
 }

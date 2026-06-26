@@ -1,5 +1,7 @@
 import { X, Stethoscope, Home, ArrowRight } from "lucide-react";
 import { useNavigate } from "react-router-dom";
+import { useAuth } from "../../context/useAuth";
+import { canBookAppointments } from "../../../utils/bookingAccess";
 
 interface AppointmentTypeModalProps {
   isOpen: boolean;
@@ -11,8 +13,11 @@ export function AppointmentTypeModal({
   onClose,
 }: AppointmentTypeModalProps) {
   const navigate = useNavigate();
+  const { user } = useAuth();
 
   if (!isOpen) return null;
+
+  if (!canBookAppointments(user)) return null;
 
   const handleChooseDoctor = () => {
     onClose();

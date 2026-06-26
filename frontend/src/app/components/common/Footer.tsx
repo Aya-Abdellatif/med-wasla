@@ -1,6 +1,13 @@
-import { CalendarDays, Phone, Mail, MapPin } from "lucide-react";
+import { CalendarDays, Phone, Mail, MapPin, LayoutDashboard } from "lucide-react";
+import { useNavigate } from "react-router-dom";
 import Logo from "/src/assets/LogoFooter.png";
+import { useAuth } from "../../context/useAuth";
+import { canBookAppointments, handleBookClick } from "../../../utils/bookingAccess";
+
 function Footer() {
+  const navigate = useNavigate();
+  const { user } = useAuth();
+  const showBooking = canBookAppointments(user);
   const companyLinks = [
     "About Us",
     "Our Services",
@@ -10,7 +17,7 @@ function Footer() {
   ];
   const supportLinks = [
     "Help Center",
-    "Book an Appointment",
+    ...(showBooking ? ["Book an Appointment"] : []),
     "Emergency Support",
     "Terms of Service",
     "Privacy Policy",
@@ -157,13 +164,31 @@ function Footer() {
             </div>
 
             <div className="pt-2">
-              <button className="group flex items-center justify-center gap-2 w-full bg-primary text-white border-2 border-primary font-bold text-base px-4 py-2.5 rounded-xl cursor-pointer transition-all duration-300 ease-in-out hover:-translate-y-0.5 hover:bg-transparent hover:text-primary hover:shadow-md">
-                <CalendarDays
-                  className="h-5 w-5 stroke-white group-hover:stroke-primary transition-colors duration-300"
-                  strokeWidth={2.5}
-                />
-                Book Appointment
-              </button>
+              {showBooking ? (
+                <button
+                  type="button"
+                  onClick={() => handleBookClick(user, navigate, () => navigate("/doctors"))}
+                  className="group flex items-center justify-center gap-2 w-full bg-primary text-white border-2 border-primary font-bold text-base px-4 py-2.5 rounded-xl cursor-pointer transition-all duration-300 ease-in-out hover:-translate-y-0.5 hover:bg-transparent hover:text-primary hover:shadow-md"
+                >
+                  <CalendarDays
+                    className="h-5 w-5 stroke-white group-hover:stroke-primary transition-colors duration-300"
+                    strokeWidth={2.5}
+                  />
+                  Book Appointment
+                </button>
+              ) : user?.role === "doctor" || user?.role === "nurse" ? (
+                <button
+                  type="button"
+                  onClick={() => navigate("/dashboard")}
+                  className="group flex items-center justify-center gap-2 w-full bg-primary text-white border-2 border-primary font-bold text-base px-4 py-2.5 rounded-xl cursor-pointer transition-all duration-300 ease-in-out hover:-translate-y-0.5 hover:bg-transparent hover:text-primary hover:shadow-md"
+                >
+                  <LayoutDashboard
+                    className="h-5 w-5 stroke-white group-hover:stroke-primary transition-colors duration-300"
+                    strokeWidth={2.5}
+                  />
+                  Go to Dashboard
+                </button>
+              ) : null}
             </div>
           </div>
         </div>

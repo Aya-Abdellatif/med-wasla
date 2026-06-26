@@ -19,10 +19,16 @@ import {
   type SpecialistProfile,
 } from "../../../utils/specialistMapper";
 import { fetchSpecialistReviews, type ReviewItem } from "../../../services/reviewsApi";
+import { useAuth } from "../../context/useAuth";
+import { canBookAppointments, handleBookClick } from "../../../utils/bookingAccess";
 
 function NurseProfileView({ id }: { id: string }) {
   const navigate = useNavigate();
+  const { user } = useAuth();
+  const showBooking = canBookAppointments(user);
   const [isBookingModalOpen, setIsBookingModalOpen] = useState(false);
+  const openBooking = () => setIsBookingModalOpen(true);
+  const onBookClick = () => handleBookClick(user, navigate, openBooking);
   const [currentPage, setCurrentPage] = useState(0);
   const [nurse, setNurse] = useState<SpecialistProfile | null>(null);
   const [reviews, setReviews] = useState<ReviewItem[]>([]);
@@ -134,12 +140,14 @@ function NurseProfileView({ id }: { id: string }) {
                     <span>{nurse.specialty}</span>
                   </span>
                 </div>
-                <button
-                  onClick={() => setIsBookingModalOpen(true)}
-                  className="w-full md:w-auto px-8 py-4 bg-primary text-white rounded-lg hover:bg-primary/90 transition-colors font-medium text-lg"
-                >
-                  Book Appointment
-                </button>
+                {showBooking && (
+                  <button
+                    onClick={onBookClick}
+                    className="w-full md:w-auto px-8 py-4 bg-primary text-white rounded-lg hover:bg-primary/90 transition-colors font-medium text-lg"
+                  >
+                    Book Appointment
+                  </button>
+                )}
               </div>
               <p className="text-lg text-muted-foreground mb-6">{nurse.description}</p>
             </div>
@@ -270,12 +278,14 @@ function NurseProfileView({ id }: { id: string }) {
         </div>
       </section>
 
-      <BookingModal
-        isOpen={isBookingModalOpen}
-        onClose={() => setIsBookingModalOpen(false)}
-        provider={nurse}
-        serviceType="nurse"
-      />
+      {user?.role === "patient" && (
+        <BookingModal
+          isOpen={isBookingModalOpen}
+          onClose={() => setIsBookingModalOpen(false)}
+          provider={nurse}
+          serviceType="nurse"
+        />
+      )}
     </div>
   );
 }

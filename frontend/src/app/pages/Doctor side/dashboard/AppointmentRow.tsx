@@ -18,8 +18,10 @@ export function AppointmentRow({
   onComplete,
   isUpdating = false,
 }: AppointmentRowProps) {
-  const showConfirm = appointment.backendStatus === "pending" && onConfirm;
-  const showComplete = appointment.backendStatus === "confirmed" && onComplete;
+  const showConfirm =
+    appointment.backendStatus === "pending" && onConfirm;
+  const showComplete =
+    appointment.backendStatus === "confirmed" && onComplete;
 
   return (
     <div

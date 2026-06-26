@@ -1,4 +1,4 @@
-import { Link } from "react-router";
+import { Link, useNavigate } from "react-router";
 import {
   GraduationCap,
   CalendarDays,
@@ -19,6 +19,8 @@ import {
   type PaginationMeta,
 } from "../../../utils/specialistMapper";
 import { showError } from "../../../utils/toast";
+import { useAuth } from "../../context/useAuth";
+import { canBookAppointments, handleBookClick } from "../../../utils/bookingAccess";
 
 const SORT_OPTIONS = [
   { label: "Highest Rated", sortBy: "rating", sortOrder: "desc" as const },
@@ -42,6 +44,9 @@ const SORT_OPTIONS = [
 ] as const;
 
 export function Doctors() {
+  const navigate = useNavigate();
+  const { user } = useAuth();
+  const showBooking = canBookAppointments(user);
   const [selectedSpecialty, setSelectedSpecialty] = useState("All");
   const [searchInput, setSearchInput] = useState("");
   const [debouncedSearch, setDebouncedSearch] = useState("");
@@ -107,8 +112,10 @@ export function Doctors() {
   const specialties = ["All", ...MEDICAL_SPECIALIZATIONS];
 
   const handleBookDoctor = (doctor: SpecialistCard) => {
-    setSelectedDoctor(doctor);
-    setIsBookingModalOpen(true);
+    handleBookClick(user, navigate, () => {
+      setSelectedDoctor(doctor);
+      setIsBookingModalOpen(true);
+    });
   };
 
   return (
@@ -270,19 +277,21 @@ export function Doctors() {
                           </span>
                         </div>
                       </div>
-                      <div className="grid grid-cols-2 gap-3 mt-auto">
+                      <div className={`grid gap-3 mt-auto ${showBooking ? "grid-cols-2" : "grid-cols-1"}`}>
                         <Link
                           to={`/doctor/${doctor.id}`}
                           className="group flex items-center justify-center gap-2 bg-transparent text-primary border-2 border-primary font-bold text-base px-4 py-2 rounded-xl cursor-pointer transition-all duration-300 ease-in-out hover:border-primary hover:-translate-y-0.5 hover:bg-primary hover:text-white hover:shadow-md whitespace-nowrap"
                         >
                           <span>View Details</span>
                         </Link>
-                        <button
-                          onClick={() => handleBookDoctor(doctor)}
-                          className="group flex items-center justify-center gap-2 bg-primary text-white border-2 border-primary font-bold text-base px-4 py-2 rounded-xl cursor-pointer transition-all duration-300 ease-in-out hover:border-primary hover:-translate-y-0.5 hover:bg-transparent hover:text-primary hover:shadow-md whitespace-nowrap"
-                        >
-                          Book Now
-                        </button>
+                        {showBooking && (
+                          <button
+                            onClick={() => handleBookDoctor(doctor)}
+                            className="group flex items-center justify-center gap-2 bg-primary text-white border-2 border-primary font-bold text-base px-4 py-2 rounded-xl cursor-pointer transition-all duration-300 ease-in-out hover:border-primary hover:-translate-y-0.5 hover:bg-transparent hover:text-primary hover:shadow-md whitespace-nowrap"
+                          >
+                            Book Now
+                          </button>
+                        )}
                       </div>
                     </div>
                   </div>
@@ -332,15 +341,17 @@ export function Doctors() {
         </div>
       </section>
 
-      <BookingModal
-        isOpen={isBookingModalOpen}
-        onClose={() => {
-          setIsBookingModalOpen(false);
-          setSelectedDoctor(null);
-        }}
-        provider={selectedDoctor ?? undefined}
-        serviceType="doctor"
-      />
+      {user?.role === "patient" && (
+        <BookingModal
+          isOpen={isBookingModalOpen}
+          onClose={() => {
+            setIsBookingModalOpen(false);
+            setSelectedDoctor(null);
+          }}
+          provider={selectedDoctor ?? undefined}
+          serviceType="doctor"
+        />
+      )}
     </div>
   );
 }
