@@ -1,5 +1,5 @@
 import { useState } from "react";
-import { Link, useNavigate } from "react-router-dom";
+import { Link, useNavigate, useLocation } from "react-router-dom";
 import AuthLayout from "../../components/auth/AuthLayout";
 import { useAuth } from "../../context/useAuth";
 import { showError, showSuccess } from "../../../utils/toast";
@@ -10,7 +10,9 @@ export default function SignIn() {
   const [password, setPassword] = useState("");
   const [isLoading, setIsLoading] = useState(false);
   const navigate = useNavigate();
+  const location = useLocation();
   const { login } = useAuth();
+  const redirectTo = (location.state as { from?: string } | null)?.from;
 
   const handleLogin = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -29,6 +31,8 @@ export default function SignIn() {
         navigate("/admin-dashboard");
       } else if (loggedInUser.role === "doctor" || loggedInUser.role === "nurse") {
         navigate("/dashboard");
+      } else if (redirectTo) {
+        navigate(redirectTo, { replace: true });
       } else {
         navigate("/");
       }
