@@ -1,10 +1,11 @@
 import { useState, useEffect, useMemo, useCallback } from "react";
 import { useNavigate } from "react-router";
-import { X, Calendar, Clock, MapPin, AlertCircle, Loader2 } from "lucide-react";
+import { X, Calendar, Clock, MapPin, AlertCircle, Loader2, Home, Stethoscope } from "lucide-react";
 import { showSuccess, showWarning, showError } from "../../../utils/toast";
 import { bookAppointment, fetchAvailableSlots } from "../../../services/appointmentsApi";
 import { formatSlotLabel } from "../../../utils/appointmentReschedule";
 import { useAuth } from "../../context/useAuth";
+
 interface AvailableSlot {
   day: string;
   startTime: string;
@@ -18,6 +19,7 @@ interface Provider {
   certification?: string;
   location?: string;
   availableSlots?: AvailableSlot[];
+  homeVisit?: boolean;
 }
 
 interface BookingModalProps {
@@ -34,7 +36,8 @@ const initialFormData = {
   address: "",
 };
 
-function isWorkingDay(dateStr: string, availableSlots: AvailableSlot[]) {  if (!dateStr || availableSlots.length === 0) return false;
+function isWorkingDay(dateStr: string, availableSlots: AvailableSlot[]) {
+  if (!dateStr || availableSlots.length === 0) return false;
   const dayName = new Date(`${dateStr}T12:00:00`).toLocaleDateString("en-US", {
     weekday: "long",
   });
@@ -45,6 +48,7 @@ export function BookingModal({ isOpen, onClose, provider, serviceType }: Booking
   const navigate = useNavigate();
   const { user } = useAuth();
   const [formData, setFormData] = useState(initialFormData);
+  const [visitType, setVisitType] = useState<"clinic" | "home">("clinic");
 
   const [errors, setErrors] = useState<Record<string, string>>({});
   const [isSubmitting, setIsSubmitting] = useState(false);
@@ -54,6 +58,10 @@ export function BookingModal({ isOpen, onClose, provider, serviceType }: Booking
     null,
   );
 
+  const isNurseBooking = serviceType === "nurse";
+  const doctorOffersHome = serviceType === "doctor" && provider?.homeVisit === true;
+  const requiresAddress = isNurseBooking || visitType === "home";
+
   const specialistSlots = useMemo(
     () => provider?.availableSlots ?? [],
     [provider?.availableSlots],
@@ -61,11 +69,12 @@ export function BookingModal({ isOpen, onClose, provider, serviceType }: Booking
 
   const resetForm = useCallback(() => {
     setFormData(initialFormData);
+    setVisitType(isNurseBooking ? "home" : "clinic");
     setErrors({});
     setAvailableTimes([]);
     setWorkingHours(null);
     setLoadingSlots(false);
-  }, []);
+  }, [isNurseBooking]);
 
   const handleClose = useCallback(() => {
     resetForm();
@@ -107,20 +116,21 @@ export function BookingModal({ isOpen, onClose, provider, serviceType }: Booking
       window.clearTimeout(timer);
     };
   }, [isOpen, provider?.id, formData.date, specialistSlots]);
+
   const validateForm = () => {
     const newErrors: Record<string, string> = {};
 
     if (!formData.date) newErrors.date = "Date is required";
     else if (!isWorkingDay(formData.date, specialistSlots)) {
-      newErrors.date = "Doctor is not available on this day";
+      newErrors.date = "Specialist is not available on this day";
     }
 
     if (!formData.time) newErrors.time = "Time is required";
 
     if (!formData.reason.trim()) newErrors.reason = "Reason for visit is required";
 
-    if (serviceType === "nurse" && !formData.address.trim()) {
-      newErrors.address = "Address is required for home service";
+    if (requiresAddress && !formData.address.trim()) {
+      newErrors.address = "Address is required for home visits";
     }
 
     setErrors(newErrors);
@@ -148,21 +158,24 @@ export function BookingModal({ isOpen, onClose, provider, serviceType }: Booking
 
     setIsSubmitting(true);
 
+    const bookingType = isNurseBooking ? "home" : visitType;
+
     try {
       await bookAppointment({
         specialistId: provider.id,
         date: formData.date,
         time: formData.time,
-        type: serviceType === "nurse" ? "home" : "clinic",
-        address: serviceType === "nurse" ? formData.address : undefined,
+        type: bookingType,
+        address: bookingType === "home" ? formData.address : undefined,
         notes: formData.reason,
       });
 
       showSuccess(
-        `${serviceType === "nurse" ? "Home service" : "Appointment"} booked successfully! Check My Appointments to track it.`,
+        `${bookingType === "home" ? "Home visit" : "Appointment"} booked successfully! Check My Appointments to track it.`,
       );
       handleClose();
-    } catch (err) {      showError(err instanceof Error ? err.message : "Failed to book appointment");
+    } catch (err) {
+      showError(err instanceof Error ? err.message : "Failed to book appointment");
     } finally {
       setIsSubmitting(false);
     }
@@ -193,6 +206,21 @@ export function BookingModal({ isOpen, onClose, provider, serviceType }: Booking
       });
     }
   };
+
+  const handleVisitTypeChange = (nextType: "clinic" | "home") => {
+    setVisitType(nextType);
+    if (nextType === "clinic") {
+      setFormData((prev) => ({ ...prev, address: "" }));
+      if (errors.address) {
+        setErrors((prev) => {
+          const newErrors = { ...prev };
+          delete newErrors.address;
+          return newErrors;
+        });
+      }
+    }
+  };
+
   if (!isOpen) return null;
 
   const workingDaysText =
@@ -206,7 +234,7 @@ export function BookingModal({ isOpen, onClose, provider, serviceType }: Booking
         <div className="sticky top-0 bg-white border-b border-border px-6 py-4 flex items-center justify-between">
           <div>
             <h2 className="text-2xl font-bold text-foreground">
-              {serviceType === "nurse" ? "Request Home Service" : "Book Appointment"}
+              {isNurseBooking ? "Request Home Service" : "Book Appointment"}
             </h2>
             {provider && (
               <p className="text-sm text-muted-foreground mt-1">
@@ -214,17 +242,50 @@ export function BookingModal({ isOpen, onClose, provider, serviceType }: Booking
               </p>
             )}
           </div>
-          <button onClick={handleClose} className="p-2 hover:bg-muted rounded-lg transition-colors">            <X className="w-5 h-5" />
+          <button onClick={handleClose} className="p-2 hover:bg-muted rounded-lg transition-colors">
+            <X className="w-5 h-5" />
           </button>
         </div>
 
         <form onSubmit={handleSubmit} className="p-6 space-y-6">
           <div className="rounded-lg border border-primary/20 bg-primary/5 p-4 text-sm text-foreground">
-            <p className="font-medium mb-1">Doctor availability</p>
+            <p className="font-medium mb-1">Availability</p>
             <p className="text-muted-foreground">{workingDaysText}</p>
           </div>
 
-          {serviceType === "nurse" && (
+          {doctorOffersHome && (
+            <div>
+              <p className="block mb-2 font-medium text-foreground">Visit Type *</p>
+              <div className="grid grid-cols-2 gap-3">
+                <button
+                  type="button"
+                  onClick={() => handleVisitTypeChange("clinic")}
+                  className={`flex items-center justify-center gap-2 px-4 py-3 rounded-lg border transition-colors ${
+                    visitType === "clinic"
+                      ? "border-primary bg-primary/5 text-primary"
+                      : "border-border hover:bg-muted/50"
+                  }`}
+                >
+                  <Stethoscope className="w-4 h-4" />
+                  Clinic Visit
+                </button>
+                <button
+                  type="button"
+                  onClick={() => handleVisitTypeChange("home")}
+                  className={`flex items-center justify-center gap-2 px-4 py-3 rounded-lg border transition-colors ${
+                    visitType === "home"
+                      ? "border-teal-600 bg-teal-50 text-teal-700"
+                      : "border-border hover:bg-muted/50"
+                  }`}
+                >
+                  <Home className="w-4 h-4" />
+                  Home Visit
+                </button>
+              </div>
+            </div>
+          )}
+
+          {requiresAddress && (
             <div>
               <label htmlFor="address" className="block mb-2 font-medium text-foreground">
                 Home Address *
@@ -264,7 +325,8 @@ export function BookingModal({ isOpen, onClose, provider, serviceType }: Booking
                   id="date"
                   type="date"
                   value={formData.date}
-                  onChange={(e) => handleDateChange(e.target.value)}                  min={new Date().toISOString().split("T")[0]}
+                  onChange={(e) => handleDateChange(e.target.value)}
+                  min={new Date().toISOString().split("T")[0]}
                   className={`w-full pl-12 pr-4 py-3 border rounded-lg focus:outline-none focus:ring-2 transition-colors ${
                     errors.date
                       ? "border-red-500 focus:ring-red-500"
@@ -329,13 +391,13 @@ export function BookingModal({ isOpen, onClose, provider, serviceType }: Booking
 
           <div>
             <label htmlFor="reason" className="block mb-2 font-medium text-foreground">
-              Reason for {serviceType === "nurse" ? "Service" : "Visit"} *
+              Reason for {requiresAddress ? "Visit" : "Appointment"} *
             </label>
             <textarea
               id="reason"
               value={formData.reason}
               onChange={(e) => handleChange("reason", e.target.value)}
-              placeholder={`Describe the reason for your ${serviceType === "nurse" ? "home service request" : "appointment"}`}
+              placeholder={`Describe the reason for your ${requiresAddress ? "home visit" : "appointment"}`}
               rows={4}
               className={`w-full px-4 py-3 border rounded-lg focus:outline-none focus:ring-2 transition-colors resize-none ${
                 errors.reason
@@ -354,7 +416,7 @@ export function BookingModal({ isOpen, onClose, provider, serviceType }: Booking
           {provider && (
             <div className="bg-muted/50 rounded-lg p-4 border border-border">
               <h3 className="font-semibold text-foreground mb-2">
-                {serviceType === "nurse" ? "Nurse" : "Doctor"} Details
+                {isNurseBooking ? "Nurse" : "Doctor"} Details
               </h3>
               <div className="space-y-1 text-sm">
                 <p className="text-foreground">
@@ -369,6 +431,11 @@ export function BookingModal({ isOpen, onClose, provider, serviceType }: Booking
                     <span className="font-medium">Location:</span> {provider.location}
                   </p>
                 )}
+                {doctorOffersHome && (
+                  <p className="text-foreground">
+                    <span className="font-medium">Home visits:</span> Available
+                  </p>
+                )}
               </div>
             </div>
           )}
@@ -376,7 +443,8 @@ export function BookingModal({ isOpen, onClose, provider, serviceType }: Booking
           <div className="flex space-x-3 pt-4">
             <button
               type="button"
-              onClick={handleClose}              className="flex-1 px-6 py-3 border border-border rounded-lg hover:bg-muted transition-colors font-medium"
+              onClick={handleClose}
+              className="flex-1 px-6 py-3 border border-border rounded-lg hover:bg-muted transition-colors font-medium"
             >
               Cancel
             </button>
@@ -391,7 +459,7 @@ export function BookingModal({ isOpen, onClose, provider, serviceType }: Booking
                   Booking...
                 </>
               ) : (
-                "Book Appointment"
+                requiresAddress ? "Book Home Visit" : "Book Appointment"
               )}
             </button>
           </div>

@@ -1,6 +1,13 @@
-import { CalendarDays, Phone, Mail, MapPin } from "lucide-react";
+import { CalendarDays, Phone, Mail, MapPin, LayoutDashboard } from "lucide-react";
+import { useNavigate } from "react-router-dom";
+import Logo from "/src/assets/LogoFooter.png";
+import { useAuth } from "../../context/useAuth";
+import { canBookAppointments, handleBookClick } from "../../../utils/bookingAccess";
 
 function Footer() {
+  const navigate = useNavigate();
+  const { user } = useAuth();
+  const showBooking = canBookAppointments(user);
   const companyLinks = [
     "About Us",
     "Our Services",
@@ -10,20 +17,20 @@ function Footer() {
   ];
   const supportLinks = [
     "Help Center",
-    "Book an Appointment",
+    ...(showBooking ? ["Book an Appointment"] : []),
     "Emergency Support",
     "Terms of Service",
     "Privacy Policy",
   ];
 
   return (
-    <footer className="bg-[#1D3BA5] text-white shadow-[0_-4px_10px_rgba(0,0,0,0.1)] mt-auto w-full">
+    <footer className="bg-fg text-white shadow-[0_-4px_10px_rgba(0,0,0,0.1)] mt-auto w-full">
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-12">
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-8 mb-12">
           <div className="space-y-4">
             <div className="flex items-center gap-3">
               <img
-                src="src/assets/Logo.png"
+                src={Logo}
                 alt="Logo"
                 className="w-20 h-17 -mr-6 transition-transform duration-300"
               />
@@ -157,13 +164,31 @@ function Footer() {
             </div>
 
             <div className="pt-2">
-              <button className="group flex items-center justify-center gap-2 w-full bg-primary text-white border-2 border-primary font-bold text-base px-4 py-2.5 rounded-xl cursor-pointer transition-all duration-300 ease-in-out hover:-translate-y-0.5 hover:bg-transparent hover:text-primary hover:shadow-md">
-                <CalendarDays
-                  className="h-5 w-5 stroke-white group-hover:stroke-primary transition-colors duration-300"
-                  strokeWidth={2.5}
-                />
-                Book Appointment
-              </button>
+              {showBooking ? (
+                <button
+                  type="button"
+                  onClick={() => handleBookClick(user, navigate, () => navigate("/doctors"))}
+                  className="group flex items-center justify-center gap-2 w-full bg-primary text-white border-2 border-primary font-bold text-base px-4 py-2.5 rounded-xl cursor-pointer transition-all duration-300 ease-in-out hover:-translate-y-0.5 hover:bg-transparent hover:text-primary hover:shadow-md"
+                >
+                  <CalendarDays
+                    className="h-5 w-5 stroke-white group-hover:stroke-primary transition-colors duration-300"
+                    strokeWidth={2.5}
+                  />
+                  Book Appointment
+                </button>
+              ) : user?.role === "doctor" || user?.role === "nurse" ? (
+                <button
+                  type="button"
+                  onClick={() => navigate("/dashboard")}
+                  className="group flex items-center justify-center gap-2 w-full bg-primary text-white border-2 border-primary font-bold text-base px-4 py-2.5 rounded-xl cursor-pointer transition-all duration-300 ease-in-out hover:-translate-y-0.5 hover:bg-transparent hover:text-primary hover:shadow-md"
+                >
+                  <LayoutDashboard
+                    className="h-5 w-5 stroke-white group-hover:stroke-primary transition-colors duration-300"
+                    strokeWidth={2.5}
+                  />
+                  Go to Dashboard
+                </button>
+              ) : null}
             </div>
           </div>
         </div>

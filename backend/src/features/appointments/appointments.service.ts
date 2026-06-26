@@ -13,6 +13,34 @@ export function parseLocalAppointment(dateStr: string, timeStr: string) {
   return new Date(year, month - 1, day, hours, minutes, 0, 0);
 }
 
+/** Mark unconfirmed or uncompleted appointments whose date/time has passed as overdue. */
+export async function expireOverdueAppointments(filter?: {
+  patientId?: string;
+  specialistId?: string;
+}) {
+  const query: Record<string, unknown> = {
+    status: { $in: ["pending", "confirmed"] },
+    date: { $lt: new Date() },
+  };
+
+  if (filter?.patientId) {
+    query.patientId = Types.ObjectId.isValid(filter.patientId)
+      ? new Types.ObjectId(filter.patientId)
+      : filter.patientId;
+  }
+  if (filter?.specialistId) {
+    query.specialistId = Types.ObjectId.isValid(filter.specialistId)
+      ? new Types.ObjectId(filter.specialistId)
+      : filter.specialistId;
+  }
+
+  await Appointment.updateMany(query, { $set: { status: "overdue" } });
+}
+
+export function isAppointmentPast(date: Date) {
+  return date.getTime() < Date.now();
+}
+
 export const createAppointmentService = async (data: {
   patientId: string;
   specialistId: string;
@@ -78,6 +106,8 @@ export const createAppointmentService = async (data: {
 
 
 export const getPatientAppointmentsService = async (patientId: string) => {
+  await expireOverdueAppointments({ patientId });
+
   return Appointment.find({ patientId })
     .populate({
       path: "specialistId",
@@ -91,6 +121,8 @@ export const getSpecialistAppointmentsService = async (userId: string) => {
   // The logged-in specialist's req.user.id is a User._id, not a MedicalSpecialist._id
   const specialist = await MedicalSpecialist.findOne({ userId });
   if (!specialist) throw new Error("SPECIALIST_PROFILE_NOT_FOUND");
+
+  await expireOverdueAppointments({ specialistId: specialist._id.toString() });
 
   return Appointment.find({ specialistId: specialist._id })
     .populate("patientId", "name photoUrl phone")
@@ -151,6 +183,18 @@ export const updateAppointmentStatusService = async (
     throw new Error("FORBIDDEN");
   }
 
+  if (isAppointmentPast(appointment.date)) {
+    if (appointment.status === "pending" || appointment.status === "confirmed") {
+      appointment.status = "overdue";
+      await appointment.save();
+    }
+    throw new Error("APPOINTMENT_OVERDUE");
+  }
+
+  if (appointment.status === "overdue") {
+    throw new Error("APPOINTMENT_OVERDUE");
+  }
+
   const validTransitions: Record<string, AppointmentStatus[]> = {
     pending: ["confirmed"],
     confirmed: ["completed"],
@@ -188,6 +232,18 @@ export const cancelAppointmentService = async (
     throw new Error("CANNOT_CANCEL");
   }
 
+  if (isAppointmentPast(appointment.date)) {
+    if (appointment.status === "pending" || appointment.status === "confirmed") {
+      appointment.status = "overdue";
+      await appointment.save();
+    }
+    throw new Error("APPOINTMENT_OVERDUE");
+  }
+
+  if (appointment.status === "overdue") {
+    throw new Error("APPOINTMENT_OVERDUE");
+  }
+
   if (requesterRole === "patient") {
     if (appointment.patientId.toString() !== requesterId) throw new Error("FORBIDDEN");
   } else {
@@ -218,6 +274,18 @@ export const rescheduleAppointmentService = async (
 
   if (appointment.status === "completed" || appointment.status === "cancelled") {
     throw new Error("CANNOT_RESCHEDULE");
+  }
+
+  if (isAppointmentPast(appointment.date)) {
+    if (appointment.status === "pending" || appointment.status === "confirmed") {
+      appointment.status = "overdue";
+      await appointment.save();
+    }
+    throw new Error("APPOINTMENT_OVERDUE");
+  }
+
+  if (appointment.status === "overdue") {
+    throw new Error("APPOINTMENT_OVERDUE");
   }
 
   if (newDate <= new Date()) throw new Error("DATE_IN_PAST");
@@ -265,7 +333,7 @@ export const getAvailableSlotsService = async (
   const booked = await Appointment.find({
     specialistId,
     date: { $gte: startOfDay, $lte: endOfDay },
-    status: { $ne: "cancelled" },
+    status: { $nin: ["cancelled", "overdue"] },
   }).select("date");
 
   // Build 30-minute slots between startTime and endTime

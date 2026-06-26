@@ -6,44 +6,49 @@ import {
   LogIn,
   UserPlus,
 } from "lucide-react";
-import { Link, useNavigate } from "react-router-dom";
+import { Link, useNavigate, useLocation } from "react-router-dom";
 import { AppointmentTypeModal } from "../booking/AppointmentTypeModal";
 import { useAuth } from "../../context/useAuth";
 import { getSpecialistDisplayName } from "../../../utils/displayName";
 import { showInfo } from "../../../utils/toast";
+import { canBookAppointments, handleBookClick } from "../../../utils/bookingAccess";
+import Logo from "../../../assets/logo.png";
 
 function Navbar() {
   const [isOpen, setIsOpen] = useState(false);
-  const [active, setActive] = useState<string | null>(null);
   const [underlineStyle, setUnderlineStyle] = useState({ left: 0, width: 0 });
-  const [isFirstClick, setIsFirstClick] = useState(true);
+  const [isFirstActivation, setIsFirstActivation] = useState(true);
   const [isAppointmentModalOpen, setIsAppointmentModalOpen] = useState(false);
   const navigate = useNavigate();
+  const location = useLocation();
   const { user, logout, isAuthenticated } = useAuth();
 
   const isDoctor = user?.role === "doctor" || user?.role === "nurse";
   const displayName = getSpecialistDisplayName(user?.name);
 
-  const navLinks = isDoctor
-    ? [
-        { name: "Home", path: "/" },
-        { name: "About", path: "/about" },
-        { name: "Contact", path: "/contact" },
-        { name: "Dashboard", path: "/dashboard" },
-      ]
-    : [
-        { name: "Home", path: "/" },
-        { name: "Services", path: "/services" },
-        { name: "Doctors", path: "/doctors" },
-        { name: "Nurses", path: "/nurses" },
-        { name: "About", path: "/about" },
-        { name: "Contact Us", path: "/contact" },
-        { name: "Profile", path: "/profile" },
-      ];
-
+  const doctorLinks = [
+    { name: "Home", path: "/" },
+    { name: "Services", path: "/services" },
+    { name: "About", path: "/about" },
+    { name: "Contact", path: "/contact" },
+    { name: "Dashboard", path: "/dashboard" },
+  ];
+  const patientLinks = [
+    { name: "Home", path: "/" },
+    { name: "Services", path: "/services" },
+    { name: "Doctors", path: "/doctors" },
+    { name: "Nurses", path: "/nurses" },
+    { name: "About", path: "/about" },
+    { name: "Contact Us", path: "/contact" },
+  ];
+  const baseLinks = isDoctor ? doctorLinks : patientLinks;
+  const navLinks = isAuthenticated
+    ? [...baseLinks, { name: "Profile", path: "/profile" }]
+    : baseLinks;
+  const active =
+    navLinks.find((link) => link.path === location.pathname)?.name ?? null;
   const containerRef = useRef<HTMLDivElement | null>(null);
   const linksRef = useRef<Record<string, HTMLElement | null>>({});
-
   useEffect(() => {
     if (!active) return;
     const el = linksRef.current[active];
@@ -56,19 +61,11 @@ function Navbar() {
         width: elRect.width,
       });
     }
-  }, [active]);
+    if (isFirstActivation) setIsFirstActivation(false);
+  }, [active, isFirstActivation]);
 
-  const handleLinkClick = (name: string) => {
-    if (active !== null) {
-      setIsFirstClick(false);
-    }
-    setActive(name);
-  };
-
-  const handleLogoClick = () => {
-    setActive(null);
-    setIsFirstClick(true);
-  };
+  const openBooking = () => setIsAppointmentModalOpen(true);
+  const onBookClick = () => handleBookClick(user, navigate, openBooking);
 
   const handleLogout = () => {
     logout();
@@ -83,11 +80,10 @@ function Navbar() {
           <div className="flex h-20 items-center gap-6">
             <Link
               to="/"
-              onClick={handleLogoClick}
               className="flex items-center shrink-0 cursor-pointer group"
             >
               <img
-                src="src/assets/Logo.png"
+                src={Logo}
                 alt="Logo"
                 className="w-20 h-17 -mr-4 transition-transform duration-300"
               />
@@ -106,7 +102,7 @@ function Navbar() {
               {active && (
                 <div
                   className={`absolute bottom-0 h-0.5 bg-primary rounded-full transition-all ease-out ${
-                    isFirstClick ? "duration-0" : "duration-300"
+                    isFirstActivation ? "duration-0" : "duration-300"
                   }`}
                   style={{
                     left: `${underlineStyle.left}px`,
@@ -121,7 +117,6 @@ function Navbar() {
                   ref={(el) => {
                     linksRef.current[name] = el;
                   }}
-                  onClick={() => handleLinkClick(name)}
                   className={`px-4 py-2 text-lg font-semibold tracking-wide transition-all duration-300 ease-in-out ${
                     active === name
                       ? "text-primary"
@@ -146,7 +141,7 @@ function Navbar() {
               {isAuthenticated ? (
                 <button
                   onClick={handleLogout}
-                  className="group flex items-center gap-2 bg-primary text-white border-2 border-primary font-bold text-base px-4 py-2 rounded-xl cursor-pointer transition-all duration-300 ease-in-out hover:border-primary hover:-translate-y-0.5 hover:bg-transparent hover:text-primary hover:shadow-md whitespace-nowrap"
+                  className="group flex items-center gap-2 bg-transparent text-primary border-2 border-primary font-bold text-base px-4 py-2 rounded-xl cursor-pointer transition-all duration-300 ease-in-out hover:border-primary hover:-translate-y-0.5 hover:bg-primary hover:text-white hover:shadow-md whitespace-nowrap"
                 >
                   <LogOut className="h-5 w-5" strokeWidth={2.5} />
                   Logout
@@ -161,7 +156,7 @@ function Navbar() {
                     Login
                   </Link>
                   <Link
-                    to="/signup"
+                    to="/role"
                     className="group flex items-center gap-2 bg-primary text-white border-2 border-primary font-bold text-base px-4 py-2 rounded-xl cursor-pointer transition-all duration-300 ease-in-out hover:border-primary hover:-translate-y-0.5 hover:bg-transparent hover:text-primary hover:shadow-md whitespace-nowrap"
                   >
                     <UserPlus className="h-5 w-5" strokeWidth={2.5} />
@@ -169,19 +164,6 @@ function Navbar() {
                   </Link>
                 </>
               )}
-
-              {/* {isAuthenticated && !isDoctor && (
-                <button
-                  onClick={() => setIsAppointmentModalOpen(true)}
-                  className="group flex items-center gap-2 bg-primary text-white border-2 border-primary font-bold text-base px-4 py-2 rounded-xl cursor-pointer transition-all duration-300 ease-in-out hover:-translate-y-0.5 hover:bg-transparent hover:text-primary hover:shadow-md whitespace-nowrap"
-                >
-                  <CalendarDays
-                    className="h-5 w-5 text-brand-teal group-hover:text-primary transition-colors duration-300"
-                    strokeWidth={2.5}
-                  />
-                  Book Appointment
-                </button>
-              )} */}
             </div>
 
             <div className="lg:hidden ml-auto relative">
@@ -227,10 +209,7 @@ function Navbar() {
                     <Link
                       key={name}
                       to={path}
-                      onClick={() => {
-                        handleLinkClick(name);
-                        setIsOpen(false);
-                      }}
+                      onClick={() => setIsOpen(false)}
                       className={`block text-base font-semibold px-4 py-2.5 rounded-lg transition-all duration-300 ease-in-out ${
                         active === name
                           ? "text-primary bg-primary/10"
@@ -270,7 +249,7 @@ function Navbar() {
                           Login
                         </Link>
                         <Link
-                          to="/signup"
+                          to="/role"
                           onClick={() => setIsOpen(false)}
                           className="group flex items-center justify-center gap-2 w-full bg-primary text-white border-2 border-primary font-bold text-base px-4 py-2 rounded-xl cursor-pointer transition-all duration-300 ease-in-out hover:border-primary hover:-translate-y-0.5 hover:bg-transparent hover:text-primary hover:shadow-md whitespace-nowrap"
                         >
@@ -280,9 +259,12 @@ function Navbar() {
                       </>
                     )}
 
-                    {isAuthenticated && !isDoctor && (
+                    {canBookAppointments(user) && (
                       <button
-                        onClick={() => setIsAppointmentModalOpen(true)}
+                        onClick={() => {
+                          setIsOpen(false);
+                          onBookClick();
+                        }}
                         className="group flex items-center justify-center gap-2 w-full bg-primary text-white border-2 border-primary font-bold text-base px-4 py-2 rounded-xl cursor-pointer transition-all duration-300 ease-in-out hover:border-primary hover:-translate-y-0.5 hover:bg-transparent hover:text-primary hover:shadow-md whitespace-nowrap"
                       >
                         <CalendarDays

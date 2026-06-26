@@ -6,12 +6,10 @@ import {
   // faLocationDot,
   faPhone,
   faEnvelope,
-  faClock,
-  faArrowRight,
 } from "@fortawesome/free-solid-svg-icons";
 import { showSuccess } from "../../../utils/toast";
 
-import {  departments, faqs } from "./ContactData";
+import { departments, faqs } from "./ContactData";
 import type { ContactFormData } from "./contactTypes";
 
 const initialFormData: ContactFormData = {
@@ -73,24 +71,24 @@ export default function ContactPage() {
   return (
     <main className="min-h-screen bg-white text-gray-900">
       {/* Hero Section */}
-      <section className="bg-linear-to-br from-teal-50 via-cyan-50 to-blue-50 py-24 px-4 text-center relative overflow-hidden">
+      <section className="bg-linear-to-br from-[#F6FFFB] via-[#ECFEFF] to-[#F0FDFA] py-24 px-4 text-center relative overflow-hidden">
         <div className="absolute inset-0 opacity-10">
           <div className="absolute top-10 right-10 w-40 h-40 bg-teal-300 rounded-full blur-3xl" />
           <div className="absolute bottom-10 left-10 w-40 h-40 bg-cyan-300 rounded-full blur-3xl" />
         </div>
         <div className="max-w-4xl mx-auto relative z-10">
-          <h1 className="text-5xl md:text-6xl font-bold  text-[#1F2937] mb-6">
+          <h1 className="mb-6 text-4xl font-bold md:text-5xl">
             Get in Touch
           </h1>
-          <p className="text-lg md:text-xl text-gray-600 leading-relaxed max-w-2xl mx-auto">
+          <p className="mx-auto max-w-3xl text-xl leading-8 text-[#6B7280]">
             Have questions or need assistance? Our team is here to help. Reach out and we'll respond within 24-48 hours.
           </p>
         </div>
       </section>
 
       {/* Form & Quick Info */}
-      <section className="py-20 px-4 bg-gray-50">
-        <div className="max-w-7xl mx-auto grid lg:grid-cols-2 gap-8 items-start">
+      <section className="py-20 px-4 bg-white">
+        <div className="max-w-7xl mx-auto grid lg:grid-cols-2 gap-8 items-start bg-linear-to-br from-[#F6FFFB] via-[#ECFEFF] to-[#F0FDFA] p-10 rounded-2xl shadow-lg">
           {/* Form */}
           <div className="lg:col-span-1">
             <h2 className="text-4xl font-bold mb-8">Send us a Message</h2>
@@ -179,7 +177,7 @@ export default function ContactPage() {
 
               <button
                 type="submit"
-                className="w-full bg-linear-to-r from-teal-500 to-cyan-500 text-white py-4 rounded-xl font-semibold text-lg hover:from-teal-600 hover:to-cyan-600 transition-all flex items-center justify-center gap-3 shadow-lg hover:shadow-xl"
+                className="group flex items-center w-full gap-2 bg-primary text-white border-2 border-primary font-bold text-base px-4 py-2  rounded-xl cursor-pointer transition-all duration-300 ease-in-out hover:border-primary hover:-translate-y-0.5 hover:bg-transparent hover:text-primary hover:shadow-md whitespace-nowrap"
               >
                 <FontAwesomeIcon icon={faPaperPlane} />
                 <span>Send Message</span>
@@ -187,11 +185,11 @@ export default function ContactPage() {
             </form>
           </div>
 
-           {/* Right Column - 3 cards stacked */}
-    <div className="flex flex-col gap-6 mt-24">
-      
-      {/* Working Hours */}
-      <div className="bg-white rounded-2xl p-8 shadow-lg hover:shadow-xl transition">
+          {/* Right Column - 3 cards stacked */}
+          <div className="flex flex-col gap-6 mt-24">
+
+            {/* Working Hours */}
+            {/* <div className="bg-white rounded-2xl p-8 shadow-lg hover:shadow-xl transition">
         <div className="flex items-start gap-4">
           <div className="w-12 h-12 bg-purple-50 rounded-xl flex items-center justify-center shrink-0">
             <FontAwesomeIcon icon={faClock} className="text-purple-500 text-xl" />
@@ -205,48 +203,57 @@ export default function ContactPage() {
             </div>
           </div>
         </div>
-      </div>
+      </div> */}
 
-      {/* Email */}
-      <div className="bg-white rounded-2xl p-8 shadow-lg hover:shadow-xl transition">
-        <div className="flex items-start gap-4">
-          <div className="w-12 h-12 bg-green-50 rounded-xl flex items-center justify-center shrink-0">
-            <FontAwesomeIcon icon={faEnvelope} className="text-green-500 text-xl" />
-          </div>
-          <div>
-            <h3 className="font-bold text-gray-900 mb-2">Email</h3>
-            <div className="space-y-1">
-              <p className="text-sm text-gray-600">info@healthcareplus.com</p>
-              <p className="text-sm text-gray-600">support@healthcareplus.com</p>
+            {/* Email */}
+            <div className="bg-white rounded-2xl p-8 shadow-lg hover:shadow-xl transition">
+              <div className="flex items-start gap-4">
+                <div className="w-10 h-10 bg-primary/10 rounded-xl flex items-center justify-center shrink-0">
+                  <FontAwesomeIcon icon={faEnvelope} className="text-primary text-xl" />
+                </div>
+                <div>
+                  <h3 className="font-bold text-gray-900 mb-2 text-lg">Email</h3>
+                  <div className="space-y-1">
+                    <p className="text-sm text-gray-600">medwasla@healthcareplus.com</p>
+                    <p className="text-sm text-gray-600">medwaslasupport@healthcareplus.com</p>
+                  </div>
+                </div>
+              </div>
+            </div>
+
+            {/* Emergency */}
+            <div className="group whitespace-nowrap rounded-2xl border border-transparent bg-primary p-8 text-white shadow-lg transition-all duration-300 ease-in-out  ">
+              <div className="flex items-start gap-4">
+                <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-xl bg-white/20 transition-colors duration-300">
+                  <FontAwesomeIcon
+                    icon={faPhone}
+                    className="text-xl text-white transition-colors duration-300 "
+                  />
+                </div>
+
+                <div>
+                  <h3 className="mb-2 text-lg font-bold">Support Number</h3>
+
+                  <a
+                    href="tel:+12345678891"
+                    className="flex items-center gap-2 text-lg font-bold hover:underline"
+                  >
+                    +1 (234) 567-891
+                  </a>
+
+                  <p className="mt-2 text-xs text-white/80 transition-colors duration-300 ">
+                    Available 24/7
+                  </p>
+                </div>
+              </div>
             </div>
           </div>
-        </div>
-      </div>
-
-      {/* Emergency */}
-      <div className="bg-linear-to-br from-teal-500 to-cyan-500 text-white rounded-2xl p-8 shadow-lg">
-        <div className="flex items-start gap-4">
-          <div className="w-12 h-12 bg-white/20 rounded-xl flex items-center justify-center shrink-0">
-            <FontAwesomeIcon icon={faPhone} className="text-white text-xl" />
-          </div>
-          <div>
-            <h3 className="font-bold mb-2">Emergency</h3>
-            <a href="tel:+12345678891" className="text-lg font-bold hover:underline flex items-center gap-2">
-              +1 (234) 567-891
-              <FontAwesomeIcon icon={faArrowRight} className="text-sm" />
-            </a>
-            <p className="text-xs text-white/80 mt-2">Available 24/7</p>
-          </div>
-        </div>
-      </div>
-
-    </div>
 
         </div>
       </section>
 
       {/* FAQs */}
-      <section className="py-20 px-4 bg-white">
+      <section className="py-20 px-4 bg-linear-to-br from-[#F6FFFB] via-[#ECFEFF] to-[#F0FDFA]">
         <div className="max-w-4xl mx-auto">
           <div className="text-center mb-12">
             <h2 className="text-4xl font-bold mb-4">Frequently Asked Questions</h2>
@@ -257,7 +264,7 @@ export default function ContactPage() {
             {faqs.map((faq, index) => (
               <div
                 key={index}
-                className="bg-gray-50 rounded-xl overflow-hidden hover:shadow-md transition"
+                className="bg-white rounded-xl overflow-hidden hover:shadow-md transition"
               >
                 <button
                   onClick={() => setExpandedFAQ(expandedFAQ === index ? null : index)}
@@ -265,9 +272,8 @@ export default function ContactPage() {
                 >
                   <span className="text-lg text-gray-900">{faq.question}</span>
                   <span
-                    className={`text-teal-500 transition-transform ${
-                      expandedFAQ === index ? "rotate-180" : ""
-                    }`}
+                    className={`text-teal-500 transition-transform ${expandedFAQ === index ? "rotate-180" : ""
+                      }`}
                   >
                     ▼
                   </span>

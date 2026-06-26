@@ -6,15 +6,55 @@ import {
   Home as HomeIcon,
   MapPin,
   Phone,
+  Loader2,
 } from "lucide-react";
 import type { HomeServiceRequest } from "./dashboardTypes";
 
 interface RequestsTabProps {
   requests: HomeServiceRequest[];
+  loading?: boolean;
+  updatingRequestId?: string | null;
   onRequestAction: (requestId: string, action: "accepted" | "rejected") => void;
 }
 
-export function RequestsTab({ requests, onRequestAction }: RequestsTabProps) {
+function getStatusLabel(request: HomeServiceRequest) {
+  if (request.backendStatus === "completed") return "Completed";
+  if (request.backendStatus === "overdue") return "Overdue";
+  if (request.backendStatus === "cancelled" || request.status === "rejected") return "Rejected";
+  if (request.backendStatus === "confirmed" || request.status === "accepted") return "Accepted";
+  return "Pending";
+}
+
+function getStatusStyles(request: HomeServiceRequest) {
+  if (request.backendStatus === "completed") {
+    return { backgroundColor: "#dbeafe", color: "#1d4ed8" };
+  }
+  if (request.backendStatus === "overdue") {
+    return { backgroundColor: "#fee2e2", color: "#b91c1c" };
+  }
+  if (request.status === "pending") {
+    return { backgroundColor: "#fed7aa", color: "#c2410c" };
+  }
+  if (request.status === "accepted") {
+    return { backgroundColor: "#bbf7d0", color: "#15803d" };
+  }
+  return { backgroundColor: "#fecaca", color: "#b91c1c" };
+}
+
+export function RequestsTab({
+  requests,
+  loading = false,
+  updatingRequestId = null,
+  onRequestAction,
+}: RequestsTabProps) {
+  if (loading) {
+    return (
+      <div className="bg-white rounded-xl p-6 flex items-center justify-center min-h-[240px]">
+        <Loader2 className="w-8 h-8 animate-spin text-teal-600" />
+      </div>
+    );
+  }
+
   return (
     <div className="bg-white rounded-xl p-6" style={{ boxShadow: "0 1px 3px rgba(0,0,0,0.1)" }}>
       <h2 className="text-xl font-bold mb-6" style={{ color: "#111827" }}>Home Service Requests</h2>
@@ -23,7 +63,7 @@ export function RequestsTab({ requests, onRequestAction }: RequestsTabProps) {
           <HomeIcon className="w-12 h-12 mx-auto mb-3" style={{ color: "#9ca3af" }} />
           <p className="text-sm font-medium" style={{ color: "#374151" }}>No home service requests yet</p>
           <p className="text-sm mt-1 max-w-md mx-auto" style={{ color: "#6b7280" }}>
-            Requests appear here when patients book a home visit. Booking must be connected to the backend first.
+            Requests appear here when patients book a home visit with you.
           </p>
         </div>
       ) : (
@@ -58,15 +98,9 @@ export function RequestsTab({ requests, onRequestAction }: RequestsTabProps) {
               </div>
               <span
                 className="px-3 py-1 text-sm rounded-full font-medium"
-                style={
-                  request.status === "pending"
-                    ? { backgroundColor: "#fed7aa", color: "#c2410c" }
-                    : request.status === "accepted"
-                    ? { backgroundColor: "#bbf7d0", color: "#15803d" }
-                    : { backgroundColor: "#fecaca", color: "#b91c1c" }
-                }
+                style={getStatusStyles(request)}
               >
-                {request.status.charAt(0).toUpperCase() + request.status.slice(1)}
+                {getStatusLabel(request)}
               </span>
             </div>
 
@@ -91,18 +125,24 @@ export function RequestsTab({ requests, onRequestAction }: RequestsTabProps) {
               </div>
             </div>
 
-            {request.status === "pending" && (
+            {(request.backendStatus === "pending" || request.backendStatus === "overdue") && (
               <div className="flex space-x-3">
                 <button
                   onClick={() => onRequestAction(request.id, "accepted")}
-                  className="flex-1 flex items-center justify-center space-x-2 px-4 py-2 text-white rounded-lg transition-colors text-sm bg-green-600 hover:bg-green-700"
+                  disabled={updatingRequestId === request.id}
+                  className="flex-1 flex items-center justify-center space-x-2 px-4 py-2 text-white rounded-lg transition-colors text-sm bg-green-600 hover:bg-green-700 disabled:opacity-50"
                 >
-                  <CheckCircle className="w-4 h-4" />
+                  {updatingRequestId === request.id ? (
+                    <Loader2 className="w-4 h-4 animate-spin" />
+                  ) : (
+                    <CheckCircle className="w-4 h-4" />
+                  )}
                   <span>Accept</span>
                 </button>
                 <button
                   onClick={() => onRequestAction(request.id, "rejected")}
-                  className="flex-1 flex items-center justify-center space-x-2 px-4 py-2 text-white rounded-lg transition-colors text-sm bg-red-600 hover:bg-red-700"
+                  disabled={updatingRequestId === request.id}
+                  className="flex-1 flex items-center justify-center space-x-2 px-4 py-2 text-white rounded-lg transition-colors text-sm bg-red-600 hover:bg-red-700 disabled:opacity-50"
                 >
                   <XCircle className="w-4 h-4" />
                   <span>Reject</span>

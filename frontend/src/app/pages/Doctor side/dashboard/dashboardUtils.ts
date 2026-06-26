@@ -34,6 +34,7 @@ export function getStatusBadgeStyle(status: Appointment["status"]) {
   if (status === "pending") return { backgroundColor: "#fffbeb", color: "#d97706" };
   if (status === "scheduled") return { backgroundColor: "#eff6ff", color: "#2563eb" };
   if (status === "completed") return { backgroundColor: "#f0fdf4", color: "#16a34a" };
+  if (status === "overdue") return { backgroundColor: "#f3f4f6", color: "#4b5563" };
   return { backgroundColor: "#fef2f2", color: "#dc2626" };
 }
 

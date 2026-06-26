@@ -16,6 +16,8 @@ export interface PatientProfile {
     address: string;
     role: string;
     photoUrl?: string;
+    dob?: string;
+    governorate?: string;
   };
   medicalHistory: Array<{
     condition: string;
@@ -31,7 +33,7 @@ export interface PatientProfile {
 export const getPatientProfileByUserId = async (userId: string): Promise<PatientProfile> => {
 
   const patient = await Patient.findOne({ userId })
-    .populate("userId", "name email phone address role photoUrl")
+    .populate("userId", "name email phone address role photoUrl dob governorate")
     .exec();
 
   if (!patient || !patient.userId) {
@@ -50,6 +52,8 @@ export const getPatientProfileByUserId = async (userId: string): Promise<Patient
       address: user.address,
       role: user.role,
       photoUrl: user.photoUrl,
+      dob: user.dob?.toISOString(),
+      governorate: user.governorate,
     },
     medicalHistory: (patient.medicalHistory ?? []).map((entry) => ({
       condition: entry.condition,

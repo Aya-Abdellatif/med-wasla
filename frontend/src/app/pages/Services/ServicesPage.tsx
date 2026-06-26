@@ -1,7 +1,8 @@
 import { Link } from "react-router-dom";
 import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
-import { faArrowRight, faCheck } from "@fortawesome/free-solid-svg-icons";
+//import { faArrowRight, faCheck } from "@fortawesome/free-solid-svg-icons";
 import { useChatBot } from "../../context/useChatBot";
+import { CheckCircle } from "lucide-react";
 
 import { services, topFeatures } from "./ServicesData";
 
@@ -24,11 +25,12 @@ export default function ServicesPage() {
       </section>
 
       {/* Features Grid */}
-      <section className="bg-white px-5 py-16">
+      <section className="bg-white px-5 py-16 border-b border-border sticky top-20 z-40">
         <div className="mx-auto grid max-w-7xl gap-8 text-center md:grid-cols-2 lg:grid-cols-4">
           {topFeatures.map((feature) => (
             <div key={feature.title}>
               <div className="mx-auto mb-4 flex h-16 w-16 items-center justify-center rounded-full bg-teal-50 text-[#14B8A6]">
+                {/* <FontAwesomeIcon icon={feature.icon} className="text-3xl" /> */}
                 <FontAwesomeIcon icon={feature.icon} className="text-3xl" />
               </div>
 
@@ -43,7 +45,7 @@ export default function ServicesPage() {
       </section>
 
       {/* Services Section */}
-      <section className="bg-[#F9FAFB] px-5 py-20">
+      <section className="bg-white px-5 py-20">
         <div className="mx-auto max-w-7xl">
           <div className="space-y-20">
             {services.map((service, index) => {
@@ -67,14 +69,14 @@ export default function ServicesPage() {
 
                   {/* Content */}
                   <div className={isReverse ? "lg:order-1" : ""}>
-                    <div
+                    {/* <div
                       className={`mb-6 flex h-16 w-16 items-center justify-center rounded-xl ${service.color}`}
                     >
                       <FontAwesomeIcon
                         icon={service.icon}
                         className="text-3xl"
                       />
-                    </div>
+                    </div> */}
 
                     <h2 className="mb-4 text-3xl font-bold text-[#1F2937]">
                       {service.title}
@@ -87,12 +89,14 @@ export default function ServicesPage() {
                     <div className="mb-7 space-y-3">
                       {service.features.map((feature) => (
                         <div key={feature} className="flex items-center gap-3">
-                          <div className="flex h-5 w-5 shrink-0 items-center justify-center rounded-full bg-[#14B8A6] text-white">
-                            <FontAwesomeIcon
+                           <div className="flex h-5 w-5 shrink-0 items-center justify-center rounded-full bg-[#14B8A6] text-white">
+                            {/* <FontAwesomeIcon
                               icon={faCheck}
                               className="text-xs"
-                            />
-                          </div>
+                            /> */}
+                            <CheckCircle className="h-8 w-8" />
+                          </div> 
+                         
 
                           <span className="text-[#1F2937]">{feature}</span>
                         </div>
@@ -102,30 +106,30 @@ export default function ServicesPage() {
                     {service.title === "AI Medical Assistant" ? (
                       <button
                         onClick={openChatBot}
-                        className="inline-flex items-center gap-3 rounded-lg bg-[#14B8A6] px-6 py-3 font-medium text-white transition hover:bg-teal-600 cursor-pointer"
+                    className="group flex items-center gap-2 bg-primary text-white border-2 border-primary w-min font-bold text-base px-4 py-2 rounded-xl cursor-pointer transition-all duration-300 ease-in-out hover:border-primary hover:-translate-y-0.5 hover:bg-transparent hover:text-primary hover:shadow-md whitespace-nowrap"
                       >
                         <span>Start Chatbot</span>
-                        <FontAwesomeIcon icon={faArrowRight} />
+                        {/* <FontAwesomeIcon icon={faArrowRight} /> */}
                       </button>
                     ) : (
                       <Link
                         to={
                           service.title === "Doctor Reservation"
                             ? "/doctors"
-                            : service.title === "Home Visit"
+                            : service.title === "Nursing Care"
                               ? "/nurses"
                               : "/services"
                         }
-                        className="inline-flex items-center gap-3 rounded-lg bg-[#14B8A6] px-6 py-3 font-medium text-white transition hover:bg-teal-600"
+                    className="group flex items-center gap-2 bg-primary text-white border-2 border-primary font-bold text-base px-4 py-2 w-min rounded-xl cursor-pointer transition-all duration-300 ease-in-out hover:border-primary hover:-translate-y-0.5 hover:bg-transparent hover:text-primary hover:shadow-md whitespace-nowrap"
                       >
                         <span>
                           {service.title === "Doctor Reservation"
                             ? "Go to Doctors"
-                            : service.title === "Home Visit"
-                              ? "Go to Home Services"
+                            : service.title === "Nursing Care"
+                              ? "Go to Nurses"
                               : "Go to Home services"}
                         </span>
-                        <FontAwesomeIcon icon={faArrowRight} />
+                        {/* <FontAwesomeIcon icon={faArrowRight} /> */}
                       </Link>
                     )}
                   </div>

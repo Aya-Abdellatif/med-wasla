@@ -12,7 +12,7 @@ function ChatBot() {
 
         <button
           onClick={openChatBot}
-          className="relative h-14 w-14 rounded-full bg-primary hover:bg-primary-deep text-white shadow-lg transition-all duration-300 hover:scale-110 flex items-center justify-center cursor-pointer"
+          className="relative h-14 w-14 rounded-full bg-primary hover:bg-fg text-white shadow-lg transition-all duration-300 hover:scale-110 flex items-center justify-center cursor-pointer"
         >
           <Bot className="h-7 w-7" />
         </button>
@@ -67,7 +67,7 @@ function ChatBot() {
             placeholder="Type a message..."
             className="flex-1 text-sm px-4 py-2.5 rounded-xl border border-border bg-muted text-fg placeholder:text-fg-muted focus:outline-none focus:border-primary transition-colors"
           />
-          <button className="h-10 w-10 rounded-xl bg-primary hover:bg-primary-deep text-white flex items-center justify-center transition-colors cursor-pointer shrink-0">
+          <button className="h-10 w-10 rounded-xl bg-primary hover:bg-fg text-white flex items-center justify-center transition-colors cursor-pointer shrink-0">
             <Send className="h-4 w-4" />
           </button>
         </div>

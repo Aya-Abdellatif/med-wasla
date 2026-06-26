@@ -8,8 +8,8 @@ export interface Appointment {
   time: string;
   date: string;
   type: string;
-  status: "pending" | "scheduled" | "completed" | "cancelled";
-  backendStatus?: "pending" | "confirmed" | "completed" | "cancelled";
+  status: "pending" | "scheduled" | "completed" | "cancelled" | "overdue";
+  backendStatus?: "pending" | "confirmed" | "completed" | "cancelled" | "overdue";
 }
 
 export interface HomeServiceRequest {
@@ -21,6 +21,7 @@ export interface HomeServiceRequest {
   requestedTime: string;
   status: "pending" | "accepted" | "rejected";
   phone: string;
+  backendStatus?: "pending" | "confirmed" | "completed" | "cancelled" | "overdue";
 }
 
 export interface ProfileForm {
@@ -33,7 +34,7 @@ export interface ProfileForm {
   bio: string;
 }
 
-export type DashboardTab = "overview" | "schedule" | "profile" | "requests";
+export type DashboardTab = "overview" | "schedule" | "requests";
 
 export interface NewCertificateForm {
   title: string;
