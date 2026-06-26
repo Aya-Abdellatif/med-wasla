@@ -69,7 +69,7 @@ async function buildTemplateData(
   appointment: IAppointment & { _id: Types.ObjectId },
   patientUserId: string,
   specialistId: Types.ObjectId
-): Promise<{ patientPhone: string; params: string[] } | null> {
+): Promise<{ patientPhone: string; patientName: string; params: string[] } | null> {
   const [patient, specialist] = await Promise.all([
     User.findById(patientUserId).select("name phone"),
     MedicalSpecialist.findById(specialistId).populate<{ userId: { name: string } }>("userId", "name"),
@@ -77,6 +77,7 @@ async function buildTemplateData(
 
   if (!patient?.phone) return null;
 
+  const patientName = patient.name ?? "المريض";
   const specialistName = (specialist?.userId as { name: string } | null)?.name ?? "المتخصص";
   const appointmentDate = new Date(appointment.date);
 
@@ -96,8 +97,31 @@ async function buildTemplateData(
   // params order matches {{1}} {{2}} {{3}} {{4}} in the template
   return {
     patientPhone: patient.phone,
+    patientName,
     params: [specialistName, dateStr, timeStr, typeText],
   };
+}
+
+export async function sendCancellationNotification(
+  appointment: IAppointment & { _id: Types.ObjectId },
+  patientUserId: string,
+  specialistId: Types.ObjectId
+): Promise<void> {
+  const data = await buildTemplateData(appointment, patientUserId, specialistId);
+  if (!data) return;
+
+  // cancellation params: [patientName, specialistName, dateStr, timeStr, typeText]
+  const params = [data.patientName, ...data.params];
+
+  await sendWhatsAppMessage(data.patientPhone, "appointment_cancellation", params)
+    .catch(err => console.error("[WhatsApp] Cancellation send failed:", err));
+}
+
+export async function cancelAppointmentReminders(appointmentId: string): Promise<void> {
+  await Reminder.updateMany(
+    { appointmentId, status: "PENDING" },
+    { $set: { status: "CANCELLED" } }
+  );
 }
 
 export async function scheduleAppointmentReminders(

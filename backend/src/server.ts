@@ -3,6 +3,7 @@ import dotenv from "dotenv";
 import app from "./app.js";
 import { connectDB } from "./config/db.js";
 import { processReminders } from "./features/appointments/reminder.service.js";
+import { expireOverdueAppointments } from "./features/appointments/appointments.service.js";
 
 dns.setServers(["1.1.1.1", "8.8.8.8"]);
 
@@ -21,9 +22,13 @@ const startServer = async (): Promise<void> => {
   const runReminders = () =>
     processReminders().catch(err => console.error("[Reminder Scheduler]", err));
 
-  runReminders(); // run immediately on start
-  setInterval(runReminders, 60 * 1000);
-  console.log("[Reminder Scheduler] Started - checking every 60s");
+  const runExpireOverdue = () =>
+    expireOverdueAppointments().catch(err => console.error("[Overdue Scheduler]", err));
+
+  runReminders();
+  runExpireOverdue();
+  setInterval(() => { runReminders(); runExpireOverdue(); }, 60 * 1000);
+  console.log("[Scheduler] Started - checking reminders and overdue every 60s");
 };
 
 startServer();
