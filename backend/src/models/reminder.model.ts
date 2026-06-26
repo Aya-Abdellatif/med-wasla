@@ -1,6 +1,6 @@
 import mongoose, { Document, Schema, Types } from "mongoose";
 
-const reminderChannels = ["SMS", "EMAIL", "PUSH"] as const;
+const reminderChannels = ["WHATSAPP"] as const;
 export type ReminderChannel = (typeof reminderChannels)[number];
 
 const reminderStatuses = ["PENDING", "SENT", "DELIVERED", "FAILED", "CANCELLED"] as const;
@@ -15,6 +15,9 @@ export interface IReminder extends Document {
   attempts: number;
   maxAttempts: number;
   providerMessageId?: string | null;
+  message?: string;
+  templateName?: string;
+  templateParams?: string[];
   createdAt?: Date;
   updatedAt?: Date;
 }
@@ -31,7 +34,7 @@ const reminderSchema = new Schema<IReminder>(
     channel: {
       type: String,
       enum: reminderChannels as unknown as string[],
-      default: "SMS",
+      default: "WHATSAPP",
       required: true,
     },
 
@@ -64,6 +67,18 @@ const reminderSchema = new Schema<IReminder>(
 
     providerMessageId: {
       type: String,
+    },
+
+    message: {
+      type: String,
+    },
+
+    templateName: {
+      type: String,
+    },
+
+    templateParams: {
+      type: [String],
     },
   },
   {

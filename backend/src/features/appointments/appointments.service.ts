@@ -5,6 +5,7 @@ import MedicalSpecialist from "../../models/medicalSpecialist.model.js";
 import type { AppointmentStatus, AppointmentType } from "../../models/appointment.model.js";
 import type { IUser } from "../../models/user.model.js";
 import type { IMedicalSpecialist } from "../../models/medicalSpecialist.model.js";
+import { scheduleAppointmentReminders } from "./reminder.service.js";
 
 export function parseLocalAppointment(dateStr: string, timeStr: string) {
   const [year, month, day] = dateStr.split("-").map(Number);
@@ -23,25 +24,28 @@ export const createAppointmentService = async (data: {
   notes?: string;
 }) => {
   const specialist = await MedicalSpecialist.findById(data.specialistId);
-  if (!specialist) throw new Error("SPECIALIST_NOT_FOUND");
+  if (!specialist) 
+    throw new Error("SPECIALIST_NOT_FOUND");
+
   if (specialist.verificationStatus !== "approved") 
     throw new Error("SPECIALIST_NOT_APPROVED");
 
   if (data.type === "home" && !data.address?.trim()) 
     throw new Error("ADDRESS_REQUIRED");
 
-  if (data.type === "clinic" && specialist.specialistType === "nurse") {
+  if (data.type === "clinic" && specialist.specialistType === "nurse")
     throw new Error("INVALID_TYPE_FOR_NURSE");
-  }
-  if (data.type === "home" && !specialist.homeVisit) {
+  
+  if (data.type === "home" && !specialist.homeVisit)
     throw new Error("SPECIALIST_NO_HOME_VISIT");
-  }
 
-  if (data.date <= new Date()) throw new Error("DATE_IN_PAST");
+  if (data.date <= new Date()) 
+    throw new Error("DATE_IN_PAST");
 
   const dayName = data.date.toLocaleDateString("en-US", { weekday: "long" });
   const worksOnDay = specialist.availableSlots?.some((slot) => slot.day === dayName);
-  if (!worksOnDay) throw new Error("DAY_NOT_AVAILABLE");
+  if (!worksOnDay) 
+    throw new Error("DAY_NOT_AVAILABLE");
 
   const { availableSlots } = await getAvailableSlotsService(
     data.specialistId,
@@ -52,7 +56,7 @@ export const createAppointmentService = async (data: {
     throw new Error("SLOT_NOT_AVAILABLE");
   }
 
-  return Appointment.create({
+  const appointment = await Appointment.create({
     patientId: data.patientId,
     specialistId: data.specialistId,
     date: data.date,
@@ -61,6 +65,15 @@ export const createAppointmentService = async (data: {
     notes: data.notes,
     status: "pending",
   });
+
+  // For clinic appointments: send confirmation immediately on booking
+  // For home visits: wait until specialist approves (handled in updateAppointmentStatusService)
+  if (data.type !== "home") {
+    scheduleAppointmentReminders(appointment, data.patientId, specialist._id as Types.ObjectId)
+      .catch(err => console.error("[Reminder] Failed to schedule:", err));
+  }
+
+  return appointment;
 };
 
 
@@ -149,6 +162,16 @@ export const updateAppointmentStatusService = async (
 
   appointment.status = newStatus;
   await appointment.save();
+
+  // For home visits: send confirmation when specialist approves
+  if (newStatus === "confirmed" && appointment.type === "home") {
+    scheduleAppointmentReminders(
+      appointment,
+      appointment.patientId.toString(),
+      appointment.specialistId as Types.ObjectId
+    ).catch(err => console.error("[Reminder] Failed to schedule:", err));
+  }
+
   return appointment;
 };
 
@@ -216,18 +239,20 @@ export const getAvailableSlotsService = async (
   availableSlots: string[];
 }> => {
   const specialist = await MedicalSpecialist.findById(specialistId);
-  if (!specialist) throw new Error("SPECIALIST_NOT_FOUND");
-  if (specialist.verificationStatus !== "approved") throw new Error("SPECIALIST_NOT_APPROVED");
+  if (!specialist) 
+    throw new Error("SPECIALIST_NOT_FOUND");
+
+  if (specialist.verificationStatus !== "approved") 
+    throw new Error("SPECIALIST_NOT_APPROVED");
 
   const date = new Date(dateStr);
-  if (isNaN(date.getTime())) throw new Error("INVALID_DATE");
+  if (isNaN(date.getTime())) 
+    throw new Error("INVALID_DATE");
 
-  // Get the day name (e.g. "Monday") for the requested date
   const dayName = date.toLocaleDateString("en-US", { weekday: "long" });
 
   const slot = specialist.availableSlots?.find((s) => s.day === dayName);
   if (!slot) {
-    // Specialist doesn't work on this day
     return { availableSlots: [], workingHours: null };
   }
 
