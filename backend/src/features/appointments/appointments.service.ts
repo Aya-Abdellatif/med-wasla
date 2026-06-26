@@ -5,7 +5,7 @@ import MedicalSpecialist from "../../models/medicalSpecialist.model.js";
 import type { AppointmentStatus, AppointmentType } from "../../models/appointment.model.js";
 import type { IUser } from "../../models/user.model.js";
 import type { IMedicalSpecialist } from "../../models/medicalSpecialist.model.js";
-import { scheduleAppointmentReminders } from "./reminder.service.js";
+import { scheduleAppointmentReminders, cancelAppointmentReminders, sendCancellationNotification } from "./reminder.service.js";
 
 export function parseLocalAppointment(dateStr: string, timeStr: string) {
   const [year, month, day] = dateStr.split("-").map(Number);
@@ -91,7 +91,7 @@ export const createAppointmentService = async (data: {
     type: data.type,
     address: data.address,
     notes: data.notes,
-    status: "pending",
+    status: data.type === "clinic" ? "confirmed" : "pending",
   });
 
   // For clinic appointments: send confirmation immediately on booking
@@ -257,9 +257,57 @@ export const cancelAppointmentService = async (
 
   appointment.status = "cancelled";
   await appointment.save();
+
+  cancelAppointmentReminders(appointment._id.toString())
+    .catch(err => console.error("[Reminder] Failed to cancel reminders:", err));
+
+  sendCancellationNotification(
+    appointment,
+    appointment.patientId.toString(),
+    appointment.specialistId as Types.ObjectId
+  ).catch(err => console.error("[WhatsApp] Failed to send cancellation:", err));
+
   return appointment;
 };
 
+
+export const cancelDayAppointmentsService = async (
+  specialistUserId: string,
+  dateStr: string
+) => {
+  const specialist = await MedicalSpecialist.findOne({ userId: specialistUserId });
+  if (!specialist) throw new Error("SPECIALIST_PROFILE_NOT_FOUND");
+
+  const date = new Date(dateStr);
+  if (isNaN(date.getTime())) throw new Error("INVALID_DATE");
+
+  const startOfDay = new Date(date);
+  startOfDay.setHours(0, 0, 0, 0);
+  const endOfDay = new Date(date);
+  endOfDay.setHours(23, 59, 59, 999);
+
+  const appointments = await Appointment.find({
+    specialistId: specialist._id,
+    date: { $gte: startOfDay, $lte: endOfDay },
+    status: { $nin: ["cancelled", "completed", "overdue"] },
+  });
+
+  for (const appointment of appointments) {
+    appointment.status = "cancelled";
+    await appointment.save();
+
+    cancelAppointmentReminders(appointment._id.toString())
+      .catch(err => console.error("[Reminder] Failed to cancel reminders:", err));
+
+    sendCancellationNotification(
+      appointment,
+      appointment.patientId.toString(),
+      appointment.specialistId as Types.ObjectId
+    ).catch(err => console.error("[WhatsApp] Failed to send cancellation:", err));
+  }
+
+  return appointments.length;
+};
 
 export const rescheduleAppointmentService = async (
   appointmentId: string,
@@ -291,10 +339,21 @@ export const rescheduleAppointmentService = async (
   if (newDate <= new Date()) throw new Error("DATE_IN_PAST");
 
   appointment.date = newDate;
-  // Reset to pending so the specialist must re-confirm the new time
-  appointment.status = "pending";
+  // clinic stays confirmed (auto-approved); home goes back to pending for re-approval
+  appointment.status = appointment.type === "clinic" ? "confirmed" : "pending";
   if (notes !== undefined) appointment.notes = notes;
+
+  await cancelAppointmentReminders(appointment._id.toString());
   await appointment.save();
+
+  if (appointment.type === "clinic") {
+    scheduleAppointmentReminders(
+      appointment,
+      appointment.patientId.toString(),
+      appointment.specialistId as Types.ObjectId
+    ).catch(err => console.error("[Reminder] Failed to schedule reminders after reschedule:", err));
+  }
+
   return appointment;
 };
 
