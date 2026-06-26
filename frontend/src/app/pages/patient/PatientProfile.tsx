@@ -1,4 +1,4 @@
-import { useState, useEffect, useCallback } from "react";
+import { useState, useEffect } from "react";
 import {
   Edit,
   Save,
@@ -21,13 +21,33 @@ import { showError, showSuccess } from "../../../utils/toast";
 
 function formatDobForInput(dob?: string) {
   if (!dob) return "";
-  return new Date(dob).toISOString().split("T")[0];
+
+  const date = new Date(dob);
+  if (Number.isNaN(date.getTime())) return "";
+
+  const year = date.getFullYear();
+  const month = String(date.getMonth() + 1).padStart(2, "0");
+  const day = String(date.getDate()).padStart(2, "0");
+  return `${year}-${month}-${day}`;
+}
+
+function buildProfileForm(data: PatientProfileResponse["user"]) {
+  return {
+    name: data.name,
+    email: data.email,
+    phone: data.phone,
+    dob: formatDobForInput(data.dob),
+    address: data.address ?? "",
+    governorate: data.governorate ?? "",
+  };
 }
 
 export function PatientProfile() {
   const { user, updateProfile } = useAuth();
   const [profile, setProfile] = useState<PatientProfileResponse | null>(null);
   const [loading, setLoading] = useState(true);
+  const [loadError, setLoadError] = useState<string | null>(null);
+  const [reloadKey, setReloadKey] = useState(0);
   const [isEditingProfile, setIsEditingProfile] = useState(false);
   const [isSaving, setIsSaving] = useState(false);
   const [profileData, setProfileData] = useState({
@@ -36,37 +56,41 @@ export function PatientProfile() {
     phone: "",
     dob: "",
     address: "",
+    governorate: "",
   });
 
-  const loadProfile = useCallback(async () => {
+  useEffect(() => {
     if (!user?.id || user.role !== "patient") {
-      setLoading(false);
       return;
     }
 
-    try {
-      const data = await fetchPatientProfile(user.id);
-      setProfile(data);
-      setProfileData({
-        name: data.user.name,
-        email: data.user.email,
-        phone: data.user.phone,
-        dob: formatDobForInput(data.user.dob),
-        address: data.user.address ?? "",
-      });
-    } catch (err) {
-      showError(err instanceof Error ? err.message : "Failed to load profile");
-    } finally {
-      setLoading(false);
-    }
-  }, [user?.id, user?.role]);
+    let cancelled = false;
 
-  useEffect(() => {
-    void loadProfile();
-  }, [loadProfile]);
+    void fetchPatientProfile(user.id)
+      .then((data) => {
+        if (cancelled) return;
+        setProfile(data);
+        setProfileData(buildProfileForm(data.user));
+        setLoadError(null);
+      })
+      .catch((err) => {
+        if (cancelled) return;
+        setProfile(null);
+        const message = err instanceof Error ? err.message : "Failed to load profile";
+        setLoadError(message);
+        showError(message);
+      })
+      .finally(() => {
+        if (!cancelled) setLoading(false);
+      });
+
+    return () => {
+      cancelled = true;
+    };
+  }, [user?.id, user?.role, reloadKey]);
 
   const handleUpdateProfile = async () => {
-    if (!user?.id) return;
+    if (!user?.id || !profile) return;
 
     setIsSaving(true);
     try {
@@ -76,16 +100,21 @@ export function PatientProfile() {
         phone: profileData.phone,
         address: profileData.address,
         dob: profileData.dob || undefined,
+        governorate: profileData.governorate || undefined,
       });
+
+      const data = await fetchPatientProfile(user.id);
+      setProfile(data);
+      setProfileData(buildProfileForm(data.user));
+      setLoadError(null);
 
       updateProfile({
-        name: profileData.name,
-        email: profileData.email,
-        phone: profileData.phone,
-        location: profileData.address,
+        name: data.user.name,
+        email: data.user.email,
+        phone: data.user.phone,
+        location: data.user.address,
       });
 
-      await loadProfile();
       setIsEditingProfile(false);
       showSuccess("Profile updated successfully!");
     } catch (err) {
@@ -94,6 +123,14 @@ export function PatientProfile() {
       setIsSaving(false);
     }
   };
+
+  if (!user?.id || user.role !== "patient") {
+    return (
+      <div className="min-h-screen bg-muted/30 flex items-center justify-center px-4">
+        <p className="text-muted-foreground">Unable to load your profile.</p>
+      </div>
+    );
+  }
 
   if (loading) {
     return (
@@ -105,8 +142,20 @@ export function PatientProfile() {
 
   if (!profile) {
     return (
-      <div className="min-h-screen bg-muted/30 flex items-center justify-center px-4">
-        <p className="text-muted-foreground">Unable to load your profile.</p>
+      <div className="min-h-screen bg-muted/30 flex flex-col items-center justify-center gap-4 px-4">
+        <p className="text-muted-foreground text-center">
+          {loadError ?? "Unable to load your profile."}
+        </p>
+        <button
+          type="button"
+          onClick={() => {
+            setLoading(true);
+            setReloadKey((key) => key + 1);
+          }}
+          className="px-4 py-2 bg-primary text-white rounded-lg hover:bg-primary/90 transition-colors"
+        >
+          Try Again
+        </button>
       </div>
     );
   }
@@ -152,13 +201,7 @@ export function PatientProfile() {
                 <button
                   onClick={() => {
                     setIsEditingProfile(false);
-                    setProfileData({
-                      name: profile.user.name,
-                      email: profile.user.email,
-                      phone: profile.user.phone,
-                      dob: formatDobForInput(profile.user.dob),
-                      address: profile.user.address ?? "",
-                    });
+                    setProfileData(buildProfileForm(profile.user));
                   }}
                   className="px-4 py-2 border border-border rounded-lg hover:bg-muted transition-colors"
                 >
@@ -226,6 +269,17 @@ export function PatientProfile() {
                 type="date"
                 value={profileData.dob}
                 onChange={(e) => setProfileData({ ...profileData, dob: e.target.value })}
+                disabled={!isEditingProfile}
+                className="w-full px-4 py-3 border border-border rounded-lg focus:outline-none focus:ring-2 focus:ring-primary disabled:bg-muted disabled:cursor-not-allowed"
+              />
+            </div>
+
+            <div>
+              <label className="block mb-2 font-medium text-foreground">Governorate</label>
+              <input
+                type="text"
+                value={profileData.governorate}
+                onChange={(e) => setProfileData({ ...profileData, governorate: e.target.value })}
                 disabled={!isEditingProfile}
                 className="w-full px-4 py-3 border border-border rounded-lg focus:outline-none focus:ring-2 focus:ring-primary disabled:bg-muted disabled:cursor-not-allowed"
               />
