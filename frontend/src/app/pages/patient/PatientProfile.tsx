@@ -1,4 +1,4 @@
-import { useEffect, useState } from "react";
+import { useEffect, useState, useRef, type ChangeEvent } from "react";
 import { useAuth } from "../../context/useAuth";
 import { fetchPatientProfile, updatePatientProfile, type PatientProfileApi } from "../../../services/patientApi";
 import {
@@ -19,6 +19,7 @@ import {
   Save,
   X,
   Edit,
+  UploadCloud,
 } from "lucide-react";
 import { ImageWithFallback } from "../../figma/ImageWithFallback";
 
@@ -97,6 +98,17 @@ function PersonalTab({ profile, onSave }: {
   const [success, setSuccess] = useState(false);
   const [saveError, setSaveError] = useState<string>("");
   const [isSaving, setIsSaving] = useState(false);
+  const fileInputRef = useRef<HTMLInputElement | null>(null);
+
+  const handleFileChange = (e: ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    if (!file) return;
+    const reader = new FileReader();
+    reader.onload = () => {
+      setForm((prev) => ({ ...prev, photoUrl: String(reader.result) }));
+    };
+    reader.readAsDataURL(file);
+  };
 
   useEffect(() => {
     const nextState = getInitialState();
@@ -217,9 +229,29 @@ function PersonalTab({ profile, onSave }: {
         </div>
       )}
 
-      {/* Row 1 — Full Name */}
-      <div>
-        <label className="block text-sm font-medium text-fg mb-1.5">Full Name</label>
+      {/* Avatar + Row 1 — Full Name */}
+      <div className="flex items-start gap-6">
+        <div className="relative">
+          <div className="w-24 h-24 rounded-full bg-primary/10 overflow-hidden flex items-center justify-center text-2xl text-fg">
+            {form.photoUrl ? (
+              // eslint-disable-next-line @next/next/no-img-element
+              <img src={form.photoUrl} alt="avatar" className="w-full h-full object-cover" />
+            ) : (
+              <span className="uppercase">{(profile.name || "P").charAt(0)}</span>
+            )}
+          </div>
+          <button
+            type="button"
+            onClick={() => fileInputRef.current?.click()}
+            className="absolute -bottom-0.5 -right-0.5 bg-white border border-border rounded-full p-2 shadow-sm hover:bg-muted transition-colors"
+            aria-label="Upload avatar"
+          >
+            <UploadCloud className="w-4 h-4 text-primary" />
+          </button>
+          <input ref={fileInputRef} onChange={handleFileChange} accept="image/*" type="file" className="hidden" />
+        </div>
+        <div className="flex-1">
+          <label className="block text-sm font-medium text-fg mb-1.5">Full Name</label>
         <input
           type="text"
           value={form.name}
@@ -228,6 +260,7 @@ function PersonalTab({ profile, onSave }: {
           className={`w-full px-4 py-3 bg-input-background border rounded-xl focus:outline-none focus:ring-2 focus:ring-primary transition-colors ${errors.name ? "border-red-400 focus:ring-red-300" : "border-border"}`}
         />
         <FieldError msg={errors.name} />
+        </div>
       </div>
 
       {/* Row 2 — Phone + DOB */}
@@ -400,7 +433,6 @@ function SecurityTab({ user }: { user: any }) {
     return e;
   };
 
-  // ✅ Correct SecurityTab handleSave — uses only its own state/form fields
   const handleSave = () => {
     const e = validate();
     if (Object.keys(e).length) { setErrors(e); return; }
