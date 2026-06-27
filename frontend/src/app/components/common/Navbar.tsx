@@ -1,4 +1,10 @@
-import { useState, useEffect, useRef } from "react";
+import {
+  useState,
+  useEffect,
+  useRef,
+  useLayoutEffect,
+  useCallback,
+} from "react";
 import {
   LogOut,
   CalendarDays,
@@ -62,17 +68,39 @@ function Navbar() {
     (link) => link.name !== "Profile" && link.name !== "Appointments",
   );
 
+  // `active` is used for the MOBILE menu highlight — it can match Profile/Appointments,
+  // which is correct there since those links actually exist in the mobile list.
   const active =
     navLinks.find((link) => link.path === location.pathname)?.name ?? null;
+
+  // `desktopActive` is used for the DESKTOP underline — it only matches links that
+  // actually exist in desktopNavLinks, so we never try to position the underline
+  // against a ref (Profile/Appointments) that was never assigned.
+  const desktopActive =
+    desktopNavLinks.find((link) => link.path === location.pathname)?.name ??
+    null;
+
   const containerRef = useRef<HTMLDivElement | null>(null);
   const linksRef = useRef<Record<string, HTMLElement | null>>({});
   const profileRef = useRef<HTMLDivElement | null>(null);
 
-  useEffect(() => {
-    if (!active) return;
-    const el = linksRef.current[active];
+  // Recomputes the underline's left/width based on the currently-active
+  // desktop link. Pulled into its own function so it can be re-run any time
+  // the layout might have shifted underneath us (font load, image load,
+  // window resize) — not just when the active route changes.
+  const updateUnderline = useCallback(() => {
     const container = containerRef.current;
-    if (el && container) {
+
+    // No desktop link matches the current route (e.g. we're on /profile or
+    // /appointments) — reset/hide the underline instead of leaving it stuck
+    // at its last position.
+    if (!desktopActive || !container) {
+      setUnderlineStyle({ left: 0, width: 0 });
+      return;
+    }
+
+    const el = linksRef.current[desktopActive];
+    if (el) {
       const elRect = el.getBoundingClientRect();
       const containerRect = container.getBoundingClientRect();
       setUnderlineStyle({
@@ -80,8 +108,43 @@ function Navbar() {
         width: elRect.width,
       });
     }
+  }, [desktopActive]);
+
+  // useLayoutEffect (not useEffect) so this runs synchronously right after
+  // DOM mutations, before the browser paints — avoids a visible flash/jump.
+  useLayoutEffect(() => {
+    updateUnderline();
     if (isFirstActivation) setIsFirstActivation(false);
-  }, [active, isFirstActivation]);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [desktopActive]);
+
+  // The measurement above can still be wrong on first paint if the page's
+  // fonts or the logo image haven't finished loading yet — text/layout can
+  // shift size right after we measured it. Re-measure once those settle,
+  // and again on any resize, so the underline snaps to its correct spot
+  // instead of being stuck wherever it was on the very first render.
+  useEffect(() => {
+    // Re-run once web fonts are fully loaded (font swap changes text width).
+    if (typeof document !== "undefined" && "fonts" in document) {
+      document.fonts.ready.then(() => updateUnderline());
+    }
+
+    window.addEventListener("resize", updateUnderline);
+
+    // Catches any other layout shift in the nav (e.g. the logo image
+    // finishing its load and changing the row's width).
+    const container = containerRef.current;
+    let resizeObserver: ResizeObserver | undefined;
+    if (container && typeof ResizeObserver !== "undefined") {
+      resizeObserver = new ResizeObserver(() => updateUnderline());
+      resizeObserver.observe(container);
+    }
+
+    return () => {
+      window.removeEventListener("resize", updateUnderline);
+      resizeObserver?.disconnect();
+    };
+  }, [updateUnderline]);
 
   useEffect(() => {
     if (!isProfileOpen) return;
@@ -118,6 +181,8 @@ function Navbar() {
               <img
                 src={Logo}
                 alt="Logo"
+                width={80}
+                height={68}
                 className="w-20 h-17 -mr-4 transition-transform duration-300"
               />
               <span className="text-3xl font-medium tracking-tight">
@@ -132,7 +197,7 @@ function Navbar() {
               ref={containerRef}
               className="hidden lg:flex items-center justify-center gap-1 flex-1 relative h-full"
             >
-              {active && (
+              {desktopActive && (
                 <div
                   className={`absolute bottom-0 h-0.5 bg-primary rounded-full transition-all ease-out ${
                     isFirstActivation ? "duration-0" : "duration-300"
@@ -151,7 +216,7 @@ function Navbar() {
                     linksRef.current[name] = el;
                   }}
                   className={`px-4 py-2 text-lg font-semibold tracking-wide transition-all duration-300 ease-in-out ${
-                    active === name
+                    desktopActive === name
                       ? "text-primary"
                       : "text-fg-muted hover:text-fg hover:scale-[1.02]"
                   }`}
@@ -320,7 +385,7 @@ function Navbar() {
                       </>
                     )}
 
-                    {canBookAppointments(user) && (
+                    {isAuthenticated && canBookAppointments(user) && (
                       <button
                         onClick={() => {
                           setIsOpen(false);
