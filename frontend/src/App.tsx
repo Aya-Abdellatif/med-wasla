@@ -43,8 +43,7 @@ function App() {
           <Route path="/medical-specialist" element={<MedicalSpecialist />} />
           <Route path="/forgot-password" element={<ForgotPassword />} />
           <Route path="/reset-password" element={<ResetPassword />} />
-          <Route path="/doctor/:id" element={<DoctorProfile />} />
-          <Route path="/nurse/:id" element={<NurseProfile />} />
+
           <Route path="/admin-dashboard" element={<AdminDashboard />} />
 
           <Route element={<MainLayout />}>
@@ -54,6 +53,8 @@ function App() {
             <Route path="/services" element={<ServicesPage />} />
             <Route path="/doctors" element={<Doctors />} />
             <Route path="/nurses" element={<Nurses />} />
+            <Route path="/doctor/:id" element={<DoctorProfile />} />
+            <Route path="/nurse/:id" element={<NurseProfile />} />
             <Route element={<ProtectedRoute />}>
               <Route path="/dashboard" element={<Dashboard />} />
               <Route path="/profile" element={<PatientProfile />} />

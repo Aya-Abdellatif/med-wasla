@@ -5,6 +5,8 @@ import {
   UserCircle,
   LogIn,
   UserPlus,
+  UserRound,
+  ChevronDown,
 } from "lucide-react";
 import { Link, useNavigate, useLocation } from "react-router-dom";
 import { AppointmentTypeModal } from "../booking/AppointmentTypeModal";
@@ -15,6 +17,7 @@ import Logo from "../../../assets/logo.png";
 
 function Navbar() {
   const [isOpen, setIsOpen] = useState(false);
+  const [isProfileOpen, setIsProfileOpen] = useState(false);
   const [underlineStyle, setUnderlineStyle] = useState({ left: 0, width: 0 });
   const [isFirstActivation, setIsFirstActivation] = useState(true);
   const [isAppointmentModalOpen, setIsAppointmentModalOpen] = useState(false);
@@ -24,6 +27,7 @@ function Navbar() {
 
   const isDoctor = user?.role === "doctor" || user?.role === "nurse";
   const displayName = getSpecialistDisplayName(user?.name);
+  const navUserName = isDoctor ? displayName : user?.name;
 
   const doctorLinks = [
     { name: "Home", path: "/" },
@@ -40,13 +44,25 @@ function Navbar() {
     { name: "Contact Us", path: "/contact" },
   ];
   const baseLinks = isDoctor ? doctorLinks : patientLinks;
+
   const navLinks = isAuthenticated
-    ? [...baseLinks, { name: "Profile", path: "/profile" }]
+    ? [
+        ...baseLinks,
+        { name: "Profile", path: "/profile" },
+        { name: "Appointments", path: "/appointments" },
+      ]
     : baseLinks;
+
+  const desktopNavLinks = navLinks.filter(
+    (link) => link.name !== "Profile" && link.name !== "Appointments",
+  );
+
   const active =
     navLinks.find((link) => link.path === location.pathname)?.name ?? null;
   const containerRef = useRef<HTMLDivElement | null>(null);
   const linksRef = useRef<Record<string, HTMLElement | null>>({});
+  const profileRef = useRef<HTMLDivElement | null>(null);
+
   useEffect(() => {
     if (!active) return;
     const el = linksRef.current[active];
@@ -61,6 +77,24 @@ function Navbar() {
     }
     if (isFirstActivation) setIsFirstActivation(false);
   }, [active, isFirstActivation]);
+
+  useEffect(() => {
+    if (!isProfileOpen) return;
+    const handleClickOutside = (event: MouseEvent) => {
+      if (
+        profileRef.current &&
+        !profileRef.current.contains(event.target as Node)
+      ) {
+        setIsProfileOpen(false);
+      }
+    };
+    document.addEventListener("mousedown", handleClickOutside);
+    return () => document.removeEventListener("mousedown", handleClickOutside);
+  }, [isProfileOpen]);
+
+  useEffect(() => {
+    setIsProfileOpen(false);
+  }, [location.pathname]);
 
   const handleLogout = () => {
     logout();
@@ -105,7 +139,7 @@ function Navbar() {
                   }}
                 />
               )}
-              {navLinks.map(({ name, path }) => (
+              {desktopNavLinks.map(({ name, path }) => (
                 <Link
                   key={name}
                   to={path}
@@ -124,15 +158,43 @@ function Navbar() {
             </div>
 
             <div className="hidden lg:flex items-center gap-2 shrink-0">
-              {isDoctor && displayName && (
-                <div className="flex items-center gap-2 text-lg font-semibold text-fg px-3 py-1.5 rounded-full bg-muted">
-                  <UserCircle
-                    className="h-6 w-6 text-primary shrink-0"
-                    strokeWidth={2}
-                  />
-                  <span>{displayName}</span>
+              {isAuthenticated && navUserName && (
+                <div className="relative" ref={profileRef}>
+                  <button
+                    onClick={() => setIsProfileOpen((prev) => !prev)}
+                    className="group flex items-center gap-2 bg-primary text-white border-2 border-primary font-bold text-base px-4 py-2 rounded-xl cursor-pointer transition-all duration-300 ease-in-out hover:border-primary hover:-translate-y-0.5 hover:bg-transparent hover:text-primary hover:shadow-md whitespace-nowrap"
+                  >
+                    <UserRound className="h-5 w-5" strokeWidth={2.5} />
+                    {navUserName}
+                    <ChevronDown
+                      className={`h-4 w-4 transition-transform duration-200 ${
+                        isProfileOpen ? "rotate-180" : ""
+                      }`}
+                      strokeWidth={2.5}
+                    />
+                  </button>
+
+                  {isProfileOpen && (
+                    <div className="absolute right-0 top-full mt-2 w-52 bg-white rounded-xl shadow-xl border border-border p-2 space-y-1 z-50">
+                      <Link
+                        to="/profile"
+                        onClick={() => setIsProfileOpen(false)}
+                        className="flex items-center gap-2 text-base font-semibold px-3 py-2 rounded-lg text-fg-muted hover:text-fg hover:bg-muted transition-all duration-200"
+                      >
+                        View Profile
+                      </Link>
+                      <Link
+                        to="/appointments"
+                        onClick={() => setIsProfileOpen(false)}
+                        className="flex items-center gap-2 text-base font-semibold px-3 py-2 rounded-lg text-fg-muted hover:text-fg hover:bg-muted transition-all duration-200"
+                      >
+                        View Appointments
+                      </Link>
+                    </div>
+                  )}
                 </div>
               )}
+
               {isAuthenticated ? (
                 <button
                   onClick={handleLogout}
