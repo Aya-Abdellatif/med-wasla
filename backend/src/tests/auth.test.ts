@@ -58,14 +58,26 @@ describe("Auth Routes", () => {
       expect(mockSendEmail).toHaveBeenCalledOnce();
     });
 
-    it("returns 400 when email already exists", async () => {
-      await request(app).post("/api/auth/register").send(basePatient);
+    it("returns 400 when verified email already exists", async () => {
+      await registerAndVerify();
 
       const res = await request(app)
         .post("/api/auth/register")
         .send(basePatient);
 
       expect(res.status).toBe(400);
+    });
+
+    it("re-sends OTP and returns 201 when email exists but is unverified", async () => {
+      await request(app).post("/api/auth/register").send(basePatient);
+      mockSendEmail.mockClear();
+
+      const res = await request(app)
+        .post("/api/auth/register")
+        .send(basePatient);
+
+      expect(res.status).toBe(201);
+      expect(mockSendEmail).toHaveBeenCalledOnce();
     });
 
     it("returns 400 when required fields are missing", async () => {
@@ -128,6 +140,13 @@ describe("Auth Routes", () => {
   describe("POST /api/auth/resend-otp", () => {
     it("resends OTP for unverified user and returns 200", async () => {
       await request(app).post("/api/auth/register").send(basePatient);
+
+      // bypass the 60s rate limit by backdating the OTP record
+      // use raw collection driver because Mongoose protects the createdAt field
+      await OTP.collection.updateMany(
+        { email: basePatient.email },
+        { $set: { createdAt: new Date(Date.now() - 61_000) } },
+      );
       mockSendEmail.mockClear();
 
       const res = await request(app)
@@ -137,6 +156,16 @@ describe("Auth Routes", () => {
       expect(res.status).toBe(200);
       expect(res.body.status).toBe("success");
       expect(mockSendEmail).toHaveBeenCalledOnce();
+    });
+
+    it("returns 429 when resend is requested within 60 seconds", async () => {
+      await request(app).post("/api/auth/register").send(basePatient);
+
+      const res = await request(app)
+        .post("/api/auth/resend-otp")
+        .send({ email: basePatient.email });
+
+      expect(res.status).toBe(429);
     });
 
     it("returns 400 for already-verified user", async () => {
@@ -199,6 +228,122 @@ describe("Auth Routes", () => {
         .send({ email: "nobody@test.com", password: "password123" });
 
       expect(res.status).toBe(401);
+    });
+  });
+
+  // ─── POST /api/auth/forgot-password ──────────────────────────────────────
+  describe("POST /api/auth/forgot-password", () => {
+    it("sends OTP to verified user and returns 200", async () => {
+      await registerAndVerify();
+      mockSendEmail.mockClear();
+
+      const res = await request(app)
+        .post("/api/auth/forgot-password")
+        .send({ email: basePatient.email });
+
+      expect(res.status).toBe(200);
+      expect(res.body.status).toBe("success");
+      expect(mockSendEmail).toHaveBeenCalledOnce();
+    });
+
+    it("returns 404 for unknown email", async () => {
+      const res = await request(app)
+        .post("/api/auth/forgot-password")
+        .send({ email: "ghost@test.com" });
+
+      expect(res.status).toBe(404);
+    });
+
+    it("returns 400 for unverified account", async () => {
+      await request(app).post("/api/auth/register").send(basePatient);
+
+      const res = await request(app)
+        .post("/api/auth/forgot-password")
+        .send({ email: basePatient.email });
+
+      expect(res.status).toBe(400);
+    });
+
+    it("returns 429 when requested within 60 seconds", async () => {
+      await registerAndVerify();
+      await request(app).post("/api/auth/forgot-password").send({ email: basePatient.email });
+
+      const res = await request(app)
+        .post("/api/auth/forgot-password")
+        .send({ email: basePatient.email });
+
+      expect(res.status).toBe(429);
+    });
+  });
+
+  // ─── POST /api/auth/reset-password ───────────────────────────────────────
+  describe("POST /api/auth/reset-password", () => {
+    async function requestPasswordReset() {
+      await registerAndVerify();
+      mockSendEmail.mockClear();
+      await request(app).post("/api/auth/forgot-password").send({ email: basePatient.email });
+      return extractOtpFromLastEmail();
+    }
+
+    it("resets password with valid OTP and returns 200", async () => {
+      const otp = await requestPasswordReset();
+
+      const res = await request(app)
+        .post("/api/auth/reset-password")
+        .send({ email: basePatient.email, otp, newPassword: "newpassword123" });
+
+      expect(res.status).toBe(200);
+      expect(res.body.status).toBe("success");
+    });
+
+    it("allows login with new password after reset", async () => {
+      const otp = await requestPasswordReset();
+      await request(app)
+        .post("/api/auth/reset-password")
+        .send({ email: basePatient.email, otp, newPassword: "newpassword123" });
+
+      const res = await request(app)
+        .post("/api/auth/login")
+        .send({ email: basePatient.email, password: "newpassword123" });
+
+      expect(res.status).toBe(200);
+      expect(res.body.token).toBeDefined();
+    });
+
+    it("returns 401 with old password after reset", async () => {
+      const otp = await requestPasswordReset();
+      await request(app)
+        .post("/api/auth/reset-password")
+        .send({ email: basePatient.email, otp, newPassword: "newpassword123" });
+
+      const res = await request(app)
+        .post("/api/auth/login")
+        .send({ email: basePatient.email, password: basePatient.password });
+
+      expect(res.status).toBe(401);
+    });
+
+    it("returns 400 for wrong OTP", async () => {
+      await requestPasswordReset();
+
+      const res = await request(app)
+        .post("/api/auth/reset-password")
+        .send({ email: basePatient.email, otp: "000000", newPassword: "newpassword123" });
+
+      expect(res.status).toBe(400);
+    });
+
+    it("returns 400 when OTP is reused", async () => {
+      const otp = await requestPasswordReset();
+      await request(app)
+        .post("/api/auth/reset-password")
+        .send({ email: basePatient.email, otp, newPassword: "newpassword123" });
+
+      const res = await request(app)
+        .post("/api/auth/reset-password")
+        .send({ email: basePatient.email, otp, newPassword: "anotherpassword123" });
+
+      expect(res.status).toBe(400);
     });
   });
 
