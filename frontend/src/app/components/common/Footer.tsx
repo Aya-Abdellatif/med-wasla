@@ -1,12 +1,23 @@
-import { CalendarDays, Phone, Mail, MapPin, LayoutDashboard } from "lucide-react";
+import {
+  CalendarDays,
+  Phone,
+  Mail,
+  MapPin,
+  LayoutDashboard,
+} from "lucide-react";
 import { useNavigate } from "react-router-dom";
 import Logo from "/src/assets/LogoFooter.png";
 import { useAuth } from "../../context/useAuth";
-import { canBookAppointments, handleBookClick } from "../../../utils/bookingAccess";
-
+import { useState } from "react";
+import {
+  canBookAppointments,
+  handleBookClick,
+} from "../../../utils/bookingAccess";
+import { AppointmentTypeModal } from "../booking/AppointmentTypeModal";
 function Footer() {
   const navigate = useNavigate();
   const { user } = useAuth();
+  const [isAppointmentModalOpen, setIsAppointmentModalOpen] = useState(false);
   const showBooking = canBookAppointments(user);
   const companyLinks = [
     "About Us",
@@ -22,6 +33,8 @@ function Footer() {
     "Terms of Service",
     "Privacy Policy",
   ];
+  const openBooking = () => setIsAppointmentModalOpen(true);
+  const onBookClick = () => handleBookClick(user, navigate, openBooking);
 
   return (
     <footer className="bg-fg text-white shadow-[0_-4px_10px_rgba(0,0,0,0.1)] mt-auto w-full">
@@ -167,7 +180,7 @@ function Footer() {
               {showBooking ? (
                 <button
                   type="button"
-                  onClick={() => handleBookClick(user, navigate, () => navigate("/doctors"))}
+                  onClick={onBookClick}
                   className="group flex items-center justify-center gap-2 w-full bg-primary text-white border-2 border-primary font-bold text-base px-4 py-2.5 rounded-xl cursor-pointer transition-all duration-300 ease-in-out hover:-translate-y-0.5 hover:bg-transparent hover:text-primary hover:shadow-md"
                 >
                   <CalendarDays
@@ -207,6 +220,10 @@ function Footer() {
           </div>
         </div>
       </div>
+      <AppointmentTypeModal
+        isOpen={isAppointmentModalOpen}
+        onClose={() => setIsAppointmentModalOpen(false)}
+      />
     </footer>
   );
 }
