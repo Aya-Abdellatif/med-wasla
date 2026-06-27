@@ -29,7 +29,6 @@ function Navbar() {
   const [isOpen, setIsOpen] = useState(false);
   const [isProfileOpen, setIsProfileOpen] = useState(false);
   const [underlineStyle, setUnderlineStyle] = useState({ left: 0, width: 0 });
-  const [isFirstActivation, setIsFirstActivation] = useState(true);
   const [isAppointmentModalOpen, setIsAppointmentModalOpen] = useState(false);
   const navigate = useNavigate();
   const location = useLocation();
@@ -112,11 +111,13 @@ function Navbar() {
 
   // useLayoutEffect (not useEffect) so this runs synchronously right after
   // DOM mutations, before the browser paints — avoids a visible flash/jump.
+  // (No need for an "isFirstActivation" flag here: because this is a layout
+  // effect, React flushes the resulting position update before the browser
+  // ever paints, so the unpositioned underline is never actually visible —
+  // there's nothing to guard against on first mount.)
   useLayoutEffect(() => {
     updateUnderline();
-    if (isFirstActivation) setIsFirstActivation(false);
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [desktopActive]);
+  }, [updateUnderline]);
 
   // The measurement above can still be wrong on first paint if the page's
   // fonts or the logo image haven't finished loading yet — text/layout can
@@ -199,9 +200,7 @@ function Navbar() {
             >
               {desktopActive && (
                 <div
-                  className={`absolute bottom-0 h-0.5 bg-primary rounded-full transition-all ease-out ${
-                    isFirstActivation ? "duration-0" : "duration-300"
-                  }`}
+                  className="absolute bottom-0 h-0.5 bg-primary rounded-full transition-all duration-300 ease-out"
                   style={{
                     left: `${underlineStyle.left}px`,
                     width: `${underlineStyle.width}px`,
