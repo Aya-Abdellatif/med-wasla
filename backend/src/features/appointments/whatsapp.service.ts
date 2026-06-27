@@ -55,8 +55,8 @@ export async function sendWhatsAppMessage(
       const code = err.response?.data?.error?.code;
       const message = err.response?.data?.error?.message;
       console.error(`[WhatsApp] Error ${err.response?.status}:`, err.response?.data);
-      if (code === 131026) throw new Error("NOT_ON_WHATSAPP");
-      throw new Error(message ?? "WHATSAPP_SEND_FAILED");
+      if (code === 131026) throw new Error("NOT_ON_WHATSAPP", { cause: err });
+      throw new Error(message ?? "WHATSAPP_SEND_FAILED", { cause: err });
     }
     throw err;
   }
