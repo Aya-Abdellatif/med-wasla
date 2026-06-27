@@ -58,48 +58,51 @@ function SuccessBanner({ message, onDismiss }: { message: string; onDismiss: () 
 function InfoRow({ label, value, icon: Icon }: { label: string; value?: string; icon?: React.ElementType }) {
   return (
     <div>
-      <p className="text-xs font-medium text-muted-foreground uppercase tracking-wider mb-1">{label}</p>
+      <p className="text-xs font-medium text-fg-muted uppercase tracking-wider mb-1">{label}</p>
       <div className="flex items-center gap-2">
-        {Icon && <Icon className="w-4 h-4 text-muted-foreground flex-shrink-0" />}
-        <p className="text-sm text-foreground">{value || <span className="text-muted-foreground italic">Not set</span>}</p>
+        {Icon && <Icon className="w-4 h-4 text-fg-muted flex-shrink-0" />}
+        <p className="text-sm text-fg">{value || <span className="text-fg-muted italic">Not set</span>}</p>
       </div>
     </div>
   );
 }
 
 // ─── Personal Info Tab ──────────────────────────────────────────
-function PersonalTab({ profile, onSave }: { profile: PatientProfileApi["user"]; onSave: (payload: {
-  name: string;
-  phone: string;
-  dob: string;
-  governorate: string;
-  address: string;
-}) => Promise<void>; }) {
-  const [editing, setEditing] = useState(false);
-  const [saved, setSaved] = useState({
-    name: profile?.name || "",
-    phone: profile?.phone || "1234567890",
-    dob: profile?.dob ? profile.dob.slice(0, 10) : "",
-    governorate: profile?.governorate || "",
-    address: profile?.address || "",
+function PersonalTab({ profile, onSave }: {
+  profile: PatientProfileApi["user"];
+  onSave: (payload: {
+    name: string;
+    phone: string;
+    dob: string;
+    governorate: string;
+    address: string;
+    photoUrl: string;
+  }) => Promise<void>;
+}) {
+  const getInitialState = () => ({
+    name: profile.name || "",
+    phone: profile.phone || "1234567890",
+    dob: profile.dob ? profile.dob.slice(0, 10) : "",
+    governorate: profile.governorate || "",
+    address: profile.address || "",
+    photoUrl: profile.photoUrl || "",
   });
-  const [form, setForm] = useState(saved);
+
+  const [editing, setEditing] = useState(false);
+  const [saved, setSaved] = useState(getInitialState());
+  const [form, setForm] = useState(getInitialState());
   const [errors, setErrors] = useState<Record<string, string>>({});
   const [govOpen, setGovOpen] = useState(false);
   const [govSearch, setGovSearch] = useState("");
   const [success, setSuccess] = useState(false);
   const [saveError, setSaveError] = useState<string>("");
+  const [isSaving, setIsSaving] = useState(false);
 
   useEffect(() => {
-    const nextState = {
-      name: profile?.name || "",
-      phone: profile?.phone || "1234567890",
-      dob: profile?.dob ? profile.dob.slice(0, 10) : "",
-      governorate: profile?.governorate || "",
-      address: profile?.address || "",
-    };
+    const nextState = getInitialState();
     setSaved(nextState);
     setForm(nextState);
+    // NOTE: intentionally NOT resetting isSaving here — handleSave's finally block owns it
   }, [profile]);
 
   const filteredGovs = EGYPTIAN_GOVERNORATES.filter((g) =>
@@ -121,6 +124,7 @@ function PersonalTab({ profile, onSave }: { profile: PatientProfileApi["user"]; 
     const e = validate();
     if (Object.keys(e).length) { setErrors(e); return; }
     setSaveError("");
+    setIsSaving(true);
 
     try {
       await onSave({
@@ -129,13 +133,16 @@ function PersonalTab({ profile, onSave }: { profile: PatientProfileApi["user"]; 
         dob: form.dob,
         governorate: form.governorate,
         address: form.address,
+        photoUrl: form.photoUrl,
       });
       setSaved(form);
       setErrors({});
-      setEditing(false);
       setSuccess(true);
+      setEditing(false);
     } catch (error) {
       setSaveError(error instanceof Error ? error.message : "Unable to save profile.");
+    } finally {
+      setIsSaving(false);
     }
   };
 
@@ -149,13 +156,18 @@ function PersonalTab({ profile, onSave }: { profile: PatientProfileApi["user"]; 
   if (!editing) {
     return (
       <div className="space-y-6">
-        {success && <SuccessBanner message="Personal information saved successfully." onDismiss={() => setSuccess(false)} />}
+        {success && (
+          <SuccessBanner
+            message="Personal information saved successfully."
+            onDismiss={() => setSuccess(false)}
+          />
+        )}
 
         <div className="flex items-center justify-between">
-          <p className="text-sm text-muted-foreground">Your personal details as registered on MedWasla.</p>
+          <p className="text-sm text-fg-muted">Your personal details as registered on MedWasla.</p>
           <button
             onClick={() => setEditing(true)}
-            className="flex items-center gap-2 px-4 py-2 bg-primary text-white rounded-xl hover:bg-primary/90 transition-colors text-sm font-medium"
+            className="group flex items-center gap-2 bg-primary text-white border-2 border-primary text-base px-4 py-1.5 rounded-xl cursor-pointer transition-all duration-300 ease-in-out hover:border-primary hover:-translate-y-0.5 hover:bg-white hover:text-primary hover:shadow-md whitespace-nowrap"
           >
             <Edit className="w-3.5 h-3.5" />
             Edit Profile
@@ -164,12 +176,28 @@ function PersonalTab({ profile, onSave }: { profile: PatientProfileApi["user"]; 
 
         <div className="grid grid-cols-1 md:grid-cols-2 gap-x-8 gap-y-5">
           <div className="md:col-span-2">
-            <InfoRow label="Full Name" value={saved.name} icon={UserIcon} />
+            <InfoRow label="Full Name" value={saved?.name} icon={UserIcon} />
           </div>
-          <InfoRow label="Phone Number" value={saved.phone ? `+20 ${saved.phone}` : undefined} icon={Phone} />
-          <InfoRow label="Date of Birth" value={saved.dob ? new Date(saved.dob).toLocaleDateString("en-US", { year: "numeric", month: "long", day: "numeric" }) : undefined} icon={Calendar} />
-          <InfoRow label="Governorate" value={saved.governorate} icon={MapPin} />
-          <InfoRow label="Address Details" value={saved.address} icon={MapPin} />
+          <InfoRow
+            label="Phone Number"
+            value={saved?.phone ? `+20 ${saved.phone}` : undefined}
+            icon={Phone}
+          />
+          <InfoRow
+            label="Date of Birth"
+            value={
+              saved?.dob
+                ? new Date(saved.dob).toLocaleDateString("en-US", {
+                    year: "numeric",
+                    month: "long",
+                    day: "numeric",
+                  })
+                : undefined
+            }
+            icon={Calendar}
+          />
+          <InfoRow label="Governorate" value={saved?.governorate} icon={MapPin} />
+          <InfoRow label="Address Details" value={saved?.address} icon={MapPin} />
         </div>
       </div>
     );
@@ -179,18 +207,19 @@ function PersonalTab({ profile, onSave }: { profile: PatientProfileApi["user"]; 
   return (
     <div className="space-y-6">
       <div className="flex items-center justify-between">
-        <p className="text-sm text-muted-foreground">Update your personal details below.</p>
+        <p className="text-sm text-fg-muted">Update your personal details below.</p>
         <span className="text-xs text-primary bg-primary/5 px-2.5 py-1 rounded-full">Editing</span>
       </div>
-      {saveError ? (
+
+      {saveError && (
         <div className="rounded-2xl border border-red-200 bg-red-50 px-4 py-3 text-sm text-red-700">
           {saveError}
         </div>
-      ) : null}
+      )}
 
       {/* Row 1 — Full Name */}
       <div>
-        <label className="block text-sm font-medium text-foreground mb-1.5">Full Name</label>
+        <label className="block text-sm font-medium text-fg mb-1.5">Full Name</label>
         <input
           type="text"
           value={form.name}
@@ -204,12 +233,12 @@ function PersonalTab({ profile, onSave }: { profile: PatientProfileApi["user"]; 
       {/* Row 2 — Phone + DOB */}
       <div className="grid grid-cols-1 md:grid-cols-2 gap-5">
         <div>
-          <label className="block text-sm font-medium text-foreground mb-1.5">Phone Number</label>
+          <label className="block text-sm font-medium text-fg mb-1.5">Phone Number</label>
           <div className={`flex rounded-xl border overflow-hidden focus-within:ring-2 focus-within:ring-primary transition-colors ${errors.phone ? "border-red-400" : "border-border"}`}>
             <div className="flex items-center gap-2 px-3 py-3 bg-muted/50 border-r border-border flex-shrink-0 select-none">
               <span className="text-lg leading-none">🇪🇬</span>
-              <span className="text-sm font-medium text-foreground">+20</span>
-              <ChevronDown className="w-3.5 h-3.5 text-muted-foreground" />
+              <span className="text-sm font-medium text-fg">+20</span>
+              <ChevronDown className="w-3.5 h-3.5 text-fg-muted" />
             </div>
             <input
               type="tel"
@@ -223,7 +252,7 @@ function PersonalTab({ profile, onSave }: { profile: PatientProfileApi["user"]; 
         </div>
 
         <div>
-          <label className="block text-sm font-medium text-foreground mb-1.5">Date of Birth</label>
+          <label className="block text-sm font-medium text-fg mb-1.5">Date of Birth</label>
           <input
             type="date"
             value={form.dob}
@@ -237,16 +266,16 @@ function PersonalTab({ profile, onSave }: { profile: PatientProfileApi["user"]; 
       {/* Row 3 — Governorate + Address */}
       <div className="grid grid-cols-1 md:grid-cols-2 gap-5">
         <div className="relative">
-          <label className="block text-sm font-medium text-foreground mb-1.5">Governorate</label>
+          <label className="block text-sm font-medium text-fg mb-1.5">Governorate</label>
           <button
             type="button"
             onClick={() => { setGovOpen(!govOpen); setGovSearch(""); }}
             className="w-full flex items-center justify-between px-4 py-3 bg-input-background border border-border rounded-xl focus:outline-none focus:ring-2 focus:ring-primary transition-colors text-sm text-left"
           >
-            <span className={form.governorate ? "text-foreground" : "text-muted-foreground"}>
+            <span className={form.governorate ? "text-fg" : "text-fg-muted"}>
               {form.governorate || "Select governorate"}
             </span>
-            <ChevronDown className={`w-4 h-4 text-muted-foreground transition-transform ${govOpen ? "rotate-180" : ""}`} />
+            <ChevronDown className={`w-4 h-4 text-fg-muted transition-transform ${govOpen ? "rotate-180" : ""}`} />
           </button>
           {govOpen && (
             <div className="w-full mt-2 bg-white border border-border rounded-xl shadow-lg overflow-hidden">
@@ -262,14 +291,14 @@ function PersonalTab({ profile, onSave }: { profile: PatientProfileApi["user"]; 
               </div>
               <ul className="max-h-40 overflow-y-auto">
                 {filteredGovs.length === 0 && (
-                  <li className="px-4 py-3 text-sm text-muted-foreground text-center">No results</li>
+                  <li className="px-4 py-3 text-sm text-fg-muted text-center">No results</li>
                 )}
                 {filteredGovs.map((g) => (
                   <li key={g}>
                     <button
                       type="button"
                       onClick={() => { setForm({ ...form, governorate: g }); setGovOpen(false); }}
-                      className={`w-full text-left px-4 py-2.5 text-sm hover:bg-primary/5 transition-colors ${form.governorate === g ? "text-primary bg-primary/5" : "text-foreground"}`}
+                      className={`w-full text-left px-4 py-2.5 text-sm hover:bg-primary/5 transition-colors ${form.governorate === g ? "text-primary bg-primary/5" : "text-fg"}`}
                     >
                       {g}
                     </button>
@@ -281,12 +310,12 @@ function PersonalTab({ profile, onSave }: { profile: PatientProfileApi["user"]; 
         </div>
 
         <div>
-          <label className="block text-sm font-medium text-foreground mb-1.5">
+          <label className="block text-sm font-medium text-fg mb-1.5">
             Address Details
-            <span className="ml-1 text-muted-foreground">(Optional)</span>
+            <span className="ml-1 text-fg-muted">(Optional)</span>
           </label>
           <div className="relative">
-            <MapPin className="absolute left-3 top-3.5 w-4 h-4 text-muted-foreground" />
+            <MapPin className="absolute left-3 top-3.5 w-4 h-4 text-fg-muted" />
             <input
               type="text"
               value={form.address}
@@ -302,14 +331,25 @@ function PersonalTab({ profile, onSave }: { profile: PatientProfileApi["user"]; 
       <div className="flex items-center gap-3 pt-2">
         <button
           onClick={handleSave}
-          className="flex items-center gap-2 px-6 py-2.5 bg-primary text-white rounded-xl hover:bg-primary/90 transition-colors text-sm font-medium"
+          disabled={isSaving}
+          className="group flex items-center gap-2 bg-primary text-white border-2 border-primary text-base px-3 py-1 rounded-xl cursor-pointer transition-all duration-300 ease-in-out hover:border-primary hover:-translate-y-0.5 hover:bg-white hover:text-primary hover:shadow-md whitespace-nowrap disabled:opacity-60 disabled:cursor-not-allowed disabled:hover:translate-y-0"
         >
-          <Save className="w-4 h-4" />
-          Save Changes
+          {isSaving ? (
+            <>
+              <div className="animate-spin rounded-full h-4 w-4 border-2 border-current border-t-transparent" />
+              Saving...
+            </>
+          ) : (
+            <>
+              <Save className="w-4 h-4" />
+              Save Changes
+            </>
+          )}
         </button>
         <button
           onClick={handleCancel}
-          className="px-5 py-2.5 border border-border text-foreground rounded-xl hover:bg-muted/50 transition-colors text-sm"
+          disabled={isSaving}
+          className="group flex items-center gap-2 bg-white text-fg border-2 border-fg/10 text-base px-3 py-1 rounded-xl cursor-pointer transition-all duration-300 ease-in-out hover:border-fg-muted hover:-translate-y-0.5 hover:bg-fg-muted hover:text-white hover:shadow-md whitespace-nowrap disabled:opacity-50 disabled:cursor-not-allowed"
         >
           Cancel
         </button>
@@ -360,6 +400,7 @@ function SecurityTab({ user }: { user: any }) {
     return e;
   };
 
+  // ✅ Correct SecurityTab handleSave — uses only its own state/form fields
   const handleSave = () => {
     const e = validate();
     if (Object.keys(e).length) { setErrors(e); return; }
@@ -380,13 +421,18 @@ function SecurityTab({ user }: { user: any }) {
   if (!editing) {
     return (
       <div className="space-y-6">
-        {success && <SuccessBanner message="Account & security settings saved successfully." onDismiss={() => setSuccess(false)} />}
+        {success && (
+          <SuccessBanner
+            message="Account & security settings saved successfully."
+            onDismiss={() => setSuccess(false)}
+          />
+        )}
 
         <div className="flex items-center justify-between">
-          <p className="text-sm text-muted-foreground">Manage your login email and password.</p>
+          <p className="text-sm text-fg-muted">Manage your login email and password.</p>
           <button
             onClick={() => setEditing(true)}
-            className="flex items-center gap-2 px-4 py-2 bg-primary text-white rounded-xl hover:bg-primary/90 transition-colors text-sm font-medium"
+            className="group flex items-center gap-2 bg-primary text-white border-2 border-primary text-base px-4 py-1.5 rounded-xl cursor-pointer transition-all duration-300 ease-in-out hover:border-primary hover:-translate-y-0.5 hover:bg-white hover:text-primary hover:shadow-md whitespace-nowrap"
           >
             <Edit className="w-3.5 h-3.5" />
             Edit Security
@@ -396,10 +442,10 @@ function SecurityTab({ user }: { user: any }) {
         <div className="space-y-5">
           <InfoRow label="Email Address" value={savedEmail} icon={Mail} />
           <div>
-            <p className="text-xs font-medium text-muted-foreground uppercase tracking-wider mb-1">Password</p>
+            <p className="text-xs font-medium text-fg-muted uppercase tracking-wider mb-1">Password</p>
             <div className="flex items-center gap-2">
-              <Lock className="w-4 h-4 text-muted-foreground" />
-              <p className="text-sm text-foreground tracking-widest">••••••••••</p>
+              <Lock className="w-4 h-4 text-fg-muted" />
+              <p className="text-sm text-fg tracking-widest">••••••••••</p>
             </div>
           </div>
         </div>
@@ -411,15 +457,15 @@ function SecurityTab({ user }: { user: any }) {
   return (
     <div className="space-y-6">
       <div className="flex items-center justify-between">
-        <p className="text-sm text-muted-foreground">Update your email or change your password.</p>
+        <p className="text-sm text-fg-muted">Update your email or change your password.</p>
         <span className="text-xs text-primary bg-primary/5 px-2.5 py-1 rounded-full">Editing</span>
       </div>
 
       {/* Email */}
       <div>
-        <label className="block text-sm font-medium text-foreground mb-1.5">Email Address</label>
+        <label className="block text-sm font-medium text-fg mb-1.5">Email Address</label>
         <div className="relative">
-          <Mail className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground" />
+          <Mail className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-fg-muted" />
           <input
             type="email"
             value={form.email}
@@ -434,15 +480,15 @@ function SecurityTab({ user }: { user: any }) {
       {/* Divider */}
       <div className="flex items-center gap-3">
         <div className="flex-1 h-px bg-border" />
-        <span className="text-xs text-muted-foreground px-2">Change Password</span>
+        <span className="text-xs text-fg-muted px-2">Change Password</span>
         <div className="flex-1 h-px bg-border" />
       </div>
 
       {/* Current Password */}
       <div>
-        <label className="block text-sm font-medium text-foreground mb-1.5">Current Password</label>
+        <label className="block text-sm font-medium text-fg mb-1.5">Current Password</label>
         <div className="relative">
-          <Lock className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground" />
+          <Lock className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-fg-muted" />
           <input
             type={show.current ? "text" : "password"}
             value={form.currentPassword}
@@ -450,7 +496,7 @@ function SecurityTab({ user }: { user: any }) {
             placeholder="Enter current password"
             className={`w-full pl-9 pr-10 py-3 bg-input-background border rounded-xl focus:outline-none focus:ring-2 focus:ring-primary transition-colors text-sm ${errors.currentPassword ? "border-red-400 focus:ring-red-300" : "border-border"}`}
           />
-          <button type="button" onClick={() => setShow({ ...show, current: !show.current })} className="absolute right-3 top-1/2 -translate-y-1/2 text-muted-foreground hover:text-foreground">
+          <button type="button" onClick={() => setShow({ ...show, current: !show.current })} className="absolute right-3 top-1/2 -translate-y-1/2 text-fg-muted hover:text-fg">
             {show.current ? <EyeOff className="w-4 h-4" /> : <Eye className="w-4 h-4" />}
           </button>
         </div>
@@ -459,9 +505,9 @@ function SecurityTab({ user }: { user: any }) {
 
       {/* New Password */}
       <div>
-        <label className="block text-sm font-medium text-foreground mb-1.5">New Password</label>
+        <label className="block text-sm font-medium text-fg mb-1.5">New Password</label>
         <div className="relative">
-          <Lock className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground" />
+          <Lock className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-fg-muted" />
           <input
             type={show.newPw ? "text" : "password"}
             value={form.newPassword}
@@ -469,14 +515,14 @@ function SecurityTab({ user }: { user: any }) {
             placeholder="Enter new password"
             className={`w-full pl-9 pr-10 py-3 bg-input-background border rounded-xl focus:outline-none focus:ring-2 focus:ring-primary transition-colors text-sm ${errors.newPassword ? "border-red-400 focus:ring-red-300" : "border-border"}`}
           />
-          <button type="button" onClick={() => setShow({ ...show, newPw: !show.newPw })} className="absolute right-3 top-1/2 -translate-y-1/2 text-muted-foreground hover:text-foreground">
+          <button type="button" onClick={() => setShow({ ...show, newPw: !show.newPw })} className="absolute right-3 top-1/2 -translate-y-1/2 text-fg-muted hover:text-fg">
             {show.newPw ? <EyeOff className="w-4 h-4" /> : <Eye className="w-4 h-4" />}
           </button>
         </div>
         {form.newPassword && (
           <div className="mt-2">
             <div className="flex gap-1 mb-1">
-              {[1,2,3,4].map((i) => (
+              {[1, 2, 3, 4].map((i) => (
                 <div key={i} className={`h-1 flex-1 rounded-full transition-colors ${i <= strength ? strengthColor[strength] : "bg-border"}`} />
               ))}
             </div>
@@ -488,9 +534,9 @@ function SecurityTab({ user }: { user: any }) {
 
       {/* Confirm Password */}
       <div>
-        <label className="block text-sm font-medium text-foreground mb-1.5">Confirm New Password</label>
+        <label className="block text-sm font-medium text-fg mb-1.5">Confirm New Password</label>
         <div className="relative">
-          <Lock className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground" />
+          <Lock className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-fg-muted" />
           <input
             type={show.confirm ? "text" : "password"}
             value={form.confirmPassword}
@@ -498,7 +544,7 @@ function SecurityTab({ user }: { user: any }) {
             placeholder="Repeat new password"
             className={`w-full pl-9 pr-10 py-3 bg-input-background border rounded-xl focus:outline-none focus:ring-2 focus:ring-primary transition-colors text-sm ${errors.confirmPassword ? "border-red-400 focus:ring-red-300" : "border-border"}`}
           />
-          <button type="button" onClick={() => setShow({ ...show, confirm: !show.confirm })} className="absolute right-3 top-1/2 -translate-y-1/2 text-muted-foreground hover:text-foreground">
+          <button type="button" onClick={() => setShow({ ...show, confirm: !show.confirm })} className="absolute right-3 top-1/2 -translate-y-1/2 text-fg-muted hover:text-fg">
             {show.confirm ? <EyeOff className="w-4 h-4" /> : <Eye className="w-4 h-4" />}
           </button>
         </div>
@@ -514,14 +560,14 @@ function SecurityTab({ user }: { user: any }) {
       <div className="flex items-center gap-3 pt-2">
         <button
           onClick={handleSave}
-          className="flex items-center gap-2 px-6 py-2.5 bg-primary text-white rounded-xl hover:bg-primary/90 transition-colors text-sm font-medium"
+          className="group flex items-center gap-2 bg-primary text-white border-2 border-primary text-base px-3 py-1 rounded-xl cursor-pointer transition-all duration-300 ease-in-out hover:border-primary hover:-translate-y-0.5 hover:bg-white hover:text-primary hover:shadow-md whitespace-nowrap"
         >
           <Save className="w-4 h-4" />
           Save Changes
         </button>
         <button
           onClick={handleCancel}
-          className="px-5 py-2.5 border border-border text-foreground rounded-xl hover:bg-muted/50 transition-colors text-sm"
+          className="group flex items-center gap-2 bg-white text-fg border-2 border-fg/10 text-base px-3 py-1 rounded-xl cursor-pointer transition-all duration-300 ease-in-out hover:border-fg-muted hover:-translate-y-0.5 hover:bg-fg-muted hover:text-white hover:shadow-md whitespace-nowrap"
         >
           Cancel
         </button>
@@ -551,9 +597,15 @@ export function PatientProfile() {
       .finally(() => setIsProfileLoading(false));
   }, [user?.id]);
 
-  const handleSaveProfile = async (payload: { name: string; phone: string; dob: string; governorate: string; address: string }) => {
+  const handleSaveProfile = async (payload: {
+    name: string;
+    phone: string;
+    dob: string;
+    governorate: string;
+    address: string;
+    photoUrl: string;
+  }) => {
     if (!user?.id) throw new Error("Unable to save profile without a logged in user.");
-
     const updatedProfile = await updatePatientProfile(user.id, payload);
     setProfile(updatedProfile);
     updateProfile({ name: updatedProfile.user.name, phone: updatedProfile.user.phone });
@@ -585,23 +637,23 @@ export function PatientProfile() {
   return (
     <div className="min-h-screen bg-muted/20">
       {/* Header banner */}
-      <div className="bg-gradient-to-r from-primary to-secondary py-10 px-4">
-        <div className="max-w-3xl mx-auto flex items-center gap-5">
-          <div className="w-16 h-16 rounded-full bg-white/20 flex items-center justify-center flex-shrink-0 overflow-hidden ring-2 ring-white/30">
+      <div className="bg-linear-to-br from-[#F6FFFB] via-[#ECFEFF] to-[#F0FDFA] py-10 px-4">
+        <div className="max-w-5xl mx-auto flex items-center gap-5">
+          <div className="w-25 h-25 rounded-full bg-primary/20 flex items-center justify-center flex-shrink-0 overflow-hidden ring-2 ring-white/30">
             {user?.avatar ? (
               <ImageWithFallback src={user.avatar} alt={user.name} className="w-full h-full object-cover" />
             ) : (
-              <span className="text-white text-2xl font-bold">{user?.name?.charAt(0) ?? "P"}</span>
+              <span className="text-fg/70 text-3xl font-bold">{user?.name?.charAt(0) ?? "P"}</span>
             )}
           </div>
           <div>
-            <h1 className="text-xl font-bold text-white">{user?.name ?? "Patient"}</h1>
-            <p className="text-white/70 text-sm mt-0.5">Patient · MedWasla</p>
+            <h1 className="text-xl font-bold text-fg/90">{user?.name ?? "Patient"}</h1>
+            <p className="text-fg/70 text-sm mt-0.5">Patient · MedWasla</p>
           </div>
         </div>
       </div>
 
-      <div className="max-w-3xl mx-auto px-4 py-8 space-y-6">
+      <div className="max-w-5xl mx-auto px-4 py-8 space-y-6">
         {/* Tab card */}
         <div className="bg-white rounded-2xl border border-border shadow-sm overflow-hidden">
           {/* Tab header */}
@@ -613,8 +665,8 @@ export function PatientProfile() {
                 <button
                   key={tab.id}
                   onClick={() => setActiveTab(tab.id)}
-                  className={`flex-1 flex items-center justify-center gap-2 px-4 py-4 text-sm font-medium transition-colors relative ${
-                    active ? "text-primary" : "text-muted-foreground hover:text-foreground"
+                  className={`flex-1 flex items-center justify-center gap-2 px-4 py-4 text-m text-fg font-medium transition-colors relative ${
+                    active ? "text-primary" : "text-fg/95"
                   }`}
                 >
                   <Icon className="w-4 h-4" />
@@ -630,17 +682,22 @@ export function PatientProfile() {
           {/* Tab body */}
           <div className="p-6 md:p-8">
             {profileError && (
-            <div className="mb-6 rounded-2xl border border-red-200 bg-red-50 px-4 py-3 text-sm text-red-700">
-              Unable to load patient profile: {profileError}
+              <div className="mb-6 rounded-2xl border border-red-200 bg-red-50 px-4 py-3 text-sm text-red-700">
+                Unable to load patient profile: {profileError}
+              </div>
+            )}
+
+            {/* Keep PersonalTab mounted at all times so saving never unmounts it.
+                Show a spinner inside the tab while the initial load is in flight. */}
+            <div className={activeTab === "personal" ? "" : "hidden"}>
+              {profile ? (
+                <PersonalTab profile={profile.user} onSave={handleSaveProfile} />
+              ) : isProfileLoading ? (
+                <div className="py-10 text-center text-sm text-fg-muted">Loading profile...</div>
+              ) : null}
             </div>
-          )}
-          {activeTab === "personal" && profile && (
-            <PersonalTab profile={profile.user} onSave={handleSaveProfile} />
-          )}
-          {activeTab === "personal" && !profile && !profileError && isProfileLoading && (
-            <div className="py-10 text-center text-sm text-muted-foreground">Loading profile...</div>
-          )}
-          {activeTab === "security" && <SecurityTab user={user} />}
+
+            {activeTab === "security" && <SecurityTab user={user} />}
           </div>
         </div>
 
@@ -649,9 +706,9 @@ export function PatientProfile() {
           <div className="flex items-center justify-between mb-5">
             <div className="flex items-center gap-2">
               <Activity className="w-5 h-5 text-primary" />
-              <h2 className="font-bold text-foreground">Medical History</h2>
+              <h2 className="font-bold text-fg">Medical History</h2>
             </div>
-            <span className="flex items-center gap-1.5 px-3 py-1 bg-blue-50 border border-blue-200 rounded-lg text-xs text-blue-600 font-medium">
+            <span className="flex items-center gap-1.5 px-3 py-1 bg-primary/10 border border-primary rounded-lg text-xs text-primary font-medium">
               <ShieldCheck className="w-3.5 h-3.5" />
               Read-only for patients
             </span>
@@ -667,15 +724,20 @@ export function PatientProfile() {
               {user.diseaseHistory.map((record: any) => (
                 <div key={record.id} className="p-4 border border-border rounded-xl bg-muted/10">
                   <div className="flex items-start justify-between mb-2">
-                    <h3 className="font-semibold text-foreground">{record.disease}</h3>
+                    <h3 className="font-semibold text-fg">{record.disease}</h3>
                     <span className={`px-2.5 py-0.5 text-xs rounded-full font-medium border ${getStatusColor(record.status)}`}>
                       {getStatusLabel(record.status)}
                     </span>
                   </div>
-                  <div className="space-y-1.5 text-sm text-muted-foreground">
+                  <div className="space-y-1.5 text-sm text-fg-muted">
                     <span className="flex items-center gap-2">
                       <Calendar className="w-3.5 h-3.5" />
-                      Diagnosed: {new Date(record.diagnosedDate).toLocaleDateString("en-US", { year: "numeric", month: "long", day: "numeric" })}
+                      Diagnosed:{" "}
+                      {new Date(record.diagnosedDate).toLocaleDateString("en-US", {
+                        year: "numeric",
+                        month: "long",
+                        day: "numeric",
+                      })}
                     </span>
                     <span className="flex items-center gap-2">
                       <UserIcon className="w-3.5 h-3.5" />
@@ -693,9 +755,9 @@ export function PatientProfile() {
             </div>
           ) : (
             <div className="text-center py-10 bg-muted/20 rounded-xl">
-              <Activity className="w-10 h-10 text-muted-foreground/50 mx-auto mb-2" />
-              <p className="text-muted-foreground text-sm">No medical history recorded yet.</p>
-              <p className="text-xs text-muted-foreground mt-1">Your doctor will add records during consultations.</p>
+              <Activity className="w-10 h-10 text-fg-muted/50 mx-auto mb-2" />
+              <p className="text-fg-muted text-sm">No medical history recorded yet.</p>
+              <p className="text-xs text-fg-muted mt-1">Your doctor will add records during consultations.</p>
             </div>
           )}
         </div>

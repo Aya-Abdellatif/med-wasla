@@ -1,5 +1,5 @@
 import { Link } from "react-router-dom";
-import LetterGlitch from "../shadcn/LetterGlitch";
+// import LetterGlitch from "../shadcn/LetterGlitch";
 
 interface AppStatusPageProps {
   code: string;
@@ -17,13 +17,13 @@ export function AppStatusPage({
   return (
     <div className="relative h-screen w-screen overflow-hidden">
       <div className="absolute inset-0">
-        <LetterGlitch
+        {/* <LetterGlitch
           glitchColors={["#0ea5e9", "#14b8a6", "#38bdf8"]}
           glitchSpeed={80}
           centerVignette={true}
           outerVignette={true}
           smooth={true}
-        />
+        /> */}
       </div>
 
       <div className="relative z-10 flex h-full flex-col items-center justify-center px-4 text-center text-white">

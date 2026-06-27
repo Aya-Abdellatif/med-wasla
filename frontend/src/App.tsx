@@ -47,9 +47,7 @@ function App() {
           <Route path="/medical-specialist" element={<MedicalSpecialist />} />
           <Route path="/forgot-password" element={<ForgotPassword />} />
           <Route path="/reset-password" element={<ResetPassword />} />
-          <Route path="/doctor/:id" element={<DoctorProfile />} />
-          <Route path="/nurse/:id" element={<NurseProfile />} />
-
+          
           <Route element={<ProtectedRoute />}>
             <Route element={<RoleProtectedRoute allowedRoles={["admin"]} />}>
               <Route path="/admin-dashboard" element={<AdminDashboard />} />
@@ -72,9 +70,11 @@ function App() {
                 <Route path="/appointments" element={<MyAppointments />} />
               </Route>
             </Route>
+            <Route path="/doctor/:id" element={<DoctorProfile />} />
+            <Route path="/nurse/:id" element={<NurseProfile />} />
+            <Route path="*" element={<NotFound />} />
           </Route>
           <Route path="/error" element={<ErrorPage />} />
-          <Route path="*" element={<NotFound />} />
         </Routes>
       </ChatBotProvider>
     </AuthProvider>
