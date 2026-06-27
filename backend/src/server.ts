@@ -4,6 +4,7 @@ import app from "./app.js";
 import { connectDB } from "./config/db.js";
 import { processReminders } from "./features/appointments/reminder.service.js";
 import { expireOverdueAppointments } from "./features/appointments/appointments.service.js";
+import { cleanupUnverifiedUsers } from "./features/auth/cleanup.service.js";
 
 dns.setServers(["1.1.1.1", "8.8.8.8"]);
 
@@ -25,9 +26,14 @@ const startServer = async (): Promise<void> => {
   const runExpireOverdue = () =>
     expireOverdueAppointments().catch(err => console.error("[Overdue Scheduler]", err));
 
+  const runCleanup = () =>
+    cleanupUnverifiedUsers().catch(err => console.error("[Cleanup Scheduler]", err));
+
   runReminders();
   runExpireOverdue();
+  runCleanup();
   setInterval(() => { runReminders(); runExpireOverdue(); }, 60 * 1000);
+  setInterval(runCleanup, 60 * 60 * 1000); // every hour
   console.log("[Scheduler] Started - checking reminders and overdue every 60s");
 };
 

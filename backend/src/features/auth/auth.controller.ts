@@ -3,10 +3,12 @@ import { registerUser, verifyUserOtp, resendUserOtp, loginUser, getUserById } fr
 
 export const register = async (req: Request, res: Response, next: NextFunction) => {
   try {
-    await registerUser(req.body);
+    const { resent } = await registerUser(req.body);
     res.status(201).json({
       status: "success",
-      message: "Registration successful. Check your email for the OTP.",
+      message: resent
+        ? "A new verification code has been sent to your email."
+        : "Registration successful. Check your email for the OTP.",
     });
   } catch (err) {
     next(err);
