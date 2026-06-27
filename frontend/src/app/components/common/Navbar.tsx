@@ -5,7 +5,7 @@ import {
   UserCircle,
   LogIn,
   UserPlus,
-  UserRound,
+  User,
   ChevronDown,
 } from "lucide-react";
 import { Link, useNavigate, useLocation } from "react-router-dom";
@@ -164,7 +164,7 @@ function Navbar() {
                     onClick={() => setIsProfileOpen((prev) => !prev)}
                     className="group flex items-center gap-2 bg-primary text-white border-2 border-primary font-bold text-base px-4 py-2 rounded-xl cursor-pointer transition-all duration-300 ease-in-out hover:border-primary hover:-translate-y-0.5 hover:bg-transparent hover:text-primary hover:shadow-md whitespace-nowrap"
                   >
-                    <UserRound className="h-5 w-5" strokeWidth={2.5} />
+                    <User className="h-5 w-5" strokeWidth={2.5} />
                     {navUserName}
                     <ChevronDown
                       className={`h-4 w-4 transition-transform duration-200 ${
