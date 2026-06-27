@@ -275,6 +275,81 @@ describe("Appointments Routes", () => {
       expect(res.body.count).toBe(1);
       expect(res.body.data).toHaveLength(1);
     });
+
+    it("marks past pending appointments as overdue when fetched", async () => {
+      const patient = await createPatient();
+      const { specialist } = await createSpecialist();
+      const token = createToken(idOf(patient), "patient");
+
+      const pastDate = new Date();
+      pastDate.setDate(pastDate.getDate() - 1);
+      pastDate.setHours(10, 0, 0, 0);
+
+      await Appointment.create({
+        patientId: idOf(patient),
+        specialistId: idOf(specialist),
+        date: pastDate,
+        type: "home",
+        address: "123 Test Street",
+        status: "pending",
+      });
+
+      const res = await request(app)
+        .get("/api/appointments/my")
+        .set("Authorization", `Bearer ${token}`);
+
+      expect(res.status).toBe(200);
+      expect(res.body.data[0].status).toBe("overdue");
+    });
+
+    it("marks past confirmed appointments as overdue when fetched", async () => {
+      const patient = await createPatient();
+      const { specialist } = await createSpecialist();
+      const token = createToken(idOf(patient), "patient");
+
+      const pastDate = new Date();
+      pastDate.setDate(pastDate.getDate() - 2);
+      pastDate.setHours(14, 0, 0, 0);
+
+      await Appointment.create({
+        patientId: idOf(patient),
+        specialistId: idOf(specialist),
+        date: pastDate,
+        type: "clinic",
+        status: "confirmed",
+      });
+
+      const res = await request(app)
+        .get("/api/appointments/my")
+        .set("Authorization", `Bearer ${token}`);
+
+      expect(res.status).toBe(200);
+      expect(res.body.data[0].status).toBe("overdue");
+    });
+
+    it("returns 400 when confirming an overdue appointment", async () => {
+      const patient = await createPatient();
+      const { user, specialist } = await createSpecialist();
+      const specialistToken = createToken(idOf(user), "specialist");
+
+      const pastDate = new Date();
+      pastDate.setDate(pastDate.getDate() - 1);
+
+      const appointment = await Appointment.create({
+        patientId: idOf(patient),
+        specialistId: idOf(specialist),
+        date: pastDate,
+        type: "clinic",
+        status: "overdue",
+      });
+
+      const res = await request(app)
+        .patch(`/api/appointments/${idOf(appointment)}/status`)
+        .set("Authorization", `Bearer ${specialistToken}`)
+        .send({ status: "confirmed" });
+
+      expect(res.status).toBe(400);
+    });
   });
 
   describe("GET /api/appointments/specialist", () => {

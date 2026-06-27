@@ -114,9 +114,7 @@ export function mapSpecialistToCard(
 ): SpecialistCard {
   const user = resolveUser(specialist);
   const isDoctor = type === "doctor";
-  const defaultImage = isDoctor
-    ? DEFAULT_SPECIALIST_IMAGE
-    : DEFAULT_NURSE_IMAGE;
+  const defaultImage = isDoctor ? DEFAULT_SPECIALIST_IMAGE : DEFAULT_NURSE_IMAGE;
 
   const specialty = isDoctor
     ? (specialist.specialization ?? "General Practice")

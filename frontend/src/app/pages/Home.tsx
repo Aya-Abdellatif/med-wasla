@@ -1,6 +1,8 @@
 import { useState, useEffect, useRef } from "react";
 import { useNavigate } from "react-router-dom";
 import { AppointmentTypeModal } from "../components/booking/AppointmentTypeModal";
+import { useAuth } from "../context/useAuth";
+import { canBookAppointments, handleBookClick, isSpecialistAccount } from "../../utils/bookingAccess";
 import {
   Heart,
   Zap,
@@ -14,6 +16,7 @@ import {
   ChevronLeft,
   ChevronRight,
   MessageCircle,
+  LayoutDashboard,
 } from "lucide-react";
 import docImg from "/src/assets/doctors.avif";
 import whyImg from "/src/assets/trust.jpg";
@@ -155,6 +158,12 @@ function Home() {
   const [currentReview, setCurrentReview] = useState(0);
   const [isAppointmentModalOpen, setIsAppointmentModalOpen] = useState(false);
   const navigate = useNavigate();
+  const { user } = useAuth();
+  const showBooking = canBookAppointments(user);
+  const showDashboardCta = isSpecialistAccount(user);
+
+  const openBooking = () => setIsAppointmentModalOpen(true);
+  const onBookClick = () => handleBookClick(user, navigate, openBooking);
 
   const prev = () =>
     setCurrentReview((i) => (i === 0 ? reviews.length - 1 : i - 1));
@@ -179,13 +188,24 @@ function Home() {
             way.
           </p>
           <div className="flex items-center gap-4 flex-wrap">
-            <button
-              onClick={() => setIsAppointmentModalOpen(true)}
-              className="group flex items-center gap-2 bg-primary hover:bg-transparent text-white hover:text-primary font-bold px-6 py-3 rounded-xl transition-all duration-300 hover:-translate-y-0.5 border-2 border-primary cursor-pointer"
-            >
-              <CalendarDays className="h-5 w-5 stroke-white group-hover:stroke-primary transition-colors duration-300" />
-              Book Appointment
-            </button>
+            {showBooking && (
+              <button
+                onClick={onBookClick}
+                className="group flex items-center gap-2 bg-primary hover:bg-transparent text-white hover:text-primary font-bold px-6 py-3 rounded-xl transition-all duration-300 hover:-translate-y-0.5 border-2 border-primary cursor-pointer"
+              >
+                <CalendarDays className="h-5 w-5 stroke-white group-hover:stroke-primary transition-colors duration-300" />
+                Book Appointment
+              </button>
+            )}
+            {showDashboardCta && (
+              <button
+                onClick={() => navigate("/dashboard")}
+                className="group flex items-center gap-2 bg-primary hover:bg-transparent text-white hover:text-primary font-bold px-6 py-3 rounded-xl transition-all duration-300 hover:-translate-y-0.5 border-2 border-primary cursor-pointer"
+              >
+                <LayoutDashboard className="h-5 w-5 stroke-white group-hover:stroke-primary transition-colors duration-300" />
+                Go to Dashboard
+              </button>
+            )}
             <button
               onClick={() => navigate("/services")}
               className="flex items-center gap-2 text-fg font-semibold px-6 py-3 rounded-xl border-2 border-border hover:border-primary hover:text-primary hover:-translate-y-0.5 transition-all duration-300 cursor-pointer"
@@ -389,17 +409,29 @@ function Home() {
             Ready to Take Control of Your Health?
           </h2>
           <p className="text-white/80 max-w-lg text-lg">
-            Book an appointment with our expert doctors today and experience
-            healthcare excellence.
+            {showBooking
+              ? "Book an appointment with our expert doctors today and experience healthcare excellence."
+              : "Manage your schedule, appointments, and profile from your professional dashboard."}
           </p>
           <div className="flex items-center gap-4 flex-wrap justify-center">
-            <button
-              onClick={() => setIsAppointmentModalOpen(true)}
-              className="group flex items-center gap-2 bg-white text-primary border-2 border-white font-bold px-8 py-3 rounded-xl hover:bg-transparent hover:text-white hover:border-white hover:-translate-y-0.5 transition-all duration-300 cursor-pointer"
-            >
-              <CalendarDays className="h-5 w-5" />
-              Book Appointment
-            </button>
+            {showBooking && (
+              <button
+                onClick={onBookClick}
+                className="group flex items-center gap-2 bg-white text-primary border-2 border-white font-bold px-8 py-3 rounded-xl hover:bg-transparent hover:text-white hover:border-white hover:-translate-y-0.5 transition-all duration-300 cursor-pointer"
+              >
+                <CalendarDays className="h-5 w-5" />
+                Book Appointment
+              </button>
+            )}
+            {showDashboardCta && (
+              <button
+                onClick={() => navigate("/dashboard")}
+                className="group flex items-center gap-2 bg-white text-primary border-2 border-white font-bold px-8 py-3 rounded-xl hover:bg-transparent hover:text-white hover:border-white hover:-translate-y-0.5 transition-all duration-300 cursor-pointer"
+              >
+                <LayoutDashboard className="h-5 w-5" />
+                Go to Dashboard
+              </button>
+            )}
             <button
               onClick={() => navigate("/contact")}
               className="group flex items-center gap-2 bg-white text-primary border-2 border-white font-bold px-8 py-3 rounded-xl hover:bg-transparent hover:text-white hover:border-white hover:-translate-y-0.5 transition-all duration-300 cursor-pointer"
@@ -409,10 +441,12 @@ function Home() {
             </button>
           </div>
 
-          <AppointmentTypeModal
-            isOpen={isAppointmentModalOpen}
-            onClose={() => setIsAppointmentModalOpen(false)}
-          />
+          {user?.role === "patient" && (
+            <AppointmentTypeModal
+              isOpen={isAppointmentModalOpen}
+              onClose={() => setIsAppointmentModalOpen(false)}
+            />
+          )}
         </div>
       </section>
     </div>

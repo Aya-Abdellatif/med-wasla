@@ -1,4 +1,4 @@
-export type AppointmentStatus = "upcoming" | "pending" | "completed" | "cancelled";
+export type AppointmentStatus = "upcoming" | "pending" | "completed" | "cancelled" | "overdue";
 export type AppointmentType = "clinic" | "home";
 
 export interface AppointmentReview {

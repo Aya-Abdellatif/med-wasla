@@ -9,6 +9,7 @@ interface ScheduleTabProps {
   filteredUpcoming: Appointment[];
   filteredCompleted: Appointment[];
   pendingAppointments: Appointment[];
+  overdueAppointments: Appointment[];
   onConfirm?: (appointmentId: string) => void;
   onComplete?: (appointmentId: string) => void;
   updatingAppointmentId?: string | null;
@@ -20,6 +21,7 @@ export function ScheduleTab({
   filteredUpcoming,
   filteredCompleted,
   pendingAppointments,
+  overdueAppointments,
   onConfirm,
   onComplete,
   updatingAppointmentId,
@@ -62,6 +64,25 @@ export function ScheduleTab({
                   onConfirm={onConfirm}
                   isUpdating={updatingAppointmentId === appointment.id}
                 />
+              ))}
+            </div>
+          </div>
+        )}
+
+        {overdueAppointments.length > 0 && (
+          <div>
+            <h3 className="text-lg font-semibold mb-4" style={{ color: "#111827" }}>
+              Overdue
+              <span className="ml-2 text-sm font-normal" style={{ color: "#6b7280" }}>
+                ({overdueAppointments.length})
+              </span>
+            </h3>
+            <p className="text-sm mb-3" style={{ color: "#6b7280" }}>
+              These requests were not confirmed before the appointment time passed. No further action is required.
+            </p>
+            <div className="space-y-3">
+              {overdueAppointments.map((appointment) => (
+                <AppointmentRow key={appointment.id} appointment={appointment} showDate />
               ))}
             </div>
           </div>

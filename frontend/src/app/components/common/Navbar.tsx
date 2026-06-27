@@ -13,6 +13,7 @@ import { AppointmentTypeModal } from "../booking/AppointmentTypeModal";
 import { useAuth } from "../../context/useAuth";
 import { getSpecialistDisplayName } from "../../../utils/displayName";
 import { showInfo } from "../../../utils/toast";
+import { canBookAppointments, handleBookClick } from "../../../utils/bookingAccess";
 import Logo from "../../../assets/logo.png";
 
 function Navbar() {
@@ -31,6 +32,7 @@ function Navbar() {
 
   const doctorLinks = [
     { name: "Home", path: "/" },
+    { name: "Services", path: "/services" },
     { name: "About", path: "/about" },
     { name: "Contact", path: "/contact" },
     { name: "Dashboard", path: "/dashboard" },
@@ -95,6 +97,9 @@ function Navbar() {
   useEffect(() => {
     setIsProfileOpen(false);
   }, [location.pathname]);
+
+  const openBooking = () => setIsAppointmentModalOpen(true);
+  const onBookClick = () => handleBookClick(user, navigate, openBooking);
 
   const handleLogout = () => {
     logout();
@@ -316,9 +321,12 @@ function Navbar() {
                       </>
                     )}
 
-                    {isAuthenticated && !isDoctor && (
+                    {canBookAppointments(user) && (
                       <button
-                        onClick={() => setIsAppointmentModalOpen(true)}
+                        onClick={() => {
+                          setIsOpen(false);
+                          onBookClick();
+                        }}
                         className="group flex items-center justify-center gap-2 w-full bg-primary text-white border-2 border-primary font-bold text-base px-4 py-2 rounded-xl cursor-pointer transition-all duration-300 ease-in-out hover:border-primary hover:-translate-y-0.5 hover:bg-transparent hover:text-primary hover:shadow-md whitespace-nowrap"
                       >
                         <CalendarDays
