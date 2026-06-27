@@ -1,5 +1,5 @@
 import type { Request, Response, NextFunction } from "express";
-import { registerUser, verifyUserOtp, resendUserOtp, loginUser, getUserById } from "./auth.service.js";
+import { registerUser, verifyUserOtp, resendUserOtp, loginUser, getUserById, forgotPasswordUser, resetPasswordUser } from "./auth.service.js";
 
 export const register = async (req: Request, res: Response, next: NextFunction) => {
   try {
@@ -46,6 +46,25 @@ export const login = async (req: Request, res: Response, next: NextFunction) => 
 
 export const logout = (_req: Request, res: Response) => {
   res.status(200).json({ status: "success", message: "Logged out successfully." });
+};
+
+export const forgotPassword = async (req: Request, res: Response, next: NextFunction) => {
+  try {
+    await forgotPasswordUser(req.body.email);
+    res.status(200).json({ status: "success", message: "OTP sent to your email." });
+  } catch (err) {
+    next(err);
+  }
+};
+
+export const resetPassword = async (req: Request, res: Response, next: NextFunction) => {
+  try {
+    const { email, otp, newPassword } = req.body;
+    await resetPasswordUser(email, otp, newPassword);
+    res.status(200).json({ status: "success", message: "Password reset successfully." });
+  } catch (err) {
+    next(err);
+  }
 };
 
 export const getMe = async (req: Request, res: Response, next: NextFunction) => {
