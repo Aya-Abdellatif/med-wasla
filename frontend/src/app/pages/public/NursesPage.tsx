@@ -3,7 +3,6 @@ import {
   CalendarDays,
   Star,
   MapPin,
-  Clock,
   SearchCheck,
   ChevronLeft,
   ChevronRight,
@@ -20,7 +19,10 @@ import {
 } from "../../../utils/specialistMapper";
 import { showError } from "../../../utils/toast";
 import { useAuth } from "../../context/useAuth";
-import { canBookAppointments, handleBookClick } from "../../../utils/bookingAccess";
+import {
+  canBookAppointments,
+  handleBookClick,
+} from "../../../utils/bookingAccess";
 
 const SORT_OPTIONS = [
   { label: "Highest Rated", sortBy: "rating", sortOrder: "desc" as const },
@@ -48,7 +50,9 @@ export function Nurses() {
   const [sortIndex, setSortIndex] = useState(0);
   const [page, setPage] = useState(1);
 
-  const [selectedNurse, setSelectedNurse] = useState<SpecialistCard | null>(null);
+  const [selectedNurse, setSelectedNurse] = useState<SpecialistCard | null>(
+    null,
+  );
   const [isBookingModalOpen, setIsBookingModalOpen] = useState(false);
   const [nurses, setNurses] = useState<SpecialistCard[]>([]);
   const [pagination, setPagination] = useState<PaginationMeta | null>(null);
@@ -81,7 +85,9 @@ export function Nurses() {
       .catch((err: Error) => {
         setNurses([]);
         setPagination(null);
-        showError(err.message || "Unable to load nurses. Please try again later.");
+        showError(
+          err.message || "Unable to load nurses. Please try again later.",
+        );
       })
       .finally(() => setLoading(false));
   }, [debouncedSearch, selectedExpertise, sortIndex, page]);
@@ -197,7 +203,9 @@ export function Nurses() {
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
           {loading ? (
             <div className="text-center py-16">
-              <p className="text-lg text-muted-foreground">Loading approved nurses...</p>
+              <p className="text-lg text-muted-foreground">
+                Loading approved nurses...
+              </p>
             </div>
           ) : nurses.length === 0 ? (
             <div className="text-center py-16">
@@ -224,19 +232,25 @@ export function Nurses() {
                         <span className="font-semibold text-foreground">
                           {(nurse.rating ?? 0).toFixed(1)}
                         </span>
-                        <span className="text-sm text-muted-foreground">({nurse.reviews})</span>
+                        <span className="text-sm text-muted-foreground">
+                          ({nurse.reviews})
+                        </span>
                       </div>
                     </div>
 
                     <div className="p-5 flex flex-col flex-1 min-h-[350px]">
                       <div className="mb-4">
-                        <h3 className="text-xl font-bold text-foreground mb-2">{nurse.name}</h3>
+                        <h3 className="text-xl font-bold text-foreground mb-2">
+                          {nurse.name}
+                        </h3>
                         <span className="inline-block px-3 py-1 bg-primary/10 text-primary rounded-full text-sm font-medium">
                           {nurse.specialty}
                         </span>
                       </div>
 
-                      <p className="text-muted-foreground mb-4 line-clamp-3">{nurse.description}</p>
+                      <p className="text-muted-foreground mb-4 line-clamp-3">
+                        {nurse.description}
+                      </p>
 
                       <div className="space-y-3 mb-6">
                         <div className="flex items-center gap-3 text-sm">
@@ -299,7 +313,10 @@ export function Nurses() {
                     <ChevronLeft className="w-4 h-4" />
                   </button>
 
-                  {Array.from({ length: pagination.totalPages }, (_, i) => i + 1).map((p) => (
+                  {Array.from(
+                    { length: pagination.totalPages },
+                    (_, i) => i + 1,
+                  ).map((p) => (
                     <button
                       key={p}
                       onClick={() => goToPage(p)}
@@ -315,7 +332,9 @@ export function Nurses() {
                   ))}
 
                   <button
-                    onClick={() => goToPage(Math.min(pagination.totalPages, page + 1))}
+                    onClick={() =>
+                      goToPage(Math.min(pagination.totalPages, page + 1))
+                    }
                     disabled={loading || page === pagination.totalPages}
                     className="p-2 rounded-lg border border-border disabled:opacity-40 disabled:cursor-not-allowed hover:bg-muted"
                   >

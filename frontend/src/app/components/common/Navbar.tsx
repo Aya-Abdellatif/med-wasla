@@ -13,7 +13,10 @@ import { AppointmentTypeModal } from "../booking/AppointmentTypeModal";
 import { useAuth } from "../../context/useAuth";
 import { getSpecialistDisplayName } from "../../../utils/displayName";
 import { showInfo } from "../../../utils/toast";
-import { canBookAppointments, handleBookClick } from "../../../utils/bookingAccess";
+import {
+  canBookAppointments,
+  handleBookClick,
+} from "../../../utils/bookingAccess";
 import Logo from "../../../assets/logo.png";
 
 function Navbar() {
@@ -93,10 +96,6 @@ function Navbar() {
     document.addEventListener("mousedown", handleClickOutside);
     return () => document.removeEventListener("mousedown", handleClickOutside);
   }, [isProfileOpen]);
-
-  useEffect(() => {
-    setIsProfileOpen(false);
-  }, [location.pathname]);
 
   const openBooking = () => setIsAppointmentModalOpen(true);
   const onBookClick = () => handleBookClick(user, navigate, openBooking);
