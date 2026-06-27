@@ -18,6 +18,7 @@ export interface IReminder extends Document {
   message?: string;
   templateName?: string;
   templateParams?: string[];
+  patientEmail?: string;
   createdAt?: Date;
   updatedAt?: Date;
 }
@@ -79,6 +80,10 @@ const reminderSchema = new Schema<IReminder>(
 
     templateParams: {
       type: [String],
+    },
+
+    patientEmail: {
+      type: String,
     },
   },
   {
