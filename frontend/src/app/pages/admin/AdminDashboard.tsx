@@ -20,20 +20,13 @@ import {
   RefreshCw,
   ShieldAlert,
   ExternalLink,
-  Users // ضفنا أيكونة جديدة مناسبة للتبويبات
+  Users 
 } from "lucide-react";
 
 type FilterTab = "all" | "pending" | "approved" | "rejected";
 
 export default function AdminDashboard() {
   const { user } = useAuth();
-  const navigate = useNavigate();
-
-  useEffect(() => {
-    if (user && user.role !== "admin") {
-      navigate("/home");
-    }
-  }, [navigate, user]);
 
   if (!user || user.role !== "admin") {
     return null;
@@ -128,13 +121,12 @@ function AdminDashboardView() {
     return colors[index].bg;
   };
 
-  // فلترة المصفوفة بناءً على التاب المختار
+
   const filteredSpecialists = specialists.filter(specialist => {
     if (activeTab === "all") return true;
     return specialist.verificationStatus === activeTab;
   });
 
-  // تابع مساعد لعرض الـ Badges الخاصة بحالة الحساب
   const getStatusBadge = (status: "pending" | "approved" | "rejected") => {
     switch (status) {
       case "approved":
@@ -307,7 +299,6 @@ function AdminDashboardView() {
                       </div>
                     </div>
 
-                    {/* عرض حالة الحساب الحالية */}
                     <div className="flex items-center gap-2 bg-white px-4 py-2 rounded-xl border border-slate-100 text-sm">
                       <span className="text-slate-500 font-medium">Status:</span>
                       {getStatusBadge(specialist.verificationStatus)}
@@ -385,7 +376,6 @@ function AdminDashboardView() {
                     </div>
                   </div>
 
-                  {/* أزرار التحكم تظهر فقط إذا كانت الحالة pending */}
                   <div className="mt-8">
                     {specialist.verificationStatus === "pending" ? (
                       <div className="flex gap-4">

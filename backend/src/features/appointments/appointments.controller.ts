@@ -204,6 +204,9 @@ export const updateAppointmentStatus = async (
     if (msg === "INVALID_TRANSITION") {
       return next(new AppError("Invalid status transition. pending→confirmed or confirmed→completed only", 400));
     }
+    if (msg === "APPOINTMENT_OVERDUE") {
+      return next(new AppError("This appointment is overdue and can no longer be updated", 400));
+    }
     return next(error);
   }
 };
@@ -231,6 +234,9 @@ export const cancelAppointment = async (
       return next(new AppError("You can only cancel your own appointments", 403));
     if (msg === "CANNOT_CANCEL") 
       return next(new AppError("Cannot cancel a completed or already cancelled appointment", 400));
+    if (msg === "APPOINTMENT_OVERDUE") {
+      return next(new AppError("This appointment is overdue and can no longer be cancelled", 400));
+    }
     if (msg === "SPECIALIST_PROFILE_NOT_FOUND") 
       return next(new AppError("Specialist profile not found", 404));
     return next(error);
@@ -268,6 +274,9 @@ export const rescheduleAppointment = async (
     const msg = (error as Error).message;
     if (msg === "FORBIDDEN") return next(new AppError("You can only reschedule your own appointments", 403));
     if (msg === "CANNOT_RESCHEDULE") return next(new AppError("Cannot reschedule a completed or cancelled appointment", 400));
+    if (msg === "APPOINTMENT_OVERDUE") {
+      return next(new AppError("This appointment is overdue and can no longer be rescheduled", 400));
+    }
     if (msg === "DATE_IN_PAST") return next(new AppError("New date must be in the future", 400));
     return next(error);
   }

@@ -49,7 +49,17 @@ export const logout = (_req: Request, res: Response) => {
 export const getMe = async (req: Request, res: Response, next: NextFunction) => {
   try {
     const user = await getUserById(req.user!.id);
-    res.status(200).json({ status: "success", data: { user } });
+    res.status(200).json({
+      status: "success",
+      data: {
+        user: {
+          id: user._id.toString(),
+          name: user.name,
+          email: user.email,
+          role: user.role,
+        },
+      },
+    });
   } catch (err) {
     next(err);
   }

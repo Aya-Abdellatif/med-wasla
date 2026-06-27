@@ -1,9 +1,10 @@
 import { axiosClient } from "./axiosClient";
 import type { Appointment } from "../app/components/patient-appointments/AppointmentTypes";
-import type { Appointment as DashboardAppointment } from "../app/pages/Doctor side/dashboard/dashboardTypes";
+import type { Appointment as DashboardAppointment, HomeServiceRequest } from "../app/pages/Doctor side/dashboard/dashboardTypes";
 import {
   mapApiAppointmentsForPatient,
   mapApiAppointmentsForSpecialist,
+  mapHomeServiceRequests,
 } from "../utils/appointmentMappers";
 
 export interface BookAppointmentPayload {
@@ -63,11 +64,20 @@ export async function fetchMyAppointments(): Promise<Appointment[]> {
   return mapApiAppointmentsForPatient(appointmentsRes.data.data ?? [], reviewByAppointment);
 }
 
-export async function fetchSpecialistAppointments(): Promise<DashboardAppointment[]> {
+export interface SpecialistAppointmentsResult {
+  appointments: DashboardAppointment[];
+  homeServiceRequests: HomeServiceRequest[];
+}
+
+export async function fetchSpecialistAppointments(): Promise<SpecialistAppointmentsResult> {
   const { data } = await axiosClient.get<{ success: boolean; data: unknown[] }>(
     "/api/appointments/specialist",
   );
-  return mapApiAppointmentsForSpecialist(data.data ?? []);
+  const raw = data.data ?? [];
+  return {
+    appointments: mapApiAppointmentsForSpecialist(raw),
+    homeServiceRequests: mapHomeServiceRequests(raw),
+  };
 }
 
 export async function updateAppointmentStatus(

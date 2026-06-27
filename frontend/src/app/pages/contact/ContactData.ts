@@ -49,9 +49,9 @@ export const departments: string[] = [
 
 export const faqs: FAQ[] = [
   {
-    question: "What are your visiting hours?",
+    question: "Can I manage my appointments online?",
     answer:
-      "Our general visiting hours are from 8 AM to 8 PM daily. However, some departments may have different hours.",
+      "Yes. You can schedule, view, and manage your appointments directly through the MedWasla platform.",
   },
   {
     question: "Do you accept insurance?",
