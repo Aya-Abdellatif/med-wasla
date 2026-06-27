@@ -5,7 +5,8 @@ import MedicalSpecialist from "../../models/medicalSpecialist.model.js";
 import type { AppointmentStatus, AppointmentType } from "../../models/appointment.model.js";
 import type { IUser } from "../../models/user.model.js";
 import type { IMedicalSpecialist } from "../../models/medicalSpecialist.model.js";
-import { scheduleAppointmentReminders, cancelAppointmentReminders, sendCancellationNotification } from "./reminder.service.js";
+import { scheduleAppointmentReminders, cancelAppointmentReminders } from "./reminder.service.js";
+import { sendCancellationNotification } from "./notification.service.js";
 
 export function parseLocalAppointment(dateStr: string, timeStr: string) {
   const [year, month, day] = dateStr.split("-").map(Number);
@@ -265,7 +266,7 @@ export const cancelAppointmentService = async (
     appointment,
     appointment.patientId.toString(),
     appointment.specialistId as Types.ObjectId
-  ).catch(err => console.error("[WhatsApp] Failed to send cancellation:", err));
+  ).catch((err: unknown) => console.error("[WhatsApp] Failed to send cancellation:", err));
 
   return appointment;
 };
@@ -303,7 +304,7 @@ export const cancelDayAppointmentsService = async (
       appointment,
       appointment.patientId.toString(),
       appointment.specialistId as Types.ObjectId
-    ).catch(err => console.error("[WhatsApp] Failed to send cancellation:", err));
+    ).catch((err: unknown) => console.error("[WhatsApp] Failed to send cancellation:", err));
   }
 
   return appointments.length;
@@ -417,6 +418,20 @@ export const getAvailableSlotsService = async (
     }
     m += 30;
     if (m >= 60) { h += 1; m -= 60; }
+  }
+
+  // If date is today, remove slots that have already passed
+  const todayStr = new Date().toLocaleDateString("en-CA"); // YYYY-MM-DD local
+  if (dateStr === todayStr) {
+    const now = new Date();
+    const nowMinutes = now.getHours() * 60 + now.getMinutes();
+    return {
+      workingHours: { start: slot.startTime, end: slot.endTime },
+      availableSlots: availableSlots.filter(s => {
+        const [sh, sm] = s.split(":").map(Number);
+        return sh * 60 + sm > nowMinutes;
+      }),
+    };
   }
 
   return {
