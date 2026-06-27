@@ -1,5 +1,6 @@
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import { useAuth } from "../../context/useAuth";
+import { fetchPatientProfile, updatePatientProfile, type PatientProfileApi } from "../../../services/patientApi";
 import {
   User as UserIcon,
   Mail,
@@ -67,20 +68,39 @@ function InfoRow({ label, value, icon: Icon }: { label: string; value?: string; 
 }
 
 // ─── Personal Info Tab ──────────────────────────────────────────
-function PersonalTab({ user, updateProfile }: { user: any; updateProfile: (data: any) => void }) {
+function PersonalTab({ profile, onSave }: { profile: PatientProfileApi["user"]; onSave: (payload: {
+  name: string;
+  phone: string;
+  dob: string;
+  governorate: string;
+  address: string;
+}) => Promise<void>; }) {
   const [editing, setEditing] = useState(false);
   const [saved, setSaved] = useState({
-    name: user?.name || "",
-    phone: user?.phone || "1234567890",
-    dob: user?.dob || "",
-    governorate: user?.governorate || "",
-    address: user?.address || "",
+    name: profile?.name || "",
+    phone: profile?.phone || "1234567890",
+    dob: profile?.dob ? profile.dob.slice(0, 10) : "",
+    governorate: profile?.governorate || "",
+    address: profile?.address || "",
   });
   const [form, setForm] = useState(saved);
   const [errors, setErrors] = useState<Record<string, string>>({});
   const [govOpen, setGovOpen] = useState(false);
   const [govSearch, setGovSearch] = useState("");
   const [success, setSuccess] = useState(false);
+  const [saveError, setSaveError] = useState<string>("");
+
+  useEffect(() => {
+    const nextState = {
+      name: profile?.name || "",
+      phone: profile?.phone || "1234567890",
+      dob: profile?.dob ? profile.dob.slice(0, 10) : "",
+      governorate: profile?.governorate || "",
+      address: profile?.address || "",
+    };
+    setSaved(nextState);
+    setForm(nextState);
+  }, [profile]);
 
   const filteredGovs = EGYPTIAN_GOVERNORATES.filter((g) =>
     g.toLowerCase().includes(govSearch.toLowerCase())
@@ -92,17 +112,31 @@ function PersonalTab({ user, updateProfile }: { user: any; updateProfile: (data:
     else if (form.name.trim().length < 3) e.name = "Name must be at least 3 characters.";
     if (!form.phone.trim()) e.phone = "Phone number is required.";
     else if (!/^\d{7,15}$/.test(form.phone.replace(/\s/g, ""))) e.phone = "Enter a valid phone number.";
+    if (!form.dob) e.dob = "Date of birth is required.";
+    if (!form.governorate) e.governorate = "Governorate is required.";
     return e;
   };
 
-  const handleSave = () => {
+  const handleSave = async () => {
     const e = validate();
     if (Object.keys(e).length) { setErrors(e); return; }
-    updateProfile({ name: form.name, phone: `+20${form.phone}` });
-    setSaved(form);
-    setErrors({});
-    setEditing(false);
-    setSuccess(true);
+    setSaveError("");
+
+    try {
+      await onSave({
+        name: form.name,
+        phone: form.phone,
+        dob: form.dob,
+        governorate: form.governorate,
+        address: form.address,
+      });
+      setSaved(form);
+      setErrors({});
+      setEditing(false);
+      setSuccess(true);
+    } catch (error) {
+      setSaveError(error instanceof Error ? error.message : "Unable to save profile.");
+    }
   };
 
   const handleCancel = () => {
@@ -148,6 +182,11 @@ function PersonalTab({ user, updateProfile }: { user: any; updateProfile: (data:
         <p className="text-sm text-muted-foreground">Update your personal details below.</p>
         <span className="text-xs text-primary bg-primary/5 px-2.5 py-1 rounded-full">Editing</span>
       </div>
+      {saveError ? (
+        <div className="rounded-2xl border border-red-200 bg-red-50 px-4 py-3 text-sm text-red-700">
+          {saveError}
+        </div>
+      ) : null}
 
       {/* Row 1 — Full Name */}
       <div>
@@ -494,7 +533,31 @@ function SecurityTab({ user }: { user: any }) {
 // ─── Main Page ──────────────────────────────────────────────────
 export function PatientProfile() {
   const { user, updateProfile } = useAuth();
+  const [profile, setProfile] = useState<PatientProfileApi | null>(null);
+  const [isProfileLoading, setIsProfileLoading] = useState(true);
+  const [profileError, setProfileError] = useState<string | null>(null);
   const [activeTab, setActiveTab] = useState<Tab>("personal");
+
+  useEffect(() => {
+    if (!user?.id) return;
+    setIsProfileLoading(true);
+    setProfileError(null);
+
+    fetchPatientProfile(user.id)
+      .then((data: PatientProfileApi) => setProfile(data))
+      .catch((error: unknown) => {
+        setProfileError(error instanceof Error ? error.message : "Unable to load patient profile.");
+      })
+      .finally(() => setIsProfileLoading(false));
+  }, [user?.id]);
+
+  const handleSaveProfile = async (payload: { name: string; phone: string; dob: string; governorate: string; address: string }) => {
+    if (!user?.id) throw new Error("Unable to save profile without a logged in user.");
+
+    const updatedProfile = await updatePatientProfile(user.id, payload);
+    setProfile(updatedProfile);
+    updateProfile({ name: updatedProfile.user.name, phone: updatedProfile.user.phone });
+  };
 
   const getStatusColor = (status: string) => {
     switch (status) {
@@ -566,8 +629,18 @@ export function PatientProfile() {
 
           {/* Tab body */}
           <div className="p-6 md:p-8">
-            {activeTab === "personal" && <PersonalTab user={user} updateProfile={updateProfile} />}
-            {activeTab === "security" && <SecurityTab user={user} />}
+            {profileError && (
+            <div className="mb-6 rounded-2xl border border-red-200 bg-red-50 px-4 py-3 text-sm text-red-700">
+              Unable to load patient profile: {profileError}
+            </div>
+          )}
+          {activeTab === "personal" && profile && (
+            <PersonalTab profile={profile.user} onSave={handleSaveProfile} />
+          )}
+          {activeTab === "personal" && !profile && !profileError && isProfileLoading && (
+            <div className="py-10 text-center text-sm text-muted-foreground">Loading profile...</div>
+          )}
+          {activeTab === "security" && <SecurityTab user={user} />}
           </div>
         </div>
 
