@@ -1,4 +1,4 @@
-# MedWasla
+# MedWaslaa
 
 **MedWasla** is a full-stack healthcare platform that connects patients with verified medical specialists across Egypt. Patients can discover doctors and nurses, join live clinic queues, manage appointments, and leave reviews. Specialists manage profiles, availability, and patient flow. Administrators verify and approve specialist registrations.
 
