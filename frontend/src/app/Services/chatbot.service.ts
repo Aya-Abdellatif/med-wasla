@@ -5,5 +5,6 @@ export const sendMessageToAI = async (message: string) => {
     message,
   });
 
-  return response.data.message;
+  // 🔄 FIX HERE: Pull out '.message' so the UI gets the flat {"answer": "...", "sources": [...]}
+  return response.data.message; 
 };

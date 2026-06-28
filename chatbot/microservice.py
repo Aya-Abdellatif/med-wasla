@@ -1,22 +1,19 @@
 from flask import Flask, request, jsonify
+from flask_cors import CORS
 from grad_runner import predict
 
 app = Flask(__name__)
-
-
-@app.get("/")
-def home():
-    return {"status": "running"}
-
+CORS(app)
 
 @app.post("/chat")
 def chat():
-    message = request.json["message"]
+    message = request.json.get("message", "")
+    
+    # This returns {"answer": "...", "sources": [...]}
+    result = predict(message) 
+    
+    # Return result directly to keep the structure flat for the frontend
+    return jsonify(result)
 
-    response = predict(message)
-
-    return jsonify({
-        "response": response
-    })
-
-app.run(port=8000)
+if __name__ == "__main__":
+    app.run(port=3000, debug=True) # Ensure this matches your AI_URL port (3000)
