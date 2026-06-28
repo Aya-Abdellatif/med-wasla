@@ -90,6 +90,12 @@ export default function SignIn() {
           </div>
         </div>
 
+        <div className="flex justify-end">
+          <Link to="/forgot-password" className="text-sm font-semibold text-teal-500 hover:text-teal-600">
+            Forgot password?
+          </Link>
+        </div>
+
         <button
           type="submit"
           disabled={isLoading}
