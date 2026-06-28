@@ -15,6 +15,19 @@ export function getSpecialistDisplayName(name?: string | null): string {
   return `DR. ${firstName}`;
 }
 
+export type ToastUserRole = "patient" | "doctor" | "nurse" | "admin";
+
+/** Label shown in toast header — respects role (no "Dr." for patients). */
+export function getToastUserLabel(
+  name?: string | null,
+  role?: ToastUserRole | null,
+): string {
+  const firstName = getFirstName(name);
+  if (!firstName) return "";
+  if (role === "doctor") return `Dr. ${firstName}`;
+  return firstName;
+}
+
 export function formatSpecialistName(
   name?: string | null,
   type: "doctor" | "nurse" = "doctor",

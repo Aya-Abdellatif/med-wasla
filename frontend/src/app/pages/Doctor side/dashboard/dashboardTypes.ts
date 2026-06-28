@@ -8,6 +8,7 @@ export interface Appointment {
   time: string;
   date: string;
   type: string;
+  visitType: "clinic" | "home";
   status: "pending" | "scheduled" | "completed" | "cancelled" | "overdue";
   backendStatus?: "pending" | "confirmed" | "completed" | "cancelled" | "overdue";
 }

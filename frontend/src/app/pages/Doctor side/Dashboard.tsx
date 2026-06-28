@@ -10,7 +10,7 @@ import {
   cancelAppointment,
 } from "../../../services/appointmentsApi";
 
-import { showError, showSuccess } from "../../../utils/toast";
+import { showError, showSuccess, getToastUserContext } from "../../../utils/toast";
 
 import { VerificationStatusNotice } from "../../components/common/VerificationStatusNotice";
 
@@ -25,15 +25,11 @@ import type {
 } from "./dashboard/dashboardTypes";
 
 import {
-
   countUniquePatients,
-
+  DASHBOARD_THEME,
   getDateStrWithOffset,
-
   getFormattedToday,
-
   offersHomeService,
-
 } from "./dashboard/dashboardUtils";
 
 import { DashboardTabs } from "./dashboard/DashboardTabs";
@@ -97,11 +93,7 @@ export function Dashboard() {
 
     } catch (err) {
 
-      showError(err instanceof Error ? err.message : "Failed to load appointments", {
-
-        userName: user?.name,
-
-      });
+      showError(err instanceof Error ? err.message : "Failed to load appointments", getToastUserContext(user));
 
     } finally {
 
@@ -155,23 +147,59 @@ export function Dashboard() {
     try {
       if (action === "accepted") {
         await updateAppointmentStatus(requestId, "confirmed");
-        showSuccess("Home visit accepted!", { userName: user?.name });
+        showSuccess("Home visit accepted!", getToastUserContext(user));
       } else {
         await cancelAppointment(requestId);
-        showSuccess("Home visit declined.", { userName: user?.name });
+        showSuccess("Home visit declined.", getToastUserContext(user));
       }
 
       await loadAppointments(true);
     } catch (err) {
-      showError(err instanceof Error ? err.message : "Failed to update home visit request", {
-        userName: user?.name,
-      });
+      showError(err instanceof Error ? err.message : "Failed to update home visit request", getToastUserContext(user));
     } finally {
       setUpdatingRequestId(null);
     }
   };
 
 
+
+  const handleCancelAppointment = async (appointmentId: string) => {
+    setUpdatingAppointmentId(appointmentId);
+
+    try {
+      await cancelAppointment(appointmentId);
+      await loadAppointments(true);
+      showSuccess("Appointment cancelled.", getToastUserContext(user));
+    } catch (err) {
+      showError(err instanceof Error ? err.message : "Failed to cancel appointment", getToastUserContext(user));
+    } finally {
+      setUpdatingAppointmentId(null);
+    }
+  };
+
+  const handleCancelAllPending = async () => {
+    const clinicPending = appointments.filter(
+      (a) => a.backendStatus === "pending" && a.visitType === "clinic",
+    );
+
+    if (clinicPending.length === 0) return;
+
+    setUpdatingAppointmentId("bulk");
+
+    try {
+      await Promise.all(clinicPending.map((a) => cancelAppointment(a.id)));
+      await loadAppointments(true);
+      showSuccess(`${clinicPending.length} appointment(s) cancelled.`, getToastUserContext(user));
+    } catch (err) {
+      showError(err instanceof Error ? err.message : "Failed to cancel appointments", getToastUserContext(user));
+    } finally {
+      setUpdatingAppointmentId(null);
+    }
+  };
+
+  const openHomeServiceTab = () => {
+    setActiveTab("requests");
+  };
 
   const handleConfirmAppointment = async (appointmentId: string) => {
 
@@ -183,15 +211,11 @@ export function Dashboard() {
 
       await loadAppointments(true);
 
-      showSuccess("Appointment confirmed.", { userName: user?.name });
+      showSuccess("Appointment confirmed.", getToastUserContext(user));
 
     } catch (err) {
 
-      showError(err instanceof Error ? err.message : "Failed to confirm appointment", {
-
-        userName: user?.name,
-
-      });
+      showError(err instanceof Error ? err.message : "Failed to confirm appointment", getToastUserContext(user));
 
     } finally {
 
@@ -213,15 +237,11 @@ export function Dashboard() {
 
       await loadAppointments(true);
 
-      showSuccess("Appointment marked as completed.", { userName: user?.name });
+      showSuccess("Appointment marked as completed.", getToastUserContext(user));
 
     } catch (err) {
 
-      showError(err instanceof Error ? err.message : "Failed to complete appointment", {
-
-        userName: user?.name,
-
-      });
+      showError(err instanceof Error ? err.message : "Failed to complete appointment", getToastUserContext(user));
 
     } finally {
 
@@ -240,69 +260,40 @@ export function Dashboard() {
   const showHomeServiceTab = offersHomeService(user);
 
   const pendingHomeRequests = homeServiceRequests.filter(
-    (request) => request.backendStatus === "pending" || request.backendStatus === "overdue",
+    (request) => request.backendStatus === "pending",
   );
 
 
 
   const stats = [
-
     {
-
       label: "Today's Appointments",
-
       value: appointments.filter((a) => a.date === todayStr && a.status === "scheduled").length,
-
       icon: Calendar,
-
-      iconColor: "#2563eb",
-
-      bgColor: "#eff6ff",
-
+      iconColor: DASHBOARD_THEME.primary,
+      bgColor: DASHBOARD_THEME.primaryLight,
     },
-
     {
-
       label: "Completed Today",
-
       value: appointments.filter((a) => a.date === todayStr && a.status === "completed").length,
-
       icon: CheckCircle,
-
-      iconColor: "#16a34a",
-
-      bgColor: "#f0fdf4",
-
+      iconColor: DASHBOARD_THEME.success,
+      bgColor: DASHBOARD_THEME.successLight,
     },
-
     {
-
       label: "Total Patients",
-
       value: countUniquePatients(appointments),
-
       icon: Users,
-
-      iconColor: "#7c3aed",
-
-      bgColor: "#f5f3ff",
-
+      iconColor: DASHBOARD_THEME.accent,
+      bgColor: DASHBOARD_THEME.accentLight,
     },
-
     {
-
       label: "Pending Requests",
-
       value: pendingAppointments.length,
-
       icon: AlertCircle,
-
-      iconColor: "#d97706",
-
-      bgColor: "#fffbeb",
-
+      iconColor: DASHBOARD_THEME.warning,
+      bgColor: DASHBOARD_THEME.warningLight,
     },
-
   ];
 
 
@@ -370,23 +361,18 @@ export function Dashboard() {
         {activeTab === "overview" && (
 
           <OverviewTab
-
             stats={stats}
-
             pendingAppointments={pendingAppointments}
-
             todayUpcoming={todayUpcoming}
-
+            offersHomeService={showHomeServiceTab}
             onViewAllSchedule={openScheduleTab}
-
             onConfirm={handleConfirmAppointment}
-
+            onCancel={handleCancelAppointment}
+            onCancelAllPending={handleCancelAllPending}
             onComplete={handleCompleteAppointment}
-
+            onGoToHomeService={openHomeServiceTab}
             updatingAppointmentId={updatingAppointmentId}
-
             loading={loadingAppointments}
-
           />
 
         )}
@@ -396,25 +382,19 @@ export function Dashboard() {
         {activeTab === "schedule" && (
 
           <ScheduleTab
-
             selectedDate={selectedScheduleDate}
-
             onSelectedDateChange={setSelectedScheduleDate}
-
             filteredUpcoming={filteredUpcoming}
-
             filteredCompleted={filteredCompleted}
-
             pendingAppointments={pendingAppointments}
-
             overdueAppointments={overdueAppointments}
-
+            offersHomeService={showHomeServiceTab}
             onConfirm={handleConfirmAppointment}
-
+            onCancel={handleCancelAppointment}
+            onCancelAllPending={handleCancelAllPending}
             onComplete={handleCompleteAppointment}
-
+            onGoToHomeService={openHomeServiceTab}
             updatingAppointmentId={updatingAppointmentId}
-
           />
 
         )}

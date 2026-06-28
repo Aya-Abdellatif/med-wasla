@@ -344,28 +344,41 @@ export const updateUserPhoto = async (
   fileBuffer: Buffer,
   mimeType: string,
 ): Promise<IUser> => {
-  const uploadResult = await new Promise<{ secure_url: string }>((resolve, reject) => {
-    cloudinary.uploader
-      .upload_stream(
-        {
-          folder: "medwasla/profiles",
-          resource_type: "image",
-          format: mimeType.split("/")[1],
-          transformation: [{ width: 400, height: 400, crop: "fill" }],
-        },
-        (err, result) => {
-          if (err || !result) {
-            return reject(err ?? new Error("Cloudinary upload failed"));
-          }
-          resolve(result);
-        },
-      )
-      .end(fileBuffer);
-  });
+  let photoUrl: string;
+
+  const hasCloudinary =
+    process.env.CLOUDINARY_CLOUD_NAME &&
+    process.env.CLOUDINARY_API_KEY &&
+    process.env.CLOUDINARY_API_SECRET;
+
+  if (hasCloudinary) {
+    const uploadResult = await new Promise<{ secure_url: string }>((resolve, reject) => {
+      cloudinary.uploader
+        .upload_stream(
+          {
+            folder: "medwasla/profiles",
+            resource_type: "image",
+            format: mimeType.split("/")[1],
+            transformation: [{ width: 400, height: 400, crop: "fill" }],
+          },
+          (err, result) => {
+            if (err || !result) {
+              return reject(err ?? new Error("Cloudinary upload failed"));
+            }
+            resolve(result);
+          },
+        )
+        .end(fileBuffer);
+    });
+    photoUrl = uploadResult.secure_url;
+  } else {
+    const base64 = fileBuffer.toString("base64");
+    photoUrl = `data:${mimeType};base64,${base64}`;
+  }
 
   const user = await User.findByIdAndUpdate(
     userId,
-    { photoUrl: uploadResult.secure_url },
+    { photoUrl },
     { new: true },
   );
 

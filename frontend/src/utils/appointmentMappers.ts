@@ -129,6 +129,7 @@ export function mapApiAppointmentsForSpecialist(
         date: formatDate(appt.date),
         time: formatTime(appt.date),
         type: appt.type === "home" ? "Home Visit" : "Clinic Visit",
+        visitType: appt.type,
         status: resolveDashboardStatus(appt.status, appt.date),
         backendStatus:
           resolveDashboardStatus(appt.status, appt.date) === "overdue"

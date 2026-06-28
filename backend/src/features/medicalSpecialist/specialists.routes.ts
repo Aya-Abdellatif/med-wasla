@@ -9,7 +9,9 @@ import {
   addCertificate,
   updateAvailability,
   updateFees,
+  updatePhoto,
 } from "./specialists.controller.js";
+import { uploadPhoto } from "../../middleware/upload.middleware.js";
 
 const router = Router();
 
@@ -23,6 +25,7 @@ router.get("/", getAllSpecialists);
 router.get("/specialization/:name", getSpecialistsBySpecialization);
 
 router.get("/me", ...requireSpecialist, getMe);
+router.patch("/me/photo", ...requireSpecialist, uploadPhoto.single("photo"), updatePhoto);
 router.post("/me/certificates", ...requireSpecialist, addCertificate);
 
 router.put("/profile", ...requireSpecialist, updateProfile);
