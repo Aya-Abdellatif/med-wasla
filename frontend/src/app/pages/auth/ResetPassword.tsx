@@ -33,7 +33,7 @@ export default function ResetPassword() {
         body: JSON.stringify({ email, otp: otp.trim(), newPassword }),
       });
       showSuccess("Password reset successfully!");
-      navigate("/sign-in");
+      navigate("/login");
     } catch (err) {
       showError(err instanceof Error ? err.message : "Failed to reset password");
     } finally {
