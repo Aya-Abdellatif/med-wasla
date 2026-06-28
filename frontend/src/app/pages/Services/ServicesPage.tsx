@@ -16,6 +16,53 @@ export default function ServicesPage() {
   const showPatientServices = !isAuthenticated || user?.role === "patient";
   const showProviderServices = !isAuthenticated || isProvider;
 
+  const patientServicesList =
+    showPatientServices && showProviderServices
+      ? services.filter((service) => service.title !== "AI Medical Assistant")
+      : services;
+
+  const chatbotButtonClass =
+    "group flex items-center gap-2 bg-primary text-white border-2 border-primary w-min font-bold text-base px-4 py-2 rounded-xl cursor-pointer transition-all duration-300 ease-in-out hover:border-primary hover:-translate-y-0.5 hover:bg-transparent hover:text-primary hover:shadow-md whitespace-nowrap";
+
+  function renderServiceCta(serviceTitle: string, providerMode = false) {
+    if (serviceTitle === "AI Medical Assistant") {
+      return (
+        <button type="button" onClick={openChatBot} className={chatbotButtonClass}>
+          <span>Start Chatbot</span>
+        </button>
+      );
+    }
+
+    if (providerMode) {
+      return (
+        <Link to="/dashboard" className={chatbotButtonClass}>
+          <span>Go to Dashboard</span>
+        </Link>
+      );
+    }
+
+    return (
+      <Link
+        to={
+          serviceTitle === "Doctor Reservation"
+            ? "/doctors"
+            : serviceTitle === "Nursing Care"
+              ? "/nurses"
+              : "/services"
+        }
+        className={chatbotButtonClass}
+      >
+        <span>
+          {serviceTitle === "Doctor Reservation"
+            ? "Go to Doctors"
+            : serviceTitle === "Nursing Care"
+              ? "Go to Nurses"
+              : "Go to Home services"}
+        </span>
+      </Link>
+    );
+  }
+
   return (
     <main className="min-h-screen bg-white text-[#1F2937] ">
       {/* Hero Section */}
@@ -60,7 +107,7 @@ export default function ServicesPage() {
           {showPatientServices && (
             <div className="space-y-20">
 
-              {services.map((service, index) => {
+              {patientServicesList.map((service, index) => {
                 const isReverse = index % 2 === 1;
 
                 return (
@@ -100,33 +147,7 @@ export default function ServicesPage() {
                         ))}
                       </div>
 
-                      {service.title === "AI Medical Assistant" ? (
-                        <button
-                          onClick={openChatBot}
-                          className="group flex items-center gap-2 bg-primary text-white border-2 border-primary w-min font-bold text-base px-4 py-2 rounded-xl cursor-pointer transition-all duration-300 ease-in-out hover:border-primary hover:-translate-y-0.5 hover:bg-transparent hover:text-primary hover:shadow-md whitespace-nowrap"
-                        >
-                          <span>Start Chatbot</span>
-                        </button>
-                      ) : (
-                        <Link
-                          to={
-                            service.title === "Doctor Reservation"
-                              ? "/doctors"
-                              : service.title === "Nursing Care"
-                                ? "/nurses"
-                                : "/services"
-                          }
-                          className="group flex items-center gap-2 bg-primary text-white border-2 border-primary font-bold text-base px-4 py-2 w-min rounded-xl cursor-pointer transition-all duration-300 ease-in-out hover:border-primary hover:-translate-y-0.5 hover:bg-transparent hover:text-primary hover:shadow-md whitespace-nowrap"
-                        >
-                          <span>
-                            {service.title === "Doctor Reservation"
-                              ? "Go to Doctors"
-                              : service.title === "Nursing Care"
-                                ? "Go to Nurses"
-                                : "Go to Home services"}
-                          </span>
-                        </Link>
-                      )}
+                      {renderServiceCta(service.title)}
                     </div>
                   </div>
                 );
@@ -183,12 +204,7 @@ export default function ServicesPage() {
                         ))}
                       </div>
 
-                      <Link
-                        to="/dashboard"
-                        className="group flex items-center gap-2 bg-primary text-white border-2 border-primary font-bold text-base px-4 py-2 w-min rounded-xl cursor-pointer transition-all duration-300 ease-in-out hover:border-primary hover:-translate-y-0.5 hover:bg-transparent hover:text-primary hover:shadow-md whitespace-nowrap"
-                      >
-                        <span>Go to Dashboard</span>
-                      </Link>
+                      {renderServiceCta(service.title, true)}
                     </div>
                   </div>
                 );

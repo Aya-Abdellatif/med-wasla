@@ -21,11 +21,14 @@ import { OverviewTab } from "./dashboard/OverviewTab";
 import { ScheduleTab } from "./dashboard/ScheduleTab";
 import { RequestsTab } from "./dashboard/RequestsTab";
 
+function isSpecialistRole(role?: string) {
+  return role === "doctor" || role === "nurse";
+}
+
 export function Dashboard() {
   const { user, refreshSpecialistProfile } = useAuth();
   const [activeTab, setActiveTab] = useState<DashboardTab>("overview");
   const [selectedScheduleDate, setSelectedScheduleDate] = useState(() => getDateStrWithOffset(0));
-
   const [appointments, setAppointments] = useState<Appointment[]>([]);
   const [loadingAppointments, setLoadingAppointments] = useState(true);
   const [updatingAppointmentId, setUpdatingAppointmentId] = useState<string | null>(null);
@@ -34,7 +37,7 @@ export function Dashboard() {
 
   const loadAppointments = useCallback(
     async (silent = false) => {
-      if (user?.role !== "doctor" && user?.role !== "nurse") {
+      if (!isSpecialistRole(user?.role)) {
         setAppointments([]);
         setHomeServiceRequests([]);
         if (!silent) setLoadingAppointments(false);
@@ -62,40 +65,65 @@ export function Dashboard() {
   );
 
   useEffect(() => {
-    if (user?.role !== "doctor" && user?.role !== "nurse") {
-      return;
-    }
+    if (!isSpecialistRole(user?.role)) return;
 
-    refreshSpecialistProfile();
+    let cancelled = false;
 
-    const timer = window.setTimeout(() => {
-      void loadAppointments();
-    }, 0);
+    void (async () => {
+      await refreshSpecialistProfile();
+
+      try {
+        const { appointments: nextAppointments, homeServiceRequests: nextHomeRequests } =
+          await fetchSpecialistAppointments();
+
+        if (cancelled) return;
+
+        setAppointments(nextAppointments);
+        setHomeServiceRequests(nextHomeRequests);
+      } catch (err) {
+        if (cancelled) return;
+
+        showError(
+          err instanceof Error ? err.message : "Failed to load appointments",
+          getToastUserContext(user),
+        );
+      } finally {
+        if (!cancelled) setLoadingAppointments(false);
+      }
+    })();
 
     return () => {
-      window.clearTimeout(timer);
+      cancelled = true;
     };
-  }, [user?.id, user?.role, refreshSpecialistProfile, loadAppointments]);
+  }, [user?.id, user?.role, user?.name, refreshSpecialistProfile, user]);
 
-  const todayStr = getDateStrWithOffset(0);
+  const runWithRefresh = async (
+    action: () => Promise<unknown>,
+    successMessage: string,
+    errorMessage: string,
+  ) => {
+    try {
+      await action();
+      await loadAppointments(true);
+      showSuccess(successMessage, getToastUserContext(user));
+    } catch (err) {
+      showError(err instanceof Error ? err.message : errorMessage, getToastUserContext(user));
+    }
+  };
 
   const handleRequestAction = async (requestId: string, action: "accepted" | "rejected") => {
     setUpdatingRequestId(requestId);
-
     try {
-      if (action === "accepted") {
-        await updateAppointmentStatus(requestId, "confirmed");
-        showSuccess("Home visit accepted!", getToastUserContext(user));
-      } else {
-        await cancelAppointment(requestId);
-        showSuccess("Home visit declined.", getToastUserContext(user));
-      }
-
-      await loadAppointments(true);
-    } catch (err) {
-      showError(
-        err instanceof Error ? err.message : "Failed to update home visit request",
-        getToastUserContext(user),
+      await runWithRefresh(
+        async () => {
+          if (action === "accepted") {
+            await updateAppointmentStatus(requestId, "confirmed");
+          } else {
+            await cancelAppointment(requestId);
+          }
+        },
+        action === "accepted" ? "Home visit accepted!" : "Home visit declined.",
+        "Failed to update home visit request",
       );
     } finally {
       setUpdatingRequestId(null);
@@ -104,15 +132,11 @@ export function Dashboard() {
 
   const handleCancelAppointment = async (appointmentId: string) => {
     setUpdatingAppointmentId(appointmentId);
-
     try {
-      await cancelAppointment(appointmentId);
-      await loadAppointments(true);
-      showSuccess("Appointment cancelled.", getToastUserContext(user));
-    } catch (err) {
-      showError(
-        err instanceof Error ? err.message : "Failed to cancel appointment",
-        getToastUserContext(user),
+      await runWithRefresh(
+        () => cancelAppointment(appointmentId),
+        "Appointment cancelled.",
+        "Failed to cancel appointment",
       );
     } finally {
       setUpdatingAppointmentId(null);
@@ -123,40 +147,27 @@ export function Dashboard() {
     const clinicPending = appointments.filter(
       (a) => a.backendStatus === "pending" && a.visitType === "clinic",
     );
-
     if (clinicPending.length === 0) return;
 
     setUpdatingAppointmentId("bulk");
-
     try {
-      await Promise.all(clinicPending.map((a) => cancelAppointment(a.id)));
-      await loadAppointments(true);
-      showSuccess(`${clinicPending.length} appointment(s) cancelled.`, getToastUserContext(user));
-    } catch (err) {
-      showError(
-        err instanceof Error ? err.message : "Failed to cancel appointments",
-        getToastUserContext(user),
+      await runWithRefresh(
+        () => Promise.all(clinicPending.map((a) => cancelAppointment(a.id))),
+        `${clinicPending.length} appointment(s) cancelled.`,
+        "Failed to cancel appointments",
       );
     } finally {
       setUpdatingAppointmentId(null);
     }
   };
 
-  const openHomeServiceTab = () => {
-    setActiveTab("requests");
-  };
-
   const handleConfirmAppointment = async (appointmentId: string) => {
     setUpdatingAppointmentId(appointmentId);
-
     try {
-      await updateAppointmentStatus(appointmentId, "confirmed");
-      await loadAppointments(true);
-      showSuccess("Appointment confirmed.", getToastUserContext(user));
-    } catch (err) {
-      showError(
-        err instanceof Error ? err.message : "Failed to confirm appointment",
-        getToastUserContext(user),
+      await runWithRefresh(
+        () => updateAppointmentStatus(appointmentId, "confirmed"),
+        "Appointment confirmed.",
+        "Failed to confirm appointment",
       );
     } finally {
       setUpdatingAppointmentId(null);
@@ -165,27 +176,23 @@ export function Dashboard() {
 
   const handleCompleteAppointment = async (appointmentId: string) => {
     setUpdatingAppointmentId(appointmentId);
-
     try {
-      await updateAppointmentStatus(appointmentId, "completed");
-      await loadAppointments(true);
-      showSuccess("Appointment marked as completed.", getToastUserContext(user));
-    } catch (err) {
-      showError(
-        err instanceof Error ? err.message : "Failed to complete appointment",
-        getToastUserContext(user),
+      await runWithRefresh(
+        () => updateAppointmentStatus(appointmentId, "completed"),
+        "Appointment marked as completed.",
+        "Failed to complete appointment",
       );
     } finally {
       setUpdatingAppointmentId(null);
     }
   };
 
+  const todayStr = getDateStrWithOffset(0);
   const pendingAppointments = appointments.filter((a) => a.backendStatus === "pending");
   const overdueAppointments = appointments.filter((a) => a.backendStatus === "overdue");
   const showHomeServiceTab = offersHomeService(user);
-  const pendingHomeRequests = homeServiceRequests.filter(
-    (request) => request.backendStatus === "pending",
-  );
+  const pendingHomeRequests = homeServiceRequests.filter((r) => r.backendStatus === "pending");
+  const visibleTab = activeTab === "requests" && !showHomeServiceTab ? "overview" : activeTab;
 
   const stats = [
     {
@@ -218,31 +225,32 @@ export function Dashboard() {
     },
   ];
 
-  const todayUpcoming = appointments.filter(
-    (a) => a.date === todayStr && a.status === "scheduled",
-  );
-
+  const todayUpcoming = appointments.filter((a) => a.date === todayStr && a.status === "scheduled");
   const filteredUpcoming = appointments.filter(
     (a) => a.date === selectedScheduleDate && a.status === "scheduled",
   );
-
   const filteredCompleted = appointments.filter(
     (a) => a.date === selectedScheduleDate && a.status === "completed",
   );
 
-  const openScheduleTab = () => {
-    setSelectedScheduleDate(todayStr);
-    setActiveTab("schedule");
+  const tabProps = {
+    offersHomeService: showHomeServiceTab,
+    onConfirm: handleConfirmAppointment,
+    onCancel: handleCancelAppointment,
+    onCancelAllPending: handleCancelAllPending,
+    onComplete: handleCompleteAppointment,
+    onGoToHomeService: () => setActiveTab("requests"),
+    updatingAppointmentId,
   };
 
   return (
     <div className="min-h-screen" style={{ backgroundColor: "#f8fafc" }}>
-      {(user?.role === "doctor" || user?.role === "nurse") && user.verificationStatus && (
+      {isSpecialistRole(user?.role) && user?.verificationStatus && (
         <VerificationStatusNotice status={user.verificationStatus} />
       )}
 
       <DashboardTabs
-        activeTab={activeTab}
+        activeTab={visibleTab}
         onTabChange={setActiveTab}
         formattedDate={getFormattedToday()}
         showRequestsTab={showHomeServiceTab}
@@ -250,24 +258,21 @@ export function Dashboard() {
       />
 
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
-        {activeTab === "overview" && (
+        <div className={visibleTab === "overview" ? undefined : "hidden"}>
           <OverviewTab
             stats={stats}
             pendingAppointments={pendingAppointments}
             todayUpcoming={todayUpcoming}
-            offersHomeService={showHomeServiceTab}
-            onViewAllSchedule={openScheduleTab}
-            onConfirm={handleConfirmAppointment}
-            onCancel={handleCancelAppointment}
-            onCancelAllPending={handleCancelAllPending}
-            onComplete={handleCompleteAppointment}
-            onGoToHomeService={openHomeServiceTab}
-            updatingAppointmentId={updatingAppointmentId}
+            onViewAllSchedule={() => {
+              setSelectedScheduleDate(todayStr);
+              setActiveTab("schedule");
+            }}
             loading={loadingAppointments}
+            {...tabProps}
           />
-        )}
+        </div>
 
-        {activeTab === "schedule" && (
+        <div className={visibleTab === "schedule" ? undefined : "hidden"}>
           <ScheduleTab
             selectedDate={selectedScheduleDate}
             onSelectedDateChange={setSelectedScheduleDate}
@@ -275,23 +280,19 @@ export function Dashboard() {
             filteredCompleted={filteredCompleted}
             pendingAppointments={pendingAppointments}
             overdueAppointments={overdueAppointments}
-            offersHomeService={showHomeServiceTab}
-            onConfirm={handleConfirmAppointment}
-            onCancel={handleCancelAppointment}
-            onCancelAllPending={handleCancelAllPending}
-            onComplete={handleCompleteAppointment}
-            onGoToHomeService={openHomeServiceTab}
-            updatingAppointmentId={updatingAppointmentId}
+            {...tabProps}
           />
-        )}
+        </div>
 
-        {activeTab === "requests" && showHomeServiceTab && (
-          <RequestsTab
-            requests={homeServiceRequests}
-            loading={loadingAppointments}
-            updatingRequestId={updatingRequestId}
-            onRequestAction={handleRequestAction}
-          />
+        {showHomeServiceTab && (
+          <div className={visibleTab === "requests" ? undefined : "hidden"}>
+            <RequestsTab
+              requests={homeServiceRequests}
+              loading={loadingAppointments}
+              updatingRequestId={updatingRequestId}
+              onRequestAction={handleRequestAction}
+            />
+          </div>
         )}
       </div>
     </div>
