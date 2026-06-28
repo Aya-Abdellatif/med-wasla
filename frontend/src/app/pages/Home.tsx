@@ -12,10 +12,8 @@ import {
   Star,
   ArrowRight,
   Phone,
-  CalendarDays,
   ChevronLeft,
   ChevronRight,
-  MessageCircle,
   LayoutDashboard,
 } from "lucide-react";
 import docImg from "/src/assets/doctors.avif";
