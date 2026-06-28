@@ -1,9 +1,7 @@
 import ReactMarkdown from "react-markdown";
 import type { Message } from "../../../types/chat.types";
 
-interface ChatMessageProps extends Message {}
-
-function ChatMessage({ sender, text }: ChatMessageProps) {
+function ChatMessage({ sender, text }: Message) {
   return (
     <div className={`mb-3 ${sender === "user" ? "text-right" : "text-left"}`}>
       <div
@@ -13,7 +11,6 @@ function ChatMessage({ sender, text }: ChatMessageProps) {
             : "bg-white text-gray-800 shadow-sm border border-gray-100"
         }`}
       >
-        {/* Added dynamic check fallback if text arrives empty */}
         <ReactMarkdown>{text || "No response received"}</ReactMarkdown>
       </div>
     </div>

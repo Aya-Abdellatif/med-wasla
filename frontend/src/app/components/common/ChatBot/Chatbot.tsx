@@ -1,10 +1,10 @@
 import { X, Bot } from "lucide-react";
-import { useEffect, useState } from "react";
+import { useState } from "react";
 
 import { useChatBot } from "../../../context/useChatBot";
 import { sendMessageToAI } from "../../../Services/chatbot.service";
 
-import ChatMessage from "./ChatMessage";
+// import ChatMessage from "./ChatMessage";
 import ChatInput from "./ChatInput";
 import ChatHistory from "./ChatHistory";
 
@@ -13,40 +13,65 @@ import type { Chat } from "../../../types/chat.types";
 function ChatBot() {
   const { isOpen, openChatBot, closeChatBot } = useChatBot();
 
+  // ---------------- FIRST CHAT ----------------
+  const firstChat: Chat = {
+    id: crypto.randomUUID(),
+    title: "Chat 1",
+    messages: [
+      {
+        sender: "ai",
+        text: "Hi! I am WaslaBot. How can I help you today?",
+      },
+    ],
+  };
+
   const [message, setMessage] = useState("");
-  const [chats, setChats] = useState<Chat[]>([]);
-  const [selectedChatId, setSelectedChatId] = useState<string | null>(null);
+  const [chats, setChats] = useState<Chat[]>([firstChat]);
+  const [selectedChatId, setSelectedChatId] = useState<string | null>(
+    firstChat.id
+  );
 
   const [showHistory, setShowHistory] = useState(false);
-  const [isLoading, setIsLoading] = useState(false);
+  const [, setIsLoading] = useState(false);
 
   const currentChat = chats.find((c) => c.id === selectedChatId);
 
   // ---------------- CREATE FIRST CHAT ----------------
-  useEffect(() => {
-    createNewChat();
-  }, []);
-
-  const createNewChat = () => {
-    const newChat: Chat = {
-      id: crypto.randomUUID(),
-      title: `Chat ${chats.length + 1}`,
-      messages: [
-        {
-          sender: "ai",
-          text: "Hi! I am WaslaBot. How can I help you today?",
-        },
-      ],
-    };
-
-    setChats((prev) => [newChat, ...prev]);
-    setSelectedChatId(newChat.id);
+// new chat
+ const createNewChat = () => {
+  const newChat: Chat = {
+    id: crypto.randomUUID(),
+    title: `Chat ${chats.length + 1}`,
+    messages: [
+      {
+        sender: "ai",
+        text: "Hi! I am WaslaBot. How can I help you today?",
+      },
+    ],
   };
 
+  setChats((prev) => [newChat, ...prev]);
+  setSelectedChatId(newChat.id);
+};
 
+
+
+
+//React's new ESLint plugin says:
+//Don't use an effect just to initialize state. Initialize the state directly.
+//React's new ESLint plugin says:
+//Don't call a function inside useEffect if that function immediately calls setState().
+//This isn't a TypeScript error.
+//It's a React recommendation.
 
 // ---------------- DYNAMIC WORD-MATCHING & MARKDOWN RENDER ENGINE ----------------
-  const renderEnhancedText = (text: string, sources: any[] = []) => {
+interface Source {
+    title?: string;
+    name?: string;
+    url?: string;
+    link?: string;
+}
+const renderEnhancedText = (text: string,  sources: (string | Source)[] = []) => {
     if (!text) return null;
 
     // 1. Split text into individual lines to respect '\n' structural newlines explicitly
@@ -94,7 +119,7 @@ function ChatBot() {
 
       // Escape special regex characters in titles to prevent dynamic pattern compilation errors
       const escapedTitles = sourceTitles.map((title) =>
-        title.replace(/[-\/\\^$*+?.()|[\]{}]/g, "\\$&")
+        title.replace(/[-/\\^$*+?.()|[\]{}]/g, "\\$&")
       );
 
       // Combine bolding markdown pattern with raw source title matching phrases
@@ -139,10 +164,16 @@ function ChatBot() {
                 .toLowerCase()
                 .replace(/\s+/g, "-");
 
-              const linkUrl =
-                matchedSource.url ||
-                matchedSource.link ||
-                `https://www.nhs.uk/conditions/${cleanSlug}`;
+let linkUrl: string;
+
+if (typeof matchedSource === "string") {
+    linkUrl = `https://www.nhs.uk/conditions/${cleanSlug}`;
+} else {
+    linkUrl =
+        matchedSource.url ||
+        matchedSource.link ||
+        `https://www.nhs.uk/conditions/${cleanSlug}`;
+}
 
               return (
                 <a

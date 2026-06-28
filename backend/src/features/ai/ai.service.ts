@@ -9,7 +9,9 @@ export const sendMessageToAI = async (message: string) => {
     
     // 🔄 Return response.data entirely so the UI component reads the dictionary directly
     return response.data;
-  } catch (error: unknown) {
-    throw new Error("AI service failed");
-  }
+} catch (error: unknown) {
+  throw new Error("AI service failed", {
+    cause: error,
+  });
+}
 };

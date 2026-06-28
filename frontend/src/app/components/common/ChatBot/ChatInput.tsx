@@ -1,6 +1,10 @@
 import { Send, Plus, Mic } from "lucide-react";
 import { useRef } from "react";
 
+import type {
+  SpeechRecognitionEvent,
+} from "../../../types/chat.types";
+
 interface ChatInputProps {
   message: string;
   setMessage: (value: string) => void;
@@ -20,9 +24,8 @@ function ChatInput({ message, setMessage, onSend }: ChatInputProps) {
 
   // ---------------- VOICE INPUT ----------------
   const startVoice = () => {
-    const SpeechRecognition =
-      (window as any).SpeechRecognition ||
-      (window as any).webkitSpeechRecognition;
+const SpeechRecognition =
+  window.SpeechRecognition || window.webkitSpeechRecognition;
 
     if (!SpeechRecognition) {
       alert("Voice input not supported in this browser");
@@ -33,7 +36,7 @@ function ChatInput({ message, setMessage, onSend }: ChatInputProps) {
     recognition.lang = "en-US";
     recognition.interimResults = false;
 
-    recognition.onresult = (event: any) => {
+recognition.onresult = (event: SpeechRecognitionEvent) => {
       const text = event.results[0][0].transcript;
       setMessage(text);
       inputRef.current?.focus();
