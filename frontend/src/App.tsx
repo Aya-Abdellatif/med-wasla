@@ -31,7 +31,6 @@ import { ProtectedRoute } from "./app/components/common/ProtectedRoute";
 import { RoleProtectedRoute } from "./app/components/common/RoleProtectedRoute";
 
 import NotFound from "./app/pages/NotFound";
-import ErrorPage from "./app/pages/ErrorPage";
 
 function App() {
   return (
@@ -80,7 +79,6 @@ function App() {
             </Route>
             <Route path="*" element={<NotFound />} />
           </Route>
-          <Route path="/error" element={<ErrorPage />} />
         </Routes>
       </ChatBotProvider>
     </AuthProvider>

@@ -10,6 +10,7 @@ import cloudinary from "../../config/cloudinary.js";
 export interface GetAllSpecialistsQuery {
   specialistType?: string;
   specialization?: string;
+  expertise?: string;
   verificationStatus?: string;
   homeVisit?: string;
   serviceArea?: string;
@@ -96,6 +97,7 @@ export const getAllSpecialistsService = async (
   const {
     specialistType,
     specialization,
+    expertise,
     verificationStatus,
     homeVisit,
     serviceArea,
@@ -110,6 +112,8 @@ export const getAllSpecialistsService = async (
 
   if (specialistType) filter.specialistType = specialistType;
   if (specialization) filter.specialization = specialization;
+  if (expertise) filter.areasOfExpertise = { $in: [expertise] };
+
   if (options.publicOnly) {
     filter.verificationStatus = "approved";
   } else if (verificationStatus) {
@@ -120,22 +124,23 @@ export const getAllSpecialistsService = async (
 
   if (search) {
     const searchTerm = search.trim();
-  
+
     const matchingUsers = await User.find({
       name: { $regex: searchTerm, $options: "i" },
     }).select("_id");
-  
+
     const userIds = matchingUsers.map((user) => user._id);
-  
+
     filter.$or = [
       { bio: { $regex: searchTerm, $options: "i" } },
       { clinicAddress: { $regex: searchTerm, $options: "i" } },
+      { serviceAreas: { $regex: searchTerm, $options: "i" } },
       { areasOfExpertise: { $regex: searchTerm, $options: "i" } },
       { specialization: { $regex: searchTerm, $options: "i" } },
       ...(userIds.length > 0 ? [{ userId: { $in: userIds } }] : []),
     ];
   }
-  
+
   const pageNum = Math.max(1, parseInt(page));
   const limitNum = Math.min(50, Math.max(1, parseInt(limit)));
   const skip = (pageNum - 1) * limitNum;
@@ -322,7 +327,10 @@ export const addSpecialistCertificateService = async (
     status: "pending" as const,
   };
 
-  specialist.certifications = [...(specialist.certifications ?? []), newCertificate];
+  specialist.certifications = [
+    ...(specialist.certifications ?? []),
+    newCertificate,
+  ];
   specialist.verificationStatus = "pending";
   if (wasApproved) {
     specialist.revertToApprovedOnReject = true;
@@ -341,24 +349,26 @@ export const updateUserPhoto = async (
   fileBuffer: Buffer,
   mimeType: string,
 ): Promise<IUser> => {
-  const uploadResult = await new Promise<{ secure_url: string }>((resolve, reject) => {
-    cloudinary.uploader
-      .upload_stream(
-        {
-          folder: "medwasla/profiles",
-          resource_type: "image",
-          format: mimeType.split("/")[1],
-          transformation: [{ width: 400, height: 400, crop: "fill" }],
-        },
-        (err, result) => {
-          if (err || !result) {
-            return reject(err ?? new Error("Cloudinary upload failed"));
-          }
-          resolve(result);
-        },
-      )
-      .end(fileBuffer);
-  });
+  const uploadResult = await new Promise<{ secure_url: string }>(
+    (resolve, reject) => {
+      cloudinary.uploader
+        .upload_stream(
+          {
+            folder: "medwasla/profiles",
+            resource_type: "image",
+            format: mimeType.split("/")[1],
+            transformation: [{ width: 400, height: 400, crop: "fill" }],
+          },
+          (err, result) => {
+            if (err || !result) {
+              return reject(err ?? new Error("Cloudinary upload failed"));
+            }
+            resolve(result);
+          },
+        )
+        .end(fileBuffer);
+    },
+  );
 
   const user = await User.findByIdAndUpdate(
     userId,
