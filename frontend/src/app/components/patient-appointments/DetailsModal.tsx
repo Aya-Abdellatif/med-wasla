@@ -25,6 +25,7 @@ const statusConfig: Record<AppointmentStatus, { label: string; color: string; bg
     pending: { label: "Pending", color: "text-amber-700", bgColor: "bg-amber-50 border border-amber-200", icon: AlertCircle },
     completed: { label: "Completed", color: "text-emerald-700", bgColor: "bg-emerald-50 border border-emerald-200", icon: CheckCircle2 },
     cancelled: { label: "Cancelled", color: "text-red-700", bgColor: "bg-red-50 border border-red-200", icon: XCircle },
+    overdue: { label: "Overdue", color: "text-slate-700", bgColor: "bg-slate-100 border border-slate-200", icon: AlertCircle },
 };
 
 export function DetailsModal({ appointment, onClose }: { appointment: Appointment; onClose: () => void }) {
@@ -44,7 +45,7 @@ export function DetailsModal({ appointment, onClose }: { appointment: Appointmen
 
                 <div className="p-6 space-y-6">
                     {/* Doctor info */}
-                    <div className="flex items-center gap-4 p-4 bg-gradient-to-r from-primary/5 to-secondary/5 rounded-xl border border-primary/10">
+                    <div className="flex items-center gap-4 p-4 bg-linear-to-r from-primary/5 to-secondary/5 rounded-xl border border-primary/10">
                         <ImageWithFallback
                             src={appointment.doctor.photo}
                             alt={appointment.doctor.name}
@@ -100,7 +101,7 @@ export function DetailsModal({ appointment, onClose }: { appointment: Appointmen
                     {/* Address */}
                     {appointment.address && (
                         <div className="flex items-start gap-3 p-3 bg-muted/30 rounded-xl">
-                            <div className="w-9 h-9 bg-primary/10 rounded-lg flex items-center justify-center flex-shrink-0">
+                            <div className="w-9 h-9 bg-primary/10 rounded-lg flex items-center justify-center shrink-0">
                                 <MapPin className="w-4 h-4 text-primary" />
                             </div>
                             <div>
@@ -126,7 +127,7 @@ export function DetailsModal({ appointment, onClose }: { appointment: Appointmen
                             <ul className="space-y-2">
                                 {appointment.reminders.map((r, i) => (
                                     <li key={i} className="flex items-center gap-2 text-sm text-foreground bg-amber-50 border border-amber-100 p-2.5 rounded-lg">
-                                        <div className="w-1.5 h-1.5 rounded-full bg-amber-400 flex-shrink-0" />
+                                        <div className="w-1.5 h-1.5 rounded-full bg-amber-400 shrink-0" />
                                         {r}
                                     </li>
                                 ))}
@@ -135,7 +136,7 @@ export function DetailsModal({ appointment, onClose }: { appointment: Appointmen
                     )}
 
                     {/* Fee */}
-                    <div className="flex items-center justify-between p-3 bg-gradient-to-r from-primary/5 to-secondary/5 rounded-xl border border-primary/10">
+                    <div className="flex items-center justify-between p-3 bg-linear-to-r from-primary/5 to-secondary/5 rounded-xl border border-primary/10">
                         <span className="text-sm text-muted-foreground">Consultation Fee</span>
                         <span className="font-bold text-foreground">${appointment.fee}</span>
                     </div>

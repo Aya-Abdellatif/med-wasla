@@ -1,5 +1,5 @@
 import { useState } from "react";
-import { Link, useNavigate } from "react-router-dom";
+import { Link, useNavigate, useLocation } from "react-router-dom";
 import AuthLayout from "../../components/auth/AuthLayout";
 import { useAuth } from "../../context/useAuth";
 import { showError, showSuccess } from "../../../utils/toast";
@@ -10,7 +10,9 @@ export default function SignIn() {
   const [password, setPassword] = useState("");
   const [isLoading, setIsLoading] = useState(false);
   const navigate = useNavigate();
+  const location = useLocation();
   const { login } = useAuth();
+  const redirectTo = (location.state as { from?: string } | null)?.from;
 
   const handleLogin = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -29,11 +31,19 @@ export default function SignIn() {
         navigate("/admin-dashboard");
       } else if (loggedInUser.role === "doctor" || loggedInUser.role === "nurse") {
         navigate("/dashboard");
+      } else if (redirectTo) {
+        navigate(redirectTo, { replace: true });
       } else {
         navigate("/");
       }
     } catch (err) {
-      showError(err instanceof Error ? err.message : "Login failed. Please verify credentials.");
+      const message = err instanceof Error ? err.message : "Login failed. Please verify credentials.";
+      if (message === "Please verify your email first") {
+        showError("Your email is not verified. Redirecting to verification page...");
+        navigate(`/verify-otp?email=${encodeURIComponent(email)}`);
+      } else {
+        showError(message);
+      }
     } finally {
       setIsLoading(false);
     }
@@ -78,6 +88,12 @@ export default function SignIn() {
               </button>
             </div>
           </div>
+        </div>
+
+        <div className="flex justify-end">
+          <Link to="/forgot-password" className="text-sm font-semibold text-teal-500 hover:text-teal-600">
+            Forgot password?
+          </Link>
         </div>
 
         <button

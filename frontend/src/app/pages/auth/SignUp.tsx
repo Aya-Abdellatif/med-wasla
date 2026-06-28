@@ -9,8 +9,14 @@ import {
   ChevronDown,
 } from "lucide-react";
 import AuthLayout from "../../components/auth/AuthLayout";
+import { PasswordStrengthHints } from "../../components/auth/PasswordStrengthHints";
 import { apiFetch } from "../../../services/api";
 import { MEDICAL_SPECIALIZATIONS } from "../../../constants/medicalSpecializations";
+import {
+  mapRegisterErrorMessage,
+  validateEmail,
+  validatePassword,
+} from "../../../utils/authValidation";
 import { showError, showSuccess, showWarning } from "../../../utils/toast";
 
 type Governorate = "Alexandria" | "Cairo" | "Giza";
@@ -40,9 +46,9 @@ type FieldName = keyof FormData;
 type FieldErrors = Partial<Record<FieldName, string>>;
 
 const inputBaseClass =
-  "w-full rounded-xl border bg-slate-50 px-3.5 py-2.5 text-sm transition-colors focus:bg-white focus:outline-none focus:ring-2";
+  "w-full rounded-xl border bg-slate-50 px-3.5 py-2 text-sm transition-colors focus:bg-white focus:outline-none focus:ring-2";
 const labelClass =
-  "mb-1.5 block text-xs font-semibold uppercase tracking-wide text-slate-500";
+  "mb-1 block text-xs font-semibold uppercase tracking-wide text-slate-500";
 
 function getInputClass(hasError?: boolean) {
   return `${inputBaseClass} ${
@@ -92,19 +98,14 @@ const roleMeta = {
   },
 } as const;
 
-const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
-
 function validateStep1(form: FormData): FieldErrors {
   const errors: FieldErrors = {};
 
   if (!form.firstName.trim()) errors.firstName = "First name is required";
   if (!form.lastName.trim()) errors.lastName = "Last name is required";
 
-  if (!form.email.trim()) {
-    errors.email = "Email is required";
-  } else if (!emailRegex.test(form.email.trim())) {
-    errors.email = "Enter a valid email address";
-  }
+  const emailError = validateEmail(form.email);
+  if (emailError) errors.email = emailError;
 
   if (!form.phone.trim()) {
     errors.phone = "Phone number is required";
@@ -112,11 +113,8 @@ function validateStep1(form: FormData): FieldErrors {
     errors.phone = "Enter a valid phone number";
   }
 
-  if (!form.password) {
-    errors.password = "Password is required";
-  } else if (form.password.length < 8) {
-    errors.password = "Password must be at least 8 characters";
-  }
+  const passwordError = validatePassword(form.password);
+  if (passwordError) errors.password = passwordError;
 
   if (!form.dob) {
     errors.dob = "Date of birth is required";
@@ -180,6 +178,7 @@ export default function SignUp() {
   const [formStep, setFormStep] = useState(1);
   const [showCert, setShowCert] = useState(false);
   const [fieldErrors, setFieldErrors] = useState<FieldErrors>({});
+  const [touched, setTouched] = useState<Partial<Record<FieldName, boolean>>>({});
   const [isLoading, setIsLoading] = useState(false);
 
   const [form, setForm] = useState<FormData>({
@@ -224,6 +223,46 @@ export default function SignUp() {
   const handleChange = (field: keyof FormData, value: string | boolean) => {
     setForm((prev) => ({ ...prev, [field]: value }));
     clearFieldError(field);
+  };
+
+  const handleBlur = (field: FieldName) => {
+    setTouched((prev) => ({ ...prev, [field]: true }));
+
+    if (field === "email") {
+      const emailError = validateEmail(form.email);
+      setFieldErrors((prev) => {
+        const next = { ...prev };
+        if (emailError) next.email = emailError;
+        else delete next.email;
+        return next;
+      });
+      return;
+    }
+
+    if (field === "password") {
+      const passwordError = validatePassword(form.password);
+      setFieldErrors((prev) => {
+        const next = { ...prev };
+        if (passwordError) next.password = passwordError;
+        else delete next.password;
+        return next;
+      });
+      return;
+    }
+
+    if (field === "confirmPassword") {
+      setFieldErrors((prev) => {
+        const next = { ...prev };
+        if (!form.confirmPassword) {
+          next.confirmPassword = "Please confirm your password";
+        } else if (form.password !== form.confirmPassword) {
+          next.confirmPassword = "Passwords do not match";
+        } else {
+          delete next.confirmPassword;
+        }
+        return next;
+      });
+    }
   };
 
   const goNext = () => {
@@ -315,16 +354,19 @@ export default function SignUp() {
     } catch (err) {
       const message =
         err instanceof Error ? err.message : "Registration failed";
-      if (message.toLowerCase().includes("email")) {
-        setFieldErrors({ email: message });
+      const mapped = mapRegisterErrorMessage(message);
+
+      if (mapped.field === "email") {
+        setFieldErrors({ email: mapped.text });
+        setTouched((prev) => ({ ...prev, email: true }));
         setFormStep(1);
-        showError(message);
-      } else if (message.toLowerCase().includes("license")) {
-        setFieldErrors({ licenseNumber: message });
+        showError(mapped.text);
+      } else if (mapped.field === "licenseNumber") {
+        setFieldErrors({ licenseNumber: mapped.text });
         if (isSpecialist) setFormStep(2);
-        showError(message);
+        showError(mapped.text);
       } else {
-        showError(message);
+        showError(mapped.text);
       }
     } finally {
       setIsLoading(false);
@@ -341,19 +383,18 @@ export default function SignUp() {
           ? "Set up your professional profile"
           : "Join MedWasla in a few steps"
       }
-      wide={isSpecialist}
-      compact={!isSpecialist}
+      fitScreen
     >
       <button
         type="button"
         onClick={goBack}
-        className="mb-4 inline-flex items-center gap-1 text-sm font-medium text-slate-500 transition-colors hover:text-teal-600"
+        className="mb-3 inline-flex items-center gap-1 text-sm font-medium text-slate-500 transition-colors hover:text-teal-600"
       >
         <ArrowLeft className="h-4 w-4" />
         {formStep > 1 ? "Previous step" : "Change role"}
       </button>
 
-      <div className="mb-5 flex flex-wrap items-center justify-between gap-3">
+      <div className="mb-4 flex flex-wrap items-center justify-between gap-3">
         <span
           className={`inline-flex items-center gap-2 rounded-full px-3 py-1.5 text-xs font-semibold ${roleMeta[roleParam].color}`}
         >
@@ -382,44 +423,41 @@ export default function SignUp() {
         )}
       </div>
 
-      <form onSubmit={handleRegister} className="space-y-4" noValidate>
+      <form onSubmit={handleRegister} className="space-y-3" noValidate>
         {formStep === 1 && (
-          <div className="space-y-3">
-            <div className="grid gap-3 sm:grid-cols-2">
-              <Field label="First name" error={fieldErrors.firstName}>
-                <input
-                  value={form.firstName}
-                  onChange={(e) => handleChange("firstName", e.target.value)}
-                  className={getInputClass(Boolean(fieldErrors.firstName))}
-                />
-              </Field>
-              <Field label="Last name" error={fieldErrors.lastName}>
-                <input
-                  value={form.lastName}
-                  onChange={(e) => handleChange("lastName", e.target.value)}
-                  className={getInputClass(Boolean(fieldErrors.lastName))}
-                />
-              </Field>
-            </div>
+          <div className="grid gap-3 lg:grid-cols-3">
+            <Field label="First name" error={fieldErrors.firstName}>
+              <input
+                value={form.firstName}
+                onChange={(e) => handleChange("firstName", e.target.value)}
+                className={getInputClass(Boolean(fieldErrors.firstName))}
+              />
+            </Field>
+            <Field label="Last name" error={fieldErrors.lastName}>
+              <input
+                value={form.lastName}
+                onChange={(e) => handleChange("lastName", e.target.value)}
+                className={getInputClass(Boolean(fieldErrors.lastName))}
+              />
+            </Field>
+            <Field label="Email" error={fieldErrors.email}>
+              <input
+                type="email"
+                value={form.email}
+                onChange={(e) => handleChange("email", e.target.value)}
+                onBlur={() => handleBlur("email")}
+                className={getInputClass(Boolean(fieldErrors.email))}
+                placeholder="you@example.com"
+              />
+            </Field>
 
-            <div className="grid gap-3 sm:grid-cols-2">
-              <Field label="Email" error={fieldErrors.email}>
-                <input
-                  type="email"
-                  value={form.email}
-                  onChange={(e) => handleChange("email", e.target.value)}
-                  className={getInputClass(Boolean(fieldErrors.email))}
-                />
-              </Field>
-              <Field label="Phone" error={fieldErrors.phone}>
-                <input
-                  value={form.phone}
-                  onChange={(e) => handleChange("phone", e.target.value)}
-                  className={getInputClass(Boolean(fieldErrors.phone))}
-                />
-              </Field>
-            </div>
-
+            <Field label="Phone" error={fieldErrors.phone}>
+              <input
+                value={form.phone}
+                onChange={(e) => handleChange("phone", e.target.value)}
+                className={getInputClass(Boolean(fieldErrors.phone))}
+              />
+            </Field>
             <Field label="Governorate">
               <select
                 value={form.address}
@@ -431,7 +469,6 @@ export default function SignUp() {
                 <option value="Alexandria">Alexandria</option>
               </select>
             </Field>
-
             <Field label="Date of birth" error={fieldErrors.dob}>
               <input
                 type="date"
@@ -441,83 +478,76 @@ export default function SignUp() {
               />
             </Field>
 
-            <div className="grid gap-3 sm:grid-cols-2">
-              <Field label="Password" error={fieldErrors.password}>
-                <input
-                  type="password"
-                  value={form.password}
-                  onChange={(e) => handleChange("password", e.target.value)}
-                  className={getInputClass(Boolean(fieldErrors.password))}
-                />
-              </Field>
-              <Field
-                label="Confirm password"
-                error={fieldErrors.confirmPassword}
-              >
-                <input
-                  type="password"
-                  value={form.confirmPassword}
-                  onChange={(e) =>
-                    handleChange("confirmPassword", e.target.value)
-                  }
-                  className={getInputClass(
-                    Boolean(fieldErrors.confirmPassword),
-                  )}
-                />
-              </Field>
-            </div>
+            <Field label="Password" error={fieldErrors.password} className="lg:col-span-1">
+              <input
+                type="password"
+                value={form.password}
+                onChange={(e) => handleChange("password", e.target.value)}
+                onBlur={() => handleBlur("password")}
+                className={getInputClass(Boolean(fieldErrors.password))}
+                placeholder="Create a strong password"
+              />
+              <PasswordStrengthHints
+                password={form.password}
+                showErrors={Boolean(touched.password || fieldErrors.password)}
+              />
+            </Field>
+            <Field
+              label="Confirm password"
+              error={fieldErrors.confirmPassword}
+              className="lg:col-span-2"
+            >
+              <input
+                type="password"
+                value={form.confirmPassword}
+                onChange={(e) => handleChange("confirmPassword", e.target.value)}
+                onBlur={() => handleBlur("confirmPassword")}
+                className={getInputClass(Boolean(fieldErrors.confirmPassword))}
+                placeholder="Re-enter your password"
+              />
+            </Field>
           </div>
         )}
 
         {formStep === 2 && isSpecialist && (
-          <div className="space-y-3">
+          <div className="grid gap-3 lg:grid-cols-3">
             {isDoctor && (
               <>
-                <div className="grid gap-3 sm:grid-cols-2">
-                  <Field
-                    label="Medical specialty"
-                    error={fieldErrors.specialization}
+                <Field label="Medical specialty" error={fieldErrors.specialization}>
+                  <select
+                    value={form.specialization}
+                    onChange={(e) => handleChange("specialization", e.target.value)}
+                    className={getInputClass(Boolean(fieldErrors.specialization))}
                   >
-                    <select
-                      value={form.specialization}
-                      onChange={(e) =>
-                        handleChange("specialization", e.target.value)
-                      }
-                      className={getInputClass(
-                        Boolean(fieldErrors.specialization),
-                      )}
-                    >
-                      <option value="" disabled>
-                        Select specialty
+                    <option value="" disabled>
+                      Select specialty
+                    </option>
+                    {MEDICAL_SPECIALIZATIONS.map((specialty) => (
+                      <option key={specialty} value={specialty}>
+                        {specialty}
                       </option>
-                      {MEDICAL_SPECIALIZATIONS.map((specialty) => (
-                        <option key={specialty} value={specialty}>
-                          {specialty}
-                        </option>
-                      ))}
-                    </select>
-                  </Field>
-                  <Field
-                    label="License number"
-                    error={fieldErrors.licenseNumber}
-                  >
-                    <input
-                      value={form.licenseNumber}
-                      onChange={(e) =>
-                        handleChange("licenseNumber", e.target.value)
-                      }
-                      className={getInputClass(
-                        Boolean(fieldErrors.licenseNumber),
-                      )}
-                    />
-                  </Field>
-                </div>
-                <Field label="Clinic address">
+                    ))}
+                  </select>
+                </Field>
+                <Field label="License number" error={fieldErrors.licenseNumber}>
+                  <input
+                    value={form.licenseNumber}
+                    onChange={(e) => handleChange("licenseNumber", e.target.value)}
+                    className={getInputClass(Boolean(fieldErrors.licenseNumber))}
+                  />
+                </Field>
+                <Field label="Consultation fee (EGP)">
+                  <input
+                    type="number"
+                    value={form.consultationFee}
+                    onChange={(e) => handleChange("consultationFee", e.target.value)}
+                    className={getInputClass()}
+                  />
+                </Field>
+                <Field label="Clinic address" className="lg:col-span-2">
                   <input
                     value={form.clinicAddress}
-                    onChange={(e) =>
-                      handleChange("clinicAddress", e.target.value)
-                    }
+                    onChange={(e) => handleChange("clinicAddress", e.target.value)}
                     className={getInputClass()}
                   />
                 </Field>
@@ -539,60 +569,45 @@ export default function SignUp() {
             )}
 
             {isNurse && (
-              <div className="grid gap-3 sm:grid-cols-2">
-                <Field
-                  label="Nursing license"
-                  error={fieldErrors.licenseNumber}
-                >
+              <>
+                <Field label="Nursing license" error={fieldErrors.licenseNumber}>
                   <input
                     value={form.licenseNumber}
-                    onChange={(e) =>
-                      handleChange("licenseNumber", e.target.value)
-                    }
-                    className={getInputClass(
-                      Boolean(fieldErrors.licenseNumber),
-                    )}
+                    onChange={(e) => handleChange("licenseNumber", e.target.value)}
+                    className={getInputClass(Boolean(fieldErrors.licenseNumber))}
                   />
                 </Field>
                 <Field label="Service areas" error={fieldErrors.serviceArea}>
                   <input
                     placeholder="e.g. Maadi, Nasr City"
                     value={form.serviceArea}
-                    onChange={(e) =>
-                      handleChange("serviceArea", e.target.value)
-                    }
+                    onChange={(e) => handleChange("serviceArea", e.target.value)}
                     className={getInputClass(Boolean(fieldErrors.serviceArea))}
                   />
                 </Field>
-              </div>
+                <Field label="Consultation fee (EGP)">
+                  <input
+                    type="number"
+                    value={form.consultationFee}
+                    onChange={(e) => handleChange("consultationFee", e.target.value)}
+                    className={getInputClass()}
+                  />
+                </Field>
+              </>
             )}
 
-            <div className="grid gap-3 sm:grid-cols-2">
-              <Field label="Consultation fee (EGP)">
-                <input
-                  type="number"
-                  value={form.consultationFee}
-                  onChange={(e) =>
-                    handleChange("consultationFee", e.target.value)
-                  }
-                  className={getInputClass()}
-                />
-              </Field>
-              <Field label="Short bio" className="sm:col-span-1">
-                <input
-                  value={form.bio}
-                  onChange={(e) => handleChange("bio", e.target.value)}
-                  className={getInputClass()}
-                  placeholder="Brief intro..."
-                />
-              </Field>
-            </div>
+            <Field label="Short bio" className="lg:col-span-3">
+              <input
+                value={form.bio}
+                onChange={(e) => handleChange("bio", e.target.value)}
+                className={getInputClass()}
+                placeholder="Brief intro..."
+              />
+            </Field>
 
             <div
-              className={`rounded-xl border ${
-                fieldErrors.certTitle ||
-                fieldErrors.certIssuer ||
-                fieldErrors.certUrl
+              className={`lg:col-span-3 rounded-xl border ${
+                fieldErrors.certTitle || fieldErrors.certIssuer || fieldErrors.certUrl
                   ? "border-red-200"
                   : "border-slate-200"
               }`}

@@ -20,7 +20,7 @@ function createToken(userId: string, role: "patient" | "specialist" | "admin") {
 function tomorrowDateString() {
   const d = new Date();
   d.setDate(d.getDate() + 1);
-  return d.toISOString().slice(0, 10);
+  return d.toLocaleDateString("en-CA"); // YYYY-MM-DD in local time
 }
 
 function futureDate(days = 1) {
@@ -152,7 +152,7 @@ describe("Appointments Routes", () => {
 
       expect(res.status).toBe(201);
       expect(res.body.success).toBe(true);
-      expect(res.body.data.status).toBe("pending");
+      expect(res.body.data.status).toBe("confirmed");
       expect(res.body.data.type).toBe("clinic");
     });
 
@@ -274,6 +274,81 @@ describe("Appointments Routes", () => {
       expect(res.body.success).toBe(true);
       expect(res.body.count).toBe(1);
       expect(res.body.data).toHaveLength(1);
+    });
+
+    it("marks past pending appointments as overdue when fetched", async () => {
+      const patient = await createPatient();
+      const { specialist } = await createSpecialist();
+      const token = createToken(idOf(patient), "patient");
+
+      const pastDate = new Date();
+      pastDate.setDate(pastDate.getDate() - 1);
+      pastDate.setHours(10, 0, 0, 0);
+
+      await Appointment.create({
+        patientId: idOf(patient),
+        specialistId: idOf(specialist),
+        date: pastDate,
+        type: "home",
+        address: "123 Test Street",
+        status: "pending",
+      });
+
+      const res = await request(app)
+        .get("/api/appointments/my")
+        .set("Authorization", `Bearer ${token}`);
+
+      expect(res.status).toBe(200);
+      expect(res.body.data[0].status).toBe("overdue");
+    });
+
+    it("marks past confirmed appointments as overdue when fetched", async () => {
+      const patient = await createPatient();
+      const { specialist } = await createSpecialist();
+      const token = createToken(idOf(patient), "patient");
+
+      const pastDate = new Date();
+      pastDate.setDate(pastDate.getDate() - 2);
+      pastDate.setHours(14, 0, 0, 0);
+
+      await Appointment.create({
+        patientId: idOf(patient),
+        specialistId: idOf(specialist),
+        date: pastDate,
+        type: "clinic",
+        status: "confirmed",
+      });
+
+      const res = await request(app)
+        .get("/api/appointments/my")
+        .set("Authorization", `Bearer ${token}`);
+
+      expect(res.status).toBe(200);
+      expect(res.body.data[0].status).toBe("overdue");
+    });
+
+    it("returns 400 when confirming an overdue appointment", async () => {
+      const patient = await createPatient();
+      const { user, specialist } = await createSpecialist();
+      const specialistToken = createToken(idOf(user), "specialist");
+
+      const pastDate = new Date();
+      pastDate.setDate(pastDate.getDate() - 1);
+
+      const appointment = await Appointment.create({
+        patientId: idOf(patient),
+        specialistId: idOf(specialist),
+        date: pastDate,
+        type: "clinic",
+        status: "overdue",
+      });
+
+      const res = await request(app)
+        .patch(`/api/appointments/${idOf(appointment)}/status`)
+        .set("Authorization", `Bearer ${specialistToken}`)
+        .send({ status: "confirmed" });
+
+      expect(res.status).toBe(400);
     });
   });
 
@@ -398,26 +473,46 @@ describe("Appointments Routes", () => {
   });
 
   describe("PATCH /api/appointments/:id/reschedule", () => {
-    it("patient reschedules own appointment", async () => {
+    it("patient reschedules clinic appointment - stays confirmed", async () => {
       const patient = await createPatient();
       const { specialist } = await createSpecialist();
       const appointment = await createAppointment(idOf(patient), idOf(specialist), "confirmed");
       const token = createToken(idOf(patient), "patient");
 
-      const newDate = futureDate(3);
-
       const res = await request(app)
         .patch(`/api/appointments/${idOf(appointment)}/reschedule`)
         .set("Authorization", `Bearer ${token}`)
         .send({
-          date: newDate.toISOString(),
+          date: futureDate(3).toISOString(),
           notes: "New time",
         });
 
       expect(res.status).toBe(200);
       expect(res.body.success).toBe(true);
-      expect(res.body.data.status).toBe("pending");
+      expect(res.body.data.status).toBe("confirmed");
       expect(res.body.data.notes).toBe("New time");
+    });
+
+    it("patient reschedules home appointment - goes back to pending", async () => {
+      const patient = await createPatient();
+      const { specialist } = await createSpecialist();
+      const appointment = await Appointment.create({
+        patientId: idOf(patient),
+        specialistId: idOf(specialist),
+        date: futureDate(),
+        type: "home",
+        address: "123 Test St",
+        status: "confirmed",
+      });
+      const token = createToken(idOf(patient), "patient");
+
+      const res = await request(app)
+        .patch(`/api/appointments/${idOf(appointment)}/reschedule`)
+        .set("Authorization", `Bearer ${token}`)
+        .send({ date: futureDate(3).toISOString() });
+
+      expect(res.status).toBe(200);
+      expect(res.body.data.status).toBe("pending");
     });
 
     it("returns 403 when patient reschedules another patient's appointment", async () => {
@@ -495,7 +590,54 @@ describe("Appointments Routes", () => {
 
       expect(res.status).toBe(400);
     });
+  });
 
+  describe("DELETE /api/appointments/day/:date", () => {
+    it("specialist cancels all appointments for a day", async () => {
+      const patient = await createPatient();
+      const { user, specialist } = await createSpecialist();
+      const token = createToken(idOf(user), "specialist");
+
+      await Appointment.create([
+        { patientId: idOf(patient), specialistId: idOf(specialist), date: futureDate(), type: "clinic", status: "confirmed" },
+        { patientId: idOf(patient), specialistId: idOf(specialist), date: futureDate(), type: "clinic", status: "pending" },
+      ]);
+
+      const res = await request(app)
+        .delete(`/api/appointments/day/${tomorrowDateString()}`)
+        .set("Authorization", `Bearer ${token}`);
+
+      expect(res.status).toBe(200);
+      expect(res.body.data.cancelledCount).toBe(2);
+
+      const remaining = await Appointment.find({ specialistId: idOf(specialist), status: { $ne: "cancelled" } });
+      expect(remaining).toHaveLength(0);
+    });
+
+    it("returns 403 when patient tries to cancel day appointments", async () => {
+      const patient = await createPatient();
+      const token = createToken(idOf(patient), "patient");
+
+      const res = await request(app)
+        .delete(`/api/appointments/day/${tomorrowDateString()}`)
+        .set("Authorization", `Bearer ${token}`);
+
+      expect(res.status).toBe(403);
+    });
+
+    it("returns 400 for invalid date format", async () => {
+      const { user } = await createSpecialist();
+      const token = createToken(idOf(user), "specialist");
+
+      const res = await request(app)
+        .delete("/api/appointments/day/invalid-date")
+        .set("Authorization", `Bearer ${token}`);
+
+      expect(res.status).toBe(400);
+    });
+  });
+
+  describe("DELETE /api/appointments/:id", () => {
     it("returns 403 when patient cancels another patient's appointment", async () => {
       const patient = await createPatient();
       const otherPatient = await createPatient("other@test.com");

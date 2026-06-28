@@ -11,7 +11,8 @@ import {
 } from "../../services/api";
 
 interface AuthUserResponse {
-  id: string;
+  id?: string;
+  _id?: string;
   name: string;
   email: string;
   role: string;
@@ -83,13 +84,23 @@ async function fetchSpecialistProfile(token: string): Promise<SpecialistProfile 
   return json.data as SpecialistProfile;
 }
 
+function resolveAuthUserId(authUser: AuthUserResponse): string {
+  const id = authUser.id ?? authUser._id;
+  if (!id) {
+    throw new Error("User ID missing from auth response");
+  }
+  return id;
+}
+
 async function buildUser(authUser: AuthUserResponse, token: string): Promise<User> {
+  const userId = resolveAuthUserId(authUser);
+
   if (authUser.role === "specialist") {
     const profile = await fetchSpecialistProfile(token);
     const userInfo = profile?.userId;
 
     return {
-      id: authUser.id,
+      id: userId,
       name: userInfo?.name ?? authUser.name,
       email: userInfo?.email ?? authUser.email,
       phone: userInfo?.phone,
@@ -114,7 +125,7 @@ async function buildUser(authUser: AuthUserResponse, token: string): Promise<Use
   }
 
   return {
-    id: authUser.id,
+    id: userId,
     name: authUser.name,
     email: authUser.email,
     role: mapBackendRole(authUser.role),

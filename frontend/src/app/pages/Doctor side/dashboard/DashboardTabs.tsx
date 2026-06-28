@@ -19,7 +19,7 @@ export function DashboardTabs({
     <div className="bg-white border-b border-gray-200 sticky top-20 z-40">
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 flex flex-wrap items-center justify-between gap-3">
         <div className="flex space-x-8">
-          {(["overview", "schedule", "profile"] as const).map((tab) => (
+          {(["overview", "schedule"] as const).map((tab) => (
             <button
               key={tab}
               onClick={() => onTabChange(tab)}

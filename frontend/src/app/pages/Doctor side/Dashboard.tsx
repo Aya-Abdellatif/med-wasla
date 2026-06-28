@@ -1,28 +1,17 @@
-import { useState, useEffect, useMemo, useCallback } from "react";
+import { useState, useEffect, useCallback } from "react";
 import { Calendar, Users, CheckCircle, AlertCircle } from "lucide-react";
 import { useAuth } from "../../context/useAuth";
-import { apiFetch, API_BASE, getToken } from "../../../services/api";
 import {
   fetchSpecialistAppointments,
   updateAppointmentStatus,
+  cancelAppointment,
 } from "../../../services/appointmentsApi";
-import { showError, showSuccess, showWarning } from "../../../utils/toast";
+import { showError, showSuccess, getToastUserContext } from "../../../utils/toast";
 import { VerificationStatusNotice } from "../../components/common/VerificationStatusNotice";
-import type { AvailableSlot } from "../../context/AuthContext";
-import type {
-  Appointment,
-  DashboardTab,
-  HomeServiceRequest,
-  NewCertificateForm,
-  ProfileForm,
-} from "./dashboard/dashboardTypes";
-import {
-  buildProfileFormFromUser,
-  buildProfileUpdatePayload,
-  createEmptySlot,
-} from "./dashboard/dashboardTypes";
+import type { Appointment, DashboardTab, HomeServiceRequest } from "./dashboard/dashboardTypes";
 import {
   countUniquePatients,
+  DASHBOARD_THEME,
   getDateStrWithOffset,
   getFormattedToday,
   offersHomeService,
@@ -30,213 +19,156 @@ import {
 import { DashboardTabs } from "./dashboard/DashboardTabs";
 import { OverviewTab } from "./dashboard/OverviewTab";
 import { ScheduleTab } from "./dashboard/ScheduleTab";
-import { ProfileTab } from "./dashboard/ProfileTab";
 import { RequestsTab } from "./dashboard/RequestsTab";
 
+function isSpecialistRole(role?: string) {
+  return role === "doctor" || role === "nurse";
+}
+
 export function Dashboard() {
-  const { user, updateProfile, refreshSpecialistProfile } = useAuth();
+  const { user, refreshSpecialistProfile } = useAuth();
   const [activeTab, setActiveTab] = useState<DashboardTab>("overview");
   const [selectedScheduleDate, setSelectedScheduleDate] = useState(() => getDateStrWithOffset(0));
-  const [isEditingProfile, setIsEditingProfile] = useState(false);
-  const [isSaving, setIsSaving] = useState(false);
-  const [showCertForm, setShowCertForm] = useState(false);
-  const [isUploadingPhoto, setIsUploadingPhoto] = useState(false);
-  const [newCert, setNewCert] = useState<NewCertificateForm>({ title: "", issuedBy: "", certificateUrl: "" });
-  const [slotEdits, setSlotEdits] = useState<AvailableSlot[] | null>(null);
-  const [isSavingSlots, setIsSavingSlots] = useState(false);
-  const savedProfile = useMemo(() => buildProfileFormFromUser(user), [user]);
-  const availableSlots = slotEdits ?? user?.availableSlots ?? [];
-  const [profileData, setProfileData] = useState<ProfileForm>(buildProfileFormFromUser(user));
-
-  // Loaded from /api/appointments/specialist for the logged-in specialist.
   const [appointments, setAppointments] = useState<Appointment[]>([]);
   const [loadingAppointments, setLoadingAppointments] = useState(true);
   const [updatingAppointmentId, setUpdatingAppointmentId] = useState<string | null>(null);
   const [homeServiceRequests, setHomeServiceRequests] = useState<HomeServiceRequest[]>([]);
+  const [updatingRequestId, setUpdatingRequestId] = useState<string | null>(null);
 
-  const loadAppointments = useCallback(async (silent = false) => {
-    if (user?.role !== "doctor" && user?.role !== "nurse") {
-      setAppointments([]);
-      if (!silent) setLoadingAppointments(false);
-      return;
-    }
+  const loadAppointments = useCallback(
+    async (silent = false) => {
+      if (!isSpecialistRole(user?.role)) {
+        setAppointments([]);
+        setHomeServiceRequests([]);
+        if (!silent) setLoadingAppointments(false);
+        return;
+      }
 
-    if (!silent) setLoadingAppointments(true);
+      if (!silent) setLoadingAppointments(true);
 
-    try {
-      const data = await fetchSpecialistAppointments();
-      setAppointments(data);
-    } catch (err) {
-      showError(err instanceof Error ? err.message : "Failed to load appointments", {
-        userName: user?.name,
-      });
-    } finally {
-      if (!silent) setLoadingAppointments(false);
-    }
-  }, [user?.role, user?.name]);
+      try {
+        const { appointments: nextAppointments, homeServiceRequests: nextHomeRequests } =
+          await fetchSpecialistAppointments();
+
+        setAppointments(nextAppointments);
+        setHomeServiceRequests(nextHomeRequests);
+      } catch (err) {
+        showError(
+          err instanceof Error ? err.message : "Failed to load appointments",
+          getToastUserContext(user),
+        );
+      } finally {
+        if (!silent) setLoadingAppointments(false);
+      }
+    },
+    [user],
+  );
 
   useEffect(() => {
-    if (user?.role !== "doctor" && user?.role !== "nurse") {
-      return;
-    }
+    if (!isSpecialistRole(user?.role)) return;
 
-    refreshSpecialistProfile();
+    let cancelled = false;
 
-    const timer = window.setTimeout(() => {
-      void loadAppointments();
-    }, 0);
+    void (async () => {
+      await refreshSpecialistProfile();
+
+      try {
+        const { appointments: nextAppointments, homeServiceRequests: nextHomeRequests } =
+          await fetchSpecialistAppointments();
+
+        if (cancelled) return;
+
+        setAppointments(nextAppointments);
+        setHomeServiceRequests(nextHomeRequests);
+      } catch (err) {
+        if (cancelled) return;
+
+        showError(
+          err instanceof Error ? err.message : "Failed to load appointments",
+          getToastUserContext(user),
+        );
+      } finally {
+        if (!cancelled) setLoadingAppointments(false);
+      }
+    })();
 
     return () => {
-      window.clearTimeout(timer);
+      cancelled = true;
     };
-  }, [user?.id, user?.role, refreshSpecialistProfile, loadAppointments]);
+  }, [user?.id, user?.role, user?.name, refreshSpecialistProfile, user]);
 
-  const todayStr = getDateStrWithOffset(0);
-  const formValues = isEditingProfile ? profileData : savedProfile;
-
-  const startEditingProfile = () => {
-    setProfileData(buildProfileFormFromUser(user));
-    setIsEditingProfile(true);
-  };
-
-  const cancelEditingProfile = () => {
-    setIsEditingProfile(false);
-  };
-
-  const handlePhotoUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
-    const file = e.target.files?.[0];
-    if (!file) return;
-
-    if (!file.type.startsWith("image/")) {
-      showWarning("Please select an image file (JPG, PNG, etc.)", { userName: user?.name });
-      return;
-    }
-
-    if (file.size > 5 * 1024 * 1024) {
-      showWarning("Image must be smaller than 5MB", { userName: user?.name });
-      return;
-    }
-
-    setIsUploadingPhoto(true);
+  const runWithRefresh = async (
+    action: () => Promise<unknown>,
+    successMessage: string,
+    errorMessage: string,
+  ) => {
     try {
-      const token = getToken();
-      const formData = new FormData();
-      formData.append("photo", file);
-
-      const res = await fetch(`${API_BASE}/api/specialists/me/photo`, {
-        method: "PATCH",
-        headers: token ? { Authorization: `Bearer ${token}` } : {},
-        body: formData,
-      });
-
-      const data = (await res.json().catch(() => ({}))) as {
-        data?: { photoUrl?: string };
-        message?: string;
-      };
-
-      if (!res.ok) {
-        throw new Error(data.message ?? "Failed to upload photo");
-      }
-
-      const photoUrl = data.data?.photoUrl;
-      if (!photoUrl) {
-        throw new Error("Failed to upload photo");
-      }
-
-      updateProfile({ avatar: photoUrl });
-      await refreshSpecialistProfile();
-      showSuccess("Profile photo updated successfully!", { userName: user?.name });
+      await action();
+      await loadAppointments(true);
+      showSuccess(successMessage, getToastUserContext(user));
     } catch (err) {
-      showError(err instanceof Error ? err.message : "Failed to upload photo", { userName: user?.name });
+      showError(err instanceof Error ? err.message : errorMessage, getToastUserContext(user));
+    }
+  };
+
+  const handleRequestAction = async (requestId: string, action: "accepted" | "rejected") => {
+    setUpdatingRequestId(requestId);
+    try {
+      await runWithRefresh(
+        async () => {
+          if (action === "accepted") {
+            await updateAppointmentStatus(requestId, "confirmed");
+          } else {
+            await cancelAppointment(requestId);
+          }
+        },
+        action === "accepted" ? "Home visit accepted!" : "Home visit declined.",
+        "Failed to update home visit request",
+      );
     } finally {
-      setIsUploadingPhoto(false);
+      setUpdatingRequestId(null);
     }
   };
 
-  const handleUpdateProfile = async () => {
-    if (user?.role === "doctor" && !profileData.specialty) {
-      showWarning("Please select a medical specialty", { userName: user?.name });
-      return;
-    }
-
-    const payload = buildProfileUpdatePayload(profileData, savedProfile);
-    if (Object.keys(payload).length === 0) {
-      showWarning("No profile changes to submit", { userName: user?.name });
-      return;
-    }
-
-    setIsSaving(true);
+  const handleCancelAppointment = async (appointmentId: string) => {
+    setUpdatingAppointmentId(appointmentId);
     try {
-      await apiFetch("/api/specialists/profile", {
-        method: "PUT",
-        body: JSON.stringify(payload),
-      });
-      await refreshSpecialistProfile();
-      setIsEditingProfile(false);
-      showSuccess("Changes submitted for admin review. Your live profile stays unchanged until approved.", {
-        userName: user?.name,
-      });
-    } catch (err) {
-      showError(err instanceof Error ? err.message : "Failed to update profile", { userName: user?.name });
+      await runWithRefresh(
+        () => cancelAppointment(appointmentId),
+        "Appointment cancelled.",
+        "Failed to cancel appointment",
+      );
     } finally {
-      setIsSaving(false);
+      setUpdatingAppointmentId(null);
     }
   };
 
-  const handleSaveAvailability = async () => {
-    setIsSavingSlots(true);
-    try {
-      await apiFetch("/api/specialists/availability", {
-        method: "PUT",
-        body: JSON.stringify({ availableSlots }),
-      });
-      await refreshSpecialistProfile();
-      setSlotEdits(null);
-      showSuccess("Availability saved and visible on your public profile.", { userName: user?.name });
-    } catch (err) {
-      showError(err instanceof Error ? err.message : "Failed to save availability", { userName: user?.name });
-    } finally {
-      setIsSavingSlots(false);
-    }
-  };
-
-  const handleAddCertificate = async () => {
-    if (!newCert.title || !newCert.issuedBy || !newCert.certificateUrl) {
-      showWarning("Please fill all certificate fields", { userName: user?.name });
-      return;
-    }
-
-    try {
-      await apiFetch("/api/specialists/me/certificates", {
-        method: "POST",
-        body: JSON.stringify(newCert),
-      });
-      setNewCert({ title: "", issuedBy: "", certificateUrl: "" });
-      setShowCertForm(false);
-      await refreshSpecialistProfile();
-      showSuccess("Certificate submitted for review!", { userName: user?.name });
-    } catch (err) {
-      showError(err instanceof Error ? err.message : "Failed to upload certificate", { userName: user?.name });
-    }
-  };
-
-  const handleRequestAction = (requestId: string, action: "accepted" | "rejected") => {
-    setHomeServiceRequests((prev) =>
-      prev.map((req) => (req.id === requestId ? { ...req, status: action } : req)),
+  const handleCancelAllPending = async () => {
+    const clinicPending = appointments.filter(
+      (a) => a.backendStatus === "pending" && a.visitType === "clinic",
     );
-    showSuccess(action === "accepted" ? "Request accepted!" : "Request declined.", { userName: user?.name });
+    if (clinicPending.length === 0) return;
+
+    setUpdatingAppointmentId("bulk");
+    try {
+      await runWithRefresh(
+        () => Promise.all(clinicPending.map((a) => cancelAppointment(a.id))),
+        `${clinicPending.length} appointment(s) cancelled.`,
+        "Failed to cancel appointments",
+      );
+    } finally {
+      setUpdatingAppointmentId(null);
+    }
   };
 
   const handleConfirmAppointment = async (appointmentId: string) => {
     setUpdatingAppointmentId(appointmentId);
     try {
-      await updateAppointmentStatus(appointmentId, "confirmed");
-      await loadAppointments(true);
-      showSuccess("Appointment confirmed.", { userName: user?.name });
-    } catch (err) {
-      showError(err instanceof Error ? err.message : "Failed to confirm appointment", {
-        userName: user?.name,
-      });
+      await runWithRefresh(
+        () => updateAppointmentStatus(appointmentId, "confirmed"),
+        "Appointment confirmed.",
+        "Failed to confirm appointment",
+      );
     } finally {
       setUpdatingAppointmentId(null);
     }
@@ -245,55 +177,55 @@ export function Dashboard() {
   const handleCompleteAppointment = async (appointmentId: string) => {
     setUpdatingAppointmentId(appointmentId);
     try {
-      await updateAppointmentStatus(appointmentId, "completed");
-      await loadAppointments(true);
-      showSuccess("Appointment marked as completed.", { userName: user?.name });
-    } catch (err) {
-      showError(err instanceof Error ? err.message : "Failed to complete appointment", {
-        userName: user?.name,
-      });
+      await runWithRefresh(
+        () => updateAppointmentStatus(appointmentId, "completed"),
+        "Appointment marked as completed.",
+        "Failed to complete appointment",
+      );
     } finally {
       setUpdatingAppointmentId(null);
     }
   };
 
-  const pendingAppointments = appointments.filter((a) => a.status === "pending");
+  const todayStr = getDateStrWithOffset(0);
+  const pendingAppointments = appointments.filter((a) => a.backendStatus === "pending");
+  const overdueAppointments = appointments.filter((a) => a.backendStatus === "overdue");
   const showHomeServiceTab = offersHomeService(user);
+  const pendingHomeRequests = homeServiceRequests.filter((r) => r.backendStatus === "pending");
+  const visibleTab = activeTab === "requests" && !showHomeServiceTab ? "overview" : activeTab;
 
   const stats = [
     {
       label: "Today's Appointments",
       value: appointments.filter((a) => a.date === todayStr && a.status === "scheduled").length,
       icon: Calendar,
-      iconColor: "#2563eb",
-      bgColor: "#eff6ff",
+      iconColor: DASHBOARD_THEME.primary,
+      bgColor: DASHBOARD_THEME.primaryLight,
     },
     {
       label: "Completed Today",
       value: appointments.filter((a) => a.date === todayStr && a.status === "completed").length,
       icon: CheckCircle,
-      iconColor: "#16a34a",
-      bgColor: "#f0fdf4",
+      iconColor: DASHBOARD_THEME.success,
+      bgColor: DASHBOARD_THEME.successLight,
     },
     {
       label: "Total Patients",
       value: countUniquePatients(appointments),
       icon: Users,
-      iconColor: "#7c3aed",
-      bgColor: "#f5f3ff",
+      iconColor: DASHBOARD_THEME.accent,
+      bgColor: DASHBOARD_THEME.accentLight,
     },
     {
       label: "Pending Requests",
       value: pendingAppointments.length,
       icon: AlertCircle,
-      iconColor: "#d97706",
-      bgColor: "#fffbeb",
+      iconColor: DASHBOARD_THEME.warning,
+      bgColor: DASHBOARD_THEME.warningLight,
     },
   ];
 
-  const todayUpcoming = appointments.filter(
-    (a) => a.date === todayStr && a.status === "scheduled",
-  );
+  const todayUpcoming = appointments.filter((a) => a.date === todayStr && a.status === "scheduled");
   const filteredUpcoming = appointments.filter(
     (a) => a.date === selectedScheduleDate && a.status === "scheduled",
   );
@@ -301,85 +233,66 @@ export function Dashboard() {
     (a) => a.date === selectedScheduleDate && a.status === "completed",
   );
 
-  const openScheduleTab = () => {
-    setSelectedScheduleDate(todayStr);
-    setActiveTab("schedule");
+  const tabProps = {
+    offersHomeService: showHomeServiceTab,
+    onConfirm: handleConfirmAppointment,
+    onCancel: handleCancelAppointment,
+    onCancelAllPending: handleCancelAllPending,
+    onComplete: handleCompleteAppointment,
+    onGoToHomeService: () => setActiveTab("requests"),
+    updatingAppointmentId,
   };
 
   return (
     <div className="min-h-screen" style={{ backgroundColor: "#f8fafc" }}>
-      {(user?.role === "doctor" || user?.role === "nurse") && user.verificationStatus && (
+      {isSpecialistRole(user?.role) && user?.verificationStatus && (
         <VerificationStatusNotice status={user.verificationStatus} />
       )}
 
       <DashboardTabs
-        activeTab={activeTab}
+        activeTab={visibleTab}
         onTabChange={setActiveTab}
         formattedDate={getFormattedToday()}
         showRequestsTab={showHomeServiceTab}
-        pendingRequestsCount={pendingAppointments.length}
+        pendingRequestsCount={pendingHomeRequests.length}
       />
 
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
-        {activeTab === "overview" && (
+        <div className={visibleTab === "overview" ? undefined : "hidden"}>
           <OverviewTab
             stats={stats}
             pendingAppointments={pendingAppointments}
             todayUpcoming={todayUpcoming}
-            onViewAllSchedule={openScheduleTab}
-            onConfirm={handleConfirmAppointment}
-            onComplete={handleCompleteAppointment}
-            updatingAppointmentId={updatingAppointmentId}
+            onViewAllSchedule={() => {
+              setSelectedScheduleDate(todayStr);
+              setActiveTab("schedule");
+            }}
             loading={loadingAppointments}
+            {...tabProps}
           />
-        )}
+        </div>
 
-        {activeTab === "schedule" && (
+        <div className={visibleTab === "schedule" ? undefined : "hidden"}>
           <ScheduleTab
             selectedDate={selectedScheduleDate}
             onSelectedDateChange={setSelectedScheduleDate}
             filteredUpcoming={filteredUpcoming}
             filteredCompleted={filteredCompleted}
             pendingAppointments={pendingAppointments}
-            onConfirm={handleConfirmAppointment}
-            onComplete={handleCompleteAppointment}
-            updatingAppointmentId={updatingAppointmentId}
+            overdueAppointments={overdueAppointments}
+            {...tabProps}
           />
-        )}
+        </div>
 
-        {activeTab === "profile" && (
-          <ProfileTab
-            user={user}
-            formValues={formValues}
-            profileData={profileData}
-            onProfileDataChange={setProfileData}
-            availableSlots={availableSlots}
-            onAvailableSlotsChange={setSlotEdits}
-            isEditingProfile={isEditingProfile}
-            isSaving={isSaving}
-            isSavingSlots={isSavingSlots}
-            isUploadingPhoto={isUploadingPhoto}
-            showCertForm={showCertForm}
-            onShowCertFormChange={setShowCertForm}
-            newCert={newCert}
-            onNewCertChange={setNewCert}
-            onStartEditing={startEditingProfile}
-            onCancelEditing={cancelEditingProfile}
-            onSaveProfile={handleUpdateProfile}
-            onSaveAvailability={handleSaveAvailability}
-            onAddSlot={() => setSlotEdits((prev) => [...(prev ?? user?.availableSlots ?? []), createEmptySlot()])}
-            onRemoveSlot={(index) =>
-              setSlotEdits((prev) =>
-                (prev ?? user?.availableSlots ?? []).filter((_, slotIndex) => slotIndex !== index),
-              )
-            }
-            onPhotoUpload={handlePhotoUpload}
-            onAddCertificate={handleAddCertificate}
-          />
-        )}
-
-        {activeTab === "requests" && showHomeServiceTab && (
-          <RequestsTab requests={homeServiceRequests} onRequestAction={handleRequestAction} />
+        {showHomeServiceTab && (
+          <div className={visibleTab === "requests" ? undefined : "hidden"}>
+            <RequestsTab
+              requests={homeServiceRequests}
+              loading={loadingAppointments}
+              updatingRequestId={updatingRequestId}
+              onRequestAction={handleRequestAction}
+            />
+          </div>
         )}
       </div>
     </div>

@@ -3,7 +3,7 @@ import type {
   AppointmentReview,
   AppointmentStatus,
 } from "../app/components/patient-appointments/AppointmentTypes";
-import type { Appointment as DashboardAppointment } from "../app/pages/Doctor side/dashboard/dashboardTypes";
+import type { Appointment as DashboardAppointment, HomeServiceRequest } from "../app/pages/Doctor side/dashboard/dashboardTypes";
 import { DEFAULT_SPECIALIST_IMAGE } from "./specialistMapper";
 
 interface ApiUserRef {
@@ -24,6 +24,7 @@ interface ApiPatientRef {
   _id?: string;
   name?: string;
   photoUrl?: string;
+  phone?: string;
 }
 
 interface ApiAppointment {
@@ -32,7 +33,7 @@ interface ApiAppointment {
   patientId?: ApiPatientRef | string;
   date: string;
   type: "clinic" | "home";
-  status: "pending" | "confirmed" | "completed" | "cancelled";
+  status: "pending" | "confirmed" | "completed" | "cancelled" | "overdue";
   address?: string;
   notes?: string;
 }
@@ -49,17 +50,34 @@ function formatDate(dateStr: string) {
   return new Date(dateStr).toISOString().split("T")[0];
 }
 
-function mapPatientStatus(status: ApiAppointment["status"]): AppointmentStatus {
-  if (status === "confirmed") return "upcoming";
-  return status;
+function resolvePatientStatus(appt: ApiAppointment): AppointmentStatus {
+  const isPast = new Date(appt.date).getTime() < Date.now();
+
+  if (appt.status === "completed") return "completed";
+  if (appt.status === "cancelled") return "cancelled";
+  if (
+    appt.status === "overdue" ||
+    (isPast && (appt.status === "pending" || appt.status === "confirmed"))
+  ) {
+    return "overdue";
+  }
+  if (appt.status === "confirmed") return "upcoming";
+  return appt.status;
 }
 
-function mapDashboardStatus(
+function resolveDashboardStatus(
   status: ApiAppointment["status"],
+  dateStr: string,
 ): DashboardAppointment["status"] {
+  const isPast = new Date(dateStr).getTime() < Date.now();
+
+  if (status === "completed") return "completed";
+  if (status === "cancelled") return "cancelled";
+  if (status === "overdue" || (isPast && (status === "pending" || status === "confirmed"))) {
+    return "overdue";
+  }
   if (status === "confirmed") return "scheduled";
   if (status === "pending") return "pending";
-  if (status === "completed") return "completed";
   return "cancelled";
 }
 
@@ -86,7 +104,7 @@ export function mapApiAppointmentsForPatient(
       date: formatDate(appt.date),
       time: formatTime(appt.date),
       type: appt.type,
-      status: mapPatientStatus(appt.status),
+      status: resolvePatientStatus(appt),
       address: appt.address,
       reason: appt.notes ?? "Medical consultation",
       reminders: [],
@@ -112,7 +130,45 @@ export function mapApiAppointmentsForSpecialist(
         date: formatDate(appt.date),
         time: formatTime(appt.date),
         type: appt.type === "home" ? "Home Visit" : "Clinic Visit",
-        status: mapDashboardStatus(appt.status),
+        visitType: appt.type,
+        status: resolveDashboardStatus(appt.status, appt.date),
+        backendStatus:
+          resolveDashboardStatus(appt.status, appt.date) === "overdue"
+            ? "overdue"
+            : appt.status,
+      };
+    });
+}
+
+function mapHomeServiceRequestStatus(
+  status: ApiAppointment["status"],
+): HomeServiceRequest["status"] {
+  if (status === "confirmed" || status === "completed") return "accepted";
+  if (status === "cancelled") return "rejected";
+  return "pending";
+}
+
+export function mapHomeServiceRequests(appointments: unknown[]): HomeServiceRequest[] {
+  return (appointments as ApiAppointment[])
+    .filter((appt) => appt.type === "home")
+    .sort((a, b) => new Date(b.date).getTime() - new Date(a.date).getTime())
+    .map((appt) => {
+      const patient =
+        typeof appt.patientId === "object" ? appt.patientId : undefined;
+
+      return {
+        id: appt._id,
+        patientName: patient?.name ?? "Patient",
+        address: appt.address ?? "—",
+        service: appt.notes?.trim() || "Home Visit",
+        requestedDate: new Date(appt.date).toLocaleDateString("en-US", {
+          year: "numeric",
+          month: "long",
+          day: "numeric",
+        }),
+        requestedTime: formatTime(appt.date),
+        status: mapHomeServiceRequestStatus(appt.status),
+        phone: patient?.phone ?? "—",
         backendStatus: appt.status,
       };
     });

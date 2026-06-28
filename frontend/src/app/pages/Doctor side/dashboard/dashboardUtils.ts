@@ -1,5 +1,22 @@
 import type { Appointment } from "./dashboardTypes";
 
+/** MedWasla dashboard palette (matches site primary teal). */
+export const DASHBOARD_THEME = {
+  primary: "#14b8a6",
+  primaryDark: "#0d9488",
+  primaryLight: "#ccfbf1",
+  accent: "#0ea5e9",
+  accentLight: "#ecfeff",
+  warning: "#d97706",
+  warningLight: "#fffbeb",
+  success: "#059669",
+  successLight: "#ecfdf5",
+  danger: "#dc2626",
+  dangerLight: "#fef2f2",
+  muted: "#6b7280",
+  text: "#111827",
+} as const;
+
 export function getAvatarColor(name: string): { bg: string; text: string } {
   const colors = [
     { bg: "#e0f2fe", text: "#0369a1" },
@@ -31,10 +48,27 @@ export function getDateStrWithOffset(offset: number): string {
 }
 
 export function getStatusBadgeStyle(status: Appointment["status"]) {
-  if (status === "pending") return { backgroundColor: "#fffbeb", color: "#d97706" };
-  if (status === "scheduled") return { backgroundColor: "#eff6ff", color: "#2563eb" };
-  if (status === "completed") return { backgroundColor: "#f0fdf4", color: "#16a34a" };
-  return { backgroundColor: "#fef2f2", color: "#dc2626" };
+  if (status === "pending") {
+    return { backgroundColor: DASHBOARD_THEME.warningLight, color: DASHBOARD_THEME.warning };
+  }
+  if (status === "scheduled") {
+    return { backgroundColor: DASHBOARD_THEME.primaryLight, color: DASHBOARD_THEME.primaryDark };
+  }
+  if (status === "completed") {
+    return { backgroundColor: DASHBOARD_THEME.successLight, color: DASHBOARD_THEME.success };
+  }
+  if (status === "overdue") {
+    return { backgroundColor: "#f3f4f6", color: "#4b5563" };
+  }
+  return { backgroundColor: DASHBOARD_THEME.dangerLight, color: DASHBOARD_THEME.danger };
+}
+
+export function isHomeVisitAppointment(appointment: Appointment) {
+  return appointment.visitType === "home";
+}
+
+export function isClinicAppointment(appointment: Appointment) {
+  return appointment.visitType === "clinic";
 }
 
 /** Specialists who can receive home-visit requests in the dashboard. */
