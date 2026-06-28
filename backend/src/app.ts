@@ -8,6 +8,7 @@ import reviewsRouter from "./features/reviews/reviews.routes.js";
 import queueRouter from "./features/queue/queue.routes.js";
 import adminRouter from "./features/admin/admin.routes.js";
 import appointmentsRouter from "./features/appointments/appointments.routes.js";
+import aiRouter from "./features/ai/ai.routes.js";
 
 const app = express();
 
@@ -38,7 +39,7 @@ app.use("/api/appointments", appointmentsRouter);
 app.use("/api/queue", queueRouter);
 app.use("/api/reviews", reviewsRouter);
 app.use("/api/admin", adminRouter);
-// app.use("/api/ai", aiRouter);
+app.use("/api/ai", aiRouter);
 app.use(errorHandler);
 
 export default app;

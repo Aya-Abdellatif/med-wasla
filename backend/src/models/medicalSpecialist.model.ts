@@ -1,10 +1,24 @@
 import mongoose, { Document, Schema, Types } from "mongoose";
 
-export const verificationStatuses = ["pending", "approved", "rejected"] as const;
+export const verificationStatuses = [
+  "pending",
+  "approved",
+  "rejected",
+] as const;
 export type VerificationStatus = (typeof verificationStatuses)[number];
 
 export const specialistTypes = ["doctor", "nurse"] as const;
 export type SpecialistType = (typeof specialistTypes)[number];
+
+export const nurseExpertiseAreas = [
+  "Home Care",
+  "Pediatric",
+  "Geriatric",
+  "Wound Care",
+  "IV Therapy",
+  "Post-Op Care",
+] as const;
+export type NurseExpertiseArea = (typeof nurseExpertiseAreas)[number];
 
 export interface ICertification {
   _id?: Types.ObjectId;
@@ -33,7 +47,7 @@ export interface IPendingProfileUpdates {
   homeVisit?: boolean;
 }
 
-export interface IMedicalSpecialist extends Document { 
+export interface IMedicalSpecialist extends Document {
   userId: Types.ObjectId;
   specialistType: SpecialistType;
   specialization?: string;
@@ -68,7 +82,7 @@ const certificationSchema = new Schema<ICertification>(
       default: "pending",
     },
   },
-  { _id: true, timestamps: true }
+  { _id: true, timestamps: true },
 );
 
 const availableSlotSchema = new Schema<IAvailableSlot>(
@@ -77,7 +91,7 @@ const availableSlotSchema = new Schema<IAvailableSlot>(
     startTime: { type: String, required: true },
     endTime: { type: String, required: true },
   },
-  { _id: false }
+  { _id: false },
 );
 
 const pendingProfileUpdatesSchema = new Schema<IPendingProfileUpdates>(
@@ -137,8 +151,11 @@ const medicalSpecialistSchema = new Schema<IMedicalSpecialist>(
 
     serviceAreas: { type: [String], default: undefined },
 
-    areasOfExpertise: { type: [String], default: undefined },
-
+    areasOfExpertise: {
+      type: [String],
+      enum: nurseExpertiseAreas,
+      default: undefined,
+    },
     homeVisit: { type: Boolean, required: true },
 
     licenseNumber: { type: String, required: true, unique: true },
@@ -166,13 +183,14 @@ const medicalSpecialistSchema = new Schema<IMedicalSpecialist>(
       default: false,
     },
   },
-  { timestamps: true }
+  { timestamps: true },
 );
 
 medicalSpecialistSchema.index({ specialistType: 1 });
 medicalSpecialistSchema.index({ specialization: 1 });
 medicalSpecialistSchema.index({ verificationStatus: 1 });
 medicalSpecialistSchema.index({ serviceAreas: 1 });
+medicalSpecialistSchema.index({ areasOfExpertise: 1 });
 
 medicalSpecialistSchema.pre("validate", function (this: IMedicalSpecialist) {
   const isDoctor = this.specialistType === "doctor";
@@ -189,12 +207,14 @@ medicalSpecialistSchema.pre("validate", function (this: IMedicalSpecialist) {
   }
 });
 
-medicalSpecialistSchema.virtual("isVerified").get(function (this: IMedicalSpecialist) {
+medicalSpecialistSchema.virtual("isVerified").get(function (
+  this: IMedicalSpecialist,
+) {
   return this.verificationStatus === "approved";
 });
 
 const MedicalSpecialist = mongoose.model<IMedicalSpecialist>(
   "MedicalSpecialist",
-  medicalSpecialistSchema
+  medicalSpecialistSchema,
 );
 export default MedicalSpecialist;
