@@ -23,4 +23,5 @@ export const NURSE_EXPERTISE_AREAS = [
 ] as const;
 
 export type MedicalSpecialization = (typeof MEDICAL_SPECIALIZATIONS)[number];
+
 export type NurseExpertiseArea = (typeof NURSE_EXPERTISE_AREAS)[number];

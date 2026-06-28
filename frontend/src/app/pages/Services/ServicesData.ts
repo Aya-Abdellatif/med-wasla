@@ -81,3 +81,36 @@ export const services: ServiceItem[] = [
       "https://images.unsplash.com/photo-1581093588401-fbb62a02f120?auto=format&fit=crop&w=1080&q=80",
   },
 ];
+
+export const providerServices: ServiceItem[] = [
+  {
+    icon: faCalendarCheck,
+    title: "Clinic & Schedule Management",
+    description:
+      "Manage your weekly schedule, define your working hours, and let patients book appointments directly with automated slot coordination.",
+    features: [
+      "Custom Working Hours",
+      "Automated Booking Management",
+      "Real-time Appointment Reminders",
+      "Patient Medical History Access",
+    ],
+    color: "bg-teal-50 text-[#14B8A6]",
+    image:
+      "https://images.unsplash.com/photo-1622253692010-333f2da6031d?auto=format&fit=crop&w=1080&q=80",
+  },
+  {
+    icon: faUserNurse,
+    title: "Home Visit & Nursing Requests",
+    description:
+      "Receive and manage home visit and care requests from patients in your area, and coordinate with nursing staff easily.",
+    features: [
+      "Home Visit Request Management",
+      "Geographic Service Area Setup",
+      "Direct Patient Communication",
+      "Digital Prescription Issuance",
+    ],
+    color: "bg-blue-50 text-blue-500",
+    image:
+      "https://images.unsplash.com/photo-1576091160550-2173dba999ef?auto=format&fit=crop&w=1080&q=80",
+  },
+];

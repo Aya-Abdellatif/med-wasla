@@ -67,7 +67,8 @@ export interface SpecialistProfile extends SpecialistCard {
 export interface FetchSpecialistsParams {
   search?: string;
   specialization?: string;
-  expertise?: string;
+  areasOfExpertise?: string;
+  serviceArea?: string;
   sortBy?:
     | "rating"
     | "reviewCount"
@@ -186,7 +187,8 @@ export async function fetchApprovedSpecialists(
   const {
     search,
     specialization,
-    expertise,
+    areasOfExpertise,
+    serviceArea,
     sortBy,
     sortOrder,
     page = 1,
@@ -201,7 +203,8 @@ export async function fetchApprovedSpecialists(
       limit,
       ...(search ? { search } : {}),
       ...(specialization ? { specialization } : {}),
-      ...(expertise ? { expertise } : {}),
+      ...(areasOfExpertise ? { areasOfExpertise } : {}),
+      ...(serviceArea ? { serviceArea } : {}),
       ...(sortBy ? { sortBy } : {}),
       ...(sortOrder ? { sortOrder } : {}),
     },
