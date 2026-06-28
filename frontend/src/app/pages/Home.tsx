@@ -193,7 +193,7 @@ function Home() {
                 onClick={onBookClick}
                 className="group flex items-center gap-2 bg-primary hover:bg-transparent text-white hover:text-primary font-bold px-6 py-3 rounded-xl transition-all duration-300 hover:-translate-y-0.5 border-2 border-primary cursor-pointer"
               >
-                <CalendarDays className="h-5 w-5 stroke-white group-hover:stroke-primary transition-colors duration-300" />
+                {/*<CalendarDays className="h-5 w-5 stroke-white group-hover:stroke-primary transition-colors duration-300" />*/}
                 Book Appointment
               </button>
             )}
@@ -210,7 +210,7 @@ function Home() {
               onClick={() => navigate("/services")}
               className="flex items-center gap-2 text-fg font-semibold px-6 py-3 rounded-xl border-2 border-border hover:border-primary hover:text-primary hover:-translate-y-0.5 transition-all duration-300 cursor-pointer"
             >
-              Our Services <ArrowRight className="h-4 w-4" />
+              Our Services {/*<ArrowRight className="h-4 w-4" />*/}
             </button>
           </div>
         </div>
@@ -283,7 +283,7 @@ function Home() {
             onClick={() => navigate("/services")}
             className="flex items-center gap-2 mx-auto border-2 border-primary text-primary font-bold px-8 py-3 rounded-xl hover:bg-primary hover:text-white hover:-translate-y-0.5 transition-all duration-300 cursor-pointer"
           >
-            View All Services <ArrowRight className="h-4 w-4" />
+            View All Services {/*<ArrowRight className="h-4 w-4" />*/}
           </button>
         </div>
       </section>
@@ -419,7 +419,7 @@ function Home() {
                 onClick={onBookClick}
                 className="group flex items-center gap-2 bg-white text-primary border-2 border-white font-bold px-8 py-3 rounded-xl hover:bg-transparent hover:text-white hover:border-white hover:-translate-y-0.5 transition-all duration-300 cursor-pointer"
               >
-                <CalendarDays className="h-5 w-5" />
+                {/*<CalendarDays className="h-5 w-5" />*/}
                 Book Appointment
               </button>
             )}
@@ -436,7 +436,7 @@ function Home() {
               onClick={() => navigate("/contact")}
               className="group flex items-center gap-2 bg-white text-primary border-2 border-white font-bold px-8 py-3 rounded-xl hover:bg-transparent hover:text-white hover:border-white hover:-translate-y-0.5 transition-all duration-300 cursor-pointer"
             >
-              <MessageCircle className="h-5 w-5" />
+              {/*<MessageCircle className="h-5 w-5" />*/}
               Contact Us
             </button>
           </div>
