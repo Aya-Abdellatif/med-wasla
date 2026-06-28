@@ -13,6 +13,7 @@ export interface GetAllSpecialistsQuery {
   verificationStatus?: string;
   homeVisit?: string;
   serviceArea?: string;
+  areasOfExpertise?: string;
   search?: string;
   page?: string;
   limit?: string;
@@ -99,6 +100,7 @@ export const getAllSpecialistsService = async (
     verificationStatus,
     homeVisit,
     serviceArea,
+    areasOfExpertise,
     search,
     page = "1",
     limit = "10",
@@ -117,6 +119,7 @@ export const getAllSpecialistsService = async (
   }
   if (homeVisit !== undefined) filter.homeVisit = homeVisit === "true";
   if (serviceArea) filter.serviceAreas = { $in: [serviceArea] };
+  if (areasOfExpertise) filter.areasOfExpertise = { $in: [areasOfExpertise] };
 
   if (search) {
     const searchTerm = search.trim();
