@@ -1,7 +1,7 @@
 import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
 import { useState } from "react";
 import { AppointmentTypeModal } from "../../components/booking/AppointmentTypeModal";
- import { faLinkedin, faWhatsapp } from "@fortawesome/free-brands-svg-icons";
+import { faLinkedin, faWhatsapp } from "@fortawesome/free-brands-svg-icons";
 
 import {
   coreValues,
@@ -62,15 +62,15 @@ const AboutPage = () => {
   return (
     <main className="min-h-screen bg-[#FFFFFF] text-[#1F2937]">
       {/* Hero */}
-      <section className="bg-linear-to-br from-[#F6FFFB] via-[#ECFEFF] to-[#F0FDFA] px-5 py-24 text-center">
+      <section className="relative flex min-h-70 items-center justify-center bg-linear-to-br from-[#F6FFFB] via-[#ECFEFF] to-[#F0FDFA] px-5 text-center sm:min-h-80 lg:min-h-95">
         <div className="mx-auto max-w-4xl">
-          <h2 className="text-[3rem] font-bold leading-tight tracking-tight text-[#1F2937]">
+          <h2 className="text-4xl font-bold leading-tight tracking-tight text-[#1F2937] md:text-5xl">
             About MedWasla
-
           </h2>
 
-          <p className="mx-auto mt-6 max-w-3xl text-[1.25rem] font-normal leading-8 text-[#6B7280]">
-            Your trusted healthcare platform for booking appointments, managing care, and connecting with medical professionals effortlessly.
+          <p className="mx-auto mt-6 max-w-3xl text-xl font-normal leading-8 text-[#6B7280]">
+            Your trusted healthcare platform for booking appointments, managing care,
+            and connecting with medical professionals effortlessly.
           </p>
         </div>
       </section>
@@ -189,71 +189,71 @@ const AboutPage = () => {
 
       {/* ── Team — 6 cards ── */}
       <section className="bg-[#f0fffe] px-5 py-24">
-  <div className="mx-auto max-w-7xl">
-    <div className="mb-16 max-w-xl">
-      <p className="text-xs font-semibold uppercase tracking-widest text-[#14B8A6]">
-        The people behind your care
-      </p>
+        <div className="mx-auto max-w-7xl">
+          <div className="mb-16 max-w-xl">
+            <p className="text-xs font-semibold uppercase tracking-widest text-[#14B8A6]">
+              The people behind your care
+            </p>
 
-      <h3 className="mt-3 text-4xl font-bold leading-tight text-[#1F2937]">
-        Meet Our Team
-      </h3>
+            <h3 className="mt-3 text-4xl font-bold leading-tight text-[#1F2937]">
+              Meet Our Team
+            </h3>
 
-      <p className="mt-4 text-base leading-8 text-[#6B7280]">
-        100+ board-certified professionals, united by one goal: your wellbeing.
-      </p>
-    </div>
-
-    <div className="grid gap-6 sm:grid-cols-2 lg:grid-cols-3">
-      {team.map((member) => (
-        <article
-          key={member.name}
-          className="flex flex-col rounded-2xl border border-[#E5E7EB] bg-white p-8 transition-all duration-300 hover:-translate-y-1 hover:shadow-lg hover:shadow-teal-100/50"
-        >
-          <div className="flex justify-center">
-            <img
-              src={member.image}
-              alt={member.name}
-              className="h-24 w-24 rounded-full border-4 border-[#CCFBF1] object-cover shadow-md"
-            />
+            <p className="mt-4 text-base leading-8 text-[#6B7280]">
+              100+ board-certified professionals, united by one goal: your wellbeing.
+            </p>
           </div>
 
-          <h4 className="mt-5 text-center text-lg font-semibold text-[#1F2937]">
-            {member.name}
-          </h4>
+          <div className="grid gap-6 sm:grid-cols-2 lg:grid-cols-3">
+            {team.map((member) => (
+              <article
+                key={member.name}
+                className="flex flex-col rounded-2xl border border-[#E5E7EB] bg-white p-8 transition-all duration-300 hover:-translate-y-1 hover:shadow-lg hover:shadow-teal-100/50"
+              >
+                <div className="flex justify-center">
+                  <img
+                    src={member.image}
+                    alt={member.name}
+                    className="h-24 w-24 rounded-full border-4 border-[#CCFBF1] object-cover shadow-md"
+                  />
+                </div>
 
-          <p className="mt-1 text-center text-sm text-[#14B8A6]">
-            {member.title}
-          </p>
+                <h4 className="mt-5 text-center text-lg font-semibold text-[#1F2937]">
+                  {member.name}
+                </h4>
 
-          <div className="my-5 h-px bg-[#F3F4F6]" />
+                <p className="mt-1 text-center text-sm text-[#14B8A6]">
+                  {member.title}
+                </p>
 
-          <div className="mt-auto flex items-center justify-center gap-4">
-            <a
-              href={member.linkedin}
-              target="_blank"
-              rel="noopener noreferrer"
-              className="flex items-center gap-2 rounded-lg border border-[#E5E7EB] px-3 py-2 text-xs font-medium text-[#6B7280] transition-colors duration-200 hover:border-[#0A66C2] hover:text-[#0A66C2]"
-            >
-              <FontAwesomeIcon icon={faLinkedin} className="text-base" />
-              LinkedIn
-            </a>
+                <div className="my-5 h-px bg-[#F3F4F6]" />
 
-            <a
-              href={member.whatsapp}
-              target="_blank"
-              rel="noopener noreferrer"
-              className="flex items-center gap-2 rounded-lg border border-[#E5E7EB] px-3 py-2 text-xs font-medium text-[#6B7280] transition-colors duration-200 hover:border-[#25D366] hover:text-[#25D366]"
-            >
-              <FontAwesomeIcon icon={faWhatsapp} className="text-base" />
-              WhatsApp
-            </a>
+                <div className="mt-auto flex items-center justify-center gap-4">
+                  <a
+                    href={member.linkedin}
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    className="flex items-center gap-2 rounded-lg border border-[#E5E7EB] px-3 py-2 text-xs font-medium text-[#6B7280] transition-colors duration-200 hover:border-[#0A66C2] hover:text-[#0A66C2]"
+                  >
+                    <FontAwesomeIcon icon={faLinkedin} className="text-base" />
+                    LinkedIn
+                  </a>
+
+                  <a
+                    href={member.whatsapp}
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    className="flex items-center gap-2 rounded-lg border border-[#E5E7EB] px-3 py-2 text-xs font-medium text-[#6B7280] transition-colors duration-200 hover:border-[#25D366] hover:text-[#25D366]"
+                  >
+                    <FontAwesomeIcon icon={faWhatsapp} className="text-base" />
+                    WhatsApp
+                  </a>
+                </div>
+              </article>
+            ))}
           </div>
-        </article>
-      ))}
-    </div>
-  </div>
-</section>
+        </div>
+      </section>
 
 
       <AppointmentTypeModal

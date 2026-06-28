@@ -111,12 +111,13 @@ export function Nurses() {
 
   return (
     <div className="flex flex-col">
-      <section className="relative bg-linear-to-br from-[#F6FFFB] via-[#ECFEFF] to-[#F0FDFA] py-20 px-5 text-center">
-        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 text-center">
-          <h1 className="text-4xl md:text-5xl font-bold text-foreground mb-6">
+      <section className="relative flex min-h-70 items-center justify-center bg-linear-to-br from-[#F6FFFB] via-[#ECFEFF] to-[#F0FDFA] px-5 text-center sm:min-h-80 lg:min-h-95">
+        <div className="mx-auto max-w-7xl">
+          <h1 className="mb-6 text-4xl font-bold md:text-5xl">
             Our Professional Nurses
           </h1>
-          <p className="text-xl text-muted-foreground max-w-3xl mx-auto">
+
+          <p className="mx-auto max-w-3xl text-xl leading-8 text-[#6B7280]">
             Compassionate and skilled nurses ready to provide quality home
             healthcare services tailored to your needs.
           </p>
@@ -177,11 +178,10 @@ export function Nurses() {
                   setPage(1);
                   setLoading(true);
                 }}
-                className={`px-6 py-2.5 rounded-lg transition-all ${
-                  selectedExpertise === area
+                className={`px-6 py-2.5 rounded-lg transition-all ${selectedExpertise === area
                     ? "bg-primary text-white shadow-md"
                     : "bg-muted text-foreground hover:bg-muted/80"
-                }`}
+                  }`}
               >
                 {area}
               </button>
@@ -292,11 +292,10 @@ export function Nurses() {
                       key={p}
                       onClick={() => goToPage(p)}
                       disabled={loading}
-                      className={`px-4 py-2 rounded-lg ${
-                        p === page
+                      className={`px-4 py-2 rounded-lg ${p === page
                           ? "bg-primary text-white"
                           : "bg-white border border-border hover:bg-muted"
-                      }`}
+                        }`}
                     >
                       {p}
                     </button>

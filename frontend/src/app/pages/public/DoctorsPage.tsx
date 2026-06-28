@@ -120,18 +120,18 @@ export function Doctors() {
 
   return (
     <div className="flex flex-col">
-      <section className="relative bg-linear-to-br bg-[#f0fffe] py-20">
-        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 text-center">
-          <h1 className="text-4xl md:text-5xl font-bold text-foreground mb-6">
+      <section className="relative flex min-h-70 items-center justify-center bg-linear-to-br from-[#F6FFFB] via-[#ECFEFF] to-[#F0FDFA] px-5 text-center sm:min-h-80 lg:min-h-95">
+        <div className="mx-auto max-w-7xl">
+          <h1 className="mb-6 text-4xl font-bold text-foreground md:text-5xl">
             Meet Our Expert Doctors
           </h1>
-          <p className="text-xl text-fg-muted max-w-3xl mx-auto">
-            Our team of board-certified physicians brings years of experience
-            and dedication to providing exceptional healthcare.
+
+          <p className="mx-auto max-w-3xl text-xl leading-8 text-[#6B7280]">
+            Our team of board-certified physicians brings years of experience and
+            dedication to providing exceptional healthcare.
           </p>
         </div>
       </section>
-
       <section className="py-8 bg-white border-b border-border sticky top-20 z-40">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 space-y-4">
           <div className="flex flex-col md:flex-row items-center gap-4">
@@ -187,11 +187,10 @@ export function Doctors() {
                   setPage(1);
                   setLoading(true);
                 }}
-                className={`px-6 py-2.5 rounded-lg transition-all ${
-                  selectedSpecialty === specialty
+                className={`px-6 py-2.5 rounded-lg transition-all ${selectedSpecialty === specialty
                     ? "bg-primary text-white shadow-md"
                     : "bg-muted text-foreground hover:bg-muted/80"
-                }`}
+                  }`}
               >
                 {specialty}
               </button>
@@ -315,11 +314,10 @@ export function Doctors() {
                     <button
                       key={p}
                       onClick={() => setPage(p)}
-                      className={`px-4 py-2 rounded-lg ${
-                        p === page
+                      className={`px-4 py-2 rounded-lg ${p === page
                           ? "bg-primary text-white"
                           : "bg-white border border-border hover:bg-muted"
-                      }`}
+                        }`}
                     >
                       {p}
                     </button>
