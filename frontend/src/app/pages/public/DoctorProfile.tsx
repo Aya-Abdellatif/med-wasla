@@ -11,7 +11,7 @@ import {
   DollarSign,
   Watch,
   AlertCircle,
-  Home,
+  // Home,
 } from "lucide-react";
 import { useEffect, useState } from "react";
 import { BookingModal } from "../../components/booking/BookingModal";
