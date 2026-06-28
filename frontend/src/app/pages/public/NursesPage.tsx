@@ -69,10 +69,6 @@ export function Nurses() {
 
     fetchApprovedSpecialists("nurse", {
       search: debouncedSearch || undefined,
-      // NOTE: restored to "expertise" to match the original backend param.
-      // If your teammate intentionally renamed this to "areasOfExpertise" on
-      // the backend too, update both sides together instead of just here.
-      expertise: selectedExpertise === "All" ? undefined : selectedExpertise,
       sortBy,
       sortOrder,
       page,
@@ -113,10 +109,10 @@ export function Nurses() {
     });
   };
 
-  const goToPage = (nextPage: number) => {
-    setLoading(true);
-    setPage(nextPage);
-  };
+  // const goToPage = (nextPage: number) => {
+  //   setLoading(true);
+  //   setPage(nextPage);
+  // };
 
   return (
     <div className="flex flex-col">
@@ -306,7 +302,7 @@ export function Nurses() {
               {pagination && pagination.totalPages > 1 && (
                 <div className="flex items-center justify-center gap-2 mt-12">
                   <button
-                    onClick={() => goToPage(Math.max(1, page - 1))}
+                    onClick={() => setPage((p) => Math.max(1, p - 1))}
                     disabled={loading || page === 1}
                     className="p-2 rounded-lg border border-border disabled:opacity-40 disabled:cursor-not-allowed hover:bg-muted"
                   >
@@ -319,8 +315,7 @@ export function Nurses() {
                   ).map((p) => (
                     <button
                       key={p}
-                      onClick={() => goToPage(p)}
-                      disabled={loading}
+                      onClick={() => setPage(p)}
                       className={`px-4 py-2 rounded-lg ${
                         p === page
                           ? "bg-primary text-white"
@@ -333,7 +328,7 @@ export function Nurses() {
 
                   <button
                     onClick={() =>
-                      goToPage(Math.min(pagination.totalPages, page + 1))
+                      setPage((p) => Math.min(pagination.totalPages, p + 1))
                     }
                     disabled={loading || page === pagination.totalPages}
                     className="p-2 rounded-lg border border-border disabled:opacity-40 disabled:cursor-not-allowed hover:bg-muted"
