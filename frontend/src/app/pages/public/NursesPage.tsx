@@ -69,6 +69,8 @@ export function Nurses() {
 
     fetchApprovedSpecialists("nurse", {
       search: debouncedSearch || undefined,
+      areasOfExpertise:
+        selectedExpertise === "All" ? undefined : selectedExpertise,
       sortBy,
       sortOrder,
       page,
