@@ -314,7 +314,7 @@ function Home() {
                     <Icon className="h-4 w-4 text-primary" />
                   </div>
                   <div>
-                    <p className="font-semibold text-fg text-sm mt-2">{title}</p>
+                    <p className="text-md font-semibold text-[#1F2937] mt-1">{title}</p>
                     {/*<p className="text-xs text-fg-muted mt-0.5 leading-relaxed">
                       {desc}
                     </p>*/}
