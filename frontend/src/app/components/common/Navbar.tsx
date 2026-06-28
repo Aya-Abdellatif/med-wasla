@@ -165,8 +165,10 @@ function Navbar() {
   const onBookClick = () => handleBookClick(user, navigate, openBooking);
 
   const handleLogout = () => {
+    const name = user?.name;
+    const role = user?.role;
     logout();
-    showInfo("Logged out successfully", { userName: user?.name });
+    showInfo("Logged out successfully", { userName: name, userRole: role });
     navigate("/");
   };
 

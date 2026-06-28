@@ -2,7 +2,7 @@ import { useState, useMemo, useEffect } from "react";
 import { Navigate } from "react-router-dom";
 import { useAuth } from "../../context/useAuth";
 import { apiFetch, API_BASE, getToken } from "../../../services/api";
-import { showError, showSuccess, showWarning } from "../../../utils/toast";
+import { showError, showSuccess, showWarning, getToastUserContext } from "../../../utils/toast";
 import { VerificationStatusNotice } from "../../components/common/VerificationStatusNotice";
 import type { AvailableSlot } from "../../context/AuthContext";
 import {
@@ -57,12 +57,12 @@ export function SpecialistProfilePage() {
     if (!file) return;
 
     if (!file.type.startsWith("image/")) {
-      showWarning("Please select an image file (JPG, PNG, etc.)", { userName: user?.name });
+      showWarning("Please select an image file (JPG, PNG, etc.)", getToastUserContext(user));
       return;
     }
 
     if (file.size > 5 * 1024 * 1024) {
-      showWarning("Image must be smaller than 5MB", { userName: user?.name });
+      showWarning("Image must be smaller than 5MB", getToastUserContext(user));
       return;
     }
 
@@ -94,11 +94,9 @@ export function SpecialistProfilePage() {
 
       updateProfile({ avatar: photoUrl });
       await refreshSpecialistProfile();
-      showSuccess("Profile photo updated successfully!", { userName: user?.name });
+      showSuccess("Profile photo updated successfully!", getToastUserContext(user));
     } catch (err) {
-      showError(err instanceof Error ? err.message : "Failed to upload photo", {
-        userName: user?.name,
-      });
+      showError(err instanceof Error ? err.message : "Failed to upload photo", getToastUserContext(user));
     } finally {
       setIsUploadingPhoto(false);
     }
@@ -106,13 +104,13 @@ export function SpecialistProfilePage() {
 
   const handleUpdateProfile = async () => {
     if (user?.role === "doctor" && !profileData.specialty) {
-      showWarning("Please select a medical specialty", { userName: user?.name });
+      showWarning("Please select a medical specialty", getToastUserContext(user));
       return;
     }
 
     const payload = buildProfileUpdatePayload(profileData, savedProfile);
     if (Object.keys(payload).length === 0) {
-      showWarning("No profile changes to submit", { userName: user?.name });
+      showWarning("No profile changes to submit", getToastUserContext(user));
       return;
     }
 
@@ -126,12 +124,10 @@ export function SpecialistProfilePage() {
       setIsEditingProfile(false);
       showSuccess(
         "Changes submitted for admin review. Your live profile stays unchanged until approved.",
-        { userName: user?.name },
+        getToastUserContext(user),
       );
     } catch (err) {
-      showError(err instanceof Error ? err.message : "Failed to update profile", {
-        userName: user?.name,
-      });
+      showError(err instanceof Error ? err.message : "Failed to update profile", getToastUserContext(user));
     } finally {
       setIsSaving(false);
     }
@@ -146,13 +142,9 @@ export function SpecialistProfilePage() {
       });
       await refreshSpecialistProfile();
       setSlotEdits(null);
-      showSuccess("Availability saved and visible on your public profile.", {
-        userName: user?.name,
-      });
+      showSuccess("Availability saved and visible on your public profile.", getToastUserContext(user));
     } catch (err) {
-      showError(err instanceof Error ? err.message : "Failed to save availability", {
-        userName: user?.name,
-      });
+      showError(err instanceof Error ? err.message : "Failed to save availability", getToastUserContext(user));
     } finally {
       setIsSavingSlots(false);
     }
@@ -160,7 +152,7 @@ export function SpecialistProfilePage() {
 
   const handleAddCertificate = async () => {
     if (!newCert.title || !newCert.issuedBy || !newCert.certificateUrl) {
-      showWarning("Please fill all certificate fields", { userName: user?.name });
+      showWarning("Please fill all certificate fields", getToastUserContext(user));
       return;
     }
 
@@ -172,11 +164,9 @@ export function SpecialistProfilePage() {
       setNewCert({ title: "", issuedBy: "", certificateUrl: "" });
       setShowCertForm(false);
       await refreshSpecialistProfile();
-      showSuccess("Certificate submitted for review!", { userName: user?.name });
+      showSuccess("Certificate submitted for review!", getToastUserContext(user));
     } catch (err) {
-      showError(err instanceof Error ? err.message : "Failed to upload certificate", {
-        userName: user?.name,
-      });
+      showError(err instanceof Error ? err.message : "Failed to upload certificate", getToastUserContext(user));
     }
   };
 

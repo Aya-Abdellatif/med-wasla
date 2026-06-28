@@ -5,6 +5,8 @@ import MedicalSpecialist from "../../models/medicalSpecialist.model.js";
 import type { AppointmentStatus, AppointmentType } from "../../models/appointment.model.js";
 import type { IUser } from "../../models/user.model.js";
 import type { IMedicalSpecialist } from "../../models/medicalSpecialist.model.js";
+import { scheduleAppointmentReminders, cancelAppointmentReminders } from "./reminder.service.js";
+import { sendCancellationNotification } from "./notification.service.js";
 
 export function parseLocalAppointment(dateStr: string, timeStr: string) {
   const [year, month, day] = dateStr.split("-").map(Number);
@@ -51,25 +53,28 @@ export const createAppointmentService = async (data: {
   notes?: string;
 }) => {
   const specialist = await MedicalSpecialist.findById(data.specialistId);
-  if (!specialist) throw new Error("SPECIALIST_NOT_FOUND");
+  if (!specialist) 
+    throw new Error("SPECIALIST_NOT_FOUND");
+
   if (specialist.verificationStatus !== "approved") 
     throw new Error("SPECIALIST_NOT_APPROVED");
 
   if (data.type === "home" && !data.address?.trim()) 
     throw new Error("ADDRESS_REQUIRED");
 
-  if (data.type === "clinic" && specialist.specialistType === "nurse") {
+  if (data.type === "clinic" && specialist.specialistType === "nurse")
     throw new Error("INVALID_TYPE_FOR_NURSE");
-  }
-  if (data.type === "home" && !specialist.homeVisit) {
+  
+  if (data.type === "home" && !specialist.homeVisit)
     throw new Error("SPECIALIST_NO_HOME_VISIT");
-  }
 
-  if (data.date <= new Date()) throw new Error("DATE_IN_PAST");
+  if (data.date <= new Date()) 
+    throw new Error("DATE_IN_PAST");
 
   const dayName = data.date.toLocaleDateString("en-US", { weekday: "long" });
   const worksOnDay = specialist.availableSlots?.some((slot) => slot.day === dayName);
-  if (!worksOnDay) throw new Error("DAY_NOT_AVAILABLE");
+  if (!worksOnDay) 
+    throw new Error("DAY_NOT_AVAILABLE");
 
   const { availableSlots } = await getAvailableSlotsService(
     data.specialistId,
@@ -80,15 +85,24 @@ export const createAppointmentService = async (data: {
     throw new Error("SLOT_NOT_AVAILABLE");
   }
 
-  return Appointment.create({
+  const appointment = await Appointment.create({
     patientId: data.patientId,
     specialistId: data.specialistId,
     date: data.date,
     type: data.type,
     address: data.address,
     notes: data.notes,
-    status: "pending",
+    status: data.type === "clinic" ? "confirmed" : "pending",
   });
+
+  // For clinic appointments: send confirmation immediately on booking
+  // For home visits: wait until specialist approves (handled in updateAppointmentStatusService)
+  if (data.type !== "home") {
+    scheduleAppointmentReminders(appointment, data.patientId, specialist._id as Types.ObjectId)
+      .catch(err => console.error("[Reminder] Failed to schedule:", err));
+  }
+
+  return appointment;
 };
 
 
@@ -193,6 +207,16 @@ export const updateAppointmentStatusService = async (
 
   appointment.status = newStatus;
   await appointment.save();
+
+  // For home visits: send confirmation when specialist approves
+  if (newStatus === "confirmed" && appointment.type === "home") {
+    scheduleAppointmentReminders(
+      appointment,
+      appointment.patientId.toString(),
+      appointment.specialistId as Types.ObjectId
+    ).catch(err => console.error("[Reminder] Failed to schedule:", err));
+  }
+
   return appointment;
 };
 
@@ -234,9 +258,57 @@ export const cancelAppointmentService = async (
 
   appointment.status = "cancelled";
   await appointment.save();
+
+  cancelAppointmentReminders(appointment._id.toString())
+    .catch(err => console.error("[Reminder] Failed to cancel reminders:", err));
+
+  sendCancellationNotification(
+    appointment,
+    appointment.patientId.toString(),
+    appointment.specialistId as Types.ObjectId
+  ).catch((err: unknown) => console.error("[WhatsApp] Failed to send cancellation:", err));
+
   return appointment;
 };
 
+
+export const cancelDayAppointmentsService = async (
+  specialistUserId: string,
+  dateStr: string
+) => {
+  const specialist = await MedicalSpecialist.findOne({ userId: specialistUserId });
+  if (!specialist) throw new Error("SPECIALIST_PROFILE_NOT_FOUND");
+
+  const date = new Date(dateStr);
+  if (isNaN(date.getTime())) throw new Error("INVALID_DATE");
+
+  const startOfDay = new Date(date);
+  startOfDay.setHours(0, 0, 0, 0);
+  const endOfDay = new Date(date);
+  endOfDay.setHours(23, 59, 59, 999);
+
+  const appointments = await Appointment.find({
+    specialistId: specialist._id,
+    date: { $gte: startOfDay, $lte: endOfDay },
+    status: { $nin: ["cancelled", "completed", "overdue"] },
+  });
+
+  for (const appointment of appointments) {
+    appointment.status = "cancelled";
+    await appointment.save();
+
+    cancelAppointmentReminders(appointment._id.toString())
+      .catch(err => console.error("[Reminder] Failed to cancel reminders:", err));
+
+    sendCancellationNotification(
+      appointment,
+      appointment.patientId.toString(),
+      appointment.specialistId as Types.ObjectId
+    ).catch((err: unknown) => console.error("[WhatsApp] Failed to send cancellation:", err));
+  }
+
+  return appointments.length;
+};
 
 export const rescheduleAppointmentService = async (
   appointmentId: string,
@@ -268,10 +340,21 @@ export const rescheduleAppointmentService = async (
   if (newDate <= new Date()) throw new Error("DATE_IN_PAST");
 
   appointment.date = newDate;
-  // Reset to pending so the specialist must re-confirm the new time
-  appointment.status = "pending";
+  // clinic stays confirmed (auto-approved); home goes back to pending for re-approval
+  appointment.status = appointment.type === "clinic" ? "confirmed" : "pending";
   if (notes !== undefined) appointment.notes = notes;
+
+  await cancelAppointmentReminders(appointment._id.toString());
   await appointment.save();
+
+  if (appointment.type === "clinic") {
+    scheduleAppointmentReminders(
+      appointment,
+      appointment.patientId.toString(),
+      appointment.specialistId as Types.ObjectId
+    ).catch(err => console.error("[Reminder] Failed to schedule reminders after reschedule:", err));
+  }
+
   return appointment;
 };
 
@@ -284,18 +367,20 @@ export const getAvailableSlotsService = async (
   availableSlots: string[];
 }> => {
   const specialist = await MedicalSpecialist.findById(specialistId);
-  if (!specialist) throw new Error("SPECIALIST_NOT_FOUND");
-  if (specialist.verificationStatus !== "approved") throw new Error("SPECIALIST_NOT_APPROVED");
+  if (!specialist) 
+    throw new Error("SPECIALIST_NOT_FOUND");
+
+  if (specialist.verificationStatus !== "approved") 
+    throw new Error("SPECIALIST_NOT_APPROVED");
 
   const date = new Date(dateStr);
-  if (isNaN(date.getTime())) throw new Error("INVALID_DATE");
+  if (isNaN(date.getTime())) 
+    throw new Error("INVALID_DATE");
 
-  // Get the day name (e.g. "Monday") for the requested date
   const dayName = date.toLocaleDateString("en-US", { weekday: "long" });
 
   const slot = specialist.availableSlots?.find((s) => s.day === dayName);
   if (!slot) {
-    // Specialist doesn't work on this day
     return { availableSlots: [], workingHours: null };
   }
 
@@ -333,6 +418,20 @@ export const getAvailableSlotsService = async (
     }
     m += 30;
     if (m >= 60) { h += 1; m -= 60; }
+  }
+
+  // If date is today, remove slots that have already passed
+  const todayStr = new Date().toLocaleDateString("en-CA"); // YYYY-MM-DD local
+  if (dateStr === todayStr) {
+    const now = new Date();
+    const nowMinutes = now.getHours() * 60 + now.getMinutes();
+    return {
+      workingHours: { start: slot.startTime, end: slot.endTime },
+      availableSlots: availableSlots.filter(s => {
+        const [sh, sm] = s.split(":").map(Number);
+        return sh * 60 + sm > nowMinutes;
+      }),
+    };
   }
 
   return {

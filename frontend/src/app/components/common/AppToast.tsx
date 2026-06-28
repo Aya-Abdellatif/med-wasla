@@ -14,7 +14,7 @@ export default function AppToast() {
       pauseOnHover
       theme="colored"
       limit={4}
-      toastClassName="!rounded-2xl !text-sm !font-semibold !shadow-lg"
+      toastClassName="!rounded-2xl !text-sm !font-semibold !shadow-lg medwasla-toast"
       progressClassName="!bg-white/30"
     />
   );
