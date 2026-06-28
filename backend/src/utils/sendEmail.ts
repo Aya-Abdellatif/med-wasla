@@ -7,6 +7,7 @@ interface EmailOptions {
 }
 
 const sendEmail = async (options: EmailOptions): Promise<void> => {
+  if (process.env.NODE_ENV === "test") return;
 
   const user = process.env.EMAIL_USER;
   const pass = process.env.EMAIL_PASS;
