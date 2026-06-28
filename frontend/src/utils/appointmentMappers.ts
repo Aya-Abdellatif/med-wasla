@@ -24,6 +24,7 @@ interface ApiPatientRef {
   _id?: string;
   name?: string;
   photoUrl?: string;
+  phone?: string;
 }
 
 interface ApiAppointment {
