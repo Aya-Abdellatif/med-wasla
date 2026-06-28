@@ -210,7 +210,7 @@ export function Doctors() {
             </div>
           ) : doctors.length === 0 ? (
             <div className="text-center py-16">
-              <p className="text-lg text-muted-foreground">
+              <p className="text-lg text-fg">
                 No approved doctors found matching your filters.
               </p>
             </div>

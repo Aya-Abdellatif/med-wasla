@@ -63,7 +63,6 @@ function App() {
             <Route path="/services" element={<ServicesPage />} />
             <Route path="/doctors" element={<Doctors />} />
             <Route path="/nurses" element={<Nurses />} />
-
             <Route element={<ProtectedRoute />}>
               <Route element={<RoleProtectedRoute allowedRoles={["doctor", "nurse"]} />}>
                 <Route path="/dashboard" element={<Dashboard />} />
