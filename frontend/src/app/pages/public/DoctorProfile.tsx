@@ -11,7 +11,7 @@ import {
   DollarSign,
   Watch,
   AlertCircle,
-  Home,
+  // Home,
 } from "lucide-react";
 import { useEffect, useState } from "react";
 import { BookingModal } from "../../components/booking/BookingModal";
@@ -211,7 +211,7 @@ function DoctorProfileView({ id }: { id: string }) {
                     <p className="font-semibold text-foreground">{doctor.avgWaitTime}</p>
                   </div>
                 </div>
-                {doctor.homeVisit && (
+                {/* {doctor.homeVisit && (
                   <div className="flex items-center space-x-3 p-4 bg-teal-50 rounded-lg border border-teal-100">
                     <Home className="w-5 h-5 text-teal-600 shrink-0" />
                     <div>
@@ -219,7 +219,7 @@ function DoctorProfileView({ id }: { id: string }) {
                       <p className="font-semibold text-teal-900">Available on request</p>
                     </div>
                   </div>
-                )}
+                )} */}
               </div>
             </div>
           </div>
