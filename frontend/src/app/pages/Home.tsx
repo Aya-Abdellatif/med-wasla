@@ -308,16 +308,16 @@ function Home() {
               making quality medical care accessible, fast, and personal.
             </p>
             <div className="grid grid-cols-1 sm:grid-cols-2 gap-5">
-              {reasons.map(({ icon: Icon, title, desc }) => (
+              {reasons.map(({ icon: Icon, title, /*desc*/ }) => (
                 <div key={title} className="flex gap-3">
                   <div className="h-10 w-10 rounded-xl bg-primary/10 flex items-center justify-center shrink-0">
-                    <Icon className="h-5 w-5 text-primary" />
+                    <Icon className="h-4 w-4 text-primary" />
                   </div>
                   <div>
-                    <p className="font-bold text-fg text-sm">{title}</p>
-                    <p className="text-xs text-fg-muted mt-0.5 leading-relaxed">
+                    <p className="font-semibold text-fg text-sm mt-2">{title}</p>
+                    {/*<p className="text-xs text-fg-muted mt-0.5 leading-relaxed">
                       {desc}
-                    </p>
+                    </p>*/}
                   </div>
                 </div>
               ))}
