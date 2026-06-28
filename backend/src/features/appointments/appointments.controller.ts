@@ -7,6 +7,7 @@ import {
   getAppointmentByIdService,
   updateAppointmentStatusService,
   cancelAppointmentService,
+  cancelDayAppointmentsService,
   rescheduleAppointmentService,
   getAvailableSlotsService,
   parseLocalAppointment,
@@ -243,6 +244,35 @@ export const cancelAppointment = async (
   }
 };
 
+
+export const cancelDayAppointments = async (
+  req: Request,
+  res: Response,
+  next: NextFunction
+) => {
+  try {
+    const date = req.params.date as string;
+
+    if (!/^\d{4}-\d{2}-\d{2}$/.test(date)) {
+      return next(new AppError("date must be in YYYY-MM-DD format", 400));
+    }
+
+    const cancelledCount = await cancelDayAppointmentsService(req.user!.id, date);
+
+    res.status(200).json({
+      success: true,
+      message: `Cancelled ${cancelledCount} appointment(s) for ${date}`,
+      data: { cancelledCount },
+    });
+  } catch (error) {
+    const msg = (error as Error).message;
+    if (msg === "SPECIALIST_PROFILE_NOT_FOUND")
+      return next(new AppError("Specialist profile not found", 404));
+    if (msg === "INVALID_DATE")
+      return next(new AppError("date must be in YYYY-MM-DD format", 400));
+    return next(error);
+  }
+};
 
 export const rescheduleAppointment = async (
   req: Request,
