@@ -96,6 +96,7 @@ export function BookingModal({ isOpen, onClose, provider, serviceType }: Booking
 
     let cancelled = false;
 
+    // eslint-disable-next-line react-hooks/set-state-in-effect
     setLoadingSlots(true);
 
     fetchAvailableSlots(provider.id, formData.date)
