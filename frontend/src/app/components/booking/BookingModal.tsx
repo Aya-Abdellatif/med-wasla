@@ -225,7 +225,7 @@ export function BookingModal({ isOpen, onClose, provider, serviceType }: Booking
 
   const workingDaysText =
     specialistSlots.length > 0
-      ? specialistSlots.map((slot) => `${slot.day} (${slot.startTime}-${slot.endTime})`).join(", ")
+      ? specialistSlots.map((slot) => `${slot.day} (${formatSlotLabel(slot.startTime)}-${formatSlotLabel(slot.endTime)})`).join(", ")
       : "No schedule published yet";
 
   return (
@@ -326,7 +326,7 @@ export function BookingModal({ isOpen, onClose, provider, serviceType }: Booking
                   type="date"
                   value={formData.date}
                   onChange={(e) => handleDateChange(e.target.value)}
-                  min={new Date().toISOString().split("T")[0]}
+                  min={(() => { const d = new Date(); return `${d.getFullYear()}-${String(d.getMonth()+1).padStart(2,"0")}-${String(d.getDate()).padStart(2,"0")}`; })()}
                   className={`w-full pl-12 pr-4 py-3 border rounded-lg focus:outline-none focus:ring-2 transition-colors ${
                     errors.date
                       ? "border-red-500 focus:ring-red-500"
