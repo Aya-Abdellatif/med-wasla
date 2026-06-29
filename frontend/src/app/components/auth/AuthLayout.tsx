@@ -9,7 +9,6 @@ interface AuthLayoutProps {
   small?: boolean;
   wide?: boolean;
   center?: boolean;
-  /** Full viewport width, no page scroll */
   fitScreen?: boolean;
 }
 
@@ -50,15 +49,19 @@ export default function AuthLayout({
   return (
     <div className={`${shellClass} ${alignClass}`}>
       <div className={`w-full ${cardWidthClass}`}>
-        <div className={`flex items-center justify-center gap-3 ${fitScreen ? "mb-3" : "mb-5"}`}>
+        <div
+          className={`flex items-center justify-center gap-3 ${fitScreen ? "mb-3" : "mb-5"}`}
+        >
           <img
             src={Logo}
             alt="MedWasla Logo"
-            className={`${fitScreen ? "h-12 w-12" : "w-17 h-15"} -mr-4 transition-transform duration-300`}
+            className={`${fitScreen ? "h-12 w-14" : "w-19 h-17"} -mr-6 transition-transform duration-300`}
           />
-          <h1 className={`${fitScreen ? "text-lg" : "text-xl"} font-semibold`}>
-            <span className="text-slate-900">Med</span>
-            <span className="text-teal-500">Wasla</span>
+          <h1
+            className={`${fitScreen ? "text-2xl" : "text-3xl"} font-semibold`}
+          >
+            <span className="text-fg">Med</span>
+            <span className="text-primary">Wasla</span>
           </h1>
         </div>
 
@@ -66,11 +69,15 @@ export default function AuthLayout({
           className={`rounded-3xl border border-slate-100 bg-white shadow-xl shadow-slate-200/50 ${cardPaddingClass}`}
         >
           <div className={fitScreen ? "mb-4" : "mb-5"}>
-            <h2 className={`font-bold text-slate-900 ${fitScreen ? "text-xl sm:text-2xl" : "text-2xl sm:text-[1.65rem]"}`}>
+            <h2
+              className={`font-bold text-fg ${fitScreen ? "text-xl sm:text-2xl" : "text-2xl sm:text-[1.65rem]"}`}
+            >
               {title}
             </h2>
             {subtitle && (
-              <p className={`mt-1 text-slate-500 ${fitScreen ? "text-sm" : "text-sm sm:text-base"}`}>
+              <p
+                className={`mt-1 text-fg-muted ${fitScreen ? "text-sm" : "text-sm sm:text-base"}`}
+              >
                 {subtitle}
               </p>
             )}

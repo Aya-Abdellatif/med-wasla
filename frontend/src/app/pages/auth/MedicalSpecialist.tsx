@@ -9,13 +9,13 @@ export default function MedicalSpecialist() {
   return (
     <AuthLayout
       title="Medical specialist"
-      subtitle="Tell us which type of specialist you are"
+      subtitle="Tell us which type of specialist are you"
       wide
     >
       <button
         type="button"
         onClick={() => navigate("/role")}
-        className="mb-5 inline-flex items-center gap-1 text-sm font-medium text-slate-500 transition-colors hover:text-teal-600"
+        className="mb-5 inline-flex items-center gap-1 text-sm font-medium text-fg-muted transition-all duration-200 hover:text-primary hover:-translate-y-0.5"
       >
         <ArrowLeft className="h-4 w-4" />
         Back to role selection
@@ -23,25 +23,26 @@ export default function MedicalSpecialist() {
 
       <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 sm:gap-5">
         <RoleSelectCard
-          accent="indigo"
           icon={<Stethoscope className="h-8 w-8" />}
           title="Doctor"
-          description="Manage clinic appointments, profile, and patient consultations."
+          description="Manage clinic appointments, consultations, and patient records under your verified profile."
           onClick={() => navigate("/signup?role=doctor")}
         />
 
         <RoleSelectCard
-          accent="emerald"
           icon={<HeartPulse className="h-8 w-8" />}
           title="Nurse"
-          description="Offer home care services and manage your nursing profile."
+          description="Provide licensed home care services and manage your nursing profile."
           onClick={() => navigate("/signup?role=nurse")}
         />
       </div>
 
-      <p className="mt-6 text-center text-sm text-slate-600">
+      <p className="mt-6 text-center text-lg text-fg-muted">
         Already have an account?{" "}
-        <Link to="/" className="font-bold text-teal-600 hover:text-teal-700">
+        <Link
+          to="/login"
+          className="inline-block font-bold text-primary transition-transform duration-200 hover:text-primary/80 hover:-translate-y-0.5"
+        >
           Sign in
         </Link>
       </p>
