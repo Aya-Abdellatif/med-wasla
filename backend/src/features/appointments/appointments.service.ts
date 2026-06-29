@@ -295,13 +295,11 @@ export const cancelDayAppointmentsService = async (
   const specialist = await MedicalSpecialist.findOne({ userId: specialistUserId });
   if (!specialist) throw new Error("SPECIALIST_PROFILE_NOT_FOUND");
 
-  const date = new Date(dateStr);
-  if (isNaN(date.getTime())) throw new Error("INVALID_DATE");
-
-  const startOfDay = new Date(date);
-  startOfDay.setHours(0, 0, 0, 0);
-  const endOfDay = new Date(date);
-  endOfDay.setHours(23, 59, 59, 999);
+  const dateParts = dateStr.match(/^(\d{4})-(\d{2})-(\d{2})$/);
+  if (!dateParts) throw new Error("INVALID_DATE");
+  const startOfDay = new Date(Number(dateParts[1]), Number(dateParts[2]) - 1, Number(dateParts[3]), 0, 0, 0, 0);
+  const endOfDay = new Date(Number(dateParts[1]), Number(dateParts[2]) - 1, Number(dateParts[3]), 23, 59, 59, 999);
+  if (isNaN(startOfDay.getTime())) throw new Error("INVALID_DATE");
 
   const appointments = await Appointment.find({
     specialistId: specialist._id,
@@ -404,8 +402,10 @@ export const getAvailableSlotsService = async (
   if (specialist.verificationStatus !== "approved") 
     throw new Error("SPECIALIST_NOT_APPROVED");
 
-  const date = new Date(dateStr);
-  if (isNaN(date.getTime())) 
+  const dateParts = dateStr.match(/^(\d{4})-(\d{2})-(\d{2})$/);
+  if (!dateParts) throw new Error("INVALID_DATE");
+  const date = new Date(Number(dateParts[1]), Number(dateParts[2]) - 1, Number(dateParts[3]), 12, 0, 0, 0);
+  if (isNaN(date.getTime()))
     throw new Error("INVALID_DATE");
 
   const dayName = date.toLocaleDateString("en-US", { weekday: "long" });

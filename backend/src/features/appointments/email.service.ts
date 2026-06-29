@@ -4,52 +4,53 @@ export function buildEmailContent(
   templateName: string,
   params: string[]
 ): { subject: string; html: string } {
-  if (templateName === "appointment_confirmation") {
-    const [specialistName, dateStr, timeStr, typeText] = params;
+  if (templateName === "appointment_confirm") {
+    const [patientName, specialistName, dateStr, timeStr] = params;
     return {
-      subject: "تأكيد موعدك - MedWasla",
-      html: `<div dir="rtl" style="font-family:Arial,sans-serif;padding:24px">
-        <h2 style="color:#2563eb">تم تأكيد موعدك ✅</h2>
-        <p>مع: <strong>${specialistName}</strong></p>
-        <p>التاريخ: <strong>${dateStr}</strong></p>
-        <p>الوقت: <strong>${timeStr}</strong></p>
-        <p>النوع: <strong>${typeText}</strong></p>
-        <hr/><p style="color:#6b7280;font-size:13px">MedWasla - وصلة صحتك</p>
+      subject: "تأكيد موعدك - ميد واصلة",
+      html: `<div dir="rtl" style="font-family:Arial,sans-serif;padding:24px;color:#111827">
+        <p>مرحبًا <strong>${patientName}</strong>،</p>
+        <p>تم تأكيد موعدك مع <strong>${specialistName}</strong>.</p>
+        <p>📅 التاريخ: <strong>${dateStr}</strong></p>
+        <p>🕒 الوقت: <strong>${timeStr}</strong></p>
+        <br/>
+        <p>نتطلع لاستقبالكم في الموعد المحدد.</p>
+        <p>فريق ميد واصلة</p>
       </div>`,
     };
   }
 
   if (templateName === "appointment_reminder") {
-    const [specialistName, dateStr, timeStr, typeText] = params;
+    const [patientName, specialistName, dateStr, timeStr] = params;
     return {
-      subject: "تذكير بموعدك غداً - MedWasla",
-      html: `<div dir="rtl" style="font-family:Arial,sans-serif;padding:24px">
-        <h2 style="color:#d97706">تذكير بموعدك ⏰</h2>
-        <p>موعدك غداً مع: <strong>${specialistName}</strong></p>
-        <p>التاريخ: <strong>${dateStr}</strong></p>
-        <p>الوقت: <strong>${timeStr}</strong></p>
-        <p>النوع: <strong>${typeText}</strong></p>
-        <hr/><p style="color:#6b7280;font-size:13px">MedWasla - وصلة صحتك</p>
+      subject: "تذكير بموعدك - ميد واصلة",
+      html: `<div dir="rtl" style="font-family:Arial,sans-serif;padding:24px;color:#111827">
+        <p>مرحبًا <strong>${patientName}</strong>،</p>
+        <p>نود تذكيرك بموعدك مع <strong>${specialistName}</strong>.</p>
+        <p>📅 التاريخ: <strong>${dateStr}</strong></p>
+        <p>🕒 الوقت: <strong>${timeStr}</strong></p>
+        <br/>
+        <p>نتمنى لك دوام الصحة.</p>
+        <p>فريق ميد واصلة</p>
       </div>`,
     };
   }
 
-  if (templateName === "appointment_cancellation") {
-    const [patientName, specialistName, dateStr, timeStr, typeText] = params;
+  if (templateName === "appointment_cancel") {
+    const [patientName, specialistName, dateStr, timeStr] = params;
     return {
-      subject: "تم إلغاء موعدك - MedWasla",
-      html: `<div dir="rtl" style="font-family:Arial,sans-serif;padding:24px">
-        <h2 style="color:#dc2626">تم إلغاء موعدك ❌</h2>
-        <p>عزيزنا <strong>${patientName}</strong>،</p>
-        <p>نأسف لإبلاغك بأن موعدك مع <strong>${specialistName}</strong></p>
-        <p>التاريخ: <strong>${dateStr}</strong> الساعة <strong>${timeStr}</strong> (${typeText}) قد تم إلغاؤه.</p>
+      subject: "إشعار بإلغاء الموعد - ميد واصلة",
+      html: `<div dir="rtl" style="font-family:Arial,sans-serif;padding:24px;color:#111827">
+        <p>مرحبًا <strong>${patientName}</strong>،</p>
+        <p>نأسف لإبلاغك بأنه تم إلغاء موعدك مع <strong>${specialistName}</strong>، والذي كان مقررًا يوم <strong>${dateStr}</strong> في تمام <strong>${timeStr}</strong>.</p>
+        <br/>
         <p>يمكنك حجز موعد جديد من خلال التطبيق.</p>
-        <hr/><p style="color:#6b7280;font-size:13px">MedWasla - وصلة صحتك</p>
+        <p>فريق ميد واصلة</p>
       </div>`,
     };
   }
 
-  return { subject: "إشعار من MedWasla", html: "" };
+  return { subject: "إشعار من ميد واصلة", html: "" };
 }
 
 export async function sendAppointmentEmail(

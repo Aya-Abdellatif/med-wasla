@@ -25,7 +25,8 @@ export async function scheduleAppointmentReminders(
     return;
   }
 
-  const { params, patientEmail } = data;
+  const { params, patientEmail, patientName } = data;
+  const fullParams = [patientName, ...params]; // [patientName, specialistName, dateStr, timeStr]
   const appointmentDate = new Date(appointment.date);
   const now = new Date();
 
@@ -35,14 +36,14 @@ export async function scheduleAppointmentReminders(
     channel: "WHATSAPP",
     sendAt: now,
     status: "PENDING",
-    templateName: "appointment_confirmation",
-    templateParams: params,
+    templateName: "appointment_confirm",
+    templateParams: fullParams,
     patientEmail: patientEmail ?? undefined,
   });
   console.log(`[Reminder] Confirmation reminder created for appointment ${appointment._id}`);
 
   if (patientEmail) {
-    sendAppointmentEmail(patientEmail, "appointment_confirmation", params)
+    sendAppointmentEmail(patientEmail, "appointment_confirm", fullParams)
       .catch(err => console.error("[Email] Confirmation send failed:", err));
   }
 
@@ -55,7 +56,7 @@ export async function scheduleAppointmentReminders(
       sendAt: new Date(appointmentDate.getTime() - 24 * 60 * 60 * 1000),
       status: "PENDING",
       templateName: "appointment_reminder",
-      templateParams: params,
+      templateParams: fullParams,
       patientEmail: patientEmail ?? undefined,
     });
   }

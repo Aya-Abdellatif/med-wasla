@@ -27,6 +27,10 @@ summary {
   cursor: pointer;
 }
 
+.hide-picker-icon::-webkit-calendar-picker-indicator {
+  display: none;
+}
+
 button:disabled {
   cursor: not-allowed;
 }
