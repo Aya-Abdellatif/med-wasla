@@ -81,18 +81,18 @@ function PersonalTab({ profile, onSave, isLoading }: {
     photoUrl: string;
   }) => Promise<void>;
 }) {
-  const getInitialState = () => ({
-    name: profile?.name || "",
-    phone: profile?.phone || "",
-    dob: profile?.dob ? profile.dob.slice(0, 10) : "",
-    governorate: profile?.governorate || "",
-    address: profile?.address || "",
-    photoUrl: profile?.photoUrl || "",
+  const getInitialState = (p: PatientProfileApi["user"] | null) => ({
+    name: p?.name || "",
+    phone: p?.phone || "",
+    dob: p?.dob ? p.dob.slice(0, 10) : "",
+    governorate: p?.governorate || "",
+    address: p?.address || "",
+    photoUrl: p?.photoUrl || "",
   });
 
   const [editing, setEditing] = useState(false);
-  const [saved, setSaved] = useState(getInitialState());
-  const [form, setForm] = useState(getInitialState());
+  const [saved, setSaved] = useState(getInitialState(profile));
+  const [form, setForm] = useState(getInitialState(profile));
   const [errors, setErrors] = useState<Record<string, string>>({});
   const [govOpen, setGovOpen] = useState(false);
   const [govSearch, setGovSearch] = useState("");
@@ -111,11 +111,15 @@ function PersonalTab({ profile, onSave, isLoading }: {
     reader.readAsDataURL(file);
   };
 
+  const prevProfileRef = useRef(profile);
+
   useEffect(() => {
-    const nextState = getInitialState();
+    if (prevProfileRef.current === profile) return;
+    prevProfileRef.current = profile;
+    if (isSaving) return;
+    const nextState = getInitialState(profile);
     setSaved(nextState);
     setForm(nextState);
-    // NOTE: intentionally NOT resetting isSaving here — handleSave's finally block owns it
   }, [profile]);
 
   if (isLoading && !profile) {
@@ -242,7 +246,6 @@ function PersonalTab({ profile, onSave, isLoading }: {
         <div className="relative">
           <div className="w-24 h-24 rounded-full bg-primary/10 overflow-hidden flex items-center justify-center text-2xl text-fg">
             {form.photoUrl ? (
-              // eslint-disable-next-line @next/next/no-img-element
               <img src={form.photoUrl} alt="avatar" className="w-full h-full object-cover" />
             ) : (
               <span className="uppercase">{(profile?.name || "P").charAt(0)}</span>
@@ -653,10 +656,11 @@ export function PatientProfile() {
   const [profileError, setProfileError] = useState<string | null>(null);
   const [activeTab, setActiveTab] = useState<Tab>("personal");
 
+  const hasFetchedRef = useRef(false);
+
   useEffect(() => {
-    if (!user?.id) return;
-    setIsProfileLoading(true);
-    setProfileError(null);
+    if (!user?.id || hasFetchedRef.current) return;
+    hasFetchedRef.current = true;
 
     fetchPatientProfile(user.id)
       .then((data: PatientProfileApi) => {
@@ -779,10 +783,10 @@ export function PatientProfile() {
             {activeTab === "security" && <SecurityTab user={user} onSave={async (payload) => {
               if (!user?.id) throw new Error("Unable to save security settings without a logged in user.");
               const updatedUser = await updatePatientSecurity(user.id, payload);
-              console.log("updatedUser", updatedUser);
+              // console.log("updatedUser", updatedUser);
               if (updatedUser.email) {
                 updateProfile({ email: updatedUser.email });
-                console.log(user);
+               // console.log(user);
               }
             }} />}
           </div>
