@@ -1,4 +1,4 @@
-import { useState, useEffect, useCallback } from "react";
+import { useState, useEffect, useCallback, useRef } from "react";
 import { Calendar, Users, CheckCircle, AlertCircle } from "lucide-react";
 import { useAuth } from "../../context/useAuth";
 import {
@@ -27,6 +27,12 @@ function isSpecialistRole(role?: string) {
 
 export function Dashboard() {
   const { user, refreshSpecialistProfile } = useAuth();
+  const userRef = useRef(user);
+
+  useEffect(() => {
+    userRef.current = user;
+  }, [user]);
+
   const [activeTab, setActiveTab] = useState<DashboardTab>("overview");
   const [selectedScheduleDate, setSelectedScheduleDate] = useState(() => getDateStrWithOffset(0));
   const [appointments, setAppointments] = useState<Appointment[]>([]);
@@ -35,57 +41,56 @@ export function Dashboard() {
   const [homeServiceRequests, setHomeServiceRequests] = useState<HomeServiceRequest[]>([]);
   const [updatingRequestId, setUpdatingRequestId] = useState<string | null>(null);
 
-  const loadAppointments = useCallback(
-    async (silent = false) => {
-      if (!isSpecialistRole(user?.role)) {
-        setAppointments([]);
-        setHomeServiceRequests([]);
-        if (!silent) setLoadingAppointments(false);
-        return;
-      }
+  const loadAppointments = useCallback(async (silent = false) => {
+    const currentUser = userRef.current;
+    if (!isSpecialistRole(currentUser?.role)) {
+      setAppointments([]);
+      setHomeServiceRequests([]);
+      if (!silent) setLoadingAppointments(false);
+      return;
+    }
 
-      if (!silent) setLoadingAppointments(true);
+    if (!silent) setLoadingAppointments(true);
 
-      try {
-        const { appointments: nextAppointments, homeServiceRequests: nextHomeRequests } =
-          await fetchSpecialistAppointments();
+    try {
+      const { appointments: nextAppointments, homeServiceRequests: nextHomeRequests } =
+        await fetchSpecialistAppointments();
 
-        setAppointments(nextAppointments);
-        setHomeServiceRequests(nextHomeRequests);
-      } catch (err) {
-        showError(
-          err instanceof Error ? err.message : "Failed to load appointments",
-          getToastUserContext(user),
-        );
-      } finally {
-        if (!silent) setLoadingAppointments(false);
-      }
-    },
-    [user],
-  );
+      setAppointments(nextAppointments);
+      setHomeServiceRequests(nextHomeRequests);
+    } catch (err) {
+      showError(
+        err instanceof Error ? err.message : "Failed to load appointments",
+        getToastUserContext(currentUser),
+      );
+    } finally {
+      if (!silent) setLoadingAppointments(false);
+    }
+  }, []);
 
   useEffect(() => {
-    if (!isSpecialistRole(user?.role)) return;
+    if (!user?.id || !isSpecialistRole(user.role)) return;
 
     let cancelled = false;
 
     void (async () => {
-      await refreshSpecialistProfile();
+      setLoadingAppointments(true);
 
       try {
+        await refreshSpecialistProfile();
+        if (cancelled) return;
+
         const { appointments: nextAppointments, homeServiceRequests: nextHomeRequests } =
           await fetchSpecialistAppointments();
-
         if (cancelled) return;
 
         setAppointments(nextAppointments);
         setHomeServiceRequests(nextHomeRequests);
       } catch (err) {
         if (cancelled) return;
-
         showError(
           err instanceof Error ? err.message : "Failed to load appointments",
-          getToastUserContext(user),
+          getToastUserContext(userRef.current),
         );
       } finally {
         if (!cancelled) setLoadingAppointments(false);
@@ -95,7 +100,7 @@ export function Dashboard() {
     return () => {
       cancelled = true;
     };
-  }, [user?.id, user?.role, user?.name, refreshSpecialistProfile, user]);
+  }, [user?.id, user?.role, refreshSpecialistProfile]);
 
   const runWithRefresh = async (
     action: () => Promise<unknown>,
