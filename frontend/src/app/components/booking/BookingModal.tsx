@@ -3,7 +3,13 @@ import { useNavigate } from "react-router";
 import { X, Calendar, Clock, MapPin, AlertCircle, Loader2, Home, Stethoscope } from "lucide-react";
 import { showSuccess, showWarning, showError } from "../../../utils/toast";
 import { bookAppointment, fetchAvailableSlots } from "../../../services/appointmentsApi";
-import { formatSlotLabel } from "../../../utils/appointmentReschedule";
+import {
+  describeEmptySlotsMessage,
+  emptySlotsTimeLabel,
+  formatSlotLabel,
+  getEarliestBookableDate,
+  getLocalDayNameFromDateStr,
+} from "../../../utils/appointmentReschedule";
 import { useAuth } from "../../context/useAuth";
 
 interface AvailableSlot {
@@ -38,9 +44,7 @@ const initialFormData = {
 
 function isWorkingDay(dateStr: string, availableSlots: AvailableSlot[]) {
   if (!dateStr || availableSlots.length === 0) return false;
-  const dayName = new Date(`${dateStr}T12:00:00`).toLocaleDateString("en-US", {
-    weekday: "long",
-  });
+  const dayName = getLocalDayNameFromDateStr(dateStr);
   return availableSlots.some((slot) => slot.day === dayName);
 }
 
@@ -67,6 +71,11 @@ export function BookingModal({ isOpen, onClose, provider, serviceType }: Booking
     [provider?.availableSlots],
   );
 
+  const minBookableDate = useMemo(
+    () => getEarliestBookableDate(specialistSlots),
+    [specialistSlots],
+  );
+
   const resetForm = useCallback(() => {
     setFormData(initialFormData);
     setVisitType(isNurseBooking ? "home" : "clinic");
@@ -87,33 +96,39 @@ export function BookingModal({ isOpen, onClose, provider, serviceType }: Booking
 
     let cancelled = false;
 
-    const timer = window.setTimeout(() => {
-      setLoadingSlots(true);
+    // eslint-disable-next-line react-hooks/set-state-in-effect
+    setLoadingSlots(true);
 
-      fetchAvailableSlots(provider.id!, formData.date)
-        .then((result) => {
-          if (cancelled) return;
-          setAvailableTimes(result.availableSlots);
-          setWorkingHours(result.workingHours);
-          setFormData((prev) => ({
+    fetchAvailableSlots(provider.id, formData.date)
+      .then((result) => {
+        if (cancelled) return;
+        setAvailableTimes(result.availableSlots);
+        setWorkingHours(result.workingHours);
+        setFormData((prev) => ({
+          ...prev,
+          time: result.availableSlots.includes(prev.time) ? prev.time : "",
+        }));
+
+        if (result.availableSlots.length === 0) {
+          setErrors((prev) => ({
             ...prev,
-            time: result.availableSlots.includes(prev.time) ? prev.time : "",
+            date: describeEmptySlotsMessage(formData.date, result.workingHours),
+            time: "",
           }));
-        })
-        .catch((err) => {
-          if (cancelled) return;
-          setAvailableTimes([]);
-          setWorkingHours(null);
-          showError(err instanceof Error ? err.message : "Failed to load available times");
-        })
-        .finally(() => {
-          if (!cancelled) setLoadingSlots(false);
-        });
-    }, 0);
+        }
+      })
+      .catch((err) => {
+        if (cancelled) return;
+        setAvailableTimes([]);
+        setWorkingHours(null);
+        showError(err instanceof Error ? err.message : "Failed to load available times");
+      })
+      .finally(() => {
+        if (!cancelled) setLoadingSlots(false);
+      });
 
     return () => {
       cancelled = true;
-      window.clearTimeout(timer);
     };
   }, [isOpen, provider?.id, formData.date, specialistSlots]);
 
@@ -123,6 +138,8 @@ export function BookingModal({ isOpen, onClose, provider, serviceType }: Booking
     if (!formData.date) newErrors.date = "Date is required";
     else if (!isWorkingDay(formData.date, specialistSlots)) {
       newErrors.date = "Specialist is not available on this day";
+    } else if (!loadingSlots && availableTimes.length === 0) {
+      newErrors.date = describeEmptySlotsMessage(formData.date, workingHours);
     }
 
     if (!formData.time) newErrors.time = "Time is required";
@@ -326,7 +343,7 @@ export function BookingModal({ isOpen, onClose, provider, serviceType }: Booking
                   type="date"
                   value={formData.date}
                   onChange={(e) => handleDateChange(e.target.value)}
-                  min={new Date().toISOString().split("T")[0]}
+                  min={minBookableDate}
                   className={`w-full pl-12 pr-4 py-3 border rounded-lg focus:outline-none focus:ring-2 transition-colors ${
                     errors.date
                       ? "border-red-500 focus:ring-red-500"
@@ -365,7 +382,7 @@ export function BookingModal({ isOpen, onClose, provider, serviceType }: Booking
                       : !formData.date
                         ? "Select a date first"
                         : availableTimes.length === 0
-                          ? "No slots available"
+                          ? emptySlotsTimeLabel(formData.date, workingHours)
                           : "Select a time"}
                   </option>
                   {availableTimes.map((slot) => (

@@ -105,3 +105,30 @@ export async function rescheduleAppointment(appointmentId: string, date: string,
   );
   return data;
 }
+
+export interface QueueEntry {
+  queueNumber: number;
+  status: "waiting" | "in_progress" | "completed" | "cancelled";
+  isSelf: boolean;
+}
+
+export interface AppointmentQueueResult {
+  queueId?: string;
+  isActive: boolean;
+  currentNumber: number;
+  userEntry?: {
+    queueNumber: number;
+    status: string;
+  };
+  waitingAhead: number;
+  totalEntries: number;
+  entries: QueueEntry[];
+}
+
+export async function fetchAppointmentQueue(appointmentId: string): Promise<AppointmentQueueResult> {
+  const { data } = await axiosClient.get<{
+    status: string;
+    data: AppointmentQueueResult;
+  }>(`/api/queue/appointment/${appointmentId}`);
+  return data.data;
+}
