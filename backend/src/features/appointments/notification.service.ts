@@ -39,13 +39,11 @@ export async function buildNotificationData(
     minute: "2-digit",
     hour12: true,
   });
-  const typeText = appointment.type === "home" ? "زيارة منزلية" : "عيادة";
-
   return {
     patientPhone: patient.phone,
     patientName,
     patientEmail: patient.email ?? null,
-    params: [specialistName, dateStr, timeStr, typeText],
+    params: [specialistName, dateStr, timeStr],
   };
 }
 
@@ -57,14 +55,14 @@ export async function sendCancellationNotification(
   const data = await buildNotificationData(appointment, patientUserId, specialistId);
   if (!data) return;
 
-  // cancellation params: [patientName, specialistName, dateStr, timeStr, typeText]
+  // cancellation params: [patientName, specialistName, dateStr, timeStr]
   const params = [data.patientName, ...data.params];
 
-  await sendWhatsAppMessage(data.patientPhone, "appointment_cancellation", params)
+  await sendWhatsAppMessage(data.patientPhone, "appointment_cancel", params)
     .catch(err => console.error("[WhatsApp] Cancellation send failed:", err));
 
   if (data.patientEmail) {
-    sendAppointmentEmail(data.patientEmail, "appointment_cancellation", params)
+    sendAppointmentEmail(data.patientEmail, "appointment_cancel", params)
       .catch(err => console.error("[Email] Cancellation send failed:", err));
   }
 }
