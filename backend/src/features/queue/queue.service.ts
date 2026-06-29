@@ -1,5 +1,7 @@
 import Queue from "../../models/queue.model.js";
+import type { IQueueEntry, QueueStatus } from "../../models/queue.model.js";
 import MedicalSpecialist from "../../models/medicalSpecialist.model.js";
+import Appointment from "../../models/appointment.model.js";
 import { Types } from "mongoose";
 import AppError from "../../utils/AppError.js";
 
@@ -125,6 +127,138 @@ export const setQueueStatus = async (specialistUserId: string, active: boolean) 
 	queue.isActive = active;
 	await queue.save();
 	return queue;
+};
+
+export const syncQueueForSpecialistAndDate = async (specialistId: string, date: Date) => {
+	const start = new Date(date);
+	start.setHours(0, 0, 0, 0);
+	const end = new Date(date);
+	end.setHours(23, 59, 59, 999);
+
+	// Find all clinic appointments for this specialist on this date
+	const appointments = await Appointment.find({
+		specialistId,
+		date: { $gte: start, $lte: end },
+		type: "clinic",
+		status: { $in: ["confirmed", "completed", "cancelled", "overdue"] },
+	}).sort({ date: 1 });
+
+	let queue = await Queue.findOne({ specialistId, date: start });
+
+	if (appointments.length === 0) {
+		if (queue) {
+			queue.entries = [];
+			await queue.save();
+		}
+		return queue;
+	}
+
+	if (!queue) {
+		queue = new Queue({
+			specialistId,
+			date: start,
+			entries: [],
+			isActive: true,
+			currentNumber: 0,
+		});
+	}
+
+	// Preserve custom queue entry statuses (like "in_progress") if they exist
+	const existingStatusMap = new Map<string, QueueStatus>();
+	if (queue.entries) {
+		queue.entries.forEach((e) => {
+			existingStatusMap.set(e.appointmentId.toString(), e.status);
+		});
+	}
+
+	const newEntries: IQueueEntry[] = [];
+	let queueNum = 1;
+
+	for (const appt of appointments) {
+		let status: QueueStatus = "waiting";
+		const existingStatus = existingStatusMap.get(appt._id.toString());
+
+		if (appt.status === "completed") {
+			status = "completed";
+		} else if (appt.status === "cancelled" || appt.status === "overdue") {
+			status = "cancelled";
+		} else if (existingStatus) {
+			status = existingStatus;
+		}
+
+		newEntries.push({
+			patientId: appt.patientId as Types.ObjectId,
+			appointmentId: appt._id as Types.ObjectId,
+			queueNumber: queueNum,
+			status,
+		});
+		queueNum++;
+	}
+
+	queue.entries = newEntries;
+
+	// Determine currentNumber
+	const inProgressEntry = queue.entries.find((e) => e.status === "in_progress");
+	if (inProgressEntry) {
+		queue.currentNumber = inProgressEntry.queueNumber;
+	} else {
+		// Set currentNumber to the max queueNumber of completed entries, or 0
+		const completedEntries = queue.entries.filter((e) => e.status === "completed");
+		if (completedEntries.length > 0) {
+			queue.currentNumber = Math.max(...completedEntries.map((e) => e.queueNumber));
+		} else {
+			queue.currentNumber = 0;
+		}
+	}
+
+	await queue.save();
+	return queue;
+};
+
+export const getQueueForAppointment = async (appointmentId: string, patientId: string) => {
+	const appointment = await Appointment.findById(appointmentId);
+	if (!appointment) throw new AppError("Appointment not found", 404);
+
+	// Sync the queue to make sure it's up to date
+	const queue = await syncQueueForSpecialistAndDate(appointment.specialistId.toString(), appointment.date);
+
+	if (!queue) {
+		return {
+			isActive: false,
+			currentNumber: 0,
+			entries: [],
+			waitingAhead: 0,
+		};
+	}
+
+	const userEntry = queue.entries.find((e) => e.appointmentId.toString() === appointmentId);
+	if (!userEntry) {
+		return {
+			isActive: queue.isActive ?? true,
+			currentNumber: queue.currentNumber || 0,
+			entries: [],
+			waitingAhead: 0,
+		};
+	}
+
+	// Calculate how many waiting/in-progress entries are ahead of this user
+	const waitingAhead = queue.entries.filter(
+		(e) => e.queueNumber < userEntry.queueNumber && (e.status === "waiting" || e.status === "in_progress")
+	).length;
+
+	return {
+		queueId: queue._id,
+		isActive: queue.isActive ?? true,
+		currentNumber: queue.currentNumber || 0,
+		userEntry,
+		waitingAhead,
+		totalEntries: queue.entries.length,
+		entries: queue.entries.map((e) => ({
+			queueNumber: e.queueNumber,
+			status: e.status,
+			isSelf: e.appointmentId.toString() === appointmentId,
+		})),
+	};
 };
 
 export default {};

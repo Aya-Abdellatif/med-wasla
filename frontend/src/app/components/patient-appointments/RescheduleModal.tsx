@@ -3,7 +3,12 @@ import { X, RefreshCw, Loader2 } from "lucide-react";
 import type { Appointment } from "./AppointmentTypes";
 import { ImageWithFallback } from "../../figma/ImageWithFallback";
 import { fetchAvailableSlots } from "../../../services/appointmentsApi";
-import { formatSlotLabel } from "../../../utils/appointmentReschedule";
+import {
+  describeEmptySlotsMessage,
+  emptySlotsTimeLabel,
+  formatSlotLabel,
+  getLocalDateString,
+} from "../../../utils/appointmentReschedule";
 import { showError } from "../../../utils/toast";
 
 function formatDate(dateStr: string) {
@@ -26,6 +31,8 @@ export function RescheduleModal({
     const [submitting, setSubmitting] = useState(false);
     const [loadingSlots, setLoadingSlots] = useState(false);
     const [availableTimes, setAvailableTimes] = useState<string[]>([]);
+    const [workingHours, setWorkingHours] = useState<{ start: string; end: string } | null>(null);
+    const [dateError, setDateError] = useState("");
 
     useEffect(() => {
         if (!date) return;
@@ -39,11 +46,19 @@ export function RescheduleModal({
                 .then((result) => {
                     if (cancelled) return;
                     setAvailableTimes(result.availableSlots);
+                    setWorkingHours(result.workingHours);
                     setTime((prev) => (result.availableSlots.includes(prev) ? prev : ""));
+                    setDateError(
+                      result.availableSlots.length === 0
+                        ? describeEmptySlotsMessage(date, result.workingHours)
+                        : "",
+                    );
                 })
                 .catch((err) => {
                     if (cancelled) return;
                     setAvailableTimes([]);
+                    setWorkingHours(null);
+                    setDateError("");
                     setTime("");
                     showError(err instanceof Error ? err.message : "Failed to load available times");
                 })
@@ -115,12 +130,19 @@ export function RescheduleModal({
                                 const nextDate = e.target.value;
                                 setDate(nextDate);
                                 setTime("");
-                                if (!nextDate) setAvailableTimes([]);
+                                setDateError("");
+                                if (!nextDate) {
+                                  setAvailableTimes([]);
+                                  setWorkingHours(null);
+                                }
                             }}
-                            min={new Date().toISOString().split("T")[0]}
+                            min={getLocalDateString()}
                             disabled={submitting}
                             className="w-full px-4 py-3 bg-input-background border border-border rounded-xl focus:outline-none focus:ring-2 focus:ring-primary disabled:opacity-50"
                         />
+                        {dateError && (
+                          <p className="mt-2 text-sm text-red-500">{dateError}</p>
+                        )}
                     </div>
                     <div>
                         <label className="block text-sm text-foreground mb-1.5">New Time</label>
@@ -136,7 +158,7 @@ export function RescheduleModal({
                                     : !date
                                       ? "Select a date first"
                                       : availableTimes.length === 0
-                                        ? "No slots available"
+                                        ? emptySlotsTimeLabel(date, workingHours)
                                         : "Select a time"}
                             </option>
                             {availableTimes.map((slot) => (
