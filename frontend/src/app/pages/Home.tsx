@@ -15,6 +15,7 @@ import {
   ChevronLeft,
   ChevronRight,
   LayoutDashboard,
+  CalendarDays
 } from "lucide-react";
 import docImg from "/src/assets/doctors.avif";
 import whyImg from "/src/assets/trust.jpg";
@@ -191,7 +192,7 @@ function Home() {
                 onClick={onBookClick}
                 className="group flex items-center gap-2 bg-primary hover:bg-transparent text-white hover:text-primary font-bold px-6 py-3 rounded-xl transition-all duration-300 hover:-translate-y-0.5 border-2 border-primary cursor-pointer"
               >
-                {/*<CalendarDays className="h-5 w-5 stroke-white group-hover:stroke-primary transition-colors duration-300" />*/}
+                <CalendarDays className="h-5 w-5 stroke-white group-hover:stroke-primary transition-colors duration-300" />
                 Book Appointment
               </button>
             )}
@@ -208,7 +209,7 @@ function Home() {
               onClick={() => navigate("/services")}
               className="flex items-center gap-2 text-fg font-semibold px-6 py-3 rounded-xl border-2 border-border hover:border-primary hover:text-primary hover:-translate-y-0.5 transition-all duration-300 cursor-pointer"
             >
-              Our Services {/*<ArrowRight className="h-4 w-4" />*/}
+              Our Services <ArrowRight className="h-4 w-4" />
             </button>
           </div>
         </div>
@@ -306,16 +307,16 @@ function Home() {
               making quality medical care accessible, fast, and personal.
             </p>
             <div className="grid grid-cols-1 sm:grid-cols-2 gap-5">
-              {reasons.map(({ icon: Icon, title, /*desc*/ }) => (
+              {reasons.map(({ icon: Icon, title, desc }) => (
                 <div key={title} className="flex gap-3">
                   <div className="h-10 w-10 rounded-xl bg-primary/10 flex items-center justify-center shrink-0">
                     <Icon className="h-4 w-4 text-primary" />
                   </div>
                   <div>
                     <p className="text-md font-semibold text-[#1F2937] mt-1">{title}</p>
-                    {/*<p className="text-xs text-fg-muted mt-0.5 leading-relaxed">
+                    <p className="text-xs text-fg-muted mt-0.5 leading-relaxed">
                       {desc}
-                    </p>*/}
+                    </p>
                   </div>
                 </div>
               ))}

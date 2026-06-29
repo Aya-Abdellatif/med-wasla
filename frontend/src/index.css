@@ -31,7 +31,6 @@ button:disabled {
   cursor: not-allowed;
 }
 
-/* MedWasla toast palette — consistent with site primary teal */
 .Toastify__toast--success.medwasla-toast {
   background: #14b8a6 !important;
   color: #ffffff !important;

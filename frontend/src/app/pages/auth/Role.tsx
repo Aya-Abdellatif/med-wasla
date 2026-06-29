@@ -1,5 +1,5 @@
 import { Link, useNavigate } from "react-router-dom";
-import { UserRound, Stethoscope } from "lucide-react";
+import { User, BriefcaseMedical } from "lucide-react";
 import AuthLayout from "../../components/auth/AuthLayout";
 import RoleSelectCard from "../../components/auth/RoleSelectCard";
 
@@ -12,33 +12,27 @@ export default function Role() {
       subtitle="Choose how you want to use MedWasla"
       wide
     >
-      <p className="mb-5 text-center text-sm font-medium text-slate-600">
-        I want to register as...
-      </p>
-
       <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 sm:gap-5">
         <RoleSelectCard
-          accent="blue"
-          icon={<UserRound className="h-8 w-8" />}
+          icon={<User className="h-8 w-8" />}
           title="Patient"
-          description="Book appointments and manage your health records easily."
+          description="Schedule visits, consult licensed providers, and access your medical records securely."
           onClick={() => navigate("/signup?role=patient")}
         />
 
         <RoleSelectCard
-          accent="teal"
-          icon={<Stethoscope className="h-8 w-8" />}
+          icon={<BriefcaseMedical className="h-8 w-8" />}
           title="Medical Specialist"
-          description="Join as a doctor or nurse and offer your medical services."
+          description="Register as a licensed doctor or nurse to deliver verified care through MedWasla."
           onClick={() => navigate("/medical-specialist")}
         />
       </div>
 
-      <p className="mt-6 text-center text-sm text-slate-600">
+      <p className="mt-6 text-center text-lg text-fg-muted">
         Already have an account?{" "}
         <Link
           to="/login"
-          className="font-bold text-teal-600 hover:text-teal-700"
+          className="inline-block font-bold text-primary transition-transform duration-200 hover:text-primary/80 hover:-translate-y-0.5"
         >
           Sign in
         </Link>
