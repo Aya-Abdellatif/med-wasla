@@ -2,7 +2,7 @@ import { useState } from "react";
 import { Link, useLocation, useNavigate } from "react-router-dom";
 import {
   ArrowLeft,
-  ChevronRight,
+  // ChevronRight,
   User,
   Stethoscope,
   HeartPulse,
