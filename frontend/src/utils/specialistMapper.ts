@@ -33,7 +33,6 @@ export interface ApiSpecialist {
   serviceAreas?: string[];
   areasOfExpertise?: string[];
   verificationStatus?: string;
-  homeVisit?: boolean;
 }
 
 export interface SpecialistCard {
@@ -51,7 +50,6 @@ export interface SpecialistCard {
   availableSlots?: { day: string; startTime: string; endTime: string }[];
   description: string;
   services?: string[];
-  homeVisit?: boolean;
 }
 
 export interface SpecialistProfile extends SpecialistCard {
@@ -67,7 +65,8 @@ export interface SpecialistProfile extends SpecialistCard {
 export interface FetchSpecialistsParams {
   search?: string;
   specialization?: string;
-  expertise?: string;
+  areasOfExpertise?: string;
+  serviceArea?: string;
   sortBy?:
     | "rating"
     | "reviewCount"
@@ -116,9 +115,7 @@ export function mapSpecialistToCard(
 ): SpecialistCard {
   const user = resolveUser(specialist);
   const isDoctor = type === "doctor";
-  const defaultImage = isDoctor
-    ? DEFAULT_SPECIALIST_IMAGE
-    : DEFAULT_NURSE_IMAGE;
+  const defaultImage = isDoctor ? DEFAULT_SPECIALIST_IMAGE : DEFAULT_NURSE_IMAGE;
 
   const specialty = isDoctor
     ? (specialist.specialization ?? "General Practice")
@@ -148,7 +145,6 @@ export function mapSpecialistToCard(
     availableSlots: specialist.availableSlots ?? [],
     description: specialist.bio ?? "Experienced medical specialist.",
     services: specialist.areasOfExpertise ?? specialist.serviceAreas,
-    homeVisit: specialist.homeVisit ?? type === "nurse",
   };
 }
 
@@ -186,7 +182,8 @@ export async function fetchApprovedSpecialists(
   const {
     search,
     specialization,
-    expertise,
+    areasOfExpertise,
+    serviceArea,
     sortBy,
     sortOrder,
     page = 1,
@@ -201,7 +198,8 @@ export async function fetchApprovedSpecialists(
       limit,
       ...(search ? { search } : {}),
       ...(specialization ? { specialization } : {}),
-      ...(expertise ? { expertise } : {}),
+      ...(areasOfExpertise ? { areasOfExpertise } : {}),
+      ...(serviceArea ? { serviceArea } : {}),
       ...(sortBy ? { sortBy } : {}),
       ...(sortOrder ? { sortOrder } : {}),
     },

@@ -31,7 +31,6 @@ import { ProtectedRoute } from "./app/components/common/ProtectedRoute";
 import { RoleProtectedRoute } from "./app/components/common/RoleProtectedRoute";
 
 import NotFound from "./app/pages/NotFound";
-import ErrorPage from "./app/pages/ErrorPage";
 
 function App() {
   return (
@@ -61,12 +60,20 @@ function App() {
             <Route path="/services" element={<ServicesPage />} />
             <Route path="/doctors" element={<Doctors />} />
             <Route path="/nurses" element={<Nurses />} />
+            <Route path="/doctor/:id" element={<DoctorProfile />} />
+            <Route path="/nurse/:id" element={<NurseProfile />} />
             <Route element={<ProtectedRoute />}>
-              <Route element={<RoleProtectedRoute allowedRoles={["doctor", "nurse"]} />}>
+              <Route
+                element={
+                  <RoleProtectedRoute allowedRoles={["doctor", "nurse"]} />
+                }
+              >
                 <Route path="/dashboard" element={<Dashboard />} />
               </Route>
               <Route path="/profile" element={<ProfilePage />} />
-              <Route element={<RoleProtectedRoute allowedRoles={["patient"]} />}>
+              <Route
+                element={<RoleProtectedRoute allowedRoles={["patient"]} />}
+              >
                 <Route path="/appointments" element={<MyAppointments />} />
               </Route>
             </Route>
@@ -74,7 +81,6 @@ function App() {
             <Route path="/nurse/:id" element={<NurseProfile />} />
             <Route path="*" element={<NotFound />} />
           </Route>
-          <Route path="/error" element={<ErrorPage />} />
         </Routes>
       </ChatBotProvider>
     </AuthProvider>

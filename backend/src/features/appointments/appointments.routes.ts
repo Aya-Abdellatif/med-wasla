@@ -8,6 +8,7 @@ import {
   getAppointmentById,
   updateAppointmentStatus,
   cancelAppointment,
+  cancelDayAppointments,
   rescheduleAppointment,
 } from "./appointments.controller.js";
 
@@ -20,6 +21,7 @@ router.get("/specialist", protect, restrictTo("specialist"), getSpecialistAppoin
 router.get("/:id", protect, restrictTo("patient", "specialist"), getAppointmentById);
 router.patch("/:id/reschedule", protect, restrictTo("patient"), rescheduleAppointment);
 router.patch("/:id/status", protect, restrictTo("specialist"), updateAppointmentStatus);
+router.delete("/day/:date", protect, restrictTo("specialist"), cancelDayAppointments);
 router.delete("/:id", protect, restrictTo("patient", "specialist"), cancelAppointment);
 
 export default router;

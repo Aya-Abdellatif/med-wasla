@@ -1,23 +1,34 @@
-import { useState, useEffect, useRef } from "react";
+import {
+  useState,
+  useEffect,
+  useRef,
+  useLayoutEffect,
+  useCallback,
+} from "react";
 import {
   LogOut,
   CalendarDays,
   UserCircle,
   LogIn,
   UserPlus,
+  User,
+  ChevronDown,
 } from "lucide-react";
 import { Link, useNavigate, useLocation } from "react-router-dom";
 import { AppointmentTypeModal } from "../booking/AppointmentTypeModal";
 import { useAuth } from "../../context/useAuth";
 import { getSpecialistDisplayName } from "../../../utils/displayName";
 import { showInfo } from "../../../utils/toast";
-import { canBookAppointments, handleBookClick } from "../../../utils/bookingAccess";
+import {
+  canBookAppointments,
+  handleBookClick,
+} from "../../../utils/bookingAccess";
 import Logo from "../../../assets/logo.png";
 
 function Navbar() {
   const [isOpen, setIsOpen] = useState(false);
+  const [isProfileOpen, setIsProfileOpen] = useState(false);
   const [underlineStyle, setUnderlineStyle] = useState({ left: 0, width: 0 });
-  const [isFirstActivation, setIsFirstActivation] = useState(true);
   const [isAppointmentModalOpen, setIsAppointmentModalOpen] = useState(false);
   const navigate = useNavigate();
   const location = useLocation();
@@ -25,6 +36,7 @@ function Navbar() {
 
   const isDoctor = user?.role === "doctor" || user?.role === "nurse";
   const displayName = getSpecialistDisplayName(user?.name);
+  const navUserName = isDoctor ? displayName : user?.name;
 
   const doctorLinks = [
     { name: "Home", path: "/" },
@@ -42,18 +54,52 @@ function Navbar() {
     { name: "Contact Us", path: "/contact" },
   ];
   const baseLinks = isDoctor ? doctorLinks : patientLinks;
+
   const navLinks = isAuthenticated
-    ? [...baseLinks, { name: "Profile", path: "/profile" }]
+    ? [
+        ...baseLinks,
+        { name: "Profile", path: "/profile" },
+        { name: "Appointments", path: "/appointments" },
+      ]
     : baseLinks;
+
+  const desktopNavLinks = navLinks.filter(
+    (link) => link.name !== "Profile" && link.name !== "Appointments",
+  );
+
+  // `active` is used for the MOBILE menu highlight — it can match Profile/Appointments,
+  // which is correct there since those links actually exist in the mobile list.
   const active =
     navLinks.find((link) => link.path === location.pathname)?.name ?? null;
+
+  // `desktopActive` is used for the DESKTOP underline — it only matches links that
+  // actually exist in desktopNavLinks, so we never try to position the underline
+  // against a ref (Profile/Appointments) that was never assigned.
+  const desktopActive =
+    desktopNavLinks.find((link) => link.path === location.pathname)?.name ??
+    null;
+
   const containerRef = useRef<HTMLDivElement | null>(null);
   const linksRef = useRef<Record<string, HTMLElement | null>>({});
-  useEffect(() => {
-    if (!active) return;
-    const el = linksRef.current[active];
+  const profileRef = useRef<HTMLDivElement | null>(null);
+
+  // Recomputes the underline's left/width based on the currently-active
+  // desktop link. Pulled into its own function so it can be re-run any time
+  // the layout might have shifted underneath us (font load, image load,
+  // window resize) — not just when the active route changes.
+  const updateUnderline = useCallback(() => {
     const container = containerRef.current;
-    if (el && container) {
+
+    // No desktop link matches the current route (e.g. we're on /profile or
+    // /appointments) — reset/hide the underline instead of leaving it stuck
+    // at its last position.
+    if (!desktopActive || !container) {
+      setUnderlineStyle({ left: 0, width: 0 });
+      return;
+    }
+
+    const el = linksRef.current[desktopActive];
+    if (el) {
       const elRect = el.getBoundingClientRect();
       const containerRect = container.getBoundingClientRect();
       setUnderlineStyle({
@@ -61,15 +107,68 @@ function Navbar() {
         width: elRect.width,
       });
     }
-    if (isFirstActivation) setIsFirstActivation(false);
-  }, [active, isFirstActivation]);
+  }, [desktopActive]);
+
+  // useLayoutEffect (not useEffect) so this runs synchronously right after
+  // DOM mutations, before the browser paints — avoids a visible flash/jump.
+  // (No need for an "isFirstActivation" flag here: because this is a layout
+  // effect, React flushes the resulting position update before the browser
+  // ever paints, so the unpositioned underline is never actually visible —
+  // there's nothing to guard against on first mount.)
+  useLayoutEffect(() => {
+    updateUnderline();
+  }, [updateUnderline]);
+
+  // The measurement above can still be wrong on first paint if the page's
+  // fonts or the logo image haven't finished loading yet — text/layout can
+  // shift size right after we measured it. Re-measure once those settle,
+  // and again on any resize, so the underline snaps to its correct spot
+  // instead of being stuck wherever it was on the very first render.
+  useEffect(() => {
+    // Re-run once web fonts are fully loaded (font swap changes text width).
+    if (typeof document !== "undefined" && "fonts" in document) {
+      document.fonts.ready.then(() => updateUnderline());
+    }
+
+    window.addEventListener("resize", updateUnderline);
+
+    // Catches any other layout shift in the nav (e.g. the logo image
+    // finishing its load and changing the row's width).
+    const container = containerRef.current;
+    let resizeObserver: ResizeObserver | undefined;
+    if (container && typeof ResizeObserver !== "undefined") {
+      resizeObserver = new ResizeObserver(() => updateUnderline());
+      resizeObserver.observe(container);
+    }
+
+    return () => {
+      window.removeEventListener("resize", updateUnderline);
+      resizeObserver?.disconnect();
+    };
+  }, [updateUnderline]);
+
+  useEffect(() => {
+    if (!isProfileOpen) return;
+    const handleClickOutside = (event: MouseEvent) => {
+      if (
+        profileRef.current &&
+        !profileRef.current.contains(event.target as Node)
+      ) {
+        setIsProfileOpen(false);
+      }
+    };
+    document.addEventListener("mousedown", handleClickOutside);
+    return () => document.removeEventListener("mousedown", handleClickOutside);
+  }, [isProfileOpen]);
 
   const openBooking = () => setIsAppointmentModalOpen(true);
   const onBookClick = () => handleBookClick(user, navigate, openBooking);
 
   const handleLogout = () => {
+    const name = user?.name;
+    const role = user?.role;
     logout();
-    showInfo("Logged out successfully", { userName: user?.name });
+    showInfo("Logged out successfully", { userName: name, userRole: role });
     navigate("/");
   };
 
@@ -85,6 +184,8 @@ function Navbar() {
               <img
                 src={Logo}
                 alt="Logo"
+                width={80}
+                height={68}
                 className="w-20 h-17 -mr-4 transition-transform duration-300"
               />
               <span className="text-3xl font-medium tracking-tight">
@@ -99,18 +200,16 @@ function Navbar() {
               ref={containerRef}
               className="hidden lg:flex items-center justify-center gap-1 flex-1 relative h-full"
             >
-              {active && (
+              {desktopActive && (
                 <div
-                  className={`absolute bottom-0 h-0.5 bg-primary rounded-full transition-all ease-out ${
-                    isFirstActivation ? "duration-0" : "duration-300"
-                  }`}
+                  className="absolute bottom-0 h-0.5 bg-primary rounded-full transition-all duration-300 ease-out"
                   style={{
                     left: `${underlineStyle.left}px`,
                     width: `${underlineStyle.width}px`,
                   }}
                 />
               )}
-              {navLinks.map(({ name, path }) => (
+              {desktopNavLinks.map(({ name, path }) => (
                 <Link
                   key={name}
                   to={path}
@@ -118,7 +217,7 @@ function Navbar() {
                     linksRef.current[name] = el;
                   }}
                   className={`px-4 py-2 text-lg font-semibold tracking-wide transition-all duration-300 ease-in-out ${
-                    active === name
+                    desktopActive === name
                       ? "text-primary"
                       : "text-fg-muted hover:text-fg hover:scale-[1.02]"
                   }`}
@@ -129,15 +228,43 @@ function Navbar() {
             </div>
 
             <div className="hidden lg:flex items-center gap-2 shrink-0">
-              {isDoctor && displayName && (
-                <div className="flex items-center gap-2 text-lg font-semibold text-fg px-3 py-1.5 rounded-full bg-muted">
-                  <UserCircle
-                    className="h-6 w-6 text-primary shrink-0"
-                    strokeWidth={2}
-                  />
-                  <span>{displayName}</span>
+              {isAuthenticated && navUserName && (
+                <div className="relative" ref={profileRef}>
+                  <button
+                    onClick={() => setIsProfileOpen((prev) => !prev)}
+                    className="group flex items-center gap-2 bg-primary text-white border-2 border-primary font-bold text-base px-4 py-2 rounded-xl cursor-pointer transition-all duration-300 ease-in-out hover:border-primary hover:-translate-y-0.5 hover:bg-transparent hover:text-primary hover:shadow-md whitespace-nowrap"
+                  >
+                    <User className="h-5 w-5" strokeWidth={2.5} />
+                    {navUserName}
+                    <ChevronDown
+                      className={`h-4 w-4 transition-transform duration-200 ${
+                        isProfileOpen ? "rotate-180" : ""
+                      }`}
+                      strokeWidth={2.5}
+                    />
+                  </button>
+
+                  {isProfileOpen && (
+                    <div className="absolute right-0 top-full mt-2 w-52 bg-white rounded-xl shadow-xl border border-border p-2 space-y-1 z-50">
+                      <Link
+                        to="/profile"
+                        onClick={() => setIsProfileOpen(false)}
+                        className="flex items-center gap-2 text-base font-semibold px-3 py-2 rounded-lg text-fg-muted hover:text-fg hover:bg-muted transition-all duration-200"
+                      >
+                        View Profile
+                      </Link>
+                      <Link
+                        to="/appointments"
+                        onClick={() => setIsProfileOpen(false)}
+                        className="flex items-center gap-2 text-base font-semibold px-3 py-2 rounded-lg text-fg-muted hover:text-fg hover:bg-muted transition-all duration-200"
+                      >
+                        View Appointments
+                      </Link>
+                    </div>
+                  )}
                 </div>
               )}
+
               {isAuthenticated ? (
                 <button
                   onClick={handleLogout}
@@ -259,7 +386,7 @@ function Navbar() {
                       </>
                     )}
 
-                    {canBookAppointments(user) && (
+                    {isAuthenticated && canBookAppointments(user) && (
                       <button
                         onClick={() => {
                           setIsOpen(false);

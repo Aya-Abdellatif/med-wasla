@@ -43,6 +43,7 @@ export function VerificationStatusNotice({ status }: VerificationStatusNoticePro
         <Icon className="w-4 h-4 shrink-0 mt-0.5" style={{ color: config.iconColor }} />
         <p className="flex-1 leading-snug">{config.message}</p>
         <button
+          type="button"
           onClick={() => setDismissed(true)}
           className="shrink-0 opacity-60 hover:opacity-100 transition-opacity"
           aria-label="Dismiss notification"

@@ -24,7 +24,7 @@ export const topFeatures: ServiceFeature[] = [
   {
     icon: faRobot,
     title: "AI Assistance",
-    description: "Get smart guidance to choose the right medical specialty.",
+    description: "Smart guidance for patients and healthcare providers, anytime.",
   },
   {
     icon: faShieldHeart,
@@ -33,6 +33,22 @@ export const topFeatures: ServiceFeature[] = [
       "Every healthcare professional here is verified to ensure safe, reliable, and quality care.",
   },
 ];
+
+export const aiMedicalAssistantService: ServiceItem = {
+  icon: faBrain,
+  title: "AI Medical Assistant",
+  description:
+    "Describe your symptoms and let our chatbot guide you to the most suitable medical specialty.",
+  features: [
+    "Symptom Analysis",
+    "Specialty Recommendation",
+    "24/7 Assistance",
+    "Smart Healthcare Guidance",
+  ],
+  color: "bg-purple-50 text-purple-500",
+  image:
+    "https://images.unsplash.com/photo-1581093588401-fbb62a02f120?auto=format&fit=crop&w=1080&q=80",
+};
 
 export const services: ServiceItem[] = [
   {
@@ -56,28 +72,60 @@ export const services: ServiceItem[] = [
     description:
       "Schedule professional nursing services at home for follow-up care, monitoring, injections, and medical support.",
     features: [
-    "Home Nursing Services",
-    "Medication & Injection Support",
-    "Patient Monitoring",
-    "Flexible Nurse Scheduling",
+      "Home Nursing Services",
+      "Medication & Injection Support",
+      "Patient Monitoring",
+      "Flexible Nurse Scheduling",
     ],
     color: "bg-blue-50 text-blue-500",
     image:
       "https://images.unsplash.com/photo-1584515933487-779824d29309?auto=format&fit=crop&w=1080&q=80",
   },
+  aiMedicalAssistantService,
+];
+
+export const providerAiMedicalAssistantService: ServiceItem = {
+  ...aiMedicalAssistantService,
+  description:
+    "Use AI support for quick clinical reference, patient intake questions, and specialty guidance while you manage your practice.",
+  features: [
+    "Clinical Reference Support",
+    "Patient Intake Guidance",
+    "24/7 Assistance",
+    "Smart Practice Support",
+  ],
+};
+
+export const providerServices: ServiceItem[] = [
   {
-    icon: faBrain,
-    title: "AI Medical Assistant",
+    icon: faCalendarCheck,
+    title: "Clinic & Schedule Management",
     description:
-      "Describe your symptoms and let our chatbot guide you to the most suitable medical specialty.",
+      "Manage your weekly schedule, define your working hours, and let patients book appointments directly with automated slot coordination.",
     features: [
-      "Symptom Analysis",
-      "Specialty Recommendation",
-      "24/7 Assistance",
-      "Smart Healthcare Guidance",
+      "Custom Working Hours",
+      "Automated Booking Management",
+      "Real-time Appointment Reminders",
+      "Patient Medical History Access",
     ],
-    color: "bg-purple-50 text-purple-500",
+    color: "bg-teal-50 text-[#14B8A6]",
     image:
-      "https://images.unsplash.com/photo-1581093588401-fbb62a02f120?auto=format&fit=crop&w=1080&q=80",
+      "https://images.unsplash.com/photo-1622253692010-333f2da6031d?auto=format&fit=crop&w=1080&q=80",
   },
+  {
+    icon: faUserNurse,
+    title: "Home Visit & Nursing Requests",
+    description:
+      "Receive and manage home visit and care requests from patients in your area, and coordinate with nursing staff easily.",
+    features: [
+      "Home Visit Request Management",
+      "Geographic Service Area Setup",
+      "Direct Patient Communication",
+      "Digital Prescription Issuance",
+    ],
+    color: "bg-blue-50 text-blue-500",
+    image:
+      "https://images.unsplash.com/photo-1576091160550-2173dba999ef?auto=format&fit=crop&w=1080&q=80",
+  },
+  providerAiMedicalAssistantService,
 ];

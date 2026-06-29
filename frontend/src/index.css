@@ -30,6 +30,28 @@ summary {
 button:disabled {
   cursor: not-allowed;
 }
+
+/* MedWasla toast palette — consistent with site primary teal */
+.Toastify__toast--success.medwasla-toast {
+  background: #14b8a6 !important;
+  color: #ffffff !important;
+}
+
+.Toastify__toast--info.medwasla-toast {
+  background: #0ea5e9 !important;
+  color: #ffffff !important;
+}
+
+.Toastify__toast--warning.medwasla-toast {
+  background: #d97706 !important;
+  color: #ffffff !important;
+}
+
+.Toastify__toast--error.medwasla-toast {
+  background: #dc2626 !important;
+  color: #ffffff !important;
+}
+
 /* Tailwind v4 import syntax; global visuals are handled through HTML/body class utilities. */
 @theme {
   --color-primary: #14b8a6;
