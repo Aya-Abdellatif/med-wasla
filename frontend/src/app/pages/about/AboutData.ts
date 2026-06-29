@@ -106,7 +106,7 @@ export const teamMembers = [
     name: "Hana Ahmed",
     role: "Full Stack Developer",
     image: "../../assets/Hana.jpg",
-    linkedin: "www.linkedin.com/in/hanasamir",
+    linkedin: "https://www.linkedin.com/in/hanasamir",
     whatsapp: "https://wa.me/201003333333",
   },
   {
