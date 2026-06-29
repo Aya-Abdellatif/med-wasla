@@ -7,6 +7,7 @@ import type { IUser } from "../../models/user.model.js";
 import type { IMedicalSpecialist } from "../../models/medicalSpecialist.model.js";
 import { scheduleAppointmentReminders, cancelAppointmentReminders } from "./reminder.service.js";
 import { sendCancellationNotification } from "./notification.service.js";
+import { syncQueueForSpecialistAndDate } from "../queue/queue.service.js";
 
 export function parseLocalAppointment(dateStr: string, timeStr: string) {
   const [year, month, day] = dateStr.split("-").map(Number);
@@ -21,7 +22,7 @@ export async function expireOverdueAppointments(filter?: {
 }) {
   const query: Record<string, unknown> = {
     status: { $in: ["pending", "confirmed"] },
-    date: { $lt: new Date() },
+    date: { $lt: new Date(Date.now() - 30 * 60 * 1000) },
   };
 
   if (filter?.patientId) {
@@ -94,6 +95,11 @@ export const createAppointmentService = async (data: {
     notes: data.notes,
     status: data.type === "clinic" ? "confirmed" : "pending",
   });
+
+  if (appointment.type === "clinic") {
+    await syncQueueForSpecialistAndDate(appointment.specialistId.toString(), appointment.date)
+      .catch(err => console.error("[Queue Sync] Failed to sync on creation:", err));
+  }
 
   // For clinic appointments: send confirmation immediately on booking
   // For home visits: wait until specialist approves (handled in updateAppointmentStatusService)
@@ -208,6 +214,11 @@ export const updateAppointmentStatusService = async (
   appointment.status = newStatus;
   await appointment.save();
 
+  if (appointment.type === "clinic") {
+    await syncQueueForSpecialistAndDate(appointment.specialistId.toString(), appointment.date)
+      .catch(err => console.error("[Queue Sync] Failed to sync on status update:", err));
+  }
+
   // For home visits: send confirmation when specialist approves
   if (newStatus === "confirmed" && appointment.type === "home") {
     scheduleAppointmentReminders(
@@ -259,6 +270,11 @@ export const cancelAppointmentService = async (
   appointment.status = "cancelled";
   await appointment.save();
 
+  if (appointment.type === "clinic") {
+    await syncQueueForSpecialistAndDate(appointment.specialistId.toString(), appointment.date)
+      .catch(err => console.error("[Queue Sync] Failed to sync on cancellation:", err));
+  }
+
   cancelAppointmentReminders(appointment._id.toString())
     .catch(err => console.error("[Reminder] Failed to cancel reminders:", err));
 
@@ -307,6 +323,9 @@ export const cancelDayAppointmentsService = async (
     ).catch((err: unknown) => console.error("[WhatsApp] Failed to send cancellation:", err));
   }
 
+  await syncQueueForSpecialistAndDate(specialist._id.toString(), startOfDay)
+    .catch(err => console.error("[Queue Sync] Failed to sync on cancel day:", err));
+
   return appointments.length;
 };
 
@@ -339,6 +358,7 @@ export const rescheduleAppointmentService = async (
 
   if (newDate <= new Date()) throw new Error("DATE_IN_PAST");
 
+  const oldDate = appointment.date;
   appointment.date = newDate;
   // clinic stays confirmed (auto-approved); home goes back to pending for re-approval
   appointment.status = appointment.type === "clinic" ? "confirmed" : "pending";
@@ -346,6 +366,17 @@ export const rescheduleAppointmentService = async (
 
   await cancelAppointmentReminders(appointment._id.toString());
   await appointment.save();
+
+  if (appointment.type === "clinic") {
+    // Sync old queue
+    await syncQueueForSpecialistAndDate(appointment.specialistId.toString(), oldDate).catch(err =>
+      console.error("[Queue Sync] Failed to sync old date on reschedule:", err)
+    );
+    // Sync new queue
+    await syncQueueForSpecialistAndDate(appointment.specialistId.toString(), appointment.date).catch(err =>
+      console.error("[Queue Sync] Failed to sync new date on reschedule:", err)
+    );
+  }
 
   if (appointment.type === "clinic") {
     scheduleAppointmentReminders(

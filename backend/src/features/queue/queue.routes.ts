@@ -7,6 +7,7 @@ import {
   leave,
   nextPatient,
   setStatus,
+  getQueueForAppointment,
 } from "./queue.controller.js";
 
 const router = express.Router();
@@ -14,6 +15,8 @@ const router = express.Router();
 router.post("/join", protect, restrictTo("patient"), join);
 
 router.get("/my-position", protect, restrictTo("patient"), myPosition);
+
+router.get("/appointment/:appointmentId", protect, getQueueForAppointment);
 
 router.get("/:specialistId", getQueue);
 

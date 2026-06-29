@@ -38,3 +38,90 @@ export function buildRescheduleIsoDate(date: string, time: string) {
   nextDate.setHours(parsed.hours, parsed.minutes, 0, 0);
   return nextDate.toISOString();
 }
+
+export function getLocalDayNameFromDateStr(dateStr: string): string {
+  const [year, month, day] = dateStr.split("-").map(Number);
+  return new Date(year, month - 1, day, 12, 0, 0, 0).toLocaleDateString("en-US", {
+    weekday: "long",
+  });
+}
+
+export function getLocalDateString(date = new Date()): string {
+  const year = date.getFullYear();
+  const month = String(date.getMonth() + 1).padStart(2, "0");
+  const day = String(date.getDate()).padStart(2, "0");
+  return `${year}-${month}-${day}`;
+}
+
+function getMinutesFromTime(time: string): number {
+  const [hours, minutes] = time.split(":").map(Number);
+  return hours * 60 + minutes;
+}
+
+function getLastSlotStartMinutes(endTime: string): number {
+  return getMinutesFromTime(endTime) - 30;
+}
+
+export function hasTodayHoursEnded(
+  availableSlots: Array<{ day: string; startTime: string; endTime: string }>,
+): boolean {
+  const todayStr = getLocalDateString();
+  const dayName = getLocalDayNameFromDateStr(todayStr);
+  const todaySlot = availableSlots.find((slot) => slot.day === dayName);
+  if (!todaySlot) return false;
+
+  const nowMinutes = new Date().getHours() * 60 + new Date().getMinutes();
+  return nowMinutes >= getLastSlotStartMinutes(todaySlot.endTime);
+}
+
+export function getEarliestBookableDate(
+  availableSlots: Array<{ day: string; startTime: string; endTime: string }>,
+): string {
+  if (hasTodayHoursEnded(availableSlots)) {
+    const tomorrow = new Date();
+    tomorrow.setDate(tomorrow.getDate() + 1);
+    return getLocalDateString(tomorrow);
+  }
+
+  return getLocalDateString();
+}
+
+export function describeEmptySlotsMessage(
+  dateStr: string,
+  workingHours: { start: string; end: string } | null,
+): string {
+  if (!workingHours) {
+    return "This specialist is not scheduled on this day. Please pick another date.";
+  }
+
+  const isToday = dateStr === getLocalDateString();
+  const nowMinutes = new Date().getHours() * 60 + new Date().getMinutes();
+
+  if (isToday && nowMinutes >= getLastSlotStartMinutes(workingHours.end)) {
+    return "Today's available hours have ended. Please choose a future date.";
+  }
+
+  if (isToday) {
+    return "No more times left today. Please choose a future date.";
+  }
+
+  return "All slots are booked for this day. Please pick another date.";
+}
+
+export function emptySlotsTimeLabel(
+  dateStr: string,
+  workingHours: { start: string; end: string } | null,
+): string {
+  if (!workingHours) return "Not available this day";
+
+  const isToday = dateStr === getLocalDateString();
+  const nowMinutes = new Date().getHours() * 60 + new Date().getMinutes();
+
+  if (isToday && nowMinutes >= getLastSlotStartMinutes(workingHours.end)) {
+    return "Today's hours have ended";
+  }
+
+  if (isToday) return "No more times today";
+
+  return "All slots booked";
+}
