@@ -100,13 +100,13 @@ export const teamMembers = [
     role: "Backend Developer",
     image: "../../assets/Aya.jpg",
     linkedin: "https://linkedin.com/in/mohammed-ali",
-    whatsapp: "https://wa.me/201002222222",
+    whatsapp: "https://wa.me/201283633638",
   },
   {
     name: "Hana Ahmed",
-    role: "Backend Developer",
+    role: "Full Stack Developer",
     image: "../../assets/Hana.jpg",
-    linkedin: "https://linkedin.com/in/emily-martinez",
+    linkedin: "www.linkedin.com/in/hanasamir",
     whatsapp: "https://wa.me/201003333333",
   },
   {
