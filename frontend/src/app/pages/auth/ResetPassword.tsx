@@ -1,18 +1,22 @@
 import { useState } from "react";
 import { useLocation, useNavigate } from "react-router-dom";
 import AuthLayout from "../../components/auth/AuthLayout";
-import { showError, showSuccess, showInfo } from "../../../utils/toast";
+import { apiFetch } from "../../../services/api";
+import { showError, showSuccess } from "../../../utils/toast";
 
 export default function ResetPassword() {
   const [showPassword, setShowPassword] = useState(false);
   const [otp, setOtp] = useState("");
   const [newPassword, setNewPassword] = useState("");
+  const [isLoading, setIsLoading] = useState(false);
+  const [isResending, setIsResending] = useState(false);
   const navigate = useNavigate();
   const location = useLocation();
 
-  const email = location.state?.email || "";
+  const email = (location.state as { email?: string } | null)?.email ?? "";
 
-  const handleResetPassword = () => {
+  const handleResetPassword = async (e: React.FormEvent) => {
+    e.preventDefault();
     if (!otp.trim()) {
       showError("Please enter the OTP code");
       return;
@@ -22,12 +26,35 @@ export default function ResetPassword() {
       return;
     }
 
-    showSuccess("Password reset successfully!");
-    navigate("/home");
+    setIsLoading(true);
+    try {
+      await apiFetch("/api/auth/reset-password", {
+        method: "POST",
+        body: JSON.stringify({ email, otp: otp.trim(), newPassword }),
+      });
+      showSuccess("Password reset successfully!");
+      navigate("/login");
+    } catch (err) {
+      showError(err instanceof Error ? err.message : "Failed to reset password");
+    } finally {
+      setIsLoading(false);
+    }
   };
 
-  const handleResendOtp = () => {
-    showInfo("OTP resent to your email");
+  const handleResendOtp = async () => {
+    if (!email) return;
+    setIsResending(true);
+    try {
+      await apiFetch("/api/auth/forgot-password", {
+        method: "POST",
+        body: JSON.stringify({ email }),
+      });
+      showSuccess("A new code was sent to your email.");
+    } catch (err) {
+      showError(err instanceof Error ? err.message : "Could not resend code");
+    } finally {
+      setIsResending(false);
+    }
   };
 
   return (
@@ -35,7 +62,7 @@ export default function ResetPassword() {
       title="Reset Password"
       subtitle="Create a new password"
     >
-      <form className="space-y-6">
+      <form onSubmit={handleResetPassword} className="space-y-6">
         <div>
           <label className="block text-sm font-semibold text-slate-700 mb-2">Email Address</label>
           <div className="relative flex items-center bg-slate-50 border border-slate-200 rounded-full focus-within:border-teal-500 transition-colors">
@@ -48,21 +75,22 @@ export default function ResetPassword() {
             <input
               value={email}
               readOnly
-              className="w-full bg-transparent px-14 py-4 text-slate-900 placeholder:text-slate-400 outline-none rounded-full cursor-not-allowed"
+              className="w-full bg-transparent px-14 py-4 text-slate-900 outline-none rounded-full cursor-not-allowed"
             />
           </div>
         </div>
 
         <div>
           <label className="block text-sm font-semibold text-slate-700 mb-2">OTP</label>
-          <div className="relative flex items-center bg-slate-50 border border-slate-200 rounded-full focus-within:border-teal-500 transition-colors">
-            <input
-              placeholder="Enter OTP"
-              value={otp}
-              onChange={(e) => setOtp(e.target.value)}
-              className="w-full bg-transparent px-5 py-4 text-slate-900 placeholder:text-slate-400 outline-none rounded-full"
-            />
-          </div>
+          <input
+            type="text"
+            inputMode="numeric"
+            maxLength={6}
+            placeholder="123456"
+            value={otp}
+            onChange={(e) => setOtp(e.target.value.replace(/\D/g, ""))}
+            className="w-full rounded-full border border-slate-200 bg-slate-50 px-5 py-4 text-center text-lg tracking-[0.4em] text-slate-900 outline-none focus:border-teal-500"
+          />
         </div>
 
         <div>
@@ -75,8 +103,8 @@ export default function ResetPassword() {
               onChange={(e) => setNewPassword(e.target.value)}
               className="w-full bg-transparent px-5 py-4 text-slate-900 placeholder:text-slate-400 outline-none rounded-full"
             />
-            <button 
-              type="button" 
+            <button
+              type="button"
               onClick={() => setShowPassword(!showPassword)}
               className="absolute right-4 text-slate-400 hover:text-slate-600"
             >
@@ -95,13 +123,14 @@ export default function ResetPassword() {
         </div>
 
         <button
-          type="button"
-          onClick={handleResetPassword}
-          className="w-full rounded-full bg-teal-500 py-4 text-base font-bold text-white shadow-lg hover:bg-teal-600 transition-colors"
+          type="submit"
+          disabled={isLoading}
+          className="w-full rounded-full bg-teal-500 py-4 text-base font-bold text-white shadow-lg hover:bg-teal-600 transition-colors disabled:opacity-50"
         >
-          Reset Password
+          {isLoading ? "Resetting..." : "Reset Password"}
         </button>
-                <div className="flex items-center justify-center gap-8 text-sm">
+
+        <div className="flex items-center justify-center gap-8 text-sm">
           <button
             type="button"
             onClick={() => navigate("/forgot-password")}
@@ -112,9 +141,10 @@ export default function ResetPassword() {
           <button
             type="button"
             onClick={handleResendOtp}
-            className="text-teal-500 underline underline-offset-4 decoration-teal-500 hover:text-teal-600"
+            disabled={isResending}
+            className="text-teal-500 underline underline-offset-4 decoration-teal-500 hover:text-teal-600 disabled:opacity-50"
           >
-            Resend OTP
+            {isResending ? "Sending..." : "Resend OTP"}
           </button>
         </div>
       </form>

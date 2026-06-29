@@ -37,7 +37,13 @@ export default function SignIn() {
         navigate("/");
       }
     } catch (err) {
-      showError(err instanceof Error ? err.message : "Login failed. Please verify credentials.");
+      const message = err instanceof Error ? err.message : "Login failed. Please verify credentials.";
+      if (message === "Please verify your email first") {
+        showError("Your email is not verified. Redirecting to verification page...");
+        navigate(`/verify-otp?email=${encodeURIComponent(email)}`);
+      } else {
+        showError(message);
+      }
     } finally {
       setIsLoading(false);
     }
@@ -82,6 +88,12 @@ export default function SignIn() {
               </button>
             </div>
           </div>
+        </div>
+
+        <div className="flex justify-end">
+          <Link to="/forgot-password" className="text-sm font-semibold text-teal-500 hover:text-teal-600">
+            Forgot password?
+          </Link>
         </div>
 
         <button

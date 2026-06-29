@@ -89,12 +89,17 @@ const toAppError = (err: unknown): AppError => {
 };
 
 
-export const registerUser = async (data: RegisterData): Promise<void> => {
+export const registerUser = async (data: RegisterData): Promise<{ resent: boolean }> => {
   const { name, email, password, phone, governorate, dob, address, role = "patient", ...specialistFields } = data;
 
   const existing = await User.findOne({ email });
-  if (existing)
+  if (existing) {
+    if (!existing.isVerified) {
+      await createAndSendOtp(email);
+      return { resent: true };
+    }
     throw new AppError("This email is already registered", 400);
+  }
 
   if (role === "specialist") {
     const { specialistType, licenseNumber, specialization, serviceAreas } = specialistFields;
@@ -171,6 +176,7 @@ export const registerUser = async (data: RegisterData): Promise<void> => {
     throw toAppError(err);
   }
   await createAndSendOtp(email);
+  return { resent: false };
 };
 
 export const verifyUserOtp = async (email: string, otp: string): Promise<AuthResult> => {
@@ -206,6 +212,8 @@ export const verifyUserOtp = async (email: string, otp: string): Promise<AuthRes
   };
 };
 
+const RESEND_COOLDOWN_MS = 60 * 1000; // 60 seconds
+
 export const resendUserOtp = async (email: string): Promise<void> => {
   const user = await User.findOne({ email });
 
@@ -214,6 +222,15 @@ export const resendUserOtp = async (email: string): Promise<void> => {
 
   if (user.isVerified)
     throw new AppError("Account is already verified", 400);
+
+  const lastOtp = await OTP.findOne({ email, used: false }).sort({ createdAt: -1 });
+  if (lastOtp?.createdAt) {
+    const elapsed = Date.now() - lastOtp.createdAt.getTime();
+    if (elapsed < RESEND_COOLDOWN_MS) {
+      const waitSec = Math.ceil((RESEND_COOLDOWN_MS - elapsed) / 1000);
+      throw new AppError(`Please wait ${waitSec} seconds before requesting a new code`, 429);
+    }
+  }
 
   await createAndSendOtp(email);
 };
@@ -250,4 +267,45 @@ export const getUserById = async (id: string): Promise<IUser> => {
     throw new AppError("User not found", 404);
 
   return user;
+};
+
+export const forgotPasswordUser = async (email: string): Promise<void> => {
+  const user = await User.findOne({ email });
+  if (!user)
+    throw new AppError("No account found with this email", 404);
+
+  if (!user.isVerified)
+    throw new AppError("Please verify your account before resetting your password", 400);
+
+  const lastOtp = await OTP.findOne({ email, used: false }).sort({ createdAt: -1 });
+  if (lastOtp?.createdAt) {
+    const elapsed = Date.now() - lastOtp.createdAt.getTime();
+    if (elapsed < RESEND_COOLDOWN_MS) {
+      const waitSec = Math.ceil((RESEND_COOLDOWN_MS - elapsed) / 1000);
+      throw new AppError(`Please wait ${waitSec} seconds before requesting a new code`, 429);
+    }
+  }
+
+  await createAndSendOtp(email);
+};
+
+export const resetPasswordUser = async (email: string, otp: string, newPassword: string): Promise<void> => {
+  const record = await OTP.findOne({ email, used: false });
+
+  if (!record || record.expiresAt < new Date())
+    throw new AppError("Invalid or expired OTP", 400);
+
+  const isValid = await bcrypt.compare(otp, record.otp);
+  if (!isValid)
+    throw new AppError("Invalid or expired OTP", 400);
+
+  record.used = true;
+  await record.save();
+
+  const user = await User.findOne({ email }).select("+password");
+  if (!user)
+    throw new AppError("User not found", 404);
+
+  user.password = newPassword;
+  await user.save();
 };

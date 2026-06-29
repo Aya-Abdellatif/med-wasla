@@ -81,11 +81,6 @@ export const updatePatientProfileByUserId = async (_id: string, data: UpdatePati
 
     const patient = await User.findOne({ _id });
 
-    console.log("patient: ", patient);
-
-    console.log("collection: ", User.collection);
-
-
     if (!patient) {
         throw new AppError("Patient profile not found", 404);
     }
