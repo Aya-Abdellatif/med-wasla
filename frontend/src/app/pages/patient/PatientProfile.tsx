@@ -1,5 +1,6 @@
 import { useEffect, useState, useRef, type ChangeEvent } from "react";
 import { useAuth } from "../../context/useAuth";
+import type { DiseaseRecord, User } from "../../context/AuthContext";
 import { fetchPatientProfile, updatePatientProfile, updatePatientSecurity, type PatientProfileApi } from "../../../services/patientApi";
 import {
   User as UserIcon,
@@ -403,7 +404,7 @@ function PersonalTab({ profile, onSave, isLoading }: {
 }
 
 // ─── Security Tab ───────────────────────────────────────────────
-function SecurityTab({ user, onSave }: { user: any; onSave: (payload: { currentPassword: string; email: string; password?: string }) => Promise<void>; }) {
+function SecurityTab({ user, onSave }: { user: User | null; onSave: (payload: { currentPassword: string; email: string; password?: string }) => Promise<void>; }) {
   const [editing, setEditing] = useState(false);
   const [savedEmail, setSavedEmail] = useState(user?.email || "");
   const [form, setForm] = useState({
@@ -812,7 +813,7 @@ export function PatientProfile() {
 
           {user?.diseaseHistory && user.diseaseHistory.length > 0 ? (
             <div className="space-y-3">
-              {user.diseaseHistory.map((record: any) => (
+              {user.diseaseHistory.map((record: DiseaseRecord) => (
                 <div key={record.id} className="p-4 border border-border rounded-xl bg-muted/10">
                   <div className="flex items-start justify-between mb-2">
                     <h3 className="font-semibold text-fg">{record.disease}</h3>
