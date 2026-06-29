@@ -37,7 +37,7 @@ export async function updatePatientProfile(userId: string, payload: {
   address: string;
   dob: string;
   photoUrl: string;
-}): Promise<PatientProfileApi> {
-  const { data } = await axiosClient.patch<PatientProfileApi>(`/api/patient/profile/${userId}`, payload);
+}): Promise<PatientProfileApi["user"]> {
+  const { data } = await axiosClient.patch<PatientProfileApi["user"]>(`/api/patient/profile/${userId}`, payload);
   return data;
 }

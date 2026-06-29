@@ -31,6 +31,11 @@ button:disabled {
   cursor: not-allowed;
 }
 
+input[type="password"]::-ms-reveal,
+input[type="password"]::-ms-clear {
+  display: none;
+}
+
 /* MedWasla toast palette — consistent with site primary teal */
 .Toastify__toast--success.medwasla-toast {
   background: #14b8a6 !important;

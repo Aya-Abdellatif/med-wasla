@@ -69,8 +69,9 @@ function InfoRow({ label, value, icon: Icon }: { label: string; value?: string; 
 }
 
 // ─── Personal Info Tab ──────────────────────────────────────────
-function PersonalTab({ profile, onSave }: {
-  profile: PatientProfileApi["user"];
+function PersonalTab({ profile, onSave, isLoading }: {
+  profile: PatientProfileApi["user"] | null;
+  isLoading?: boolean;
   onSave: (payload: {
     name: string;
     phone: string;
@@ -81,12 +82,12 @@ function PersonalTab({ profile, onSave }: {
   }) => Promise<void>;
 }) {
   const getInitialState = () => ({
-    name: profile.name || "",
-    phone: profile.phone || "1234567890",
-    dob: profile.dob ? profile.dob.slice(0, 10) : "",
-    governorate: profile.governorate || "",
-    address: profile.address || "",
-    photoUrl: profile.photoUrl || "",
+    name: profile?.name || "",
+    phone: profile?.phone || "",
+    dob: profile?.dob ? profile.dob.slice(0, 10) : "",
+    governorate: profile?.governorate || "",
+    address: profile?.address || "",
+    photoUrl: profile?.photoUrl || "",
   });
 
   const [editing, setEditing] = useState(false);
@@ -116,6 +117,10 @@ function PersonalTab({ profile, onSave }: {
     setForm(nextState);
     // NOTE: intentionally NOT resetting isSaving here — handleSave's finally block owns it
   }, [profile]);
+
+  if (isLoading && !profile) {
+    return <div className="py-10 text-center text-sm text-fg-muted">Loading profile...</div>;
+  }
 
   const filteredGovs = EGYPTIAN_GOVERNORATES.filter((g) =>
     g.toLowerCase().includes(govSearch.toLowerCase())
@@ -148,6 +153,9 @@ function PersonalTab({ profile, onSave }: {
         photoUrl: form.photoUrl,
       });
       setSaved(form);
+      // console.log("setSaved called");
+      // console.log(saved);
+      // console.log(form);
       setErrors({});
       setSuccess(true);
       setEditing(false);
@@ -200,10 +208,10 @@ function PersonalTab({ profile, onSave }: {
             value={
               saved?.dob
                 ? new Date(saved.dob).toLocaleDateString("en-US", {
-                    year: "numeric",
-                    month: "long",
-                    day: "numeric",
-                  })
+                  year: "numeric",
+                  month: "long",
+                  day: "numeric",
+                })
                 : undefined
             }
             icon={Calendar}
@@ -237,7 +245,7 @@ function PersonalTab({ profile, onSave }: {
               // eslint-disable-next-line @next/next/no-img-element
               <img src={form.photoUrl} alt="avatar" className="w-full h-full object-cover" />
             ) : (
-              <span className="uppercase">{(profile.name || "P").charAt(0)}</span>
+              <span className="uppercase">{(profile?.name || "P").charAt(0)}</span>
             )}
           </div>
           <button
@@ -252,14 +260,14 @@ function PersonalTab({ profile, onSave }: {
         </div>
         <div className="flex-1">
           <label className="block text-sm font-medium text-fg mb-1.5">Full Name</label>
-        <input
-          type="text"
-          value={form.name}
-          onChange={(e) => { setForm({ ...form, name: e.target.value }); setErrors({ ...errors, name: "" }); }}
-          placeholder="e.g. Ahmed Mohamed"
-          className={`w-full px-4 py-3 bg-input-background border rounded-xl focus:outline-none focus:ring-2 focus:ring-primary transition-colors ${errors.name ? "border-red-400 focus:ring-red-300" : "border-border"}`}
-        />
-        <FieldError msg={errors.name} />
+          <input
+            type="text"
+            value={form.name}
+            onChange={(e) => { setForm({ ...form, name: e.target.value }); setErrors({ ...errors, name: "" }); }}
+            placeholder="e.g. Ahmed Mohamed"
+            className={`w-full px-4 py-3 bg-input-background border rounded-xl focus:outline-none focus:ring-2 focus:ring-primary transition-colors ${errors.name ? "border-red-400 focus:ring-red-300" : "border-border"}`}
+          />
+          <FieldError msg={errors.name} />
         </div>
       </div>
 
@@ -422,14 +430,21 @@ function SecurityTab({ user }: { user: any }) {
 
   const validate = () => {
     const e: Record<string, string> = {};
+    const isPasswordChanged = form.newPassword || form.confirmPassword;
+
     if (!form.email.trim()) e.email = "Email is required.";
     else if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(form.email)) e.email = "Enter a valid email address.";
-    if (form.newPassword || form.currentPassword || form.confirmPassword) {
-      if (!form.currentPassword) e.currentPassword = "Current password is required to make changes.";
+
+    if (!form.currentPassword) {
+      e.currentPassword = "Current password is required to make changes.";
+    }
+
+    if (isPasswordChanged) {
       if (!form.newPassword) e.newPassword = "New password is required.";
       else if (form.newPassword.length < 8) e.newPassword = "Password must be at least 8 characters.";
       if (form.newPassword !== form.confirmPassword) e.confirmPassword = "Passwords do not match.";
     }
+
     return e;
   };
 
@@ -493,6 +508,34 @@ function SecurityTab({ user }: { user: any }) {
         <span className="text-xs text-primary bg-primary/5 px-2.5 py-1 rounded-full">Editing</span>
       </div>
 
+      {/* Current Password */}
+      <div>
+        <label className="block text-sm font-medium text-fg mb-1.5">Current Password</label>
+        <p className="text-xs text-fg-muted mb-2">Enter your current password first. This is required to update your email or change your password.</p>
+        <div className="relative">
+          <Lock className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-fg-muted" />
+          <input
+            type={show.current ? "text" : "password"}
+            value={form.currentPassword}
+            onChange={(e) => { setForm({ ...form, currentPassword: e.target.value }); setErrors({ ...errors, currentPassword: "" }); }}
+            placeholder="Enter current password"
+            className={`w-full pl-9 pr-10 py-3 bg-input-background border rounded-xl focus:outline-none focus:ring-2 focus:ring-primary transition-colors text-sm ${errors.currentPassword ? "border-red-400 focus:ring-red-300" : "border-border"}`}
+          />
+          <button type="button" onClick={() => setShow({ ...show, current: !show.current })} className="absolute right-3 top-1/2 -translate-y-1/2 text-fg-muted hover:text-fg">
+            {show.current ? <EyeOff className="w-4 h-4" /> : <Eye className="w-4 h-4" />}
+          </button>
+        </div>
+        <FieldError msg={errors.currentPassword} />
+      </div>
+
+      {/* Divider */}
+
+      <div className="flex items-center gap-3">
+        <div className="flex-1 h-px bg-border" />
+        <span className="text-xs text-fg-muted px-2">Change Email</span>
+        <div className="flex-1 h-px bg-border" />
+      </div>
+
       {/* Email */}
       <div>
         <label className="block text-sm font-medium text-fg mb-1.5">Email Address</label>
@@ -514,25 +557,6 @@ function SecurityTab({ user }: { user: any }) {
         <div className="flex-1 h-px bg-border" />
         <span className="text-xs text-fg-muted px-2">Change Password</span>
         <div className="flex-1 h-px bg-border" />
-      </div>
-
-      {/* Current Password */}
-      <div>
-        <label className="block text-sm font-medium text-fg mb-1.5">Current Password</label>
-        <div className="relative">
-          <Lock className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-fg-muted" />
-          <input
-            type={show.current ? "text" : "password"}
-            value={form.currentPassword}
-            onChange={(e) => { setForm({ ...form, currentPassword: e.target.value }); setErrors({ ...errors, currentPassword: "" }); }}
-            placeholder="Enter current password"
-            className={`w-full pl-9 pr-10 py-3 bg-input-background border rounded-xl focus:outline-none focus:ring-2 focus:ring-primary transition-colors text-sm ${errors.currentPassword ? "border-red-400 focus:ring-red-300" : "border-border"}`}
-          />
-          <button type="button" onClick={() => setShow({ ...show, current: !show.current })} className="absolute right-3 top-1/2 -translate-y-1/2 text-fg-muted hover:text-fg">
-            {show.current ? <EyeOff className="w-4 h-4" /> : <Eye className="w-4 h-4" />}
-          </button>
-        </div>
-        <FieldError msg={errors.currentPassword} />
       </div>
 
       {/* New Password */}
@@ -622,7 +646,10 @@ export function PatientProfile() {
     setProfileError(null);
 
     fetchPatientProfile(user.id)
-      .then((data: PatientProfileApi) => setProfile(data))
+      .then((data: PatientProfileApi) => {
+        setProfile(data);
+        // console.log(data);
+      })
       .catch((error: unknown) => {
         setProfileError(error instanceof Error ? error.message : "Unable to load patient profile.");
       })
@@ -638,9 +665,21 @@ export function PatientProfile() {
     photoUrl: string;
   }) => {
     if (!user?.id) throw new Error("Unable to save profile without a logged in user.");
-    const updatedProfile = await updatePatientProfile(user.id, payload);
-    setProfile(updatedProfile);
-    updateProfile({ name: updatedProfile.user.name, phone: updatedProfile.user.phone });
+    const updatedUser = await updatePatientProfile(user.id, payload);
+
+    setProfile((currentProfile) =>
+      currentProfile
+        ? { ...currentProfile, user: updatedUser }
+        : {
+          patientId: user.id,
+          user: updatedUser,
+          medicalHistory: [],
+          createdAt: undefined,
+          updatedAt: undefined,
+        }
+    );
+
+    updateProfile({ name: updatedUser.name, phone: updatedUser.phone });
   };
 
   const getStatusColor = (status: string) => {
@@ -697,9 +736,8 @@ export function PatientProfile() {
                 <button
                   key={tab.id}
                   onClick={() => setActiveTab(tab.id)}
-                  className={`flex-1 flex items-center justify-center gap-2 px-4 py-4 text-m text-fg font-medium transition-colors relative ${
-                    active ? "text-primary" : "text-fg/95"
-                  }`}
+                  className={`flex-1 flex items-center justify-center gap-2 px-4 py-4 text-m text-fg font-medium transition-colors relative ${active ? "text-primary" : "text-fg/95"
+                    }`}
                 >
                   <Icon className="w-4 h-4" />
                   {tab.label}
@@ -722,11 +760,7 @@ export function PatientProfile() {
             {/* Keep PersonalTab mounted at all times so saving never unmounts it.
                 Show a spinner inside the tab while the initial load is in flight. */}
             <div className={activeTab === "personal" ? "" : "hidden"}>
-              {profile ? (
-                <PersonalTab profile={profile.user} onSave={handleSaveProfile} />
-              ) : isProfileLoading ? (
-                <div className="py-10 text-center text-sm text-fg-muted">Loading profile...</div>
-              ) : null}
+              <PersonalTab profile={profile?.user ?? null} onSave={handleSaveProfile} isLoading={isProfileLoading} />
             </div>
 
             {activeTab === "security" && <SecurityTab user={user} />}
