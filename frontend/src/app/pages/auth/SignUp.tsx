@@ -3,7 +3,7 @@ import { Link, useLocation, useNavigate } from "react-router-dom";
 import {
   ArrowLeft,
   ChevronRight,
-  UserRound,
+  User,
   Stethoscope,
   HeartPulse,
   ChevronDown,
@@ -83,18 +83,18 @@ function Field({
 const roleMeta = {
   patient: {
     label: "Patient",
-    icon: UserRound,
-    color: "bg-blue-100 text-blue-700",
+    icon: User,
+    color: "bg-primary text-white",
   },
   doctor: {
     label: "Doctor",
     icon: Stethoscope,
-    color: "bg-indigo-100 text-indigo-700",
+    color: "bg-primary text-white",
   },
   nurse: {
     label: "Nurse",
     icon: HeartPulse,
-    color: "bg-emerald-100 text-emerald-700",
+    color: "bg-primary text-white",
   },
 } as const;
 
@@ -178,7 +178,9 @@ export default function SignUp() {
   const [formStep, setFormStep] = useState(1);
   const [showCert, setShowCert] = useState(false);
   const [fieldErrors, setFieldErrors] = useState<FieldErrors>({});
-  const [touched, setTouched] = useState<Partial<Record<FieldName, boolean>>>({});
+  const [touched, setTouched] = useState<Partial<Record<FieldName, boolean>>>(
+    {},
+  );
   const [isLoading, setIsLoading] = useState(false);
 
   const [form, setForm] = useState<FormData>({
@@ -388,7 +390,7 @@ export default function SignUp() {
       <button
         type="button"
         onClick={goBack}
-        className="mb-3 inline-flex items-center gap-1 text-sm font-medium text-slate-500 transition-colors hover:text-teal-600"
+        className="mb-2 inline-flex items-center gap-1 text-sm font-medium text-fg-muted transition-all duration-200 hover:text-primary hover:-translate-y-0.5"
       >
         <ArrowLeft className="h-4 w-4" />
         {formStep > 1 ? "Previous step" : "Change role"}
@@ -396,7 +398,7 @@ export default function SignUp() {
 
       <div className="mb-4 flex flex-wrap items-center justify-between gap-3">
         <span
-          className={`inline-flex items-center gap-2 rounded-full px-3 py-1.5 text-xs font-semibold ${roleMeta[roleParam].color}`}
+          className={`inline-flex items-center gap-2 rounded-xl px-3 py-1.5 text-xs font-semibold ${roleMeta[roleParam].color}`}
         >
           <RoleIcon className="h-3.5 w-3.5" />
           {roleMeta[roleParam].label}
@@ -407,7 +409,7 @@ export default function SignUp() {
             {Array.from({ length: totalSteps }, (_, i) => i + 1).map((n) => (
               <div
                 key={n}
-                className={`h-2 rounded-full transition-all duration-300 ${
+                className={`h-2 rounded-xl transition-all duration-300 ${
                   n === formStep
                     ? "w-8 bg-teal-500"
                     : n < formStep
@@ -478,7 +480,11 @@ export default function SignUp() {
               />
             </Field>
 
-            <Field label="Password" error={fieldErrors.password} className="lg:col-span-1">
+            <Field
+              label="Password"
+              error={fieldErrors.password}
+              className="lg:col-span-1"
+            >
               <input
                 type="password"
                 value={form.password}
@@ -500,7 +506,9 @@ export default function SignUp() {
               <input
                 type="password"
                 value={form.confirmPassword}
-                onChange={(e) => handleChange("confirmPassword", e.target.value)}
+                onChange={(e) =>
+                  handleChange("confirmPassword", e.target.value)
+                }
                 onBlur={() => handleBlur("confirmPassword")}
                 className={getInputClass(Boolean(fieldErrors.confirmPassword))}
                 placeholder="Re-enter your password"
@@ -513,11 +521,18 @@ export default function SignUp() {
           <div className="grid gap-3 lg:grid-cols-3">
             {isDoctor && (
               <>
-                <Field label="Medical specialty" error={fieldErrors.specialization}>
+                <Field
+                  label="Medical specialty"
+                  error={fieldErrors.specialization}
+                >
                   <select
                     value={form.specialization}
-                    onChange={(e) => handleChange("specialization", e.target.value)}
-                    className={getInputClass(Boolean(fieldErrors.specialization))}
+                    onChange={(e) =>
+                      handleChange("specialization", e.target.value)
+                    }
+                    className={getInputClass(
+                      Boolean(fieldErrors.specialization),
+                    )}
                   >
                     <option value="" disabled>
                       Select specialty
@@ -532,22 +547,30 @@ export default function SignUp() {
                 <Field label="License number" error={fieldErrors.licenseNumber}>
                   <input
                     value={form.licenseNumber}
-                    onChange={(e) => handleChange("licenseNumber", e.target.value)}
-                    className={getInputClass(Boolean(fieldErrors.licenseNumber))}
+                    onChange={(e) =>
+                      handleChange("licenseNumber", e.target.value)
+                    }
+                    className={getInputClass(
+                      Boolean(fieldErrors.licenseNumber),
+                    )}
                   />
                 </Field>
                 <Field label="Consultation fee (EGP)">
                   <input
                     type="number"
                     value={form.consultationFee}
-                    onChange={(e) => handleChange("consultationFee", e.target.value)}
+                    onChange={(e) =>
+                      handleChange("consultationFee", e.target.value)
+                    }
                     className={getInputClass()}
                   />
                 </Field>
                 <Field label="Clinic address" className="lg:col-span-2">
                   <input
                     value={form.clinicAddress}
-                    onChange={(e) => handleChange("clinicAddress", e.target.value)}
+                    onChange={(e) =>
+                      handleChange("clinicAddress", e.target.value)
+                    }
                     className={getInputClass()}
                   />
                 </Field>
@@ -570,18 +593,27 @@ export default function SignUp() {
 
             {isNurse && (
               <>
-                <Field label="Nursing license" error={fieldErrors.licenseNumber}>
+                <Field
+                  label="Nursing license"
+                  error={fieldErrors.licenseNumber}
+                >
                   <input
                     value={form.licenseNumber}
-                    onChange={(e) => handleChange("licenseNumber", e.target.value)}
-                    className={getInputClass(Boolean(fieldErrors.licenseNumber))}
+                    onChange={(e) =>
+                      handleChange("licenseNumber", e.target.value)
+                    }
+                    className={getInputClass(
+                      Boolean(fieldErrors.licenseNumber),
+                    )}
                   />
                 </Field>
                 <Field label="Service areas" error={fieldErrors.serviceArea}>
                   <input
                     placeholder="e.g. Maadi, Nasr City"
                     value={form.serviceArea}
-                    onChange={(e) => handleChange("serviceArea", e.target.value)}
+                    onChange={(e) =>
+                      handleChange("serviceArea", e.target.value)
+                    }
                     className={getInputClass(Boolean(fieldErrors.serviceArea))}
                   />
                 </Field>
@@ -589,7 +621,9 @@ export default function SignUp() {
                   <input
                     type="number"
                     value={form.consultationFee}
-                    onChange={(e) => handleChange("consultationFee", e.target.value)}
+                    onChange={(e) =>
+                      handleChange("consultationFee", e.target.value)
+                    }
                     className={getInputClass()}
                   />
                 </Field>
@@ -607,7 +641,9 @@ export default function SignUp() {
 
             <div
               className={`lg:col-span-3 rounded-xl border ${
-                fieldErrors.certTitle || fieldErrors.certIssuer || fieldErrors.certUrl
+                fieldErrors.certTitle ||
+                fieldErrors.certIssuer ||
+                fieldErrors.certUrl
                   ? "border-red-200"
                   : "border-slate-200"
               }`}
@@ -666,27 +702,27 @@ export default function SignUp() {
             <button
               type="button"
               onClick={goNext}
-              className="flex w-full items-center justify-center gap-2 rounded-2xl bg-teal-500 py-3 text-sm font-bold text-white transition-colors hover:bg-teal-600"
+              className="w-full rounded-xl bg-primary border-2 border-primary py-3 text-base font-bold cursor-pointer text-white shadow-lg  transition-all duration-300 ease-in-out hover:-translate-y-0.5 hover:bg-transparent hover:text-primary hover:shadow-md whitespace-nowrap"
             >
               Continue
-              <ChevronRight className="h-4 w-4" />
+              {/* <ChevronRight className="h-4 w-4" /> */}
             </button>
           ) : (
             <button
               type="submit"
               disabled={isLoading}
-              className="w-full rounded-2xl bg-teal-500 py-3 text-sm font-bold text-white transition-colors hover:bg-teal-600 disabled:opacity-50"
+              className="w-full rounded-xl bg-primary border-2 border-primary py-3 text-base font-bold cursor-pointer text-white shadow-lg  transition-all duration-300 ease-in-out hover:-translate-y-0.5 hover:bg-transparent hover:text-primary hover:shadow-md whitespace-nowrap"
             >
               {isLoading ? "Creating account..." : "Create account"}
             </button>
           )}
         </div>
 
-        <p className="text-center text-sm text-slate-600">
+        <p className="mt-6 text-center text-lg text-fg-muted">
           Already have an account?{" "}
           <Link
             to="/login"
-            className="font-bold text-teal-600 hover:text-teal-700"
+            className="inline-block font-bold text-primary transition-transform duration-200 hover:text-primary/80 hover:-translate-y-0.5"
           >
             Sign in
           </Link>

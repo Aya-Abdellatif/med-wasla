@@ -7,7 +7,9 @@ import {
   faCalendarCheck,
   faBrain,
 } from "@fortawesome/free-solid-svg-icons";
-
+import nurseImage from "../../../assets/nurse.png";
+import clinicImage from "../../../assets/clinic.jpg";
+import homeImage from "../../../assets/home.jpeg";
 import type { ServiceFeature, ServiceItem } from "./serviceTypes";
 
 export const topFeatures: ServiceFeature[] = [
@@ -24,7 +26,8 @@ export const topFeatures: ServiceFeature[] = [
   {
     icon: faRobot,
     title: "AI Assistance",
-    description: "Smart guidance for patients and healthcare providers, anytime.",
+    description:
+      "Smart guidance for patients and healthcare providers, anytime.",
   },
   {
     icon: faShieldHeart,
@@ -78,8 +81,7 @@ export const services: ServiceItem[] = [
       "Flexible Nurse Scheduling",
     ],
     color: "bg-blue-50 text-blue-500",
-    image:
-      "https://images.unsplash.com/photo-1584515933487-779824d29309?auto=format&fit=crop&w=1080&q=80",
+    image: nurseImage,
   },
   aiMedicalAssistantService,
 ];
@@ -109,8 +111,7 @@ export const providerServices: ServiceItem[] = [
       "Patient Medical History Access",
     ],
     color: "bg-teal-50 text-[#14B8A6]",
-    image:
-      "https://images.unsplash.com/photo-1622253692010-333f2da6031d?auto=format&fit=crop&w=1080&q=80",
+    image: clinicImage,
   },
   {
     icon: faUserNurse,
@@ -124,8 +125,7 @@ export const providerServices: ServiceItem[] = [
       "Digital Prescription Issuance",
     ],
     color: "bg-blue-50 text-blue-500",
-    image:
-      "https://images.unsplash.com/photo-1576091160550-2173dba999ef?auto=format&fit=crop&w=1080&q=80",
+    image: homeImage,
   },
   providerAiMedicalAssistantService,
 ];
