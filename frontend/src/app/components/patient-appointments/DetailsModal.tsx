@@ -234,7 +234,7 @@ export function DetailsModal({ appointment, onClose }: { appointment: Appointmen
                                             {queueData.isActive && queueData.entries.length > 0 && (
                                                 <div className="flex flex-col items-center gap-2 p-3 bg-white rounded-xl border border-border/60 shadow-xs">
                                                     <div className="flex items-center gap-3 w-full overflow-x-auto py-2 justify-center scrollbar-none">
-                                                        <div className="flex flex-col items-center shrink-0 min-w-[70px] border-r border-dashed border-border pr-3 mr-1">
+                                                        <div className="flex flex-col items-center shrink-0 min-w-17.5 border-r border-dashed border-border pr-3 mr-1">
                                                             <div className="w-10 h-10 rounded-lg bg-primary/15 border border-primary/20 flex items-center justify-center text-primary font-bold shadow-xs">
                                                                 🚪
                                                             </div>
@@ -280,7 +280,7 @@ export function DetailsModal({ appointment, onClose }: { appointment: Appointmen
                                                                         const isInProgress = entry.status === "in_progress";
                                                                         
                                                                         let bgClass = "bg-muted text-muted-foreground border-slate-200";
-                                                                        let label = "";
+                                                                        let label: string;
                                                                         let labelText = "";
                                                                         
                                                                         if (isInProgress) {
