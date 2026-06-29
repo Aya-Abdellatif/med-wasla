@@ -41,3 +41,12 @@ export async function updatePatientProfile(userId: string, payload: {
   const { data } = await axiosClient.patch<PatientProfileApi["user"]>(`/api/patient/profile/${userId}`, payload);
   return data;
 }
+
+export async function updatePatientSecurity(userId: string, payload: {
+  currentPassword: string;
+  email: string;
+  password?: string;
+}): Promise<PatientProfileApi["user"]> {
+  const { data } = await axiosClient.patch<PatientProfileApi["user"]>(`/api/patient/profile/${userId}`, payload);
+  return data;
+}

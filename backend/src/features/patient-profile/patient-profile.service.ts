@@ -74,13 +74,13 @@ export interface UpdatePatientProfileDto {
     governorate?: string;
     address?: string;
     password?: string;
+    currentPassword?: string;
     dob?: Date;
 }
 
 export const updatePatientProfileByUserId = async (_id: string, data: UpdatePatientProfileDto) => {
 
-    const patient = await User.findOne({ _id });
-
+    const patient = await User.findOne({ _id }).select("+password");
     if (!patient) {
         throw new AppError("Patient profile not found", 404);
     }
@@ -117,10 +117,17 @@ export const updatePatientProfileByUserId = async (_id: string, data: UpdatePati
     if (data.dob !== undefined) patient.dob = data.dob;
 
     if (data.password) {
-        patient.password = await bcrypt.hash(data.password, 10);
+      if (data.currentPassword) {
+        const isMatch = await bcrypt.compare(data.currentPassword, patient.password);
+        if (!isMatch) {
+          throw new AppError("Current password is incorrect", 400);
+        }
+      }
+      patient.password = data.password;
     }
 
     await patient.save();
 
-    return patient;
+    const updatedPatient = await User.findOne({ _id })
+    return updatedPatient;
 };

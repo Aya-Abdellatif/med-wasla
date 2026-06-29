@@ -1,6 +1,6 @@
 import { useEffect, useState, useRef, type ChangeEvent } from "react";
 import { useAuth } from "../../context/useAuth";
-import { fetchPatientProfile, updatePatientProfile, type PatientProfileApi } from "../../../services/patientApi";
+import { fetchPatientProfile, updatePatientProfile, updatePatientSecurity, type PatientProfileApi } from "../../../services/patientApi";
 import {
   User as UserIcon,
   Mail,
@@ -400,7 +400,7 @@ function PersonalTab({ profile, onSave, isLoading }: {
 }
 
 // ─── Security Tab ───────────────────────────────────────────────
-function SecurityTab({ user }: { user: any }) {
+function SecurityTab({ user, onSave }: { user: any; onSave: (payload: { currentPassword: string; email: string; password?: string }) => Promise<void>; }) {
   const [editing, setEditing] = useState(false);
   const [savedEmail, setSavedEmail] = useState(user?.email || "");
   const [form, setForm] = useState({
@@ -411,7 +411,9 @@ function SecurityTab({ user }: { user: any }) {
   });
   const [show, setShow] = useState({ current: false, newPw: false, confirm: false });
   const [errors, setErrors] = useState<Record<string, string>>({});
+  const [saveError, setSaveError] = useState<string>("");
   const [success, setSuccess] = useState(false);
+  const [isSaving, setIsSaving] = useState(false);
 
   const getStrength = (pw: string) => {
     if (!pw) return 0;
@@ -430,12 +432,14 @@ function SecurityTab({ user }: { user: any }) {
 
   const validate = () => {
     const e: Record<string, string> = {};
+    const isEmailChanged = form.email.trim() !== savedEmail.trim();
     const isPasswordChanged = form.newPassword || form.confirmPassword;
+    const requireCurrentPassword = isEmailChanged || isPasswordChanged;
 
     if (!form.email.trim()) e.email = "Email is required.";
     else if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(form.email)) e.email = "Enter a valid email address.";
 
-    if (!form.currentPassword) {
+    if (requireCurrentPassword && !form.currentPassword) {
       e.currentPassword = "Current password is required to make changes.";
     }
 
@@ -448,14 +452,28 @@ function SecurityTab({ user }: { user: any }) {
     return e;
   };
 
-  const handleSave = () => {
+  const handleSave = async () => {
     const e = validate();
     if (Object.keys(e).length) { setErrors(e); return; }
-    setSavedEmail(form.email);
-    setErrors({});
-    setForm({ ...form, currentPassword: "", newPassword: "", confirmPassword: "" });
-    setEditing(false);
-    setSuccess(true);
+    setSaveError("");
+    setIsSaving(true);
+
+    try {
+      await onSave({
+        currentPassword: form.currentPassword,
+        email: form.email,
+        password: form.newPassword || undefined,
+      });
+      setSavedEmail(form.email);
+      setErrors({});
+      setForm({ ...form, currentPassword: "", newPassword: "", confirmPassword: "" });
+      setEditing(false);
+      setSuccess(true);
+    } catch (error) {
+      setSaveError(error instanceof Error ? error.message : "Unable to save security settings.");
+    } finally {
+      setIsSaving(false);
+    }
   };
 
   const handleCancel = () => {
@@ -507,29 +525,27 @@ function SecurityTab({ user }: { user: any }) {
         <p className="text-sm text-fg-muted">Update your email or change your password.</p>
         <span className="text-xs text-primary bg-primary/5 px-2.5 py-1 rounded-full">Editing</span>
       </div>
-
-      {/* Current Password */}
-      <div>
-        <label className="block text-sm font-medium text-fg mb-1.5">Current Password</label>
-        <p className="text-xs text-fg-muted mb-2">Enter your current password first. This is required to update your email or change your password.</p>
-        <div className="relative">
-          <Lock className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-fg-muted" />
-          <input
-            type={show.current ? "text" : "password"}
-            value={form.currentPassword}
-            onChange={(e) => { setForm({ ...form, currentPassword: e.target.value }); setErrors({ ...errors, currentPassword: "" }); }}
-            placeholder="Enter current password"
-            className={`w-full pl-9 pr-10 py-3 bg-input-background border rounded-xl focus:outline-none focus:ring-2 focus:ring-primary transition-colors text-sm ${errors.currentPassword ? "border-red-400 focus:ring-red-300" : "border-border"}`}
-          />
-          <button type="button" onClick={() => setShow({ ...show, current: !show.current })} className="absolute right-3 top-1/2 -translate-y-1/2 text-fg-muted hover:text-fg">
-            {show.current ? <EyeOff className="w-4 h-4" /> : <Eye className="w-4 h-4" />}
-          </button>
+      {saveError && (
+        <div className="rounded-2xl border border-red-200 bg-red-50 px-4 py-3 text-sm text-red-700">
+          {saveError}
         </div>
-        <FieldError msg={errors.currentPassword} />
+      )}
+      <div className="relative">
+        <Lock className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-fg-muted" />
+        <input
+          type={show.current ? "text" : "password"}
+          value={form.currentPassword}
+          onChange={(e) => { setForm({ ...form, currentPassword: e.target.value }); setErrors({ ...errors, currentPassword: "" }); }}
+          placeholder="Enter current password"
+          className={`w-full pl-9 pr-10 py-3 bg-input-background border rounded-xl focus:outline-none focus:ring-2 focus:ring-primary transition-colors text-sm ${errors.currentPassword ? "border-red-400 focus:ring-red-300" : "border-border"}`}
+        />
+        <button type="button" onClick={() => setShow({ ...show, current: !show.current })} className="absolute right-3 top-1/2 -translate-y-1/2 text-fg-muted hover:text-fg">
+          {show.current ? <EyeOff className="w-4 h-4" /> : <Eye className="w-4 h-4" />}
+        </button>
       </div>
+      <FieldError msg={errors.currentPassword} />
 
       {/* Divider */}
-
       <div className="flex items-center gap-3">
         <div className="flex-1 h-px bg-border" />
         <span className="text-xs text-fg-muted px-2">Change Email</span>
@@ -552,14 +568,12 @@ function SecurityTab({ user }: { user: any }) {
         <FieldError msg={errors.email} />
       </div>
 
-      {/* Divider */}
       <div className="flex items-center gap-3">
         <div className="flex-1 h-px bg-border" />
         <span className="text-xs text-fg-muted px-2">Change Password</span>
         <div className="flex-1 h-px bg-border" />
       </div>
 
-      {/* New Password */}
       <div>
         <label className="block text-sm font-medium text-fg mb-1.5">New Password</label>
         <div className="relative">
@@ -588,7 +602,6 @@ function SecurityTab({ user }: { user: any }) {
         <FieldError msg={errors.newPassword} />
       </div>
 
-      {/* Confirm Password */}
       <div>
         <label className="block text-sm font-medium text-fg mb-1.5">Confirm New Password</label>
         <div className="relative">
@@ -612,11 +625,11 @@ function SecurityTab({ user }: { user: any }) {
         <FieldError msg={errors.confirmPassword} />
       </div>
 
-      {/* Actions */}
       <div className="flex items-center gap-3 pt-2">
         <button
           onClick={handleSave}
-          className="group flex items-center gap-2 bg-primary text-white border-2 border-primary text-base px-3 py-1 rounded-xl cursor-pointer transition-all duration-300 ease-in-out hover:border-primary hover:-translate-y-0.5 hover:bg-white hover:text-primary hover:shadow-md whitespace-nowrap"
+          disabled={isSaving}
+          className="group flex items-center gap-2 bg-primary text-white border-2 border-primary text-base px-3 py-1 rounded-xl cursor-pointer transition-all duration-300 ease-in-out hover:border-primary hover:-translate-y-0.5 hover:bg-white hover:text-primary hover:shadow-md whitespace-nowrap disabled:opacity-60 disabled:cursor-not-allowed disabled:hover:translate-y-0"
         >
           <Save className="w-4 h-4" />
           Save Changes
@@ -763,7 +776,15 @@ export function PatientProfile() {
               <PersonalTab profile={profile?.user ?? null} onSave={handleSaveProfile} isLoading={isProfileLoading} />
             </div>
 
-            {activeTab === "security" && <SecurityTab user={user} />}
+            {activeTab === "security" && <SecurityTab user={user} onSave={async (payload) => {
+              if (!user?.id) throw new Error("Unable to save security settings without a logged in user.");
+              const updatedUser = await updatePatientSecurity(user.id, payload);
+              console.log("updatedUser", updatedUser);
+              if (updatedUser.email) {
+                updateProfile({ email: updatedUser.email });
+                console.log(user);
+              }
+            }} />}
           </div>
         </div>
 
