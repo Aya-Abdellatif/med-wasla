@@ -95,11 +95,9 @@ export const updatePatientProfileByUserId = async (
 
   if (data.name !== undefined) patient.name = data.name;
   if (data.email !== undefined) {
-    const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
-    if (!emailRegex.test(data.email)) {
-      throw new AppError("Invalid email format", 400);
+    if (data.email !== patient.email) {
+      throw new AppError("Email cannot be changed", 400);
     }
-    patient.email = data.email;
   }
   if (data.phone !== undefined) {
     const cleanedPhone = data.phone.trim().replace(/[\s-]/g, "");
@@ -125,11 +123,12 @@ export const updatePatientProfileByUserId = async (
   if (data.dob !== undefined) patient.dob = new Date(data.dob);
 
   if (data.password) {
-    if (data.currentPassword) {
-      const isMatch = await bcrypt.compare(data.currentPassword, patient.password);
-      if (!isMatch) {
-        throw new AppError("Current password is incorrect", 400);
-      }
+    if (!data.currentPassword) {
+      throw new AppError("Current password is required to change password", 400);
+    }
+    const isMatch = await bcrypt.compare(data.currentPassword, patient.password);
+    if (!isMatch) {
+      throw new AppError("Current password is incorrect", 400);
     }
     patient.password = data.password;
   }

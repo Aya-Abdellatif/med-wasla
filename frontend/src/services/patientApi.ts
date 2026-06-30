@@ -66,8 +66,7 @@ export async function removePatientPhoto(userId: string): Promise<void> {
 
 export async function updatePatientSecurity(userId: string, payload: {
   currentPassword: string;
-  email: string;
-  password?: string;
+  password: string;
 }): Promise<PatientProfileApi["user"]> {
   const { data } = await axiosClient.patch<PatientProfileApi["user"]>(`/api/patient/profile/${userId}`, payload);
   return data;
