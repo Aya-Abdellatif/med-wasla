@@ -22,7 +22,7 @@ export async function expireOverdueAppointments(filter?: {
 }) {
   const query: Record<string, unknown> = {
     type: "home",
-    status: { $in: ["pending", "confirmed"] },
+    status: "pending",
     date: { $lt: new Date(Date.now() - 30 * 60 * 1000) },
   };
 
@@ -217,16 +217,15 @@ export const updateAppointmentStatusService = async (
   }
 
   if (appointment.type === "home") {
-    if (isAppointmentPast(appointment.date)) {
-      if (appointment.status === "pending" || appointment.status === "confirmed") {
-        appointment.status = "overdue";
-        await appointment.save();
-      }
+    if (appointment.status === "pending" && isAppointmentPast(appointment.date)) {
+      appointment.status = "overdue";
+      await appointment.save();
       throw new Error("APPOINTMENT_OVERDUE");
     }
 
     const homeTransitions: Record<string, AppointmentStatus[]> = {
       pending: ["confirmed"],
+      confirmed: ["completed", "no_show"],
     };
 
     if (!homeTransitions[appointment.status]?.includes(newStatus)) {
@@ -280,18 +279,12 @@ export const cancelAppointmentService = async (
     throw new Error("CANNOT_CANCEL");
   }
 
-  if (appointment.type === "home") {
-    if (isAppointmentPast(appointment.date)) {
-      if (appointment.status === "pending" || appointment.status === "confirmed") {
-        appointment.status = "overdue";
-        await appointment.save();
-      }
-      throw new Error("APPOINTMENT_OVERDUE");
+  if (appointment.type === "home" && isAppointmentPast(appointment.date)) {
+    if (appointment.status === "pending") {
+      appointment.status = "overdue";
+      await appointment.save();
     }
-
-    if (appointment.status === "overdue") {
-      throw new Error("APPOINTMENT_OVERDUE");
-    }
+    throw new Error("APPOINTMENT_OVERDUE");
   }
 
   if (requesterRole === "patient") {
@@ -387,14 +380,12 @@ export const rescheduleAppointmentService = async (
     throw new Error("CANNOT_RESCHEDULE");
   }
 
-  if (appointment.type === "home") {
-    if (isAppointmentPast(appointment.date)) {
-      if (appointment.status === "pending" || appointment.status === "confirmed") {
-        appointment.status = "overdue";
-        await appointment.save();
-      }
-      throw new Error("APPOINTMENT_OVERDUE");
+  if (appointment.type === "home" && isAppointmentPast(appointment.date)) {
+    if (appointment.status === "pending") {
+      appointment.status = "overdue";
+      await appointment.save();
     }
+    throw new Error("APPOINTMENT_OVERDUE");
   }
 
   if (newDate <= new Date()) throw new Error("DATE_IN_PAST");
