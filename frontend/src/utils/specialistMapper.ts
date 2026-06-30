@@ -33,6 +33,7 @@ export interface ApiSpecialist {
   serviceAreas?: string[];
   areasOfExpertise?: string[];
   verificationStatus?: string;
+  homeVisit?: boolean;
 }
 
 export interface SpecialistCard {
@@ -50,6 +51,7 @@ export interface SpecialistCard {
   availableSlots?: { day: string; startTime: string; endTime: string }[];
   description: string;
   services?: string[];
+  homeVisit?: boolean;
 }
 
 export interface SpecialistProfile extends SpecialistCard {
@@ -152,6 +154,7 @@ export function mapSpecialistToCard(
     availableSlots: specialist.availableSlots ?? [],
     description: specialist.bio ?? "Experienced medical specialist.",
     services: specialist.areasOfExpertise ?? specialist.serviceAreas,
+    homeVisit: specialist.homeVisit ?? false,
   };
 }
 
