@@ -291,16 +291,28 @@ export const rescheduleAppointment = async (
   next: NextFunction
 ) => {
   try {
-    const { date, notes } = req.body;
+    const { date, time, notes } = req.body;
 
-    if (!date) {
-      return next(new AppError("New date is required", 400));
+    if (!date || !time) {
+      return next(new AppError("New date and time are required", 400));
     }
+
+    if (!/^\d{4}-\d{2}-\d{2}$/.test(date)) {
+      return next(new AppError("date must be in YYYY-MM-DD format", 400));
+    }
+
+    if (!/^\d{2}:\d{2}$/.test(time)) {
+      return next(new AppError("time must be in HH:mm format", 400));
+    }
+
+    const newDate = parseLocalAppointment(date, time);
 
     const appointment = await rescheduleAppointmentService(
       req.params.id as string,
       req.user!.id,
-      new Date(date),
+      newDate,
+      date,
+      time,
       notes
     );
 
@@ -319,6 +331,9 @@ export const rescheduleAppointment = async (
       return next(new AppError("This appointment is overdue and can no longer be rescheduled", 400));
     }
     if (msg === "DATE_IN_PAST") return next(new AppError("New date must be in the future", 400));
+    if (msg === "DAY_NOT_AVAILABLE") return next(new AppError("The doctor is not available on this day", 400));
+    if (msg === "SLOT_NOT_AVAILABLE") return next(new AppError("This time slot is not available", 400));
+    if (msg === "SPECIALIST_NOT_FOUND") return next(new AppError("Specialist not found", 404));
     return next(error);
   }
 };
