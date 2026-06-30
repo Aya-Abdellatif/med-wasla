@@ -247,7 +247,7 @@ export function BookingModal({ isOpen, onClose, provider, serviceType }: Booking
 
   const workingDaysText =
     specialistSlots.length > 0
-      ? specialistSlots.map((slot) => `${slot.day} (${slot.startTime}-${slot.endTime})`).join(", ")
+      ? specialistSlots.map((slot) => `${slot.day} (${formatSlotLabel(slot.startTime)}-${formatSlotLabel(slot.endTime)})`).join(", ")
       : "No schedule published yet";
 
   return (

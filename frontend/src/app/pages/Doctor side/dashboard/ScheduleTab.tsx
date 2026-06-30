@@ -1,3 +1,4 @@
+import { useRef } from "react";
 import { Calendar } from "lucide-react";
 import type { Appointment } from "./dashboardTypes";
 import { DASHBOARD_THEME, formatDateLabel } from "./dashboardUtils";
@@ -40,6 +41,8 @@ export function ScheduleTab({
   onGoToHomeService,
   updatingAppointmentId,
 }: ScheduleTabProps) {
+  const dateInputRef = useRef<HTMLInputElement>(null);
+
   const cancellablePending = pendingAppointments.filter(
     (a) => a.backendStatus === "pending" && a.visitType === "home",
   );
@@ -59,12 +62,17 @@ export function ScheduleTab({
           className="flex items-center gap-2 px-3 py-2 border rounded-lg bg-gray-50 cursor-pointer transition-colors"
           style={{ borderColor: "#e5e7eb" }}
         >
-          <Calendar className="w-4 h-4 shrink-0" style={{ color: DASHBOARD_THEME.primary }} />
+          <Calendar
+            className="w-4 h-4 shrink-0 cursor-pointer"
+            style={{ color: DASHBOARD_THEME.primary }}
+            onClick={() => dateInputRef.current?.showPicker()}
+          />
           <input
+            ref={dateInputRef}
             type="date"
             value={selectedDate}
             onChange={(e) => onSelectedDateChange(e.target.value)}
-            className="text-sm font-medium bg-transparent focus:outline-none cursor-pointer"
+            className="text-sm font-medium bg-transparent focus:outline-none cursor-pointer hide-picker-icon"
             style={{ color: DASHBOARD_THEME.text }}
           />
         </label>

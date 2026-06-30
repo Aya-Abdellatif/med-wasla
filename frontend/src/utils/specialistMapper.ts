@@ -90,6 +90,13 @@ export interface FetchSpecialistsResult {
   pagination: PaginationMeta;
 }
 
+function formatSlotTime(hhmm: string): string {
+  const [h, m] = hhmm.split(":").map(Number);
+  const d = new Date();
+  d.setHours(h, m, 0, 0);
+  return d.toLocaleTimeString("en-US", { hour: "numeric", minute: "2-digit", hour12: true });
+}
+
 function resolveUser(specialist: ApiSpecialist): ApiUserRef {
   if (specialist.userId && typeof specialist.userId === "object") {
     return specialist.userId;
@@ -139,7 +146,7 @@ export function mapSpecialistToCard(
     serviceAreas: isDoctor ? undefined : (specialist.serviceAreas ?? []),
     availability: specialist.availableSlots?.length
       ? specialist.availableSlots
-          .map((slot) => `${slot.day} ${slot.startTime}-${slot.endTime}`)
+          .map((slot) => `${slot.day} ${formatSlotTime(slot.startTime)}-${formatSlotTime(slot.endTime)}`)
           .join(", ")
       : "Contact for availability",
     availableSlots: specialist.availableSlots ?? [],

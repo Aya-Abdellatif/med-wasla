@@ -355,7 +355,7 @@ export function MyAppointments() {
     return (
         <div className="min-h-screen bg-muted/20">
             {/* Page Header */}
-            <div className="bg-linear-to-r from-primary to-secondary py-10 px-4">
+             {/*<div className="bg-linear-to-r from-primary to-secondary py-10 px-4">
                 <div className="max-w-5xl mx-auto">
                     <div className="flex items-center gap-3 mb-1">
                         <div className="w-9 h-9 bg-white/20 rounded-xl flex items-center justify-center">
@@ -365,7 +365,7 @@ export function MyAppointments() {
                     </div>
                     <p className="text-primary-foreground/80 ml-12 text-sm">View and manage all your medical appointments in one place</p>
                 </div>
-            </div>
+            </div>*/}
 
             <div className="max-w-5xl mx-auto px-4 py-8 space-y-6">
                 {/* Summary Cards */}
