@@ -144,8 +144,6 @@ export function BookingModal({ isOpen, onClose, provider, serviceType }: Booking
 
     if (!formData.time) newErrors.time = "Time is required";
 
-    if (!formData.reason.trim()) newErrors.reason = "Reason for visit is required";
-
     if (requiresAddress && !formData.address.trim()) {
       newErrors.address = "Address is required for home visits";
     }
@@ -413,7 +411,8 @@ export function BookingModal({ isOpen, onClose, provider, serviceType }: Booking
 
           <div>
             <label htmlFor="reason" className="block mb-2 font-medium text-foreground">
-              Reason for {requiresAddress ? "Visit" : "Appointment"} *
+              Reason for {requiresAddress ? "Visit" : "Appointment"}{" "}
+              <span className="text-muted-foreground font-normal">(optional)</span>
             </label>
             <textarea
               id="reason"
