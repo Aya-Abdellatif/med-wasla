@@ -412,7 +412,6 @@ export function BookingModal({ isOpen, onClose, provider, serviceType }: Booking
           <div>
             <label htmlFor="reason" className="block mb-2 font-medium text-foreground">
               Reason for {requiresAddress ? "Visit" : "Appointment"}{" "}
-              <span className="text-muted-foreground font-normal">(optional)</span>
             </label>
             <textarea
               id="reason"
