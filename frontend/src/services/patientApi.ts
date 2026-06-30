@@ -1,6 +1,13 @@
 import { axiosClient } from "./axiosClient";
 
-export interface PatientProfileResponse {
+export interface PatientProfileMedicalHistory {
+  condition: string;
+  diagnosed: string;
+  treatedBy: string;
+  notes?: string;
+}
+
+export interface PatientProfileApi {
   patientId: string;
   user: {
     id: string;
@@ -10,37 +17,36 @@ export interface PatientProfileResponse {
     address: string;
     role: string;
     photoUrl?: string;
-    dob?: string;
     governorate?: string;
+    dob?: string;
   };
-  medicalHistory: Array<{
-    condition: string;
-    diagnosed: string;
-    treatedBy: string;
-    notes?: string;
-  }>;
+  medicalHistory: PatientProfileMedicalHistory[];
+  createdAt?: string;
+  updatedAt?: string;
 }
 
-export interface UpdatePatientProfilePayload {
-  name?: string;
-  email?: string;
-  phone?: string;
-  address?: string;
-  dob?: string;
-  governorate?: string;
-}
-
-export async function fetchPatientProfile(userId: string): Promise<PatientProfileResponse> {
-  const { data } = await axiosClient.get<PatientProfileResponse>(
-    `/api/patient/profile/${userId}`,
-  );
+export async function fetchPatientProfile(userId: string): Promise<PatientProfileApi> {
+  const { data } = await axiosClient.get<PatientProfileApi>(`/api/patient/profile/${userId}`);
   return data;
 }
 
-export async function updatePatientProfile(
-  userId: string,
-  payload: UpdatePatientProfilePayload,
-) {
-  const { data } = await axiosClient.patch(`/api/patient/profile/${userId}`, payload);
+export async function updatePatientProfile(userId: string, payload: {
+  name: string;
+  phone: string;
+  governorate: string;
+  address: string;
+  dob: string;
+  photoUrl: string;
+}): Promise<PatientProfileApi["user"]> {
+  const { data } = await axiosClient.patch<PatientProfileApi["user"]>(`/api/patient/profile/${userId}`, payload);
+  return data;
+}
+
+export async function updatePatientSecurity(userId: string, payload: {
+  currentPassword: string;
+  email: string;
+  password?: string;
+}): Promise<PatientProfileApi["user"]> {
+  const { data } = await axiosClient.patch<PatientProfileApi["user"]>(`/api/patient/profile/${userId}`, payload);
   return data;
 }
