@@ -9,8 +9,8 @@ export interface Appointment {
   date: string;
   type: string;
   visitType: "clinic" | "home";
-  status: "pending" | "scheduled" | "completed" | "cancelled" | "overdue";
-  backendStatus?: "pending" | "confirmed" | "completed" | "cancelled" | "overdue";
+  status: "pending" | "scheduled" | "completed" | "cancelled" | "overdue" | "no_show";
+  backendStatus?: "pending" | "confirmed" | "completed" | "cancelled" | "overdue" | "no_show";
 }
 
 export interface HomeServiceRequest {
@@ -22,7 +22,7 @@ export interface HomeServiceRequest {
   requestedTime: string;
   status: "pending" | "accepted" | "rejected";
   phone: string;
-  backendStatus?: "pending" | "confirmed" | "completed" | "cancelled" | "overdue";
+  backendStatus?: "pending" | "confirmed" | "completed" | "cancelled" | "overdue" | "no_show";
 }
 
 export interface ProfileForm {

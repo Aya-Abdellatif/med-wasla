@@ -135,12 +135,11 @@ export const syncQueueForSpecialistAndDate = async (specialistId: string, date: 
 	const end = new Date(date);
 	end.setHours(23, 59, 59, 999);
 
-	// Find all clinic appointments for this specialist on this date
 	const appointments = await Appointment.find({
 		specialistId,
 		date: { $gte: start, $lte: end },
 		type: "clinic",
-		status: { $in: ["confirmed", "completed", "cancelled", "overdue"] },
+		status: { $in: ["confirmed", "completed", "cancelled", "overdue", "no_show"] },
 	}).sort({ date: 1 });
 
 	let queue = await Queue.findOne({ specialistId, date: start });
@@ -163,7 +162,6 @@ export const syncQueueForSpecialistAndDate = async (specialistId: string, date: 
 		});
 	}
 
-	// Preserve custom queue entry statuses (like "in_progress") if they exist
 	const existingStatusMap = new Map<string, QueueStatus>();
 	if (queue.entries) {
 		queue.entries.forEach((e) => {
@@ -180,7 +178,11 @@ export const syncQueueForSpecialistAndDate = async (specialistId: string, date: 
 
 		if (appt.status === "completed") {
 			status = "completed";
-		} else if (appt.status === "cancelled" || appt.status === "overdue") {
+		} else if (
+			appt.status === "cancelled" ||
+			appt.status === "overdue" ||
+			appt.status === "no_show"
+		) {
 			status = "cancelled";
 		} else if (existingStatus) {
 			status = existingStatus;
@@ -197,12 +199,10 @@ export const syncQueueForSpecialistAndDate = async (specialistId: string, date: 
 
 	queue.entries = newEntries;
 
-	// Determine currentNumber
 	const inProgressEntry = queue.entries.find((e) => e.status === "in_progress");
 	if (inProgressEntry) {
 		queue.currentNumber = inProgressEntry.queueNumber;
 	} else {
-		// Set currentNumber to the max queueNumber of completed entries, or 0
 		const completedEntries = queue.entries.filter((e) => e.status === "completed");
 		if (completedEntries.length > 0) {
 			queue.currentNumber = Math.max(...completedEntries.map((e) => e.queueNumber));
@@ -215,12 +215,14 @@ export const syncQueueForSpecialistAndDate = async (specialistId: string, date: 
 	return queue;
 };
 
-export const getQueueForAppointment = async (appointmentId: string, patientId: string) => {
+export const getQueueForAppointment = async (appointmentId: string) => {
 	const appointment = await Appointment.findById(appointmentId);
 	if (!appointment) throw new AppError("Appointment not found", 404);
 
-	// Sync the queue to make sure it's up to date
-	const queue = await syncQueueForSpecialistAndDate(appointment.specialistId.toString(), appointment.date);
+	const queue = await syncQueueForSpecialistAndDate(
+		appointment.specialistId.toString(),
+		appointment.date,
+	);
 
 	if (!queue) {
 		return {
@@ -241,9 +243,10 @@ export const getQueueForAppointment = async (appointmentId: string, patientId: s
 		};
 	}
 
-	// Calculate how many waiting/in-progress entries are ahead of this user
 	const waitingAhead = queue.entries.filter(
-		(e) => e.queueNumber < userEntry.queueNumber && (e.status === "waiting" || e.status === "in_progress")
+		(e) =>
+			e.queueNumber < userEntry.queueNumber &&
+			(e.status === "waiting" || e.status === "in_progress"),
 	).length;
 
 	return {

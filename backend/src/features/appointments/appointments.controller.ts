@@ -78,6 +78,10 @@ export const createAppointment = async (
       return next(new AppError("The doctor is not available on this day", 400));
     if (msg === "SLOT_NOT_AVAILABLE")
       return next(new AppError("This time slot is not available", 400));
+    if (msg === "ALREADY_BOOKED_SAME_DAY")
+      return next(
+        new AppError("You already have an appointment with this doctor on this day", 409),
+      );
     return next(error);
   }
 };
@@ -178,8 +182,10 @@ export const updateAppointmentStatus = async (
       return next(new AppError("'status' is required in request body", 400));
     }
 
-    if (!["confirmed", "completed"].includes(status)) {
-      return next(new AppError("Specialists can only set status to 'confirmed' or 'completed'", 400));
+    if (!["confirmed", "completed", "no_show"].includes(status)) {
+      return next(
+        new AppError("Specialists can only set status to 'confirmed', 'completed', or 'no_show'", 400),
+      );
     }
 
     const appointment = await updateAppointmentStatusService(
@@ -203,7 +209,12 @@ export const updateAppointmentStatus = async (
     if (msg === "FORBIDDEN") 
       return next(new AppError("You don't have access to this appointment", 403));
     if (msg === "INVALID_TRANSITION") {
-      return next(new AppError("Invalid status transition. pending→confirmed or confirmed→completed only", 400));
+      return next(
+        new AppError(
+          "Invalid status transition. Home: pending→confirmed. Clinic: confirmed→completed or no_show.",
+          400,
+        ),
+      );
     }
     if (msg === "APPOINTMENT_OVERDUE") {
       return next(new AppError("This appointment is overdue and can no longer be updated", 400));

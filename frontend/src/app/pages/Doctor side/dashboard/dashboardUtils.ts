@@ -60,6 +60,9 @@ export function getStatusBadgeStyle(status: Appointment["status"]) {
   if (status === "completed") {
     return { backgroundColor: DASHBOARD_THEME.successLight, color: DASHBOARD_THEME.success };
   }
+  if (status === "no_show") {
+    return { backgroundColor: "#fef3c7", color: "#b45309" };
+  }
   if (status === "overdue") {
     return { backgroundColor: "#f3f4f6", color: "#4b5563" };
   }

@@ -212,6 +212,37 @@ describe("Appointments Routes", () => {
       expect(res.status).toBe(400);
     });
 
+    it("returns 409 when patient already booked the same doctor on the same day", async () => {
+      const patient = await createPatient();
+      const { specialist } = await createSpecialist();
+      const token = createToken(idOf(patient), "patient");
+      const date = tomorrowDateString();
+
+      const first = await request(app)
+        .post("/api/appointments")
+        .set("Authorization", `Bearer ${token}`)
+        .send({
+          specialistId: idOf(specialist),
+          date,
+          time: "10:00",
+          type: "clinic",
+        });
+
+      expect(first.status).toBe(201);
+
+      const second = await request(app)
+        .post("/api/appointments")
+        .set("Authorization", `Bearer ${token}`)
+        .send({
+          specialistId: idOf(specialist),
+          date,
+          time: "11:00",
+          type: "clinic",
+        });
+
+      expect(second.status).toBe(409);
+    });
+
     it("returns 400 when specialist is not approved", async () => {
       const patient = await createPatient();
       const { specialist } = await createSpecialist("pending@test.com", "pending");
@@ -302,7 +333,7 @@ describe("Appointments Routes", () => {
       expect(res.body.data[0].status).toBe("overdue");
     });
 
-    it("marks past confirmed appointments as overdue when fetched", async () => {
+    it("does not mark past confirmed clinic appointments as overdue when fetched", async () => {
       const patient = await createPatient();
       const { specialist } = await createSpecialist();
       const token = createToken(idOf(patient), "patient");
@@ -324,7 +355,7 @@ describe("Appointments Routes", () => {
         .set("Authorization", `Bearer ${token}`);
 
       expect(res.status).toBe(200);
-      expect(res.body.data[0].status).toBe("overdue");
+      expect(res.body.data[0].status).toBe("confirmed");
     });
 
     it("returns 400 when confirming an overdue appointment", async () => {
@@ -426,10 +457,17 @@ describe("Appointments Routes", () => {
   });
 
   describe("PATCH /api/appointments/:id/status", () => {
-    it("specialist confirms pending appointment", async () => {
+    it("specialist confirms pending home appointment", async () => {
       const patient = await createPatient();
       const { user, specialist } = await createSpecialist();
-      const appointment = await createAppointment(idOf(patient), idOf(specialist), "pending");
+      const appointment = await Appointment.create({
+        patientId: idOf(patient),
+        specialistId: idOf(specialist),
+        date: futureDate(),
+        type: "home",
+        address: "123 Test Street",
+        status: "pending",
+      });
       const token = createToken(idOf(user), "specialist");
 
       const res = await request(app)
@@ -442,10 +480,32 @@ describe("Appointments Routes", () => {
       expect(res.body.data.status).toBe("confirmed");
     });
 
+    it("specialist marks clinic appointment as no show", async () => {
+      const patient = await createPatient();
+      const { user, specialist } = await createSpecialist();
+      const appointment = await createAppointment(idOf(patient), idOf(specialist), "confirmed");
+      const token = createToken(idOf(user), "specialist");
+
+      const res = await request(app)
+        .patch(`/api/appointments/${idOf(appointment)}/status`)
+        .set("Authorization", `Bearer ${token}`)
+        .send({ status: "no_show" });
+
+      expect(res.status).toBe(200);
+      expect(res.body.data.status).toBe("no_show");
+    });
+
     it("returns 400 for invalid status transition", async () => {
       const patient = await createPatient();
       const { user, specialist } = await createSpecialist();
-      const appointment = await createAppointment(idOf(patient), idOf(specialist), "pending");
+      const appointment = await Appointment.create({
+        patientId: idOf(patient),
+        specialistId: idOf(specialist),
+        date: futureDate(),
+        type: "home",
+        address: "123 Test Street",
+        status: "pending",
+      });
       const token = createToken(idOf(user), "specialist");
 
       const res = await request(app)

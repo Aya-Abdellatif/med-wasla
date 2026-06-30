@@ -149,30 +149,38 @@ export function Dashboard() {
   };
 
   const handleCancelAllPending = async () => {
-    const clinicPending = appointments.filter(
-      (a) => a.backendStatus === "pending" && a.visitType === "clinic",
+    const pendingHome = appointments.filter(
+      (a) => a.backendStatus === "pending" && a.visitType === "home",
     );
-    if (clinicPending.length === 0) return;
+    if (pendingHome.length === 0) return;
 
-    setUpdatingAppointmentId("bulk");
+    setUpdatingAppointmentId("bulk-home");
     try {
       await runWithRefresh(
-        () => Promise.all(clinicPending.map((a) => cancelAppointment(a.id))),
-        `${clinicPending.length} appointment(s) cancelled.`,
-        "Failed to cancel appointments",
+        () => Promise.all(pendingHome.map((a) => cancelAppointment(a.id))),
+        `${pendingHome.length} home visit request(s) cancelled.`,
+        "Failed to cancel home visit requests",
       );
     } finally {
       setUpdatingAppointmentId(null);
     }
   };
 
-  const handleConfirmAppointment = async (appointmentId: string) => {
-    setUpdatingAppointmentId(appointmentId);
+  const handleCancelAllUpcoming = async (date: string) => {
+    const upcomingClinic = appointments.filter(
+      (a) =>
+        a.date === date &&
+        a.visitType === "clinic" &&
+        a.backendStatus === "confirmed",
+    );
+    if (upcomingClinic.length === 0) return;
+
+    setUpdatingAppointmentId("bulk-upcoming");
     try {
       await runWithRefresh(
-        () => updateAppointmentStatus(appointmentId, "confirmed"),
-        "Appointment confirmed.",
-        "Failed to confirm appointment",
+        () => Promise.all(upcomingClinic.map((a) => cancelAppointment(a.id))),
+        `${upcomingClinic.length} appointment(s) cancelled.`,
+        "Failed to cancel appointments",
       );
     } finally {
       setUpdatingAppointmentId(null);
@@ -192,9 +200,26 @@ export function Dashboard() {
     }
   };
 
+  const handleNoShowAppointment = async (appointmentId: string) => {
+    setUpdatingAppointmentId(appointmentId);
+    try {
+      await runWithRefresh(
+        () => updateAppointmentStatus(appointmentId, "no_show"),
+        "Appointment marked as no show.",
+        "Failed to mark appointment as no show",
+      );
+    } finally {
+      setUpdatingAppointmentId(null);
+    }
+  };
+
   const todayStr = getDateStrWithOffset(0);
-  const pendingAppointments = appointments.filter((a) => a.backendStatus === "pending");
-  const overdueAppointments = appointments.filter((a) => a.backendStatus === "overdue");
+  const pendingHomeAppointments = appointments.filter(
+    (a) => a.backendStatus === "pending" && a.visitType === "home",
+  );
+  const overdueHomeAppointments = appointments.filter(
+    (a) => a.backendStatus === "overdue" && a.visitType === "home",
+  );
   const showHomeServiceTab = offersHomeService(user);
   const pendingHomeRequests = homeServiceRequests.filter((r) => r.backendStatus === "pending");
   const visibleTab = activeTab === "requests" && !showHomeServiceTab ? "overview" : activeTab;
@@ -223,7 +248,7 @@ export function Dashboard() {
     },
     {
       label: "Pending Requests",
-      value: pendingAppointments.length,
+      value: pendingHomeRequests.length,
       icon: AlertCircle,
       iconColor: DASHBOARD_THEME.warning,
       bgColor: DASHBOARD_THEME.warningLight,
@@ -237,15 +262,21 @@ export function Dashboard() {
   const filteredCompleted = appointments.filter(
     (a) => a.date === selectedScheduleDate && a.status === "completed",
   );
+  const filteredNoShow = appointments.filter(
+    (a) => a.date === selectedScheduleDate && a.status === "no_show",
+  );
 
   const tabProps = {
     offersHomeService: showHomeServiceTab,
-    onConfirm: handleConfirmAppointment,
     onCancel: handleCancelAppointment,
     onCancelAllPending: handleCancelAllPending,
+    onCancelAllUpcoming: handleCancelAllUpcoming,
     onComplete: handleCompleteAppointment,
+    onNoShow: handleNoShowAppointment,
     onGoToHomeService: () => setActiveTab("requests"),
     updatingAppointmentId,
+    selectedScheduleDate,
+    todayStr,
   };
 
   return (
@@ -266,7 +297,7 @@ export function Dashboard() {
         <div className={visibleTab === "overview" ? undefined : "hidden"}>
           <OverviewTab
             stats={stats}
-            pendingAppointments={pendingAppointments}
+            pendingAppointments={pendingHomeAppointments}
             todayUpcoming={todayUpcoming}
             onViewAllSchedule={() => {
               setSelectedScheduleDate(todayStr);
@@ -283,8 +314,9 @@ export function Dashboard() {
             onSelectedDateChange={setSelectedScheduleDate}
             filteredUpcoming={filteredUpcoming}
             filteredCompleted={filteredCompleted}
-            pendingAppointments={pendingAppointments}
-            overdueAppointments={overdueAppointments}
+            pendingAppointments={pendingHomeAppointments}
+            filteredNoShow={filteredNoShow}
+            overdueAppointments={overdueHomeAppointments}
             {...tabProps}
           />
         </div>

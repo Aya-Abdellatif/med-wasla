@@ -82,7 +82,7 @@ export async function fetchSpecialistAppointments(): Promise<SpecialistAppointme
 
 export async function updateAppointmentStatus(
   appointmentId: string,
-  status: "confirmed" | "completed",
+  status: "confirmed" | "completed" | "no_show",
 ) {
   const { data } = await axiosClient.patch<{ success: boolean; message: string }>(
     `/api/appointments/${appointmentId}/status`,
