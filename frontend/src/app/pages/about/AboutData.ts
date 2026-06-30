@@ -112,7 +112,7 @@ export const teamMembers = [
   {
     name: "Ranim Mogharab",
     role: "AI Specialist",
-    image: "../../assets/Ranim.jpg",
+    image: "../../assets/Ranim.jpeg",
     linkedin: "https://www.linkedin.com/in/ranim-mohareb/",
     whatsapp: "https://wa.me/201004444444",
   },
