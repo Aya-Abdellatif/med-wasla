@@ -114,7 +114,7 @@ export const createAppointmentService = async (data: {
       status: data.type === "clinic" ? "confirmed" : "pending",
     });
   } catch (err: unknown) {
-    if ((err as { code?: number }).code === 11000) throw new Error("SLOT_NOT_AVAILABLE");
+    if ((err as { code?: number }).code === 11000) throw new Error("SLOT_NOT_AVAILABLE", { cause: err });
     throw err;
   }
 
@@ -414,7 +414,7 @@ export const rescheduleAppointmentService = async (
   try {
     await appointment.save();
   } catch (err: unknown) {
-    if ((err as { code?: number }).code === 11000) throw new Error("SLOT_NOT_AVAILABLE");
+    if ((err as { code?: number }).code === 11000) throw new Error("SLOT_NOT_AVAILABLE", { cause: err });
     throw err;
   }
 
