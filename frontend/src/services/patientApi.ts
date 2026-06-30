@@ -36,16 +36,37 @@ export async function updatePatientProfile(userId: string, payload: {
   governorate: string;
   address: string;
   dob: string;
-  photoUrl: string;
 }): Promise<PatientProfileApi["user"]> {
   const { data } = await axiosClient.patch<PatientProfileApi["user"]>(`/api/patient/profile/${userId}`, payload);
   return data;
 }
 
+export async function updatePatientPhoto(userId: string, file: File): Promise<{ photoUrl: string }> {
+  const formData = new FormData();
+  formData.append("photo", file);
+
+  const { data } = await axiosClient.patch<{
+    status: string;
+    message: string;
+    data: { photoUrl: string };
+  }>(`/api/patient/profile/${userId}/photo`, formData, {
+    headers: { "Content-Type": "multipart/form-data" },
+  });
+
+  if (!data.data?.photoUrl) {
+    throw new Error("Failed to upload photo");
+  }
+
+  return { photoUrl: data.data.photoUrl };
+}
+
+export async function removePatientPhoto(userId: string): Promise<void> {
+  await axiosClient.delete(`/api/patient/profile/${userId}/photo`);
+}
+
 export async function updatePatientSecurity(userId: string, payload: {
   currentPassword: string;
-  email: string;
-  password?: string;
+  password: string;
 }): Promise<PatientProfileApi["user"]> {
   const { data } = await axiosClient.patch<PatientProfileApi["user"]>(`/api/patient/profile/${userId}`, payload);
   return data;

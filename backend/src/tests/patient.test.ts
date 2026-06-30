@@ -1,5 +1,6 @@
 import { describe, it, expect, beforeEach } from "vitest";
 import request from "supertest";
+import jwt from "jsonwebtoken";
 import { Types } from "mongoose";
 
 import app from "../app.js";
@@ -7,6 +8,12 @@ import User from "../models/user.model.js";
 import Patient from "../models/patient.model.js";
 
 const idOf = (doc: { _id: unknown }) => (doc._id as Types.ObjectId).toString();
+
+function createToken(userId: string, role: "patient" | "specialist" | "admin") {
+  return jwt.sign({ id: userId, role }, process.env.JWT_SECRET as string, {
+    expiresIn: "7d",
+  });
+}
 
 async function createPatient(email = "patient@test.com") {
   const user = await User.create({
@@ -25,7 +32,9 @@ async function createPatient(email = "patient@test.com") {
     userId: user._id,
   });
 
-  return user;
+  const token = createToken(idOf(user), "patient");
+
+  return { user, token };
 }
 
 describe("Patient Profile Routes", () => {
@@ -36,32 +45,47 @@ describe("Patient Profile Routes", () => {
 
   describe("GET /api/patient/profile/:userId", () => {
     it("returns patient profile", async () => {
-      const user = await createPatient();
+      const { user, token } = await createPatient();
 
-      const res = await request(app).get(`/api/patient/profile/${idOf(user)}`);
+      const res = await request(app)
+        .get(`/api/patient/profile/${idOf(user)}`)
+        .set("Authorization", `Bearer ${token}`);
 
       expect(res.status).toBe(200);
       expect(res.body.patientId).toBeDefined();
       expect(res.body.user.email).toBe(user.email);
       expect(res.body.user.name).toBe(user.name);
+      expect(res.body.user.phone).toBe(user.phone);
       expect(res.body.medicalHistory).toEqual([]);
     });
 
     it("returns 404 when patient profile not found", async () => {
+      const { token } = await createPatient();
       const fakeUserId = new Types.ObjectId().toString();
 
-      const res = await request(app).get(`/api/patient/profile/${fakeUserId}`);
+      const res = await request(app)
+        .get(`/api/patient/profile/${fakeUserId}`)
+        .set("Authorization", `Bearer ${token}`);
 
       expect(res.status).toBe(404);
+    });
+
+    it("returns 401 without token", async () => {
+      const { user } = await createPatient();
+
+      const res = await request(app).get(`/api/patient/profile/${idOf(user)}`);
+
+      expect(res.status).toBe(401);
     });
   });
 
   describe("PATCH /api/patient/profile/:userId", () => {
     it("updates patient name", async () => {
-      const user = await createPatient();
+      const { user, token } = await createPatient();
 
       const res = await request(app)
         .patch(`/api/patient/profile/${idOf(user)}`)
+        .set("Authorization", `Bearer ${token}`)
         .send({
           name: "Updated Patient",
         });
@@ -73,27 +97,43 @@ describe("Patient Profile Routes", () => {
       expect(updatedUser?.name).toBe("Updated Patient");
     });
 
-    it("updates patient email", async () => {
-      const user = await createPatient();
+    it("does not allow changing patient email", async () => {
+      const { user, token } = await createPatient();
 
       const res = await request(app)
         .patch(`/api/patient/profile/${idOf(user)}`)
+        .set("Authorization", `Bearer ${token}`)
         .send({
           email: "updated@test.com",
         });
 
-      expect(res.status).toBe(200);
-      expect(res.body.email).toBe("updated@test.com");
+      expect(res.status).toBe(400);
+      expect(res.body.message).toBe("Email cannot be changed");
 
       const updatedUser = await User.findById(user._id);
-      expect(updatedUser?.email).toBe("updated@test.com");
+      expect(updatedUser?.email).toBe(user.email);
     });
 
-    it("updates patient phone and normalizes it", async () => {
-      const user = await createPatient();
+    it("keeps same email if sent unchanged", async () => {
+      const { user, token } = await createPatient();
 
       const res = await request(app)
         .patch(`/api/patient/profile/${idOf(user)}`)
+        .set("Authorization", `Bearer ${token}`)
+        .send({
+          email: user.email,
+        });
+
+      expect(res.status).toBe(200);
+      expect(res.body.email).toBe(user.email);
+    });
+
+    it("updates patient phone and normalizes it", async () => {
+      const { user, token } = await createPatient();
+
+      const res = await request(app)
+        .patch(`/api/patient/profile/${idOf(user)}`)
+        .set("Authorization", `Bearer ${token}`)
         .send({
           phone: "1012345678",
         });
@@ -105,23 +145,12 @@ describe("Patient Profile Routes", () => {
       expect(updatedUser?.phone).toBe("01012345678");
     });
 
-    it("returns 400 for invalid email", async () => {
-      const user = await createPatient();
-
-      const res = await request(app)
-        .patch(`/api/patient/profile/${idOf(user)}`)
-        .send({
-          email: "invalid-email",
-        });
-
-      expect(res.status).toBe(400);
-    });
-
     it("returns 400 for invalid phone", async () => {
-      const user = await createPatient();
+      const { user, token } = await createPatient();
 
       const res = await request(app)
         .patch(`/api/patient/profile/${idOf(user)}`)
+        .set("Authorization", `Bearer ${token}`)
         .send({
           phone: "123",
         });
@@ -129,11 +158,54 @@ describe("Patient Profile Routes", () => {
       expect(res.status).toBe(400);
     });
 
+    it("updates governorate", async () => {
+      const { user, token } = await createPatient();
+
+      const res = await request(app)
+        .patch(`/api/patient/profile/${idOf(user)}`)
+        .set("Authorization", `Bearer ${token}`)
+        .send({
+          governorate: "Giza",
+        });
+
+      expect(res.status).toBe(200);
+      expect(res.body.governorate).toBe("Giza");
+    });
+
+    it("returns 400 for invalid governorate", async () => {
+      const { user, token } = await createPatient();
+
+      const res = await request(app)
+        .patch(`/api/patient/profile/${idOf(user)}`)
+        .set("Authorization", `Bearer ${token}`)
+        .send({
+          governorate: "InvalidCity",
+        });
+
+      expect(res.status).toBe(400);
+    });
+
+    it("updates address", async () => {
+      const { user, token } = await createPatient();
+
+      const res = await request(app)
+        .patch(`/api/patient/profile/${idOf(user)}`)
+        .set("Authorization", `Bearer ${token}`)
+        .send({
+          address: "New Cairo",
+        });
+
+      expect(res.status).toBe(200);
+      expect(res.body.address).toBe("New Cairo");
+    });
+
     it("returns 404 when patient not found", async () => {
+      const { token } = await createPatient();
       const fakeUserId = new Types.ObjectId().toString();
 
       const res = await request(app)
         .patch(`/api/patient/profile/${fakeUserId}`)
+        .set("Authorization", `Bearer ${token}`)
         .send({
           name: "No User",
         });

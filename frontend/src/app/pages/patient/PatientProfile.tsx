@@ -1,7 +1,8 @@
 import { useEffect, useState, useRef, type ChangeEvent } from "react";
+import { createPortal } from "react-dom";
 import { useAuth } from "../../context/useAuth";
 import type { DiseaseRecord, User } from "../../context/AuthContext";
-import { fetchPatientProfile, updatePatientProfile, updatePatientSecurity, type PatientProfileApi } from "../../../services/patientApi";
+import { fetchPatientProfile, updatePatientProfile, updatePatientPhoto, removePatientPhoto, updatePatientSecurity, type PatientProfileApi } from "../../../services/patientApi";
 import {
   User as UserIcon,
   Mail,
@@ -18,11 +19,15 @@ import {
   ChevronDown,
   MapPin,
   Save,
-  X,
   Edit,
   UploadCloud,
+  Trash2,
+  Camera,
+  X,
 } from "lucide-react";
 import { ImageWithFallback } from "../../figma/ImageWithFallback";
+import { showError, showSuccess } from "../../../utils/toast";
+
 
 const EGYPTIAN_GOVERNORATES = [
   "Cairo", "Giza", "Alexandria", "Dakahlia", "Red Sea", "Beheira",
@@ -32,7 +37,14 @@ const EGYPTIAN_GOVERNORATES = [
   "Luxor", "Qena", "North Sinai", "Sohag",
 ];
 
+function stripPhoneDisplay(phone: string): string {
+  const digits = phone.replace(/\D/g, "");
+  return digits.startsWith("0") ? digits.slice(1) : digits;
+}
+
 type Tab = "personal" | "security";
+
+const PHOTO_MENU_WIDTH = 208;
 
 function FieldError({ msg }: { msg?: string }) {
   if (!msg) return null;
@@ -41,18 +53,6 @@ function FieldError({ msg }: { msg?: string }) {
       <AlertCircle className="w-3.5 h-3.5 flex-shrink-0" />
       {msg}
     </p>
-  );
-}
-
-function SuccessBanner({ message, onDismiss }: { message: string; onDismiss: () => void }) {
-  return (
-    <div className="flex items-center gap-3 px-4 py-3 bg-emerald-50 border border-emerald-200 rounded-xl text-sm text-emerald-700">
-      <CheckCircle2 className="w-4 h-4 flex-shrink-0" />
-      <span className="flex-1">{message}</span>
-      <button onClick={onDismiss}>
-        <X className="w-4 h-4 opacity-60 hover:opacity-100" />
-      </button>
-    </div>
   );
 }
 
@@ -79,8 +79,9 @@ function PersonalTab({ profile, onSave, isLoading }: {
     dob: string;
     governorate: string;
     address: string;
-    photoUrl: string;
-  }) => Promise<void>;
+    photo?: File;
+    removePhoto?: boolean;
+  }) => Promise<{ photoUrl?: string }>;
 }) {
   const getInitialState = (p: PatientProfileApi["user"] | null) => ({
     name: p?.name || "",
@@ -97,19 +98,90 @@ function PersonalTab({ profile, onSave, isLoading }: {
   const [errors, setErrors] = useState<Record<string, string>>({});
   const [govOpen, setGovOpen] = useState(false);
   const [govSearch, setGovSearch] = useState("");
-  const [success, setSuccess] = useState(false);
-  const [saveError, setSaveError] = useState<string>("");
   const [isSaving, setIsSaving] = useState(false);
+  const [selectedPhotoFile, setSelectedPhotoFile] = useState<File | null>(null);
+  const [removePhotoRequested, setRemovePhotoRequested] = useState(false);
+  const [photoMenuOpen, setPhotoMenuOpen] = useState(false);
+  const [showPhotoPreview, setShowPhotoPreview] = useState(false);
+  const [photoMenuPosition, setPhotoMenuPosition] = useState({ top: 0, left: 0 });
   const fileInputRef = useRef<HTMLInputElement | null>(null);
+  const photoEditButtonRef = useRef<HTMLButtonElement | null>(null);
+  const photoMenuRef = useRef<HTMLDivElement | null>(null);
+
+  const hasProfilePhoto = Boolean(form.photoUrl);
+
+  const updatePhotoMenuPosition = () => {
+    const button = photoEditButtonRef.current;
+    if (!button) return;
+
+    const rect = button.getBoundingClientRect();
+    setPhotoMenuPosition({
+      top: rect.bottom + 8,
+      left: Math.min(
+        Math.max(8, rect.right - PHOTO_MENU_WIDTH),
+        window.innerWidth - PHOTO_MENU_WIDTH - 8,
+      ),
+    });
+  };
+
+  useEffect(() => {
+    if (!photoMenuOpen) return;
+
+    updatePhotoMenuPosition();
+    window.addEventListener("resize", updatePhotoMenuPosition);
+    window.addEventListener("scroll", updatePhotoMenuPosition, true);
+
+    const handleClickOutside = (event: MouseEvent) => {
+      const target = event.target as Node;
+      if (
+        photoMenuRef.current?.contains(target) ||
+        photoEditButtonRef.current?.contains(target)
+      ) {
+        return;
+      }
+      setPhotoMenuOpen(false);
+    };
+
+    document.addEventListener("mousedown", handleClickOutside);
+    return () => {
+      window.removeEventListener("resize", updatePhotoMenuPosition);
+      window.removeEventListener("scroll", updatePhotoMenuPosition, true);
+      document.removeEventListener("mousedown", handleClickOutside);
+    };
+  }, [photoMenuOpen]);
 
   const handleFileChange = (e: ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0];
     if (!file) return;
+
+    if (!file.type.startsWith("image/")) {
+      showError("Please select an image file (JPEG, PNG, or WebP).");
+      return;
+    }
+
+    if (file.size > 5 * 1024 * 1024) {
+      showError("Image must be smaller than 5MB.");
+      return;
+    }
+
+    setSelectedPhotoFile(file);
+    setRemovePhotoRequested(false);
+    setPhotoMenuOpen(false);
+
     const reader = new FileReader();
     reader.onload = () => {
       setForm((prev) => ({ ...prev, photoUrl: String(reader.result) }));
     };
     reader.readAsDataURL(file);
+  };
+
+  const handleRemovePhoto = () => {
+    setForm((prev) => ({ ...prev, photoUrl: "" }));
+    setSelectedPhotoFile(null);
+    if (saved.photoUrl) setRemovePhotoRequested(true);
+    if (fileInputRef.current) fileInputRef.current.value = "";
+    setPhotoMenuOpen(false);
+    setShowPhotoPreview(false);
   };
 
   if (isLoading && !profile) {
@@ -125,7 +197,7 @@ function PersonalTab({ profile, onSave, isLoading }: {
     if (!form.name.trim()) e.name = "Full name is required.";
     else if (form.name.trim().length < 3) e.name = "Name must be at least 3 characters.";
     if (!form.phone.trim()) e.phone = "Phone number is required.";
-    else if (!/^\d{7,15}$/.test(form.phone.replace(/\s/g, ""))) e.phone = "Enter a valid phone number.";
+    else if (!/^0?1[0125][0-9]{8}$/.test(form.phone.replace(/\s/g, ""))) e.phone = "Enter a valid phone number.";
     if (!form.dob) e.dob = "Date of birth is required.";
     if (!form.governorate) e.governorate = "Governorate is required.";
     return e;
@@ -134,27 +206,36 @@ function PersonalTab({ profile, onSave, isLoading }: {
   const handleSave = async () => {
     const e = validate();
     if (Object.keys(e).length) { setErrors(e); return; }
-    setSaveError("");
     setIsSaving(true);
 
     try {
-      await onSave({
+      const normalizedPhone = stripPhoneDisplay(form.phone);
+      const result = await onSave({
         name: form.name,
-        phone: form.phone,
+        phone: normalizedPhone,
         dob: form.dob,
         governorate: form.governorate,
         address: form.address,
-        photoUrl: form.photoUrl,
+        ...(selectedPhotoFile ? { photo: selectedPhotoFile } : {}),
+        ...(removePhotoRequested ? { removePhoto: true } : {}),
       });
-      setSaved(form);
-      // console.log("setSaved called");
-      // console.log(saved);
-      // console.log(form);
+      const nextSaved = {
+        ...form,
+        phone: normalizedPhone,
+        photoUrl: result.photoUrl ?? "",
+      };
+      setSaved(nextSaved);
+      setForm(nextSaved);
+      setSelectedPhotoFile(null);
+      setRemovePhotoRequested(false);
+      if (fileInputRef.current) fileInputRef.current.value = "";
       setErrors({});
-      setSuccess(true);
+      showSuccess("Personal information saved successfully.");
+      setPhotoMenuOpen(false);
+      setShowPhotoPreview(false);
       setEditing(false);
     } catch (error) {
-      setSaveError(error instanceof Error ? error.message : "Unable to save profile.");
+      showError(error instanceof Error ? error.message : "Unable to save profile.");
     } finally {
       setIsSaving(false);
     }
@@ -162,6 +243,11 @@ function PersonalTab({ profile, onSave, isLoading }: {
 
   const handleCancel = () => {
     setForm(saved);
+    setSelectedPhotoFile(null);
+    setRemovePhotoRequested(false);
+    if (fileInputRef.current) fileInputRef.current.value = "";
+    setPhotoMenuOpen(false);
+    setShowPhotoPreview(false);
     setErrors({});
     setEditing(false);
   };
@@ -170,13 +256,6 @@ function PersonalTab({ profile, onSave, isLoading }: {
   if (!editing) {
     return (
       <div className="space-y-6">
-        {success && (
-          <SuccessBanner
-            message="Personal information saved successfully."
-            onDismiss={() => setSuccess(false)}
-          />
-        )}
-
         <div className="flex items-center justify-between">
           <p className="text-sm text-fg-muted">Your personal details as registered on MedWasla.</p>
           <button
@@ -194,7 +273,7 @@ function PersonalTab({ profile, onSave, isLoading }: {
           </div>
           <InfoRow
             label="Phone Number"
-            value={saved?.phone ? `+20 ${saved.phone}` : undefined}
+            value={saved?.phone ? `+20 ${stripPhoneDisplay(saved.phone)}` : undefined}
             icon={Phone}
           />
           <InfoRow
@@ -225,30 +304,29 @@ function PersonalTab({ profile, onSave, isLoading }: {
         <span className="text-xs text-primary bg-primary/5 px-2.5 py-1 rounded-full">Editing</span>
       </div>
 
-      {saveError && (
-        <div className="rounded-2xl border border-red-200 bg-red-50 px-4 py-3 text-sm text-red-700">
-          {saveError}
-        </div>
-      )}
-
       {/* Avatar + Row 1 — Full Name */}
       <div className="flex items-start gap-6">
-        <div className="relative">
-          <div className="w-24 h-24 rounded-full bg-primary/10 overflow-hidden flex items-center justify-center text-2xl text-fg">
+        <div className="relative w-24 h-24 shrink-0">
+          <div className="w-full h-full rounded-full bg-primary/10 overflow-hidden flex items-center justify-center text-2xl text-fg">
             {form.photoUrl ? (
               <img src={form.photoUrl} alt="avatar" className="w-full h-full object-cover" />
             ) : (
               <span className="uppercase">{(profile?.name || "P").charAt(0)}</span>
             )}
           </div>
+
           <button
+            ref={photoEditButtonRef}
             type="button"
-            onClick={() => fileInputRef.current?.click()}
-            className="absolute -bottom-0.5 -right-0.5 bg-white border border-border rounded-full p-2 shadow-sm hover:bg-muted transition-colors"
-            aria-label="Upload avatar"
+            onClick={() => setPhotoMenuOpen((open) => !open)}
+            className="absolute -bottom-1 -right-1 flex items-center gap-1 bg-white border border-border rounded-full pl-1.5 pr-2 py-1 shadow-sm hover:bg-muted transition-colors text-[11px] font-medium text-primary whitespace-nowrap"
+            aria-expanded={photoMenuOpen}
+            aria-haspopup="menu"
           >
-            <UploadCloud className="w-4 h-4 text-primary" />
+            <Camera className="w-3.5 h-3.5" />
+            Edit
           </button>
+
           <input ref={fileInputRef} onChange={handleFileChange} accept="image/*" type="file" className="hidden" />
         </div>
         <div className="flex-1">
@@ -277,8 +355,11 @@ function PersonalTab({ profile, onSave, isLoading }: {
             <input
               type="tel"
               value={form.phone}
-              onChange={(e) => { setForm({ ...form, phone: e.target.value }); setErrors({ ...errors, phone: "" }); }}
-              placeholder="1234567890"
+              onChange={(e) => {
+                setForm({ ...form, phone: e.target.value });
+                setErrors({ ...errors, phone: "" });
+              }}
+              placeholder="1123456789"
               className="flex-1 px-4 py-3 bg-input-background focus:outline-none text-sm"
             />
           </div>
@@ -388,24 +469,90 @@ function PersonalTab({ profile, onSave, isLoading }: {
           Cancel
         </button>
       </div>
+
+      {photoMenuOpen && createPortal(
+        <div
+          ref={photoMenuRef}
+          role="menu"
+          style={{ top: photoMenuPosition.top, left: photoMenuPosition.left, width: PHOTO_MENU_WIDTH }}
+          className="fixed z-[200] bg-white border border-border rounded-xl shadow-lg py-1.5"
+        >
+          <button
+            type="button"
+            role="menuitem"
+            onClick={() => {
+              fileInputRef.current?.click();
+              setPhotoMenuOpen(false);
+            }}
+            className="w-full flex items-center gap-2.5 px-3.5 py-2.5 text-sm text-fg hover:bg-primary/5 transition-colors"
+          >
+            <UploadCloud className="w-4 h-4 text-primary shrink-0" />
+            Upload Photo
+          </button>
+          <button
+            type="button"
+            role="menuitem"
+            disabled={!hasProfilePhoto}
+            onClick={handleRemovePhoto}
+            className="w-full flex items-center gap-2.5 px-3.5 py-2.5 text-sm text-fg hover:bg-red-50 transition-colors disabled:opacity-40 disabled:cursor-not-allowed disabled:hover:bg-transparent"
+          >
+            <Trash2 className="w-4 h-4 text-red-500 shrink-0" />
+            Remove Photo
+          </button>
+          <button
+            type="button"
+            role="menuitem"
+            disabled={!hasProfilePhoto}
+            onClick={() => {
+              setShowPhotoPreview(true);
+              setPhotoMenuOpen(false);
+            }}
+            className="w-full flex items-center gap-2.5 px-3.5 py-2.5 text-sm text-fg hover:bg-primary/5 transition-colors disabled:opacity-40 disabled:cursor-not-allowed disabled:hover:bg-transparent"
+          >
+            <Eye className="w-4 h-4 text-fg-muted shrink-0" />
+            Show Photo
+          </button>
+        </div>,
+        document.body,
+      )}
+
+      {showPhotoPreview && form.photoUrl && (
+        <div
+          className="fixed inset-0 z-50 flex items-center justify-center bg-black/60 px-4"
+          onClick={() => setShowPhotoPreview(false)}
+        >
+          <div className="relative max-w-lg w-full" onClick={(e) => e.stopPropagation()}>
+            <button
+              type="button"
+              onClick={() => setShowPhotoPreview(false)}
+              className="absolute -top-3 -right-3 bg-white rounded-full p-2 shadow-lg hover:bg-muted transition-colors"
+              aria-label="Close photo preview"
+            >
+              <X className="w-4 h-4 text-fg" />
+            </button>
+            <img
+              src={form.photoUrl}
+              alt="Profile photo preview"
+              className="w-full max-h-[80vh] object-contain rounded-2xl bg-white"
+            />
+          </div>
+        </div>
+      )}
     </div>
   );
 }
 
 // ─── Security Tab ───────────────────────────────────────────────
-function SecurityTab({ user, onSave }: { user: User | null; onSave: (payload: { currentPassword: string; email: string; password?: string }) => Promise<void>; }) {
+function SecurityTab({ user, onSave }: { user: User | null; onSave: (payload: { currentPassword: string; password: string }) => Promise<void>; }) {
   const [editing, setEditing] = useState(false);
-  const [savedEmail, setSavedEmail] = useState(user?.email || "");
+  const email = user?.email || "";
   const [form, setForm] = useState({
-    email: user?.email || "",
     currentPassword: "",
     newPassword: "",
     confirmPassword: "",
   });
   const [show, setShow] = useState({ current: false, newPw: false, confirm: false });
   const [errors, setErrors] = useState<Record<string, string>>({});
-  const [saveError, setSaveError] = useState<string>("");
-  const [success, setSuccess] = useState(false);
   const [isSaving, setIsSaving] = useState(false);
 
   const getStrength = (pw: string) => {
@@ -425,22 +572,20 @@ function SecurityTab({ user, onSave }: { user: User | null; onSave: (payload: { 
 
   const validate = () => {
     const e: Record<string, string> = {};
-    const isEmailChanged = form.email.trim() !== savedEmail.trim();
     const isPasswordChanged = form.newPassword || form.confirmPassword;
-    const requireCurrentPassword = isEmailChanged || isPasswordChanged;
 
-    if (!form.email.trim()) e.email = "Email is required.";
-    else if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(form.email)) e.email = "Enter a valid email address.";
-
-    if (requireCurrentPassword && !form.currentPassword) {
-      e.currentPassword = "Current password is required to make changes.";
+    if (!isPasswordChanged) {
+      e.newPassword = "Enter a new password to save changes.";
+      return e;
     }
 
-    if (isPasswordChanged) {
-      if (!form.newPassword) e.newPassword = "New password is required.";
-      else if (form.newPassword.length < 8) e.newPassword = "Password must be at least 8 characters.";
-      if (form.newPassword !== form.confirmPassword) e.confirmPassword = "Passwords do not match.";
+    if (!form.currentPassword) {
+      e.currentPassword = "Current password is required to change your password.";
     }
+
+    if (!form.newPassword) e.newPassword = "New password is required.";
+    else if (form.newPassword.length < 8) e.newPassword = "Password must be at least 8 characters.";
+    if (form.newPassword !== form.confirmPassword) e.confirmPassword = "Passwords do not match.";
 
     return e;
   };
@@ -448,29 +593,26 @@ function SecurityTab({ user, onSave }: { user: User | null; onSave: (payload: { 
   const handleSave = async () => {
     const e = validate();
     if (Object.keys(e).length) { setErrors(e); return; }
-    setSaveError("");
     setIsSaving(true);
 
     try {
       await onSave({
         currentPassword: form.currentPassword,
-        email: form.email,
-        password: form.newPassword || undefined,
+        password: form.newPassword,
       });
-      setSavedEmail(form.email);
       setErrors({});
-      setForm({ ...form, currentPassword: "", newPassword: "", confirmPassword: "" });
+      setForm({ currentPassword: "", newPassword: "", confirmPassword: "" });
       setEditing(false);
-      setSuccess(true);
+      showSuccess("Password updated successfully.");
     } catch (error) {
-      setSaveError(error instanceof Error ? error.message : "Unable to save security settings.");
+      showError(error instanceof Error ? error.message : "Unable to save security settings.");
     } finally {
       setIsSaving(false);
     }
   };
 
   const handleCancel = () => {
-    setForm({ email: savedEmail, currentPassword: "", newPassword: "", confirmPassword: "" });
+    setForm({ currentPassword: "", newPassword: "", confirmPassword: "" });
     setErrors({});
     setEditing(false);
   };
@@ -479,15 +621,8 @@ function SecurityTab({ user, onSave }: { user: User | null; onSave: (payload: { 
   if (!editing) {
     return (
       <div className="space-y-6">
-        {success && (
-          <SuccessBanner
-            message="Account & security settings saved successfully."
-            onDismiss={() => setSuccess(false)}
-          />
-        )}
-
         <div className="flex items-center justify-between">
-          <p className="text-sm text-fg-muted">Manage your login email and password.</p>
+          <p className="text-sm text-fg-muted">View your email and change your password.</p>
           <button
             onClick={() => setEditing(true)}
             className="group flex items-center gap-2 bg-primary text-white border-2 border-primary text-base px-4 py-1.5 rounded-xl cursor-pointer transition-all duration-300 ease-in-out hover:border-primary hover:-translate-y-0.5 hover:bg-white hover:text-primary hover:shadow-md whitespace-nowrap"
@@ -498,7 +633,7 @@ function SecurityTab({ user, onSave }: { user: User | null; onSave: (payload: { 
         </div>
 
         <div className="space-y-5">
-          <InfoRow label="Email Address" value={savedEmail} icon={Mail} />
+          <InfoRow label="Email Address" value={email} icon={Mail} />
           <div>
             <p className="text-xs font-medium text-fg-muted uppercase tracking-wider mb-1">Password</p>
             <div className="flex items-center gap-2">
@@ -515,56 +650,46 @@ function SecurityTab({ user, onSave }: { user: User | null; onSave: (payload: { 
   return (
     <div className="space-y-6">
       <div className="flex items-center justify-between">
-        <p className="text-sm text-fg-muted">Update your email or change your password.</p>
+        <p className="text-sm text-fg-muted">Change your password below.</p>
         <span className="text-xs text-primary bg-primary/5 px-2.5 py-1 rounded-full">Editing</span>
       </div>
-      {saveError && (
-        <div className="rounded-2xl border border-red-200 bg-red-50 px-4 py-3 text-sm text-red-700">
-          {saveError}
-        </div>
-      )}
-      <div className="relative">
-        <Lock className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-fg-muted" />
-        <input
-          type={show.current ? "text" : "password"}
-          value={form.currentPassword}
-          onChange={(e) => { setForm({ ...form, currentPassword: e.target.value }); setErrors({ ...errors, currentPassword: "" }); }}
-          placeholder="Enter current password"
-          className={`w-full pl-9 pr-10 py-3 bg-input-background border rounded-xl focus:outline-none focus:ring-2 focus:ring-primary transition-colors text-sm ${errors.currentPassword ? "border-red-400 focus:ring-red-300" : "border-border"}`}
-        />
-        <button type="button" onClick={() => setShow({ ...show, current: !show.current })} className="absolute right-3 top-1/2 -translate-y-1/2 text-fg-muted hover:text-fg">
-          {show.current ? <EyeOff className="w-4 h-4" /> : <Eye className="w-4 h-4" />}
-        </button>
-      </div>
-      <FieldError msg={errors.currentPassword} />
-
-      {/* Divider */}
-      <div className="flex items-center gap-3">
-        <div className="flex-1 h-px bg-border" />
-        <span className="text-xs text-fg-muted px-2">Change Email</span>
-        <div className="flex-1 h-px bg-border" />
-      </div>
-
-      {/* Email */}
       <div>
         <label className="block text-sm font-medium text-fg mb-1.5">Email Address</label>
         <div className="relative">
           <Mail className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-fg-muted" />
           <input
             type="email"
-            value={form.email}
-            onChange={(e) => { setForm({ ...form, email: e.target.value }); setErrors({ ...errors, email: "" }); }}
-            placeholder="you@example.com"
-            className={`w-full pl-9 pr-4 py-3 bg-input-background border rounded-xl focus:outline-none focus:ring-2 focus:ring-primary transition-colors text-sm ${errors.email ? "border-red-400 focus:ring-red-300" : "border-border"}`}
+            value={email}
+            readOnly
+            disabled
+            className="w-full pl-9 pr-4 py-3 bg-muted/40 border border-border rounded-xl text-sm text-fg-muted cursor-not-allowed"
           />
         </div>
-        <FieldError msg={errors.email} />
+        <p className="text-xs text-fg-muted mt-1.5">Your email address cannot be changed.</p>
       </div>
 
       <div className="flex items-center gap-3">
         <div className="flex-1 h-px bg-border" />
         <span className="text-xs text-fg-muted px-2">Change Password</span>
         <div className="flex-1 h-px bg-border" />
+      </div>
+
+      <div>
+        <label className="block text-sm font-medium text-fg mb-1.5">Current Password</label>
+        <div className="relative">
+          <Lock className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-fg-muted" />
+          <input
+            type={show.current ? "text" : "password"}
+            value={form.currentPassword}
+            onChange={(e) => { setForm({ ...form, currentPassword: e.target.value }); setErrors({ ...errors, currentPassword: "" }); }}
+            placeholder="Enter current password"
+            className={`w-full pl-9 pr-10 py-3 bg-input-background border rounded-xl focus:outline-none focus:ring-2 focus:ring-primary transition-colors text-sm ${errors.currentPassword ? "border-red-400 focus:ring-red-300" : "border-border"}`}
+          />
+          <button type="button" onClick={() => setShow({ ...show, current: !show.current })} className="absolute right-3 top-1/2 -translate-y-1/2 text-fg-muted hover:text-fg">
+            {show.current ? <EyeOff className="w-4 h-4" /> : <Eye className="w-4 h-4" />}
+          </button>
+        </div>
+        <FieldError msg={errors.currentPassword} />
       </div>
 
       <div>
@@ -643,7 +768,6 @@ export function PatientProfile() {
   const { user, updateProfile } = useAuth();
   const [profile, setProfile] = useState<PatientProfileApi | null>(null);
   const [isProfileLoading, setIsProfileLoading] = useState(true);
-  const [profileError, setProfileError] = useState<string | null>(null);
   const [activeTab, setActiveTab] = useState<Tab>("personal");
 
   const hasFetchedRef = useRef(false);
@@ -660,7 +784,7 @@ export function PatientProfile() {
         }
       })
       .catch((error: unknown) => {
-        setProfileError(error instanceof Error ? error.message : "Unable to load patient profile.");
+        showError(error instanceof Error ? error.message : "Unable to load patient profile.");
       })
       .finally(() => setIsProfileLoading(false));
   }, [user?.id]);
@@ -671,17 +795,37 @@ export function PatientProfile() {
     dob: string;
     governorate: string;
     address: string;
-    photoUrl: string;
+    photo?: File;
+    removePhoto?: boolean;
   }) => {
     if (!user?.id) throw new Error("Unable to save profile without a logged in user.");
-    const updatedUser = await updatePatientProfile(user.id, payload);
+
+    let photoUrl: string | undefined;
+    if (payload.removePhoto) {
+      await removePatientPhoto(user.id);
+      photoUrl = undefined;
+    } else if (payload.photo) {
+      const photoResult = await updatePatientPhoto(user.id, payload.photo);
+      photoUrl = photoResult.photoUrl;
+    }
+
+    const updatedUser = await updatePatientProfile(user.id, {
+      name: payload.name,
+      phone: payload.phone,
+      dob: payload.dob,
+      governorate: payload.governorate,
+      address: payload.address,
+    });
+
+    const finalPhotoUrl = photoUrl ?? (payload.removePhoto ? undefined : updatedUser.photoUrl);
+    const mergedUser = { ...updatedUser, photoUrl: finalPhotoUrl };
 
     setProfile((currentProfile) =>
       currentProfile
-        ? { ...currentProfile, user: updatedUser }
+        ? { ...currentProfile, user: mergedUser }
         : {
           patientId: user.id,
-          user: updatedUser,
+          user: mergedUser,
           medicalHistory: [],
           createdAt: undefined,
           updatedAt: undefined,
@@ -689,10 +833,12 @@ export function PatientProfile() {
     );
 
     updateProfile({
-      name: updatedUser.name,
-      phone: updatedUser.phone,
-      ...(updatedUser.photoUrl ? { avatar: updatedUser.photoUrl } : {}),
+      name: mergedUser.name,
+      phone: mergedUser.phone,
+      avatar: finalPhotoUrl,
     });
+
+    return { photoUrl: finalPhotoUrl };
   };
 
   const getStatusColor = (status: string) => {
@@ -764,12 +910,6 @@ export function PatientProfile() {
 
           {/* Tab body */}
           <div className="p-6 md:p-8">
-            {profileError && (
-              <div className="mb-6 rounded-2xl border border-red-200 bg-red-50 px-4 py-3 text-sm text-red-700">
-                Unable to load patient profile: {profileError}
-              </div>
-            )}
-
             {/* Keep PersonalTab mounted at all times so saving never unmounts it.
                 Show a spinner inside the tab while the initial load is in flight. */}
             <div className={activeTab === "personal" ? "" : "hidden"}>
@@ -783,12 +923,7 @@ export function PatientProfile() {
 
             {activeTab === "security" && <SecurityTab user={user} onSave={async (payload) => {
               if (!user?.id) throw new Error("Unable to save security settings without a logged in user.");
-              const updatedUser = await updatePatientSecurity(user.id, payload);
-              // console.log("updatedUser", updatedUser);
-              if (updatedUser.email) {
-                updateProfile({ email: updatedUser.email });
-                // console.log(user);
-              }
+              await updatePatientSecurity(user.id, payload);
             }} />}
           </div>
         </div>
