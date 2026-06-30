@@ -274,7 +274,8 @@ export const cancelAppointmentService = async (
   if (
     appointment.status === "completed" ||
     appointment.status === "cancelled" ||
-    appointment.status === "no_show"
+    appointment.status === "no_show" ||
+    appointment.status === "overdue"
   ) {
     throw new Error("CANNOT_CANCEL");
   }
@@ -368,6 +369,8 @@ export const rescheduleAppointmentService = async (
   appointmentId: string,
   patientId: string,
   newDate: Date,
+  dateStr: string,
+  timeStr: string,
   notes?: string
 ) => {
   const appointment = await Appointment.findById(appointmentId);
@@ -378,7 +381,8 @@ export const rescheduleAppointmentService = async (
   if (
     appointment.status === "completed" ||
     appointment.status === "cancelled" ||
-    appointment.status === "no_show"
+    appointment.status === "no_show" ||
+    appointment.status === "overdue"
   ) {
     throw new Error("CANNOT_RESCHEDULE");
   }
@@ -391,13 +395,23 @@ export const rescheduleAppointmentService = async (
       }
       throw new Error("APPOINTMENT_OVERDUE");
     }
-
-    if (appointment.status === "overdue") {
-      throw new Error("APPOINTMENT_OVERDUE");
-    }
   }
 
   if (newDate <= new Date()) throw new Error("DATE_IN_PAST");
+
+  const specialistId = appointment.specialistId.toString();
+  const specialist = await MedicalSpecialist.findById(specialistId);
+  if (!specialist) throw new Error("SPECIALIST_NOT_FOUND");
+
+  const dayName = newDate.toLocaleDateString("en-US", { weekday: "long" });
+  if (!specialist.availableSlots?.some((s) => s.day === dayName)) {
+    throw new Error("DAY_NOT_AVAILABLE");
+  }
+
+  const { availableSlots } = await getAvailableSlotsService(specialistId, dateStr);
+  if (!availableSlots.includes(timeStr)) {
+    throw new Error("SLOT_NOT_AVAILABLE");
+  }
 
   const oldDate = appointment.date;
   appointment.date = newDate;
@@ -406,7 +420,12 @@ export const rescheduleAppointmentService = async (
   if (notes !== undefined) appointment.notes = notes;
 
   await cancelAppointmentReminders(appointment._id.toString());
-  await appointment.save();
+  try {
+    await appointment.save();
+  } catch (err: unknown) {
+    if ((err as { code?: number }).code === 11000) throw new Error("SLOT_NOT_AVAILABLE");
+    throw err;
+  }
 
   if (appointment.type === "clinic") {
     // Sync old queue
