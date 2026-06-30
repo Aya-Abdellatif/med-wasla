@@ -249,7 +249,10 @@ export const cancelAppointment = async (
     if (msg === "APPOINTMENT_OVERDUE") {
       return next(new AppError("This appointment is overdue and can no longer be cancelled", 400));
     }
-    if (msg === "SPECIALIST_PROFILE_NOT_FOUND") 
+    if (msg === "TOO_LATE_TO_CANCEL") {
+      return next(new AppError("Cancellation window has passed for this appointment", 400));
+    }
+    if (msg === "SPECIALIST_PROFILE_NOT_FOUND")
       return next(new AppError("Specialist profile not found", 404));
     return next(error);
   }

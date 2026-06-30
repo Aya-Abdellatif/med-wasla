@@ -716,4 +716,151 @@ describe("Appointments Routes", () => {
       expect(res.status).toBe(403);
     });
   });
+
+  describe("Cancellation time window rules", () => {
+    it("returns 400 when patient tries to cancel clinic appointment within 6 hours", async () => {
+      const patient = await createPatient();
+      const { specialist } = await createSpecialist();
+      const soonDate = new Date(Date.now() + 3 * 60 * 60 * 1000); // 3 hours from now
+      const appointment = await Appointment.create({
+        patientId: idOf(patient),
+        specialistId: idOf(specialist),
+        date: soonDate,
+        type: "clinic",
+        status: "pending",
+      });
+      const token = createToken(idOf(patient), "patient");
+
+      const res = await request(app)
+        .delete(`/api/appointments/${idOf(appointment)}`)
+        .set("Authorization", `Bearer ${token}`);
+
+      expect(res.status).toBe(400);
+    });
+
+    it("returns 400 when patient tries to cancel home appointment within 24 hours", async () => {
+      const patient = await createPatient();
+      const { specialist } = await createSpecialist();
+      const soonDate = new Date(Date.now() + 12 * 60 * 60 * 1000); // 12 hours from now
+      const appointment = await Appointment.create({
+        patientId: idOf(patient),
+        specialistId: idOf(specialist),
+        date: soonDate,
+        type: "home",
+        status: "pending",
+        address: "123 Test St",
+      });
+      const token = createToken(idOf(patient), "patient");
+
+      const res = await request(app)
+        .delete(`/api/appointments/${idOf(appointment)}`)
+        .set("Authorization", `Bearer ${token}`);
+
+      expect(res.status).toBe(400);
+    });
+
+    it("patient can cancel clinic appointment more than 6 hours before", async () => {
+      const patient = await createPatient();
+      const { specialist } = await createSpecialist();
+      const appointment = await Appointment.create({
+        patientId: idOf(patient),
+        specialistId: idOf(specialist),
+        date: futureDate(2), // 2 days from now
+        type: "clinic",
+        status: "pending",
+      });
+      const token = createToken(idOf(patient), "patient");
+
+      const res = await request(app)
+        .delete(`/api/appointments/${idOf(appointment)}`)
+        .set("Authorization", `Bearer ${token}`);
+
+      expect(res.status).toBe(200);
+      expect(res.body.data.status).toBe("cancelled");
+    });
+
+    it("patient can cancel home appointment more than 24 hours before", async () => {
+      const patient = await createPatient();
+      const { specialist } = await createSpecialist();
+      const appointment = await Appointment.create({
+        patientId: idOf(patient),
+        specialistId: idOf(specialist),
+        date: futureDate(2), // 2 days from now
+        type: "home",
+        status: "pending",
+        address: "123 Test St",
+      });
+      const token = createToken(idOf(patient), "patient");
+
+      const res = await request(app)
+        .delete(`/api/appointments/${idOf(appointment)}`)
+        .set("Authorization", `Bearer ${token}`);
+
+      expect(res.status).toBe(200);
+      expect(res.body.data.status).toBe("cancelled");
+    });
+
+    it("specialist can cancel clinic appointment even within 6 hours", async () => {
+      const patient = await createPatient();
+      const { user, specialist } = await createSpecialist();
+      const soonDate = new Date(Date.now() + 3 * 60 * 60 * 1000); // 3 hours from now
+      const appointment = await Appointment.create({
+        patientId: idOf(patient),
+        specialistId: idOf(specialist),
+        date: soonDate,
+        type: "clinic",
+        status: "pending",
+      });
+      const token = createToken(idOf(user), "specialist");
+
+      const res = await request(app)
+        .delete(`/api/appointments/${idOf(appointment)}`)
+        .set("Authorization", `Bearer ${token}`);
+
+      expect(res.status).toBe(200);
+      expect(res.body.data.status).toBe("cancelled");
+    });
+
+    it("returns 400 when specialist tries to cancel home appointment within 24 hours", async () => {
+      const patient = await createPatient();
+      const { user, specialist } = await createSpecialist();
+      const soonDate = new Date(Date.now() + 12 * 60 * 60 * 1000); // 12 hours from now
+      const appointment = await Appointment.create({
+        patientId: idOf(patient),
+        specialistId: idOf(specialist),
+        date: soonDate,
+        type: "home",
+        status: "pending",
+        address: "123 Test St",
+      });
+      const token = createToken(idOf(user), "specialist");
+
+      const res = await request(app)
+        .delete(`/api/appointments/${idOf(appointment)}`)
+        .set("Authorization", `Bearer ${token}`);
+
+      expect(res.status).toBe(400);
+    });
+
+    it("specialist can cancel home appointment more than 24 hours before", async () => {
+      const patient = await createPatient();
+      const { user, specialist } = await createSpecialist();
+      const appointment = await Appointment.create({
+        patientId: idOf(patient),
+        specialistId: idOf(specialist),
+        date: futureDate(2), // 2 days from now
+        type: "home",
+        status: "pending",
+        address: "123 Test St",
+      });
+      const token = createToken(idOf(user), "specialist");
+
+      const res = await request(app)
+        .delete(`/api/appointments/${idOf(appointment)}`)
+        .set("Authorization", `Bearer ${token}`);
+
+      expect(res.status).toBe(200);
+      expect(res.body.data.status).toBe("cancelled");
+    });
+  });
 });

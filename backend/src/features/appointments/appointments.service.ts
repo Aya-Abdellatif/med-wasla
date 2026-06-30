@@ -287,14 +287,29 @@ export const cancelAppointmentService = async (
     throw new Error("APPOINTMENT_OVERDUE");
   }
 
+  const now = new Date();
+  const appointmentDate = new Date(appointment.date);
+  const hoursUntilAppointment = (appointmentDate.getTime() - now.getTime()) / (1000 * 60 * 60);
+
   if (requesterRole === "patient") {
     if (appointment.patientId.toString() !== requesterId) throw new Error("FORBIDDEN");
+
+    if (appointment.type === "clinic" && hoursUntilAppointment < 6) {
+      throw new Error("TOO_LATE_TO_CANCEL");
+    }
+    if (appointment.type === "home" && hoursUntilAppointment < 24) {
+      throw new Error("TOO_LATE_TO_CANCEL");
+    }
   } else {
     // Specialist: find their MedicalSpecialist doc and verify ownership
     const specialist = await MedicalSpecialist.findOne({ userId: requesterId });
     if (!specialist) throw new Error("SPECIALIST_PROFILE_NOT_FOUND");
     if (appointment.specialistId.toString() !== specialist._id.toString()) {
       throw new Error("FORBIDDEN");
+    }
+
+    if (appointment.type === "home" && hoursUntilAppointment < 24) {
+      throw new Error("TOO_LATE_TO_CANCEL");
     }
   }
 
