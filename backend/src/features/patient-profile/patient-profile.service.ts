@@ -29,6 +29,17 @@ export interface PatientProfile {
   updatedAt?: Date;
 }
 
+const toPatientUserResponse = (user: IUser): PatientProfile["user"] => ({
+  id: user._id.toString(),
+  name: user.name,
+  email: user.email,
+  phone: user.phone,
+  address: user.address,
+  role: user.role,
+  photoUrl: user.photoUrl,
+  dob: user.dob?.toISOString(),
+  governorate: user.governorate,
+});
 
 export const getPatientProfileByUserId = async (userId: string): Promise<PatientProfile> => {
 
@@ -44,17 +55,7 @@ export const getPatientProfileByUserId = async (userId: string): Promise<Patient
 
   return {
     patientId: patient._id.toString(),
-    user: {
-      id: user._id.toString(),
-      name: user.name,
-      email: user.email,
-      phone: user.phone,
-      address: user.address,
-      role: user.role,
-      photoUrl: user.photoUrl,
-      dob: user.dob?.toISOString(),
-      governorate: user.governorate,
-    },
+    user: toPatientUserResponse(user),
     medicalHistory: (patient.medicalHistory ?? []).map((entry) => ({
       condition: entry.condition,
       diagnosed: entry.diagnosed,
@@ -73,12 +74,16 @@ export interface UpdatePatientProfileDto {
     phone?: string;
     governorate?: string;
     address?: string;
+    photoUrl?: string;
     password?: string;
     currentPassword?: string;
-    dob?: Date;
+    dob?: Date | string;
 }
 
-export const updatePatientProfileByUserId = async (_id: string, data: UpdatePatientProfileDto) => {
+export const updatePatientProfileByUserId = async (
+  _id: string,
+  data: UpdatePatientProfileDto,
+): Promise<PatientProfile["user"]> => {
 
     const patient = await User.findOne({ _id }).select("+password");
     if (!patient) {
@@ -114,7 +119,8 @@ export const updatePatientProfileByUserId = async (_id: string, data: UpdatePati
         patient.governorate = data.governorate;
     }
     if (data.address !== undefined) patient.address = data.address;
-    if (data.dob !== undefined) patient.dob = data.dob;
+    if (data.dob !== undefined) patient.dob = new Date(data.dob);
+    if (data.photoUrl !== undefined) patient.photoUrl = data.photoUrl;
 
     if (data.password) {
       if (data.currentPassword) {
@@ -128,6 +134,5 @@ export const updatePatientProfileByUserId = async (_id: string, data: UpdatePati
 
     await patient.save();
 
-    const updatedPatient = await User.findOne({ _id })
-    return updatedPatient;
+    return toPatientUserResponse(patient);
 };

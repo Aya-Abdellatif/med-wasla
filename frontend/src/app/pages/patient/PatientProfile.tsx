@@ -655,7 +655,9 @@ export function PatientProfile() {
     fetchPatientProfile(user.id)
       .then((data: PatientProfileApi) => {
         setProfile(data);
-        // console.log(data);
+        if (data.user.photoUrl) {
+          updateProfile({ avatar: data.user.photoUrl });
+        }
       })
       .catch((error: unknown) => {
         setProfileError(error instanceof Error ? error.message : "Unable to load patient profile.");
@@ -686,7 +688,11 @@ export function PatientProfile() {
         }
     );
 
-    updateProfile({ name: updatedUser.name, phone: updatedUser.phone });
+    updateProfile({
+      name: updatedUser.name,
+      phone: updatedUser.phone,
+      ...(updatedUser.photoUrl ? { avatar: updatedUser.photoUrl } : {}),
+    });
   };
 
   const getStatusColor = (status: string) => {
@@ -772,8 +778,8 @@ export function PatientProfile() {
                 profile={profile?.user ?? null}
                 onSave={handleSaveProfile}
                 isLoading={isProfileLoading}
-              />            
-              </div>
+              />
+            </div>
 
             {activeTab === "security" && <SecurityTab user={user} onSave={async (payload) => {
               if (!user?.id) throw new Error("Unable to save security settings without a logged in user.");
