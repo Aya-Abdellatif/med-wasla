@@ -9,15 +9,18 @@ interface ScheduleTabProps {
   onSelectedDateChange: (date: string) => void;
   filteredUpcoming: Appointment[];
   filteredCompleted: Appointment[];
+  filteredNoShow: Appointment[];
   pendingAppointments: Appointment[];
   overdueAppointments: Appointment[];
   offersHomeService: boolean;
-  onConfirm?: (appointmentId: string) => void;
   onCancel?: (appointmentId: string) => void;
   onCancelAllPending?: () => void;
+  onCancelAllUpcoming?: (date: string) => void;
   onComplete?: (appointmentId: string) => void;
+  onNoShow?: (appointmentId: string) => void;
   onGoToHomeService?: () => void;
   updatingAppointmentId?: string | null;
+  selectedScheduleDate: string;
 }
 
 export function ScheduleTab({
@@ -25,19 +28,26 @@ export function ScheduleTab({
   onSelectedDateChange,
   filteredUpcoming,
   filteredCompleted,
+  filteredNoShow,
   pendingAppointments,
   overdueAppointments,
   offersHomeService,
-  onConfirm,
   onCancel,
   onCancelAllPending,
+  onCancelAllUpcoming,
   onComplete,
+  onNoShow,
   onGoToHomeService,
   updatingAppointmentId,
 }: ScheduleTabProps) {
   const cancellablePending = pendingAppointments.filter(
-    (a) => a.backendStatus === "pending" && a.visitType === "clinic",
+    (a) => a.backendStatus === "pending" && a.visitType === "home",
   );
+  const cancellableUpcoming = filteredUpcoming.filter(
+    (a) => a.visitType === "clinic" && a.backendStatus === "confirmed",
+  );
+  const isBulkHome = updatingAppointmentId === "bulk-home";
+  const isBulkUpcoming = updatingAppointmentId === "bulk-upcoming";
 
   return (
     <div className="bg-white rounded-xl p-6" style={{ boxShadow: "0 1px 3px rgba(0,0,0,0.1)" }}>
@@ -69,7 +79,7 @@ export function ScheduleTab({
           <div>
             <div className="flex flex-wrap items-center justify-between gap-3 mb-4">
               <h3 className="text-lg font-semibold" style={{ color: DASHBOARD_THEME.text }}>
-                Pending Requests
+                Pending Home Visits
                 <span className="ml-2 text-sm font-normal" style={{ color: DASHBOARD_THEME.muted }}>
                   ({pendingAppointments.length})
                 </span>
@@ -77,12 +87,12 @@ export function ScheduleTab({
               {cancellablePending.length > 1 && onCancelAllPending && (
                 <button
                   type="button"
-                  disabled={updatingAppointmentId === "bulk"}
+                  disabled={isBulkHome || isBulkUpcoming}
                   onClick={onCancelAllPending}
                   className="px-3 py-1.5 text-sm font-medium rounded-lg text-white disabled:opacity-50"
                   style={{ backgroundColor: DASHBOARD_THEME.danger }}
                 >
-                  {updatingAppointmentId === "bulk" ? "Cancelling..." : "Cancel All Clinic"}
+                  {isBulkHome ? "Cancelling..." : "Cancel All Home"}
                 </button>
               )}
             </div>
@@ -93,8 +103,9 @@ export function ScheduleTab({
                   appointment={appointment}
                   showDate
                   offersHomeService={offersHomeService}
-                  onConfirm={onConfirm}
                   onCancel={onCancel}
+                  onComplete={onComplete}
+                  onNoShow={onNoShow}
                   onGoToHomeService={onGoToHomeService}
                   isUpdating={updatingAppointmentId === appointment.id}
                 />
@@ -104,12 +115,25 @@ export function ScheduleTab({
         )}
 
         <div>
-          <h3 className="text-lg font-semibold mb-4" style={{ color: DASHBOARD_THEME.text }}>
-            Upcoming
-            <span className="ml-2 text-sm font-normal" style={{ color: DASHBOARD_THEME.muted }}>
-              ({filteredUpcoming.length})
-            </span>
-          </h3>
+          <div className="flex flex-wrap items-center justify-between gap-3 mb-4">
+            <h3 className="text-lg font-semibold" style={{ color: DASHBOARD_THEME.text }}>
+              Upcoming
+              <span className="ml-2 text-sm font-normal" style={{ color: DASHBOARD_THEME.muted }}>
+                ({filteredUpcoming.length})
+              </span>
+            </h3>
+            {cancellableUpcoming.length > 1 && onCancelAllUpcoming && (
+              <button
+                type="button"
+                disabled={isBulkHome || isBulkUpcoming}
+                onClick={() => onCancelAllUpcoming(selectedDate)}
+                className="px-3 py-1.5 text-sm font-medium rounded-lg text-white disabled:opacity-50"
+                style={{ backgroundColor: DASHBOARD_THEME.danger }}
+              >
+                {isBulkUpcoming ? "Cancelling..." : "Cancel All"}
+              </button>
+            )}
+          </div>
           <div className="space-y-3">
             {filteredUpcoming.length > 0 ? (
               filteredUpcoming.map((appointment) => (
@@ -117,8 +141,9 @@ export function ScheduleTab({
                   key={appointment.id}
                   appointment={appointment}
                   offersHomeService={offersHomeService}
-                  onConfirm={onConfirm}
+                  onCancel={onCancel}
                   onComplete={onComplete}
+                  onNoShow={onNoShow}
                   onGoToHomeService={onGoToHomeService}
                   isUpdating={updatingAppointmentId === appointment.id}
                 />
@@ -157,7 +182,34 @@ export function ScheduleTab({
           </div>
         </div>
 
-        <MissedAppointmentsPanel count={overdueAppointments.length}>
+        <div>
+          <h3 className="text-lg font-semibold mb-4" style={{ color: DASHBOARD_THEME.text }}>
+            No Show
+            <span className="ml-2 text-sm font-normal" style={{ color: DASHBOARD_THEME.muted }}>
+              ({filteredNoShow.length})
+            </span>
+          </h3>
+          <div className="space-y-3">
+            {filteredNoShow.length > 0 ? (
+              filteredNoShow.map((appointment) => (
+                <AppointmentRow key={appointment.id} appointment={appointment} />
+              ))
+            ) : (
+              <p
+                className="text-sm py-4 text-center rounded-lg"
+                style={{ color: DASHBOARD_THEME.muted, backgroundColor: "#f9fafb" }}
+              >
+                No no-show appointments for this day.
+              </p>
+            )}
+          </div>
+        </div>
+
+        <MissedAppointmentsPanel
+          count={overdueAppointments.length}
+          title="Missed Home Visits"
+          description="Home visits that passed without confirmation or completion."
+        >
           {overdueAppointments.map((appointment) => (
             <AppointmentRow
               key={appointment.id}

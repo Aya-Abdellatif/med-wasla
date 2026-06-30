@@ -15,12 +15,13 @@ export function parseLocalAppointment(dateStr: string, timeStr: string) {
   return new Date(year, month - 1, day, hours, minutes, 0, 0);
 }
 
-/** Mark unconfirmed or uncompleted appointments whose date/time has passed as overdue. */
+/** Mark past home visits that were never completed as overdue. */
 export async function expireOverdueAppointments(filter?: {
   patientId?: string;
   specialistId?: string;
 }) {
   const query: Record<string, unknown> = {
+    type: "home",
     status: { $in: ["pending", "confirmed"] },
     date: { $lt: new Date(Date.now() - 30 * 60 * 1000) },
   };
@@ -84,6 +85,21 @@ export const createAppointmentService = async (data: {
 
   if (!availableSlots.includes(data.timeStr)) {
     throw new Error("SLOT_NOT_AVAILABLE");
+  }
+
+  const [year, month, day] = data.dateStr.split("-").map(Number);
+  const startOfDay = new Date(year, month - 1, day, 0, 0, 0, 0);
+  const endOfDay = new Date(year, month - 1, day, 23, 59, 59, 999);
+
+  const existingSameDay = await Appointment.findOne({
+    patientId: data.patientId,
+    specialistId: data.specialistId,
+    date: { $gte: startOfDay, $lte: endOfDay },
+    status: { $nin: ["cancelled"] },
+  });
+
+  if (existingSameDay) {
+    throw new Error("ALREADY_BOOKED_SAME_DAY");
   }
 
   const appointment = await Appointment.create({
@@ -190,25 +206,34 @@ export const updateAppointmentStatusService = async (
     throw new Error("FORBIDDEN");
   }
 
-  if (isAppointmentPast(appointment.date)) {
-    if (appointment.status === "pending" || appointment.status === "confirmed") {
-      appointment.status = "overdue";
-      await appointment.save();
-    }
-    throw new Error("APPOINTMENT_OVERDUE");
-  }
-
   if (appointment.status === "overdue") {
     throw new Error("APPOINTMENT_OVERDUE");
   }
 
-  const validTransitions: Record<string, AppointmentStatus[]> = {
-    pending: ["confirmed"],
-    confirmed: ["completed"],
-  };
+  if (appointment.type === "home") {
+    if (isAppointmentPast(appointment.date)) {
+      if (appointment.status === "pending" || appointment.status === "confirmed") {
+        appointment.status = "overdue";
+        await appointment.save();
+      }
+      throw new Error("APPOINTMENT_OVERDUE");
+    }
 
-  if (!validTransitions[appointment.status]?.includes(newStatus)) {
-    throw new Error("INVALID_TRANSITION");
+    const homeTransitions: Record<string, AppointmentStatus[]> = {
+      pending: ["confirmed"],
+    };
+
+    if (!homeTransitions[appointment.status]?.includes(newStatus)) {
+      throw new Error("INVALID_TRANSITION");
+    }
+  } else {
+    const clinicTransitions: Record<string, AppointmentStatus[]> = {
+      confirmed: ["completed", "no_show"],
+    };
+
+    if (!clinicTransitions[appointment.status]?.includes(newStatus)) {
+      throw new Error("INVALID_TRANSITION");
+    }
   }
 
   appointment.status = newStatus;
@@ -240,20 +265,26 @@ export const cancelAppointmentService = async (
   const appointment = await Appointment.findById(appointmentId);
   if (!appointment) return null;
 
-  if (appointment.status === "completed" || appointment.status === "cancelled") {
+  if (
+    appointment.status === "completed" ||
+    appointment.status === "cancelled" ||
+    appointment.status === "no_show"
+  ) {
     throw new Error("CANNOT_CANCEL");
   }
 
-  if (isAppointmentPast(appointment.date)) {
-    if (appointment.status === "pending" || appointment.status === "confirmed") {
-      appointment.status = "overdue";
-      await appointment.save();
+  if (appointment.type === "home") {
+    if (isAppointmentPast(appointment.date)) {
+      if (appointment.status === "pending" || appointment.status === "confirmed") {
+        appointment.status = "overdue";
+        await appointment.save();
+      }
+      throw new Error("APPOINTMENT_OVERDUE");
     }
-    throw new Error("APPOINTMENT_OVERDUE");
-  }
 
-  if (appointment.status === "overdue") {
-    throw new Error("APPOINTMENT_OVERDUE");
+    if (appointment.status === "overdue") {
+      throw new Error("APPOINTMENT_OVERDUE");
+    }
   }
 
   if (requesterRole === "patient") {
@@ -340,20 +371,26 @@ export const rescheduleAppointmentService = async (
 
   if (appointment.patientId.toString() !== patientId) throw new Error("FORBIDDEN");
 
-  if (appointment.status === "completed" || appointment.status === "cancelled") {
+  if (
+    appointment.status === "completed" ||
+    appointment.status === "cancelled" ||
+    appointment.status === "no_show"
+  ) {
     throw new Error("CANNOT_RESCHEDULE");
   }
 
-  if (isAppointmentPast(appointment.date)) {
-    if (appointment.status === "pending" || appointment.status === "confirmed") {
-      appointment.status = "overdue";
-      await appointment.save();
+  if (appointment.type === "home") {
+    if (isAppointmentPast(appointment.date)) {
+      if (appointment.status === "pending" || appointment.status === "confirmed") {
+        appointment.status = "overdue";
+        await appointment.save();
+      }
+      throw new Error("APPOINTMENT_OVERDUE");
     }
-    throw new Error("APPOINTMENT_OVERDUE");
-  }
 
-  if (appointment.status === "overdue") {
-    throw new Error("APPOINTMENT_OVERDUE");
+    if (appointment.status === "overdue") {
+      throw new Error("APPOINTMENT_OVERDUE");
+    }
   }
 
   if (newDate <= new Date()) throw new Error("DATE_IN_PAST");

@@ -180,7 +180,7 @@ export const syncQueueForSpecialistAndDate = async (specialistId: string, date: 
 
 		if (appt.status === "completed") {
 			status = "completed";
-		} else if (appt.status === "cancelled" || appt.status === "overdue") {
+		} else if (appt.status === "cancelled" || appt.status === "overdue" || appt.status === "no_show") {
 			status = "cancelled";
 		} else if (existingStatus) {
 			status = existingStatus;
@@ -215,7 +215,7 @@ export const syncQueueForSpecialistAndDate = async (specialistId: string, date: 
 	return queue;
 };
 
-export const getQueueForAppointment = async (appointmentId: string, patientId: string) => {
+export const getQueueForAppointment = async (appointmentId: string) => {
 	const appointment = await Appointment.findById(appointmentId);
 	if (!appointment) throw new AppError("Appointment not found", 404);
 

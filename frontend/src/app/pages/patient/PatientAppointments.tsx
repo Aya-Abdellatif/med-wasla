@@ -15,6 +15,7 @@ import {
     Home as HomeIcon,
     Stethoscope,
     User,
+    UserX,
     CalendarPlus,
     SlidersHorizontal,
 } from "lucide-react";
@@ -41,6 +42,7 @@ const statusConfig: Record<AppointmentStatus, { label: string; color: string; bg
     completed: { label: "Completed", color: "text-emerald-700", bgColor: "bg-emerald-50 border border-emerald-200", icon: CheckCircle2 },
     cancelled: { label: "Cancelled", color: "text-red-700", bgColor: "bg-red-50 border border-red-200", icon: XCircle },
     overdue: { label: "Overdue", color: "text-slate-700", bgColor: "bg-slate-100 border border-slate-200", icon: AlertCircle },
+    no_show: { label: "No Show", color: "text-amber-800", bgColor: "bg-amber-50 border border-amber-200", icon: UserX },
 };
 
 function formatDate(dateStr: string) {
@@ -305,6 +307,7 @@ export function MyAppointments() {
         completed: appointments.filter((a) => a.status === "completed").length,
         cancelled: appointments.filter((a) => a.status === "cancelled").length,
         overdue: appointments.filter((a) => a.status === "overdue").length,
+        no_show: appointments.filter((a) => a.status === "no_show").length,
     };
 
     const filtered = appointments.filter((a) => {
@@ -343,6 +346,7 @@ export function MyAppointments() {
     const summaryCards = [
         { label: "Upcoming", count: counts.upcoming, color: "text-blue-700", bg: "bg-blue-50", border: "border-blue-200", dot: "bg-blue-500", filter: "upcoming" as const },
         { label: "Pending", count: counts.pending, color: "text-amber-700", bg: "bg-amber-50", border: "border-amber-200", dot: "bg-amber-500", filter: "pending" as const },
+        { label: "No Show", count: counts.no_show, color: "text-amber-800", bg: "bg-amber-50", border: "border-amber-200", dot: "bg-amber-500", filter: "no_show" as const },
         { label: "Overdue", count: counts.overdue, color: "text-slate-700", bg: "bg-slate-100", border: "border-slate-200", dot: "bg-slate-500", filter: "overdue" as const },
         { label: "Completed", count: counts.completed, color: "text-emerald-700", bg: "bg-emerald-50", border: "border-emerald-200", dot: "bg-emerald-500", filter: "completed" as const },
         { label: "Cancelled", count: counts.cancelled, color: "text-red-700", bg: "bg-red-50", border: "border-red-200", dot: "bg-red-500", filter: "cancelled" as const },
@@ -411,7 +415,7 @@ export function MyAppointments() {
                             {/* Status filter */}
                             <div className="flex flex-wrap gap-2">
                                 <span className="text-xs text-muted-foreground self-center font-medium">Status:</span>
-                                {(["all", "upcoming", "pending", "overdue", "completed", "cancelled"] as const).map((s) => (
+                                {(["all", "upcoming", "pending", "no_show", "overdue", "completed", "cancelled"] as const).map((s) => (
                                     <button
                                         key={s}
                                         onClick={() => setStatusFilter(s)}

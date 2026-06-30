@@ -33,7 +33,7 @@ interface ApiAppointment {
   patientId?: ApiPatientRef | string;
   date: string;
   type: "clinic" | "home";
-  status: "pending" | "confirmed" | "completed" | "cancelled" | "overdue";
+  status: "pending" | "confirmed" | "completed" | "cancelled" | "overdue" | "no_show";
   address?: string;
   notes?: string;
 }
@@ -55,9 +55,11 @@ function resolvePatientStatus(appt: ApiAppointment): AppointmentStatus {
 
   if (appt.status === "completed") return "completed";
   if (appt.status === "cancelled") return "cancelled";
+  if (appt.status === "no_show") return "no_show";
   if (
-    appt.status === "overdue" ||
-    (isPast && (appt.status === "pending" || appt.status === "confirmed"))
+    appt.type === "home" &&
+    (appt.status === "overdue" ||
+      (isPast && (appt.status === "pending" || appt.status === "confirmed")))
   ) {
     return "overdue";
   }
@@ -68,12 +70,17 @@ function resolvePatientStatus(appt: ApiAppointment): AppointmentStatus {
 function resolveDashboardStatus(
   status: ApiAppointment["status"],
   dateStr: string,
+  type: ApiAppointment["type"],
 ): DashboardAppointment["status"] {
   const isPast = new Date(dateStr).getTime() < Date.now();
 
   if (status === "completed") return "completed";
   if (status === "cancelled") return "cancelled";
-  if (status === "overdue" || (isPast && (status === "pending" || status === "confirmed"))) {
+  if (status === "no_show") return "no_show";
+  if (
+    type === "home" &&
+    (status === "overdue" || (isPast && (status === "pending" || status === "confirmed")))
+  ) {
     return "overdue";
   }
   if (status === "confirmed") return "scheduled";
@@ -131,9 +138,9 @@ export function mapApiAppointmentsForSpecialist(
         time: formatTime(appt.date),
         type: appt.type === "home" ? "Home Visit" : "Clinic Visit",
         visitType: appt.type,
-        status: resolveDashboardStatus(appt.status, appt.date),
+        status: resolveDashboardStatus(appt.status, appt.date, appt.type),
         backendStatus:
-          resolveDashboardStatus(appt.status, appt.date) === "overdue"
+          resolveDashboardStatus(appt.status, appt.date, appt.type) === "overdue"
             ? "overdue"
             : appt.status,
       };

@@ -1,9 +1,10 @@
-import { Clock, Home } from "lucide-react";
+import { Clock, Home, UserX } from "lucide-react";
 import type { Appointment } from "./dashboardTypes";
 import {
   DASHBOARD_THEME,
   formatDateLabel,
   getStatusBadgeStyle,
+  isClinicAppointment,
   isHomeVisitAppointment,
 } from "./dashboardUtils";
 import { Avatar } from "./Avatar";
@@ -15,6 +16,7 @@ interface AppointmentRowProps {
   onConfirm?: (appointmentId: string) => void;
   onCancel?: (appointmentId: string) => void;
   onComplete?: (appointmentId: string) => void;
+  onNoShow?: (appointmentId: string) => void;
   onGoToHomeService?: () => void;
   isUpdating?: boolean;
 }
@@ -26,10 +28,12 @@ export function AppointmentRow({
   onConfirm,
   onCancel,
   onComplete,
+  onNoShow,
   onGoToHomeService,
   isUpdating = false,
 }: AppointmentRowProps) {
   const isHomeVisit = isHomeVisitAppointment(appointment);
+  const isClinic = isClinicAppointment(appointment);
   const routeToHomeTab =
     isHomeVisit &&
     offersHomeService &&
@@ -37,16 +41,27 @@ export function AppointmentRow({
 
   const showConfirm =
     !routeToHomeTab &&
+    isHomeVisit &&
     appointment.backendStatus === "pending" &&
     onConfirm;
   const showCancel =
     !routeToHomeTab &&
-    appointment.backendStatus === "pending" &&
-    onCancel;
+    onCancel &&
+    (appointment.backendStatus === "confirmed" ||
+      (isHomeVisit && appointment.backendStatus === "pending"));
   const showComplete =
     !routeToHomeTab &&
+    isClinic &&
     appointment.backendStatus === "confirmed" &&
     onComplete;
+  const showNoShow =
+    !routeToHomeTab &&
+    isClinic &&
+    appointment.backendStatus === "confirmed" &&
+    onNoShow;
+
+  const statusLabel =
+    appointment.status === "no_show" ? "No Show" : appointment.status;
 
   return (
     <div
@@ -81,7 +96,7 @@ export function AppointmentRow({
           className="px-3 py-1 text-sm rounded-full font-medium capitalize"
           style={getStatusBadgeStyle(appointment.status)}
         >
-          {appointment.status}
+          {statusLabel}
         </span>
         {routeToHomeTab && onGoToHomeService && (
           <button
@@ -126,6 +141,18 @@ export function AppointmentRow({
             style={{ backgroundColor: DASHBOARD_THEME.success }}
           >
             Mark Complete
+          </button>
+        )}
+        {showNoShow && (
+          <button
+            type="button"
+            disabled={isUpdating}
+            onClick={() => onNoShow(appointment.id)}
+            className="flex items-center gap-1.5 px-3 py-1.5 text-sm rounded-lg font-medium text-white disabled:opacity-50"
+            style={{ backgroundColor: "#d97706" }}
+          >
+            <UserX className="w-4 h-4" />
+            No Show
           </button>
         )}
       </div>

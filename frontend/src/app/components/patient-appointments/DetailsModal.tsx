@@ -16,6 +16,7 @@ import {
     Armchair,
     Users,
     Loader2,
+    UserX,
 } from "lucide-react";
 import { fetchAppointmentQueue } from "../../../services/appointmentsApi";
 import type { AppointmentQueueResult } from "../../../services/appointmentsApi";
@@ -32,6 +33,7 @@ const statusConfig: Record<AppointmentStatus, { label: string; color: string; bg
     completed: { label: "Completed", color: "text-emerald-700", bgColor: "bg-emerald-50 border border-emerald-200", icon: CheckCircle2 },
     cancelled: { label: "Cancelled", color: "text-red-700", bgColor: "bg-red-50 border border-red-200", icon: XCircle },
     overdue: { label: "Overdue", color: "text-slate-700", bgColor: "bg-slate-100 border border-slate-200", icon: AlertCircle },
+    no_show: { label: "No Show", color: "text-amber-800", bgColor: "bg-amber-50 border border-amber-200", icon: UserX },
 };
 
 export function DetailsModal({ appointment, onClose }: { appointment: Appointment; onClose: () => void }) {

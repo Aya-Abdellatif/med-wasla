@@ -7,7 +7,14 @@ import type { IReminder } from "./reminder.model.js";
 const appointmentTypes = ["clinic", "home"] as const;
 export type AppointmentType = (typeof appointmentTypes)[number];
 
-const appointmentStatuses = ["pending", "confirmed", "completed", "cancelled", "overdue"] as const;
+const appointmentStatuses = [
+  "pending",
+  "confirmed",
+  "completed",
+  "cancelled",
+  "overdue",
+  "no_show",
+] as const;
 export type AppointmentStatus = (typeof appointmentStatuses)[number];
 
 export interface IAppointment extends Document {

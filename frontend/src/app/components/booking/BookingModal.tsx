@@ -192,7 +192,12 @@ export function BookingModal({ isOpen, onClose, provider, serviceType }: Booking
       );
       handleClose();
     } catch (err) {
-      showError(err instanceof Error ? err.message : "Failed to book appointment");
+      const message = err instanceof Error ? err.message : "Failed to book appointment";
+      if (message.toLowerCase().includes("already have an appointment")) {
+        showWarning("You already booked an appointment with this doctor on this day.");
+      } else {
+        showError(message);
+      }
     } finally {
       setIsSubmitting(false);
     }
