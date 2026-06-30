@@ -419,6 +419,21 @@ export const rescheduleAppointmentService = async (
     throw new Error("SLOT_NOT_AVAILABLE");
   }
 
+  // Prevent rescheduling to a day where the patient already has another appointment with the same specialist
+  const [year, month, day] = dateStr.split("-").map(Number);
+  const startOfDay = new Date(year, month - 1, day, 0, 0, 0, 0);
+  const endOfDay = new Date(year, month - 1, day, 23, 59, 59, 999);
+  const conflictingAppointment = await Appointment.findOne({
+    patientId,
+    specialistId,
+    _id: { $ne: appointmentId },
+    date: { $gte: startOfDay, $lte: endOfDay },
+    status: { $nin: ["cancelled", "overdue"] },
+  });
+  if (conflictingAppointment) {
+    throw new Error("ALREADY_BOOKED_SAME_DAY");
+  }
+
   const oldDate = appointment.date;
   appointment.date = newDate;
   // clinic stays confirmed (auto-approved); home goes back to pending for re-approval
