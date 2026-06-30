@@ -33,6 +33,11 @@ const EGYPTIAN_GOVERNORATES = [
   "Luxor", "Qena", "North Sinai", "Sohag",
 ];
 
+function stripPhoneDisplay(phone: string): string {
+  const digits = phone.replace(/\D/g, "");
+  return digits.startsWith("0") ? digits.slice(1) : digits;
+}
+
 type Tab = "personal" | "security";
 
 function FieldError({ msg }: { msg?: string }) {
@@ -152,7 +157,7 @@ function PersonalTab({ profile, onSave, isLoading }: {
     if (!form.name.trim()) e.name = "Full name is required.";
     else if (form.name.trim().length < 3) e.name = "Name must be at least 3 characters.";
     if (!form.phone.trim()) e.phone = "Phone number is required.";
-    else if (!/^\d{7,15}$/.test(form.phone.replace(/\s/g, ""))) e.phone = "Enter a valid phone number.";
+    else if (!/^0?1[0125][0-9]{8}$/.test(form.phone.replace(/\s/g, ""))) e.phone = "Enter a valid phone number.";
     if (!form.dob) e.dob = "Date of birth is required.";
     if (!form.governorate) e.governorate = "Governorate is required.";
     return e;
@@ -165,9 +170,10 @@ function PersonalTab({ profile, onSave, isLoading }: {
     setIsSaving(true);
 
     try {
+      const normalizedPhone = stripPhoneDisplay(form.phone);
       const result = await onSave({
         name: form.name,
-        phone: form.phone,
+        phone: normalizedPhone,
         dob: form.dob,
         governorate: form.governorate,
         address: form.address,
@@ -176,6 +182,7 @@ function PersonalTab({ profile, onSave, isLoading }: {
       });
       const nextSaved = {
         ...form,
+        phone: normalizedPhone,
         photoUrl: result.photoUrl ?? "",
       };
       setSaved(nextSaved);
@@ -231,7 +238,7 @@ function PersonalTab({ profile, onSave, isLoading }: {
           </div>
           <InfoRow
             label="Phone Number"
-            value={saved?.phone ? `+20 ${saved.phone}` : undefined}
+            value={saved?.phone ? `+20 ${stripPhoneDisplay(saved.phone)}` : undefined}
             icon={Phone}
           />
           <InfoRow
@@ -326,8 +333,11 @@ function PersonalTab({ profile, onSave, isLoading }: {
             <input
               type="tel"
               value={form.phone}
-              onChange={(e) => { setForm({ ...form, phone: e.target.value }); setErrors({ ...errors, phone: "" }); }}
-              placeholder="1234567890"
+              onChange={(e) => {
+                setForm({ ...form, phone: e.target.value });
+                setErrors({ ...errors, phone: "" });
+              }}
+              placeholder="1123456789"
               className="flex-1 px-4 py-3 bg-input-background focus:outline-none text-sm"
             />
           </div>
