@@ -1,5 +1,7 @@
 import type { Request, Response, NextFunction } from "express";
-import { getPatientProfileByUserId, updatePatientProfileByUserId } from "./patient-profile.service.js";
+import { getPatientProfileByUserId, updatePatientProfileByUserId, updatePatientPhotoByUserId } from "./patient-profile.service.js";
+import AppError from "../../utils/AppError.js";
+
 
 export const getPatientProfile = async (req: Request, res: Response, next: NextFunction) => {
   try {
@@ -25,5 +27,20 @@ export const updatePatientProfile = async (req: Request, res: Response, next: Ne
     res.status(200).json(updatedProfile);
   } catch (error) {
     next(error);
+  }
+};
+
+export const updatePatientPhoto = async (req: Request, res: Response, next: NextFunction) => {
+  try {
+    if (!req.file) throw new AppError("Please upload an image", 400);
+
+    const user = await updatePatientPhotoByUserId(req.user!.id, req.file.buffer, req.file.mimetype);
+    res.status(200).json({
+      status: "success",
+      message: "Profile photo updated",
+      data: { photoUrl: user.photoUrl },
+    });
+  } catch (err) {
+    next(err);
   }
 };
