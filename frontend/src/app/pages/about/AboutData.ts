@@ -97,10 +97,10 @@ export const teamMembers = [
    },
   {
     name: "Aya Abdellatif",
-    role: "Backend Developer",
+    role: `Full Stack Developer (Team Leader)`,
     image: "../../assets/Aya.jpg",
-    linkedin: "https://linkedin.com/in/mohammed-ali",
-    whatsapp: "https://wa.me/201283633638",
+    linkedin: "https://www.linkedin.com/in/aya-abdllatif/",
+    whatsapp: "https://wa.me/20128363363",
   },
   {
     name: "Hana Ahmed",
@@ -113,7 +113,7 @@ export const teamMembers = [
     name: "Ranim Mogharab",
     role: "AI Specialist",
     image: "../../assets/Ranim.jpg",
-    linkedin: "https://linkedin.com/in/amira-saleh",
+    linkedin: "https://www.linkedin.com/in/ranim-mohareb/",
     whatsapp: "https://wa.me/201004444444",
   },
 ];
