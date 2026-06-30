@@ -543,7 +543,8 @@ describe("Appointments Routes", () => {
         .patch(`/api/appointments/${idOf(appointment)}/reschedule`)
         .set("Authorization", `Bearer ${token}`)
         .send({
-          date: futureDate(3).toISOString(),
+          date: tomorrowDateString(),
+          time: "10:30",
           notes: "New time",
         });
 
@@ -569,7 +570,7 @@ describe("Appointments Routes", () => {
       const res = await request(app)
         .patch(`/api/appointments/${idOf(appointment)}/reschedule`)
         .set("Authorization", `Bearer ${token}`)
-        .send({ date: futureDate(3).toISOString() });
+        .send({ date: tomorrowDateString(), time: "10:30" });
 
       expect(res.status).toBe(200);
       expect(res.body.data.status).toBe("pending");
@@ -586,7 +587,8 @@ describe("Appointments Routes", () => {
         .patch(`/api/appointments/${idOf(appointment)}/reschedule`)
         .set("Authorization", `Bearer ${token}`)
         .send({
-          date: futureDate(2).toISOString(),
+          date: tomorrowDateString(),
+          time: "10:30",
         });
 
       expect(res.status).toBe(403);
@@ -658,9 +660,11 @@ describe("Appointments Routes", () => {
       const { user, specialist } = await createSpecialist();
       const token = createToken(idOf(user), "specialist");
 
+      const slot1 = futureDate();
+      const slot2 = new Date(slot1); slot2.setMinutes(30);
       await Appointment.create([
-        { patientId: idOf(patient), specialistId: idOf(specialist), date: futureDate(), type: "clinic", status: "confirmed" },
-        { patientId: idOf(patient), specialistId: idOf(specialist), date: futureDate(), type: "clinic", status: "pending" },
+        { patientId: idOf(patient), specialistId: idOf(specialist), date: slot1, type: "clinic", status: "confirmed" },
+        { patientId: idOf(patient), specialistId: idOf(specialist), date: slot2, type: "clinic", status: "pending" },
       ]);
 
       const res = await request(app)
