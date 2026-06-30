@@ -1,4 +1,5 @@
 import { useEffect, useState, useRef, type ChangeEvent } from "react";
+import { createPortal } from "react-dom";
 import { useAuth } from "../../context/useAuth";
 import type { DiseaseRecord, User } from "../../context/AuthContext";
 import { fetchPatientProfile, updatePatientProfile, updatePatientPhoto, removePatientPhoto, updatePatientSecurity, type PatientProfileApi } from "../../../services/patientApi";
@@ -21,6 +22,8 @@ import {
   Edit,
   UploadCloud,
   Trash2,
+  Camera,
+  X,
 } from "lucide-react";
 import { ImageWithFallback } from "../../figma/ImageWithFallback";
 import { showError, showSuccess } from "../../../utils/toast";
@@ -40,6 +43,8 @@ function stripPhoneDisplay(phone: string): string {
 }
 
 type Tab = "personal" | "security";
+
+const PHOTO_MENU_WIDTH = 208;
 
 function FieldError({ msg }: { msg?: string }) {
   if (!msg) return null;
@@ -96,7 +101,54 @@ function PersonalTab({ profile, onSave, isLoading }: {
   const [isSaving, setIsSaving] = useState(false);
   const [selectedPhotoFile, setSelectedPhotoFile] = useState<File | null>(null);
   const [removePhotoRequested, setRemovePhotoRequested] = useState(false);
+  const [photoMenuOpen, setPhotoMenuOpen] = useState(false);
+  const [showPhotoPreview, setShowPhotoPreview] = useState(false);
+  const [photoMenuPosition, setPhotoMenuPosition] = useState({ top: 0, left: 0 });
   const fileInputRef = useRef<HTMLInputElement | null>(null);
+  const photoEditButtonRef = useRef<HTMLButtonElement | null>(null);
+  const photoMenuRef = useRef<HTMLDivElement | null>(null);
+
+  const hasProfilePhoto = Boolean(form.photoUrl);
+
+  const updatePhotoMenuPosition = () => {
+    const button = photoEditButtonRef.current;
+    if (!button) return;
+
+    const rect = button.getBoundingClientRect();
+    setPhotoMenuPosition({
+      top: rect.bottom + 8,
+      left: Math.min(
+        Math.max(8, rect.right - PHOTO_MENU_WIDTH),
+        window.innerWidth - PHOTO_MENU_WIDTH - 8,
+      ),
+    });
+  };
+
+  useEffect(() => {
+    if (!photoMenuOpen) return;
+
+    updatePhotoMenuPosition();
+    window.addEventListener("resize", updatePhotoMenuPosition);
+    window.addEventListener("scroll", updatePhotoMenuPosition, true);
+
+    const handleClickOutside = (event: MouseEvent) => {
+      const target = event.target as Node;
+      if (
+        photoMenuRef.current?.contains(target) ||
+        photoEditButtonRef.current?.contains(target)
+      ) {
+        return;
+      }
+      setPhotoMenuOpen(false);
+    };
+
+    document.addEventListener("mousedown", handleClickOutside);
+    return () => {
+      window.removeEventListener("resize", updatePhotoMenuPosition);
+      window.removeEventListener("scroll", updatePhotoMenuPosition, true);
+      document.removeEventListener("mousedown", handleClickOutside);
+    };
+  }, [photoMenuOpen]);
 
   const handleFileChange = (e: ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0];
@@ -114,6 +166,7 @@ function PersonalTab({ profile, onSave, isLoading }: {
 
     setSelectedPhotoFile(file);
     setRemovePhotoRequested(false);
+    setPhotoMenuOpen(false);
 
     const reader = new FileReader();
     reader.onload = () => {
@@ -127,6 +180,8 @@ function PersonalTab({ profile, onSave, isLoading }: {
     setSelectedPhotoFile(null);
     if (saved.photoUrl) setRemovePhotoRequested(true);
     if (fileInputRef.current) fileInputRef.current.value = "";
+    setPhotoMenuOpen(false);
+    setShowPhotoPreview(false);
   };
 
   if (isLoading && !profile) {
@@ -176,6 +231,8 @@ function PersonalTab({ profile, onSave, isLoading }: {
       if (fileInputRef.current) fileInputRef.current.value = "";
       setErrors({});
       showSuccess("Personal information saved successfully.");
+      setPhotoMenuOpen(false);
+      setShowPhotoPreview(false);
       setEditing(false);
     } catch (error) {
       showError(error instanceof Error ? error.message : "Unable to save profile.");
@@ -189,6 +246,8 @@ function PersonalTab({ profile, onSave, isLoading }: {
     setSelectedPhotoFile(null);
     setRemovePhotoRequested(false);
     if (fileInputRef.current) fileInputRef.current.value = "";
+    setPhotoMenuOpen(false);
+    setShowPhotoPreview(false);
     setErrors({});
     setEditing(false);
   };
@@ -247,35 +306,28 @@ function PersonalTab({ profile, onSave, isLoading }: {
 
       {/* Avatar + Row 1 — Full Name */}
       <div className="flex items-start gap-6">
-        <div className="flex flex-col items-center gap-2">
-          <div className="relative">
-            <div className="w-24 h-24 rounded-full bg-primary/10 overflow-hidden flex items-center justify-center text-2xl text-fg">
-              {form.photoUrl ? (
-                <img src={form.photoUrl} alt="avatar" className="w-full h-full object-cover" />
-              ) : (
-                <span className="uppercase">{(profile?.name || "P").charAt(0)}</span>
-              )}
-            </div>
-            <button
-              type="button"
-              onClick={() => fileInputRef.current?.click()}
-              className="absolute -bottom-0.5 -right-0.5 bg-white border border-border rounded-full p-2 shadow-sm hover:bg-muted transition-colors"
-              aria-label="Upload avatar"
-            >
-              <UploadCloud className="w-4 h-4 text-primary" />
-            </button>
-            <input ref={fileInputRef} onChange={handleFileChange} accept="image/*" type="file" className="hidden" />
+        <div className="relative w-24 h-24 shrink-0">
+          <div className="w-full h-full rounded-full bg-primary/10 overflow-hidden flex items-center justify-center text-2xl text-fg">
+            {form.photoUrl ? (
+              <img src={form.photoUrl} alt="avatar" className="w-full h-full object-cover" />
+            ) : (
+              <span className="uppercase">{(profile?.name || "P").charAt(0)}</span>
+            )}
           </div>
-          {form.photoUrl && (
-            <button
-              type="button"
-              onClick={handleRemovePhoto}
-              className="flex items-center gap-1.5 text-xs text-red-600 hover:text-red-700 transition-colors"
-            >
-              <Trash2 className="w-3.5 h-3.5" />
-              Remove photo
-            </button>
-          )}
+
+          <button
+            ref={photoEditButtonRef}
+            type="button"
+            onClick={() => setPhotoMenuOpen((open) => !open)}
+            className="absolute -bottom-1 -right-1 flex items-center gap-1 bg-white border border-border rounded-full pl-1.5 pr-2 py-1 shadow-sm hover:bg-muted transition-colors text-[11px] font-medium text-primary whitespace-nowrap"
+            aria-expanded={photoMenuOpen}
+            aria-haspopup="menu"
+          >
+            <Camera className="w-3.5 h-3.5" />
+            Edit
+          </button>
+
+          <input ref={fileInputRef} onChange={handleFileChange} accept="image/*" type="file" className="hidden" />
         </div>
         <div className="flex-1">
           <label className="block text-sm font-medium text-fg mb-1.5">Full Name</label>
@@ -417,6 +469,75 @@ function PersonalTab({ profile, onSave, isLoading }: {
           Cancel
         </button>
       </div>
+
+      {photoMenuOpen && createPortal(
+        <div
+          ref={photoMenuRef}
+          role="menu"
+          style={{ top: photoMenuPosition.top, left: photoMenuPosition.left, width: PHOTO_MENU_WIDTH }}
+          className="fixed z-[200] bg-white border border-border rounded-xl shadow-lg py-1.5"
+        >
+          <button
+            type="button"
+            role="menuitem"
+            onClick={() => {
+              fileInputRef.current?.click();
+              setPhotoMenuOpen(false);
+            }}
+            className="w-full flex items-center gap-2.5 px-3.5 py-2.5 text-sm text-fg hover:bg-primary/5 transition-colors"
+          >
+            <UploadCloud className="w-4 h-4 text-primary shrink-0" />
+            Upload Photo
+          </button>
+          <button
+            type="button"
+            role="menuitem"
+            disabled={!hasProfilePhoto}
+            onClick={handleRemovePhoto}
+            className="w-full flex items-center gap-2.5 px-3.5 py-2.5 text-sm text-fg hover:bg-red-50 transition-colors disabled:opacity-40 disabled:cursor-not-allowed disabled:hover:bg-transparent"
+          >
+            <Trash2 className="w-4 h-4 text-red-500 shrink-0" />
+            Remove Photo
+          </button>
+          <button
+            type="button"
+            role="menuitem"
+            disabled={!hasProfilePhoto}
+            onClick={() => {
+              setShowPhotoPreview(true);
+              setPhotoMenuOpen(false);
+            }}
+            className="w-full flex items-center gap-2.5 px-3.5 py-2.5 text-sm text-fg hover:bg-primary/5 transition-colors disabled:opacity-40 disabled:cursor-not-allowed disabled:hover:bg-transparent"
+          >
+            <Eye className="w-4 h-4 text-fg-muted shrink-0" />
+            Show Photo
+          </button>
+        </div>,
+        document.body,
+      )}
+
+      {showPhotoPreview && form.photoUrl && (
+        <div
+          className="fixed inset-0 z-50 flex items-center justify-center bg-black/60 px-4"
+          onClick={() => setShowPhotoPreview(false)}
+        >
+          <div className="relative max-w-lg w-full" onClick={(e) => e.stopPropagation()}>
+            <button
+              type="button"
+              onClick={() => setShowPhotoPreview(false)}
+              className="absolute -top-3 -right-3 bg-white rounded-full p-2 shadow-lg hover:bg-muted transition-colors"
+              aria-label="Close photo preview"
+            >
+              <X className="w-4 h-4 text-fg" />
+            </button>
+            <img
+              src={form.photoUrl}
+              alt="Profile photo preview"
+              className="w-full max-h-[80vh] object-contain rounded-2xl bg-white"
+            />
+          </div>
+        </div>
+      )}
     </div>
   );
 }
@@ -554,21 +675,21 @@ function SecurityTab({ user, onSave }: { user: User | null; onSave: (payload: { 
       </div>
 
       <div>
-      <label className="block text-sm font-medium text-fg mb-1.5">Current Password</label>
-      <div className="relative">
-        <Lock className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-fg-muted" />
-        <input
-          type={show.current ? "text" : "password"}
-          value={form.currentPassword}
-          onChange={(e) => { setForm({ ...form, currentPassword: e.target.value }); setErrors({ ...errors, currentPassword: "" }); }}
-          placeholder="Enter current password"
-          className={`w-full pl-9 pr-10 py-3 bg-input-background border rounded-xl focus:outline-none focus:ring-2 focus:ring-primary transition-colors text-sm ${errors.currentPassword ? "border-red-400 focus:ring-red-300" : "border-border"}`}
-        />
-        <button type="button" onClick={() => setShow({ ...show, current: !show.current })} className="absolute right-3 top-1/2 -translate-y-1/2 text-fg-muted hover:text-fg">
-          {show.current ? <EyeOff className="w-4 h-4" /> : <Eye className="w-4 h-4" />}
-        </button>
-      </div>
-      <FieldError msg={errors.currentPassword} />
+        <label className="block text-sm font-medium text-fg mb-1.5">Current Password</label>
+        <div className="relative">
+          <Lock className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-fg-muted" />
+          <input
+            type={show.current ? "text" : "password"}
+            value={form.currentPassword}
+            onChange={(e) => { setForm({ ...form, currentPassword: e.target.value }); setErrors({ ...errors, currentPassword: "" }); }}
+            placeholder="Enter current password"
+            className={`w-full pl-9 pr-10 py-3 bg-input-background border rounded-xl focus:outline-none focus:ring-2 focus:ring-primary transition-colors text-sm ${errors.currentPassword ? "border-red-400 focus:ring-red-300" : "border-border"}`}
+          />
+          <button type="button" onClick={() => setShow({ ...show, current: !show.current })} className="absolute right-3 top-1/2 -translate-y-1/2 text-fg-muted hover:text-fg">
+            {show.current ? <EyeOff className="w-4 h-4" /> : <Eye className="w-4 h-4" />}
+          </button>
+        </div>
+        <FieldError msg={errors.currentPassword} />
       </div>
 
       <div>
