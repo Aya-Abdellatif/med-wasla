@@ -1,4 +1,4 @@
-import { useState, useEffect, useMemo, useCallback } from "react";
+import { useState, useEffect, useMemo, useCallback, useRef } from "react";
 import { useNavigate } from "react-router";
 import { X, Calendar, Clock, MapPin, AlertCircle, Loader2, Home, Stethoscope } from "lucide-react";
 import { showSuccess, showWarning, showError } from "../../../utils/toast";
@@ -56,6 +56,7 @@ export function BookingModal({ isOpen, onClose, provider, serviceType }: Booking
 
   const [errors, setErrors] = useState<Record<string, string>>({});
   const [isSubmitting, setIsSubmitting] = useState(false);
+  const dateInputRef = useRef<HTMLInputElement>(null);
   const [loadingSlots, setLoadingSlots] = useState(false);
   const [availableTimes, setAvailableTimes] = useState<string[]>([]);
   const [workingHours, setWorkingHours] = useState<{ start: string; end: string } | null>(
@@ -342,14 +343,18 @@ export function BookingModal({ isOpen, onClose, provider, serviceType }: Booking
                 Date *
               </label>
               <div className="relative">
-                <Calendar className="absolute left-4 top-1/2 -translate-y-1/2 w-5 h-5 text-muted-foreground" />
+                <Calendar
+                  className="absolute left-4 top-1/2 -translate-y-1/2 w-5 h-5 text-muted-foreground cursor-pointer"
+                  onClick={() => dateInputRef.current?.showPicker()}
+                />
                 <input
+                  ref={dateInputRef}
                   id="date"
                   type="date"
                   value={formData.date}
                   onChange={(e) => handleDateChange(e.target.value)}
                   min={minBookableDate}
-                  className={`w-full pl-12 pr-4 py-3 border rounded-lg focus:outline-none focus:ring-2 transition-colors ${
+                  className={`w-full pl-12 pr-4 py-3 border rounded-lg focus:outline-none focus:ring-2 transition-colors [&::-webkit-calendar-picker-indicator]:hidden ${
                     errors.date
                       ? "border-red-500 focus:ring-red-500"
                       : "border-border focus:ring-primary"
