@@ -102,15 +102,21 @@ export const createAppointmentService = async (data: {
     throw new Error("ALREADY_BOOKED_SAME_DAY");
   }
 
-  const appointment = await Appointment.create({
-    patientId: data.patientId,
-    specialistId: data.specialistId,
-    date: data.date,
-    type: data.type,
-    address: data.address,
-    notes: data.notes,
-    status: data.type === "clinic" ? "confirmed" : "pending",
-  });
+  let appointment;
+  try {
+    appointment = await Appointment.create({
+      patientId: data.patientId,
+      specialistId: data.specialistId,
+      date: data.date,
+      type: data.type,
+      address: data.address,
+      notes: data.notes,
+      status: data.type === "clinic" ? "confirmed" : "pending",
+    });
+  } catch (err: unknown) {
+    if ((err as { code?: number }).code === 11000) throw new Error("SLOT_NOT_AVAILABLE");
+    throw err;
+  }
 
   if (appointment.type === "clinic") {
     await syncQueueForSpecialistAndDate(appointment.specialistId.toString(), appointment.date)

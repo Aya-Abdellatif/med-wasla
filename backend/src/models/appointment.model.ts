@@ -88,6 +88,16 @@ const appointmentSchema = new Schema<IAppointment>(
   }
 );
 
+// Prevent double-booking: enforce uniqueness on (specialistId, date) for active appointments only.
+// Cancelled/overdue/no_show docs are excluded so slots can be re-booked after cancellation.
+appointmentSchema.index(
+  { specialistId: 1, date: 1 },
+  {
+    unique: true,
+    partialFilterExpression: { status: { $in: ["pending", "confirmed"] } },
+  }
+);
+
 const Appointment = mongoose.model<IAppointment>("Appointment", appointmentSchema);
 
 export default Appointment;
