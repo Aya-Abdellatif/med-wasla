@@ -65,10 +65,9 @@ export const setStatus = async (req: Request, res: Response, next: NextFunction)
 };
 
 export const getQueueForAppointment = async (req: Request, res: Response, next: NextFunction) => {
-	try {
-		const user = req.user!;
+	try {		
 		const appointmentId = req.params.appointmentId as string;
-		const result = await queueService.getQueueForAppointment(appointmentId, user.id);
+		const result = await queueService.getQueueForAppointment(appointmentId);
 		res.status(200).json({ status: "success", data: result });
 	} catch (err) {
 		next(err);
