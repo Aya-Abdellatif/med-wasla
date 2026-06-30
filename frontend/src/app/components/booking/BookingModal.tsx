@@ -251,16 +251,18 @@ export function BookingModal({ isOpen, onClose, provider, serviceType }: Booking
   return (
     <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/50">
       <div className="bg-white rounded-2xl shadow-2xl max-w-2xl w-full max-h-[90vh] overflow-y-auto">
-        <div className="sticky top-0 bg-white border-b border-border px-6 py-4 flex items-center justify-between">
+        <div className="sticky top-0 z-10 bg-white border-b border-border px-6 py-4 flex items-center justify-between">
           <div>
             <h2 className="text-2xl font-bold text-foreground">
               {isNurseBooking ? "Request Home Service" : "Book Appointment"}
             </h2>
-            {provider && (
-              <p className="text-sm text-muted-foreground mt-1">
-                with {provider.name} - {provider.specialty || provider.certification}
-              </p>
-            )}
+            {/*{provider && (
+              <div className="mt-1 space-y-0.5">
+                <p className="text-sm text-muted-foreground">
+                  with {provider.name} &middot; {provider.specialty || provider.certification}
+                </p>
+              </div>
+            )}*/}
           </div>
           <button onClick={handleClose} className="p-2 hover:bg-muted rounded-lg transition-colors">
             <X className="w-5 h-5" />
@@ -397,7 +399,7 @@ export function BookingModal({ isOpen, onClose, provider, serviceType }: Booking
               </div>
               {workingHours && (
                 <p className="text-xs text-muted-foreground mt-2">
-                  Working hours: {workingHours.start} - {workingHours.end}
+                  Working hours: {formatSlotLabel(workingHours.start)} - {formatSlotLabel(workingHours.end)}
                 </p>
               )}
               {errors.time && (
