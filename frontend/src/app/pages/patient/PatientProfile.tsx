@@ -18,12 +18,13 @@ import {
   ChevronDown,
   MapPin,
   Save,
-  X,
   Edit,
   UploadCloud,
   Trash2,
 } from "lucide-react";
 import { ImageWithFallback } from "../../figma/ImageWithFallback";
+import { showError, showSuccess } from "../../../utils/toast";
+
 
 const EGYPTIAN_GOVERNORATES = [
   "Cairo", "Giza", "Alexandria", "Dakahlia", "Red Sea", "Beheira",
@@ -47,18 +48,6 @@ function FieldError({ msg }: { msg?: string }) {
       <AlertCircle className="w-3.5 h-3.5 flex-shrink-0" />
       {msg}
     </p>
-  );
-}
-
-function SuccessBanner({ message, onDismiss }: { message: string; onDismiss: () => void }) {
-  return (
-    <div className="flex items-center gap-3 px-4 py-3 bg-emerald-50 border border-emerald-200 rounded-xl text-sm text-emerald-700">
-      <CheckCircle2 className="w-4 h-4 flex-shrink-0" />
-      <span className="flex-1">{message}</span>
-      <button onClick={onDismiss}>
-        <X className="w-4 h-4 opacity-60 hover:opacity-100" />
-      </button>
-    </div>
   );
 }
 
@@ -104,8 +93,6 @@ function PersonalTab({ profile, onSave, isLoading }: {
   const [errors, setErrors] = useState<Record<string, string>>({});
   const [govOpen, setGovOpen] = useState(false);
   const [govSearch, setGovSearch] = useState("");
-  const [success, setSuccess] = useState(false);
-  const [saveError, setSaveError] = useState<string>("");
   const [isSaving, setIsSaving] = useState(false);
   const [selectedPhotoFile, setSelectedPhotoFile] = useState<File | null>(null);
   const [removePhotoRequested, setRemovePhotoRequested] = useState(false);
@@ -116,16 +103,15 @@ function PersonalTab({ profile, onSave, isLoading }: {
     if (!file) return;
 
     if (!file.type.startsWith("image/")) {
-      setSaveError("Please select an image file (JPEG, PNG, or WebP).");
+      showError("Please select an image file (JPEG, PNG, or WebP).");
       return;
     }
 
     if (file.size > 5 * 1024 * 1024) {
-      setSaveError("Image must be smaller than 5MB.");
+      showError("Image must be smaller than 5MB.");
       return;
     }
 
-    setSaveError("");
     setSelectedPhotoFile(file);
     setRemovePhotoRequested(false);
 
@@ -141,7 +127,6 @@ function PersonalTab({ profile, onSave, isLoading }: {
     setSelectedPhotoFile(null);
     if (saved.photoUrl) setRemovePhotoRequested(true);
     if (fileInputRef.current) fileInputRef.current.value = "";
-    setSaveError("");
   };
 
   if (isLoading && !profile) {
@@ -166,7 +151,6 @@ function PersonalTab({ profile, onSave, isLoading }: {
   const handleSave = async () => {
     const e = validate();
     if (Object.keys(e).length) { setErrors(e); return; }
-    setSaveError("");
     setIsSaving(true);
 
     try {
@@ -191,10 +175,10 @@ function PersonalTab({ profile, onSave, isLoading }: {
       setRemovePhotoRequested(false);
       if (fileInputRef.current) fileInputRef.current.value = "";
       setErrors({});
-      setSuccess(true);
+      showSuccess("Personal information saved successfully.");
       setEditing(false);
     } catch (error) {
-      setSaveError(error instanceof Error ? error.message : "Unable to save profile.");
+      showError(error instanceof Error ? error.message : "Unable to save profile.");
     } finally {
       setIsSaving(false);
     }
@@ -206,7 +190,6 @@ function PersonalTab({ profile, onSave, isLoading }: {
     setRemovePhotoRequested(false);
     if (fileInputRef.current) fileInputRef.current.value = "";
     setErrors({});
-    setSaveError("");
     setEditing(false);
   };
 
@@ -214,13 +197,6 @@ function PersonalTab({ profile, onSave, isLoading }: {
   if (!editing) {
     return (
       <div className="space-y-6">
-        {success && (
-          <SuccessBanner
-            message="Personal information saved successfully."
-            onDismiss={() => setSuccess(false)}
-          />
-        )}
-
         <div className="flex items-center justify-between">
           <p className="text-sm text-fg-muted">Your personal details as registered on MedWasla.</p>
           <button
@@ -268,12 +244,6 @@ function PersonalTab({ profile, onSave, isLoading }: {
         <p className="text-sm text-fg-muted">Update your personal details below.</p>
         <span className="text-xs text-primary bg-primary/5 px-2.5 py-1 rounded-full">Editing</span>
       </div>
-
-      {saveError && (
-        <div className="rounded-2xl border border-red-200 bg-red-50 px-4 py-3 text-sm text-red-700">
-          {saveError}
-        </div>
-      )}
 
       {/* Avatar + Row 1 — Full Name */}
       <div className="flex items-start gap-6">
@@ -462,8 +432,6 @@ function SecurityTab({ user, onSave }: { user: User | null; onSave: (payload: { 
   });
   const [show, setShow] = useState({ current: false, newPw: false, confirm: false });
   const [errors, setErrors] = useState<Record<string, string>>({});
-  const [saveError, setSaveError] = useState<string>("");
-  const [success, setSuccess] = useState(false);
   const [isSaving, setIsSaving] = useState(false);
 
   const getStrength = (pw: string) => {
@@ -504,7 +472,6 @@ function SecurityTab({ user, onSave }: { user: User | null; onSave: (payload: { 
   const handleSave = async () => {
     const e = validate();
     if (Object.keys(e).length) { setErrors(e); return; }
-    setSaveError("");
     setIsSaving(true);
 
     try {
@@ -515,9 +482,9 @@ function SecurityTab({ user, onSave }: { user: User | null; onSave: (payload: { 
       setErrors({});
       setForm({ currentPassword: "", newPassword: "", confirmPassword: "" });
       setEditing(false);
-      setSuccess(true);
+      showSuccess("Password updated successfully.");
     } catch (error) {
-      setSaveError(error instanceof Error ? error.message : "Unable to save security settings.");
+      showError(error instanceof Error ? error.message : "Unable to save security settings.");
     } finally {
       setIsSaving(false);
     }
@@ -526,7 +493,6 @@ function SecurityTab({ user, onSave }: { user: User | null; onSave: (payload: { 
   const handleCancel = () => {
     setForm({ currentPassword: "", newPassword: "", confirmPassword: "" });
     setErrors({});
-    setSaveError("");
     setEditing(false);
   };
 
@@ -534,13 +500,6 @@ function SecurityTab({ user, onSave }: { user: User | null; onSave: (payload: { 
   if (!editing) {
     return (
       <div className="space-y-6">
-        {success && (
-          <SuccessBanner
-            message="Password updated successfully."
-            onDismiss={() => setSuccess(false)}
-          />
-        )}
-
         <div className="flex items-center justify-between">
           <p className="text-sm text-fg-muted">View your email and change your password.</p>
           <button
@@ -573,11 +532,6 @@ function SecurityTab({ user, onSave }: { user: User | null; onSave: (payload: { 
         <p className="text-sm text-fg-muted">Change your password below.</p>
         <span className="text-xs text-primary bg-primary/5 px-2.5 py-1 rounded-full">Editing</span>
       </div>
-      {saveError && (
-        <div className="rounded-2xl border border-red-200 bg-red-50 px-4 py-3 text-sm text-red-700">
-          {saveError}
-        </div>
-      )}
       <div>
         <label className="block text-sm font-medium text-fg mb-1.5">Email Address</label>
         <div className="relative">
@@ -599,6 +553,8 @@ function SecurityTab({ user, onSave }: { user: User | null; onSave: (payload: { 
         <div className="flex-1 h-px bg-border" />
       </div>
 
+      <div>
+      <label className="block text-sm font-medium text-fg mb-1.5">Current Password</label>
       <div className="relative">
         <Lock className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-fg-muted" />
         <input
@@ -613,6 +569,7 @@ function SecurityTab({ user, onSave }: { user: User | null; onSave: (payload: { 
         </button>
       </div>
       <FieldError msg={errors.currentPassword} />
+      </div>
 
       <div>
         <label className="block text-sm font-medium text-fg mb-1.5">New Password</label>
@@ -690,7 +647,6 @@ export function PatientProfile() {
   const { user, updateProfile } = useAuth();
   const [profile, setProfile] = useState<PatientProfileApi | null>(null);
   const [isProfileLoading, setIsProfileLoading] = useState(true);
-  const [profileError, setProfileError] = useState<string | null>(null);
   const [activeTab, setActiveTab] = useState<Tab>("personal");
 
   const hasFetchedRef = useRef(false);
@@ -707,7 +663,7 @@ export function PatientProfile() {
         }
       })
       .catch((error: unknown) => {
-        setProfileError(error instanceof Error ? error.message : "Unable to load patient profile.");
+        showError(error instanceof Error ? error.message : "Unable to load patient profile.");
       })
       .finally(() => setIsProfileLoading(false));
   }, [user?.id]);
@@ -833,12 +789,6 @@ export function PatientProfile() {
 
           {/* Tab body */}
           <div className="p-6 md:p-8">
-            {profileError && (
-              <div className="mb-6 rounded-2xl border border-red-200 bg-red-50 px-4 py-3 text-sm text-red-700">
-                Unable to load patient profile: {profileError}
-              </div>
-            )}
-
             {/* Keep PersonalTab mounted at all times so saving never unmounts it.
                 Show a spinner inside the tab while the initial load is in flight. */}
             <div className={activeTab === "personal" ? "" : "hidden"}>
