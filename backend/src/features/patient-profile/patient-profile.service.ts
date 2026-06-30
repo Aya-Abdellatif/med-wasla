@@ -123,7 +123,6 @@ export const updatePatientProfileByUserId = async (
   }
   if (data.address !== undefined) patient.address = data.address;
   if (data.dob !== undefined) patient.dob = new Date(data.dob);
-  if (data.photoUrl !== undefined) patient.photoUrl = data.photoUrl;
 
   if (data.password) {
     if (data.currentPassword) {
@@ -179,6 +178,57 @@ export const updatePatientPhotoByUserId = async (
   }
 
   const patient = await User.findByIdAndUpdate(userId, { photoUrl }, { new: true }, );
+
+  if (!patient) {
+    throw new AppError("User not found", 404);
+  }
+
+  return patient;
+};
+
+function getCloudinaryPublicId(photoUrl: string): string | null {
+  const uploadMarker = "/upload/";
+  const markerIndex = photoUrl.indexOf(uploadMarker);
+  if (markerIndex === -1) return null;
+
+  const pathAfterUpload = photoUrl.slice(markerIndex + uploadMarker.length);
+  const withoutVersion = pathAfterUpload.replace(/^v\d+\//, "");
+  const withoutExtension = withoutVersion.replace(/\.[^/.]+$/, "");
+  return withoutExtension || null;
+}
+
+export const removePatientPhotoByUserId = async (userId: string): Promise<IUser> => {
+  const user = await User.findById(userId);
+  if (!user) {
+    throw new AppError("User not found", 404);
+  }
+
+  if (!user.photoUrl) {
+    throw new AppError("No profile photo to remove", 400);
+  }
+
+  const existingPhotoUrl = user.photoUrl;
+  const hasCloudinary =
+    process.env.CLOUDINARY_CLOUD_NAME &&
+    process.env.CLOUDINARY_API_KEY &&
+    process.env.CLOUDINARY_API_SECRET;
+
+  if (hasCloudinary && existingPhotoUrl.includes("cloudinary.com")) {
+    const publicId = getCloudinaryPublicId(existingPhotoUrl);
+    if (publicId) {
+      try {
+        await cloudinary.uploader.destroy(publicId);
+      } catch {
+        // Continue clearing the stored URL even if Cloudinary cleanup fails.
+      }
+    }
+  }
+
+  const patient = await User.findByIdAndUpdate(
+    userId,
+    { $unset: { photoUrl: 1 } },
+    { new: true },
+  );
 
   if (!patient) {
     throw new AppError("User not found", 404);

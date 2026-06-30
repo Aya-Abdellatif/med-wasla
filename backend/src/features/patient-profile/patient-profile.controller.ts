@@ -1,5 +1,5 @@
 import type { Request, Response, NextFunction } from "express";
-import { getPatientProfileByUserId, updatePatientProfileByUserId, updatePatientPhotoByUserId } from "./patient-profile.service.js";
+import { getPatientProfileByUserId, updatePatientProfileByUserId, updatePatientPhotoByUserId, removePatientPhotoByUserId } from "./patient-profile.service.js";
 import AppError from "../../utils/AppError.js";
 
 
@@ -39,6 +39,19 @@ export const updatePatientPhoto = async (req: Request, res: Response, next: Next
       status: "success",
       message: "Profile photo updated",
       data: { photoUrl: user.photoUrl },
+    });
+  } catch (err) {
+    next(err);
+  }
+};
+
+export const removePatientPhoto = async (req: Request, res: Response, next: NextFunction) => {
+  try {
+    await removePatientPhotoByUserId(req.user!.id);
+    res.status(200).json({
+      status: "success",
+      message: "Profile photo removed",
+      data: { photoUrl: null },
     });
   } catch (err) {
     next(err);

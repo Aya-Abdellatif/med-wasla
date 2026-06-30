@@ -1,7 +1,7 @@
 import { useEffect, useState, useRef, type ChangeEvent } from "react";
 import { useAuth } from "../../context/useAuth";
 import type { DiseaseRecord, User } from "../../context/AuthContext";
-import { fetchPatientProfile, updatePatientProfile, updatePatientSecurity, type PatientProfileApi } from "../../../services/patientApi";
+import { fetchPatientProfile, updatePatientProfile, updatePatientPhoto, removePatientPhoto, updatePatientSecurity, type PatientProfileApi } from "../../../services/patientApi";
 import {
   User as UserIcon,
   Mail,
@@ -21,6 +21,7 @@ import {
   X,
   Edit,
   UploadCloud,
+  Trash2,
 } from "lucide-react";
 import { ImageWithFallback } from "../../figma/ImageWithFallback";
 
@@ -79,8 +80,9 @@ function PersonalTab({ profile, onSave, isLoading }: {
     dob: string;
     governorate: string;
     address: string;
-    photoUrl: string;
-  }) => Promise<void>;
+    photo?: File;
+    removePhoto?: boolean;
+  }) => Promise<{ photoUrl?: string }>;
 }) {
   const getInitialState = (p: PatientProfileApi["user"] | null) => ({
     name: p?.name || "",
@@ -100,16 +102,41 @@ function PersonalTab({ profile, onSave, isLoading }: {
   const [success, setSuccess] = useState(false);
   const [saveError, setSaveError] = useState<string>("");
   const [isSaving, setIsSaving] = useState(false);
+  const [selectedPhotoFile, setSelectedPhotoFile] = useState<File | null>(null);
+  const [removePhotoRequested, setRemovePhotoRequested] = useState(false);
   const fileInputRef = useRef<HTMLInputElement | null>(null);
 
   const handleFileChange = (e: ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0];
     if (!file) return;
+
+    if (!file.type.startsWith("image/")) {
+      setSaveError("Please select an image file (JPEG, PNG, or WebP).");
+      return;
+    }
+
+    if (file.size > 5 * 1024 * 1024) {
+      setSaveError("Image must be smaller than 5MB.");
+      return;
+    }
+
+    setSaveError("");
+    setSelectedPhotoFile(file);
+    setRemovePhotoRequested(false);
+
     const reader = new FileReader();
     reader.onload = () => {
       setForm((prev) => ({ ...prev, photoUrl: String(reader.result) }));
     };
     reader.readAsDataURL(file);
+  };
+
+  const handleRemovePhoto = () => {
+    setForm((prev) => ({ ...prev, photoUrl: "" }));
+    setSelectedPhotoFile(null);
+    if (saved.photoUrl) setRemovePhotoRequested(true);
+    if (fileInputRef.current) fileInputRef.current.value = "";
+    setSaveError("");
   };
 
   if (isLoading && !profile) {
@@ -138,18 +165,24 @@ function PersonalTab({ profile, onSave, isLoading }: {
     setIsSaving(true);
 
     try {
-      await onSave({
+      const result = await onSave({
         name: form.name,
         phone: form.phone,
         dob: form.dob,
         governorate: form.governorate,
         address: form.address,
-        photoUrl: form.photoUrl,
+        ...(selectedPhotoFile ? { photo: selectedPhotoFile } : {}),
+        ...(removePhotoRequested ? { removePhoto: true } : {}),
       });
-      setSaved(form);
-      // console.log("setSaved called");
-      // console.log(saved);
-      // console.log(form);
+      const nextSaved = {
+        ...form,
+        photoUrl: result.photoUrl ?? "",
+      };
+      setSaved(nextSaved);
+      setForm(nextSaved);
+      setSelectedPhotoFile(null);
+      setRemovePhotoRequested(false);
+      if (fileInputRef.current) fileInputRef.current.value = "";
       setErrors({});
       setSuccess(true);
       setEditing(false);
@@ -162,7 +195,11 @@ function PersonalTab({ profile, onSave, isLoading }: {
 
   const handleCancel = () => {
     setForm(saved);
+    setSelectedPhotoFile(null);
+    setRemovePhotoRequested(false);
+    if (fileInputRef.current) fileInputRef.current.value = "";
     setErrors({});
+    setSaveError("");
     setEditing(false);
   };
 
@@ -233,23 +270,35 @@ function PersonalTab({ profile, onSave, isLoading }: {
 
       {/* Avatar + Row 1 — Full Name */}
       <div className="flex items-start gap-6">
-        <div className="relative">
-          <div className="w-24 h-24 rounded-full bg-primary/10 overflow-hidden flex items-center justify-center text-2xl text-fg">
-            {form.photoUrl ? (
-              <img src={form.photoUrl} alt="avatar" className="w-full h-full object-cover" />
-            ) : (
-              <span className="uppercase">{(profile?.name || "P").charAt(0)}</span>
-            )}
+        <div className="flex flex-col items-center gap-2">
+          <div className="relative">
+            <div className="w-24 h-24 rounded-full bg-primary/10 overflow-hidden flex items-center justify-center text-2xl text-fg">
+              {form.photoUrl ? (
+                <img src={form.photoUrl} alt="avatar" className="w-full h-full object-cover" />
+              ) : (
+                <span className="uppercase">{(profile?.name || "P").charAt(0)}</span>
+              )}
+            </div>
+            <button
+              type="button"
+              onClick={() => fileInputRef.current?.click()}
+              className="absolute -bottom-0.5 -right-0.5 bg-white border border-border rounded-full p-2 shadow-sm hover:bg-muted transition-colors"
+              aria-label="Upload avatar"
+            >
+              <UploadCloud className="w-4 h-4 text-primary" />
+            </button>
+            <input ref={fileInputRef} onChange={handleFileChange} accept="image/*" type="file" className="hidden" />
           </div>
-          <button
-            type="button"
-            onClick={() => fileInputRef.current?.click()}
-            className="absolute -bottom-0.5 -right-0.5 bg-white border border-border rounded-full p-2 shadow-sm hover:bg-muted transition-colors"
-            aria-label="Upload avatar"
-          >
-            <UploadCloud className="w-4 h-4 text-primary" />
-          </button>
-          <input ref={fileInputRef} onChange={handleFileChange} accept="image/*" type="file" className="hidden" />
+          {form.photoUrl && (
+            <button
+              type="button"
+              onClick={handleRemovePhoto}
+              className="flex items-center gap-1.5 text-xs text-red-600 hover:text-red-700 transition-colors"
+            >
+              <Trash2 className="w-3.5 h-3.5" />
+              Remove photo
+            </button>
+          )}
         </div>
         <div className="flex-1">
           <label className="block text-sm font-medium text-fg mb-1.5">Full Name</label>
@@ -671,17 +720,37 @@ export function PatientProfile() {
     dob: string;
     governorate: string;
     address: string;
-    photoUrl: string;
+    photo?: File;
+    removePhoto?: boolean;
   }) => {
     if (!user?.id) throw new Error("Unable to save profile without a logged in user.");
-    const updatedUser = await updatePatientProfile(user.id, payload);
+
+    let photoUrl: string | undefined;
+    if (payload.removePhoto) {
+      await removePatientPhoto(user.id);
+      photoUrl = undefined;
+    } else if (payload.photo) {
+      const photoResult = await updatePatientPhoto(user.id, payload.photo);
+      photoUrl = photoResult.photoUrl;
+    }
+
+    const updatedUser = await updatePatientProfile(user.id, {
+      name: payload.name,
+      phone: payload.phone,
+      dob: payload.dob,
+      governorate: payload.governorate,
+      address: payload.address,
+    });
+
+    const finalPhotoUrl = photoUrl ?? (payload.removePhoto ? undefined : updatedUser.photoUrl);
+    const mergedUser = { ...updatedUser, photoUrl: finalPhotoUrl };
 
     setProfile((currentProfile) =>
       currentProfile
-        ? { ...currentProfile, user: updatedUser }
+        ? { ...currentProfile, user: mergedUser }
         : {
           patientId: user.id,
-          user: updatedUser,
+          user: mergedUser,
           medicalHistory: [],
           createdAt: undefined,
           updatedAt: undefined,
@@ -689,10 +758,12 @@ export function PatientProfile() {
     );
 
     updateProfile({
-      name: updatedUser.name,
-      phone: updatedUser.phone,
-      ...(updatedUser.photoUrl ? { avatar: updatedUser.photoUrl } : {}),
+      name: mergedUser.name,
+      phone: mergedUser.phone,
+      avatar: finalPhotoUrl,
     });
+
+    return { photoUrl: finalPhotoUrl };
   };
 
   const getStatusColor = (status: string) => {
