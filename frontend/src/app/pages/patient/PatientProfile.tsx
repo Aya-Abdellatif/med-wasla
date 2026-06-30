@@ -112,17 +112,6 @@ function PersonalTab({ profile, onSave, isLoading }: {
     reader.readAsDataURL(file);
   };
 
-  const prevProfileRef = useRef(profile);
-
-  useEffect(() => {
-    if (prevProfileRef.current === profile) return;
-    prevProfileRef.current = profile;
-    if (isSaving) return;
-    const nextState = getInitialState(profile);
-    setSaved(nextState);
-    setForm(nextState);
-  }, [profile]);
-
   if (isLoading && !profile) {
     return <div className="py-10 text-center text-sm text-fg-muted">Loading profile...</div>;
   }
@@ -778,8 +767,13 @@ export function PatientProfile() {
             {/* Keep PersonalTab mounted at all times so saving never unmounts it.
                 Show a spinner inside the tab while the initial load is in flight. */}
             <div className={activeTab === "personal" ? "" : "hidden"}>
-              <PersonalTab profile={profile?.user ?? null} onSave={handleSaveProfile} isLoading={isProfileLoading} />
-            </div>
+              <PersonalTab
+                key={profile?.user?.name ?? "loading"}
+                profile={profile?.user ?? null}
+                onSave={handleSaveProfile}
+                isLoading={isProfileLoading}
+              />            
+              </div>
 
             {activeTab === "security" && <SecurityTab user={user} onSave={async (payload) => {
               if (!user?.id) throw new Error("Unable to save security settings without a logged in user.");
@@ -787,7 +781,7 @@ export function PatientProfile() {
               // console.log("updatedUser", updatedUser);
               if (updatedUser.email) {
                 updateProfile({ email: updatedUser.email });
-               // console.log(user);
+                // console.log(user);
               }
             }} />}
           </div>
