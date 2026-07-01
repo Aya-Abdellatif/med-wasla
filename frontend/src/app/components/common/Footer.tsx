@@ -19,22 +19,25 @@ function Footer() {
   const { user } = useAuth();
   const [isAppointmentModalOpen, setIsAppointmentModalOpen] = useState(false);
   const showBooking = canBookAppointments(user);
-  const companyLinks = [
-    "About Us",
-    "Our Services",
-    "Doctors Directory",
-    "Nurses Directory",
-    "Careers",
-  ];
-  const supportLinks = [
-    "Help Center",
-    ...(showBooking ? ["Book an Appointment"] : []),
-    "Emergency Support",
-    "Terms of Service",
-    "Privacy Policy",
-  ];
   const openBooking = () => setIsAppointmentModalOpen(true);
   const onBookClick = () => handleBookClick(user, navigate, openBooking);
+  const companyLinks = [
+    { label: "About Us", path: "/about" },
+    { label: "Our Services", path: "/services" },
+    { label: "Doctors Directory", path: "/doctors" },
+    { label: "Nurses Directory", path: "/nurses" },
+    { label: "Careers", path: "#" }, // or remove if you don't have this page
+  ];
+
+  const supportLinks = [
+    { label: "Help Center", path: "#" },
+    ...(showBooking
+      ? [{ label: "Book an Appointment", onClick: onBookClick }]
+      : []),
+    { label: "Emergency Support", path: "/contact" },
+    { label: "Terms of Service", path: "#" },
+    { label: "Privacy Policy", path: "#" },
+  ];
 
   return (
     <footer className="bg-fg text-white shadow-[0_-4px_10px_rgba(0,0,0,0.1)] mt-auto w-full">
@@ -126,14 +129,15 @@ function Footer() {
               MedWasla
             </h3>
             <ul className="space-y-3">
-              {companyLinks.map((item) => (
-                <li key={item}>
-                  <a
-                    href="#"
-                    className="text-base font-semibold text-white/70 hover:text-primary transition-all duration-300 block hover:translate-x-1"
+              {companyLinks.map(({ label, path }) => (
+                <li key={label}>
+                  <button
+                    type="button"
+                    onClick={() => navigate(path)}
+                    className="text-base font-semibold text-white/70 hover:text-primary transition-all duration-300 block hover:translate-x-1 text-left"
                   >
-                    {item}
-                  </a>
+                    {label}
+                  </button>
                 </li>
               ))}
             </ul>
@@ -144,14 +148,21 @@ function Footer() {
               Support
             </h3>
             <ul className="space-y-3">
-              {supportLinks.map((item) => (
-                <li key={item}>
-                  <a
-                    href="#"
-                    className="text-base font-semibold text-white/70 hover:text-primary transition-all duration-300 block hover:translate-x-1"
+              {supportLinks.map(({ label, path, onClick }) => (
+                <li key={label}>
+                  <button
+                    type="button"
+                    onClick={() => {
+                      if (onClick) {
+                        onClick();
+                      } else if (path) {
+                        navigate(path);
+                      }
+                    }}
+                    className="text-base font-semibold text-white/70 hover:text-primary transition-all duration-300 block hover:translate-x-1 text-left"
                   >
-                    {item}
-                  </a>
+                    {label}
+                  </button>
                 </li>
               ))}
             </ul>

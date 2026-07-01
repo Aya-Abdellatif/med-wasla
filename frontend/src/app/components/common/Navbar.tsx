@@ -24,7 +24,7 @@ import {
   handleBookClick,
 } from "../../../utils/bookingAccess";
 import Logo from "../../../assets/logo.png";
-
+import LanguageSwitch from "../../Layouts/LanguageSwitch";
 function Navbar() {
   const [isOpen, setIsOpen] = useState(false);
   const [isProfileOpen, setIsProfileOpen] = useState(false);
@@ -67,14 +67,9 @@ function Navbar() {
     (link) => link.name !== "Profile" && link.name !== "Appointments",
   );
 
-  // `active` is used for the MOBILE menu highlight — it can match Profile/Appointments,
-  // which is correct there since those links actually exist in the mobile list.
   const active =
     navLinks.find((link) => link.path === location.pathname)?.name ?? null;
 
-  // `desktopActive` is used for the DESKTOP underline — it only matches links that
-  // actually exist in desktopNavLinks, so we never try to position the underline
-  // against a ref (Profile/Appointments) that was never assigned.
   const desktopActive =
     desktopNavLinks.find((link) => link.path === location.pathname)?.name ??
     null;
@@ -83,16 +78,9 @@ function Navbar() {
   const linksRef = useRef<Record<string, HTMLElement | null>>({});
   const profileRef = useRef<HTMLDivElement | null>(null);
 
-  // Recomputes the underline's left/width based on the currently-active
-  // desktop link. Pulled into its own function so it can be re-run any time
-  // the layout might have shifted underneath us (font load, image load,
-  // window resize) — not just when the active route changes.
   const updateUnderline = useCallback(() => {
     const container = containerRef.current;
 
-    // No desktop link matches the current route (e.g. we're on /profile or
-    // /appointments) — reset/hide the underline instead of leaving it stuck
-    // at its last position.
     if (!desktopActive || !container) {
       setUnderlineStyle({ left: 0, width: 0 });
       return;
@@ -109,31 +97,17 @@ function Navbar() {
     }
   }, [desktopActive]);
 
-  // useLayoutEffect (not useEffect) so this runs synchronously right after
-  // DOM mutations, before the browser paints — avoids a visible flash/jump.
-  // (No need for an "isFirstActivation" flag here: because this is a layout
-  // effect, React flushes the resulting position update before the browser
-  // ever paints, so the unpositioned underline is never actually visible —
-  // there's nothing to guard against on first mount.)
   useLayoutEffect(() => {
     updateUnderline();
   }, [updateUnderline]);
 
-  // The measurement above can still be wrong on first paint if the page's
-  // fonts or the logo image haven't finished loading yet — text/layout can
-  // shift size right after we measured it. Re-measure once those settle,
-  // and again on any resize, so the underline snaps to its correct spot
-  // instead of being stuck wherever it was on the very first render.
   useEffect(() => {
-    // Re-run once web fonts are fully loaded (font swap changes text width).
     if (typeof document !== "undefined" && "fonts" in document) {
       document.fonts.ready.then(() => updateUnderline());
     }
 
     window.addEventListener("resize", updateUnderline);
 
-    // Catches any other layout shift in the nav (e.g. the logo image
-    // finishing its load and changing the row's width).
     const container = containerRef.current;
     let resizeObserver: ResizeObserver | undefined;
     if (container && typeof ResizeObserver !== "undefined") {
@@ -228,6 +202,7 @@ function Navbar() {
             </div>
 
             <div className="hidden lg:flex items-center gap-2 shrink-0">
+              <LanguageSwitch />
               {isAuthenticated && navUserName && (
                 <div className="relative" ref={profileRef}>
                   <button
@@ -253,13 +228,15 @@ function Navbar() {
                       >
                         View Profile
                       </Link>
-                      <Link
-                        to="/appointments"
-                        onClick={() => setIsProfileOpen(false)}
-                        className="flex items-center gap-2 text-base font-semibold px-3 py-2 rounded-lg text-fg-muted hover:text-fg hover:bg-muted transition-all duration-200"
-                      >
-                        View Appointments
-                      </Link>
+                      {!isDoctor && (
+                        <Link
+                          to="/appointments"
+                          onClick={() => setIsProfileOpen(false)}
+                          className="flex items-center gap-2 text-base font-semibold px-3 py-2 rounded-lg text-fg-muted hover:text-fg hover:bg-muted transition-all duration-200"
+                        >
+                          View Appointments
+                        </Link>
+                      )}
                     </div>
                   )}
                 </div>
@@ -346,6 +323,9 @@ function Navbar() {
                       {name}
                     </Link>
                   ))}
+                  <div className="pt-3 pb-1">
+                    <LanguageSwitch />
+                  </div>
                   <div className="pt-3 border-t border-border space-y-3">
                     {isDoctor && displayName && (
                       <div className="flex items-center gap-2 text-base font-semibold text-fg px-4 py-2 rounded-lg bg-muted">
