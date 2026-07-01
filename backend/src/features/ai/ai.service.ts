@@ -1,7 +1,7 @@
 
 import axios from "axios";
 
-const AI_URL = "http://localhost:3000/chat";
+const AI_URL = "http://localhost:3000/chat"; // flask endpiont
 
 export const sendMessageToAI = async (message: string) => {
   try {
