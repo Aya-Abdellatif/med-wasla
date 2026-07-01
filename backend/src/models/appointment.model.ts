@@ -88,13 +88,14 @@ const appointmentSchema = new Schema<IAppointment>(
   }
 );
 
-// Prevent double-booking: enforce uniqueness on (specialistId, date) for active appointments only.
-// Cancelled/overdue/no_show docs are excluded so slots can be re-booked after cancellation.
+// Prevent two confirmed appointments at the same time.
+// Clinic: booked directly as confirmed → index prevents race conditions.
+// Home: multiple pending requests allowed; uniqueness enforced only on confirmed.
 appointmentSchema.index(
   { specialistId: 1, date: 1 },
   {
     unique: true,
-    partialFilterExpression: { status: { $in: ["pending", "confirmed"] } },
+    partialFilterExpression: { status: "confirmed" },
   }
 );
 
