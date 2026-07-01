@@ -1,68 +1,72 @@
+// src/components/layout/LanguageSwitch.tsx
+import { useState, useRef, useEffect } from "react";
+import { Globe, Check } from "lucide-react";
 import { useTranslation } from "react-i18next";
 
 function LanguageSwitch() {
   const { i18n } = useTranslation();
+  const [isOpen, setIsOpen] = useState(false);
+  const ref = useRef<HTMLDivElement | null>(null);
   const isArabic = i18n.language === "ar";
 
-  const toggleLanguage = () => {
-    const newLang = isArabic ? "en" : "ar";
-    i18n.changeLanguage(newLang);
-    document.documentElement.lang = newLang;
-    document.documentElement.dir = newLang === "ar" ? "rtl" : "ltr";
-    localStorage.setItem("lang", newLang);
+  useEffect(() => {
+    if (!isOpen) return;
+    const handleClickOutside = (event: MouseEvent) => {
+      if (ref.current && !ref.current.contains(event.target as Node)) {
+        setIsOpen(false);
+      }
+    };
+    document.addEventListener("mousedown", handleClickOutside);
+    return () => document.removeEventListener("mousedown", handleClickOutside);
+  }, [isOpen]);
+
+  const selectLanguage = (lang: "en" | "ar") => {
+    i18n.changeLanguage(lang);
+    document.documentElement.lang = lang;
+    document.documentElement.dir = lang === "ar" ? "rtl" : "ltr";
+    localStorage.setItem("lang", lang);
+    setIsOpen(false);
   };
 
-  const TRACK_WIDTH = 54;
-  const TRACK_HEIGHT = 32;
-  const BALL_WIDTH = 22;
-  const BALL_HEIGHT = 24;
-  const BALL_TOP = 2; // distance from top of track
-  const BALL_LEFT = 3; // resting (EN) position from left
-  const BALL_TRAVEL = 24; // how far right it slides when AR is active
-  const LABEL_WIDTH = 30; // width of each EN/AR text slot
-
   return (
-    <button
-      type="button"
-      dir="ltr"
-      onClick={toggleLanguage}
-      aria-label="Toggle language"
-      className="relative flex items-center rounded-xl bg-muted border-2 border-border cursor-pointer shrink-0"
-      style={{ width: TRACK_WIDTH, height: TRACK_HEIGHT }}
-    >
-      <span
-        className="absolute rounded-lg bg-primary shadow-md transition-transform duration-300 ease-in-out"
-        style={{
-          top: BALL_TOP,
-          left: BALL_LEFT,
-          width: BALL_WIDTH,
-          height: BALL_HEIGHT,
-          transform: isArabic
-            ? `translateX(${BALL_TRAVEL}px)`
-            : "translateX(0px)",
-        }}
-      />
+    <div className="relative" ref={ref}>
+      <button
+        type="button"
+        onClick={() => setIsOpen((prev) => !prev)}
+        aria-label="Change language"
+        className="flex items-center justify-center h-10 w-10 rounded-xl text-fg-muted hover:text-primary transition-all duration-300 cursor-pointer hover:scale-[1.1] hover:-translate-y-0.5"
+      >
+        <Globe className="h-5 w-5" strokeWidth={2.2} />
+      </button>
 
-      <span
-        className="relative z-10 text-[11px] font-bold text-center transition-colors duration-300 ease-in-out"
-        style={{
-          width: LABEL_WIDTH,
-          marginLeft: BALL_LEFT,
-          color: isArabic ? "var(--color-fg-muted)" : "#fff",
-        }}
-      >
-        EN
-      </span>
-      <span
-        className="relative z-10 text-[11px] font-bold text-center transition-colors duration-300 ease-in-out"
-        style={{
-          width: LABEL_WIDTH,
-          color: isArabic ? "#fff" : "var(--color-fg-muted)",
-        }}
-      >
-        AR
-      </span>
-    </button>
+      {isOpen && (
+        <div
+          dir="ltr"
+          className="absolute right-0 top-full mt-2 w-36 bg-white rounded-xl shadow-xl border border-border p-1.5 space-y-1 z-50"
+        >
+          <button
+            type="button"
+            onClick={() => selectLanguage("en")}
+            className="flex items-center justify-between w-full text-sm font-semibold px-3 py-2 rounded-lg text-fg-muted hover:text-fg hover:bg-muted transition-all duration-200"
+          >
+            English
+            {!isArabic && (
+              <Check className="h-4 w-4 text-primary" strokeWidth={2.5} />
+            )}
+          </button>
+          <button
+            type="button"
+            onClick={() => selectLanguage("ar")}
+            className="flex items-center justify-between w-full text-sm font-semibold px-3 py-2 rounded-lg text-fg-muted hover:text-fg hover:bg-muted transition-all duration-200"
+          >
+            العربية
+            {isArabic && (
+              <Check className="h-4 w-4 text-primary" strokeWidth={2.5} />
+            )}
+          </button>
+        </div>
+      )}
+    </div>
   );
 }
 
