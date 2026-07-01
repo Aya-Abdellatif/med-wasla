@@ -49,6 +49,10 @@ export function AppointmentRow({
     onCancel &&
     (appointment.backendStatus === "confirmed" ||
       (isHomeVisit && appointment.backendStatus === "pending"));
+  const canFinalize =
+    appointment.scheduledAtMs === undefined ||
+    appointment.scheduledAtMs <= new Date().setHours(0, 0, 0, 0);
+
   const showComplete =
     !routeToHomeTab &&
     isClinic &&
@@ -135,7 +139,12 @@ export function AppointmentRow({
         {showComplete && (
           <button
             type="button"
-            disabled={isUpdating}
+            disabled={isUpdating || !canFinalize}
+            title={
+              canFinalize
+                ? undefined
+                : "Available after the scheduled appointment time"
+            }
             onClick={() => onComplete(appointment.id)}
             className="px-3 py-1.5 text-sm rounded-lg font-medium text-white disabled:opacity-50"
             style={{ backgroundColor: DASHBOARD_THEME.success }}
@@ -146,7 +155,12 @@ export function AppointmentRow({
         {showNoShow && (
           <button
             type="button"
-            disabled={isUpdating}
+            disabled={isUpdating || !canFinalize}
+            title={
+              canFinalize
+                ? undefined
+                : "Available after the scheduled appointment time"
+            }
             onClick={() => onNoShow(appointment.id)}
             className="flex items-center gap-1.5 px-3 py-1.5 text-sm rounded-lg font-medium text-white disabled:opacity-50"
             style={{ backgroundColor: "#d97706" }}

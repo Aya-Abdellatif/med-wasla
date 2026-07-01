@@ -14,4 +14,13 @@ router.patch("/specialists/:id/approve", AdminController.approveSpecialist);
 // Reject a specialist
 router.patch("/specialists/:id/reject", AdminController.rejectSpecialist);
 
+router.patch(
+  "/specialists/:id/certificates/:certId/approve",
+  AdminController.approveCertificate,
+);
+router.patch(
+  "/specialists/:id/certificates/:certId/reject",
+  AdminController.rejectCertificate,
+);
+
 export default router;

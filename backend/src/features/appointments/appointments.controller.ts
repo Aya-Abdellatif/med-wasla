@@ -219,6 +219,14 @@ export const updateAppointmentStatus = async (
     if (msg === "APPOINTMENT_OVERDUE") {
       return next(new AppError("This appointment is overdue and can no longer be updated", 400));
     }
+    if (msg === "APPOINTMENT_NOT_STARTED") {
+      return next(
+        new AppError(
+          "You can only mark an appointment complete or no-show after the scheduled time has passed",
+          400,
+        ),
+      );
+    }
     return next(error);
   }
 };

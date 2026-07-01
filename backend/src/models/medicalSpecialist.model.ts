@@ -27,6 +27,8 @@ export interface ICertification {
   issuedAt?: Date;
   certificateUrl: string;
   status?: VerificationStatus;
+  isRegistrationCert?: boolean;
+  isNewAddition?: boolean;
   createdAt?: Date;
   updatedAt?: Date;
 }
@@ -81,6 +83,8 @@ const certificationSchema = new Schema<ICertification>(
       enum: verificationStatuses,
       default: "pending",
     },
+    isRegistrationCert: { type: Boolean, default: false },
+    isNewAddition: { type: Boolean, default: false },
   },
   { _id: true, timestamps: true },
 );

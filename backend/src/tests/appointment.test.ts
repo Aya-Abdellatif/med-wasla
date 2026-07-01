@@ -30,6 +30,12 @@ function futureDate(days = 1) {
   return d;
 }
 
+function pastDate(hoursAgo = 2) {
+  const d = new Date();
+  d.setHours(d.getHours() - hoursAgo);
+  return d;
+}
+
 async function createUser(role: "patient" | "specialist" | "admin", email: string) {
   return User.create({
     name: `${role} user`,
@@ -480,10 +486,16 @@ describe("Appointments Routes", () => {
       expect(res.body.data.status).toBe("confirmed");
     });
 
-    it("specialist marks clinic appointment as no show", async () => {
+    it("specialist marks clinic appointment as no show after scheduled time", async () => {
       const patient = await createPatient();
       const { user, specialist } = await createSpecialist();
-      const appointment = await createAppointment(idOf(patient), idOf(specialist), "confirmed");
+      const appointment = await Appointment.create({
+        patientId: idOf(patient),
+        specialistId: idOf(specialist),
+        date: pastDate(),
+        type: "clinic",
+        status: "confirmed",
+      });
       const token = createToken(idOf(user), "specialist");
 
       const res = await request(app)
@@ -493,6 +505,21 @@ describe("Appointments Routes", () => {
 
       expect(res.status).toBe(200);
       expect(res.body.data.status).toBe("no_show");
+    });
+
+    it("returns 400 when completing clinic appointment before scheduled time", async () => {
+      const patient = await createPatient();
+      const { user, specialist } = await createSpecialist();
+      const appointment = await createAppointment(idOf(patient), idOf(specialist), "confirmed");
+      const token = createToken(idOf(user), "specialist");
+
+      const res = await request(app)
+        .patch(`/api/appointments/${idOf(appointment)}/status`)
+        .set("Authorization", `Bearer ${token}`)
+        .send({ status: "completed" });
+
+      expect(res.status).toBe(400);
+      expect(res.body.message).toMatch(/scheduled time/i);
     });
 
     it("returns 400 for invalid status transition", async () => {

@@ -241,6 +241,13 @@ export const updateAppointmentStatusService = async (
     }
   }
 
+  if (
+    (newStatus === "completed" || newStatus === "no_show") &&
+    !isAppointmentPast(appointment.date)
+  ) {
+    throw new Error("APPOINTMENT_NOT_STARTED");
+  }
+
   appointment.status = newStatus;
   await appointment.save();
 
