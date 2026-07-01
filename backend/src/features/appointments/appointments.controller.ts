@@ -219,6 +219,9 @@ export const updateAppointmentStatus = async (
     if (msg === "APPOINTMENT_OVERDUE") {
       return next(new AppError("This appointment is overdue and can no longer be updated", 400));
     }
+    if (msg === "TIME_CONFLICT") {
+      return next(new AppError("This time is no longer available. Another appointment has already been confirmed at the same time.", 409));
+    }
     return next(error);
   }
 };

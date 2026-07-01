@@ -34,7 +34,10 @@ export function RescheduleModal({
     const [workingHours, setWorkingHours] = useState<{ start: string; end: string } | null>(null);
     const [dateError, setDateError] = useState("");
 
+    const isHomeVisit = appointment.type === "home";
+
     useEffect(() => {
+        if (isHomeVisit) return;
         if (!date) return;
 
         let cancelled = false;
@@ -71,7 +74,7 @@ export function RescheduleModal({
             cancelled = true;
             window.clearTimeout(timer);
         };
-    }, [appointment.specialistId, date]);
+    }, [isHomeVisit, appointment.specialistId, date]);
 
     const handleConfirm = async () => {
       if (!date || !time || submitting) return;
@@ -96,7 +99,7 @@ export function RescheduleModal({
                     </div>
                     <h3 className="text-xl font-bold text-foreground mb-2">Appointment Rescheduled!</h3>
                     <p className="text-muted-foreground mb-6">
-                        Your appointment has been successfully rescheduled to {formatDate(date)} at {formatSlotLabel(time)}.
+                        Your appointment has been successfully rescheduled to {formatDate(date)} at {isHomeVisit ? time : formatSlotLabel(time)}.
                     </p>
                     <button onClick={onClose} className="bg-primary text-white px-6 py-2.5 rounded-xl hover:bg-primary/90 transition-colors">Done</button>
                 </div>
@@ -120,6 +123,13 @@ export function RescheduleModal({
                         <p className="text-sm text-muted-foreground">Current: {formatDate(appointment.date)} at {appointment.time}</p>
                     </div>
                 </div>
+
+                {isHomeVisit && (
+                  <div className="mb-4 p-3 rounded-xl border border-amber-200 bg-amber-50 text-sm text-amber-800">
+                    Choose any future date and time. Your request will be sent for re-approval.
+                  </div>
+                )}
+
                 <div className="space-y-4 mb-5">
                     <div>
                         <label className="block text-sm text-foreground mb-1.5">New Date</label>
@@ -129,11 +139,13 @@ export function RescheduleModal({
                             onChange={(e) => {
                                 const nextDate = e.target.value;
                                 setDate(nextDate);
-                                setTime("");
-                                setDateError("");
-                                if (!nextDate) {
-                                  setAvailableTimes([]);
-                                  setWorkingHours(null);
+                                if (!isHomeVisit) {
+                                  setTime("");
+                                  setDateError("");
+                                  if (!nextDate) {
+                                    setAvailableTimes([]);
+                                    setWorkingHours(null);
+                                  }
                                 }
                             }}
                             min={getLocalDateString()}
@@ -145,13 +157,24 @@ export function RescheduleModal({
                         )}
                     </div>
                     <div>
-                        <label className="block text-sm text-foreground mb-1.5">New Time</label>
-                        <select
+                        <label className="block text-sm text-foreground mb-1.5">
+                          {isHomeVisit ? "Preferred Time" : "New Time"}
+                        </label>
+                        {isHomeVisit ? (
+                          <input
+                            type="time"
+                            value={time}
+                            onChange={(e) => setTime(e.target.value)}
+                            disabled={submitting || !date}
+                            className="w-full px-4 py-3 bg-input-background border border-border rounded-xl focus:outline-none focus:ring-2 focus:ring-primary disabled:opacity-50"
+                          />
+                        ) : (
+                          <select
                             value={time}
                             onChange={(e) => setTime(e.target.value)}
                             disabled={submitting || !date || loadingSlots || availableTimes.length === 0}
                             className="w-full px-4 py-3 bg-input-background border border-border rounded-xl focus:outline-none focus:ring-2 focus:ring-primary disabled:opacity-50"
-                        >
+                          >
                             <option value="">
                                 {loadingSlots
                                     ? "Loading times..."
@@ -166,12 +189,13 @@ export function RescheduleModal({
                                     {formatSlotLabel(slot)}
                                 </option>
                             ))}
-                        </select>
+                          </select>
+                        )}
                     </div>
                 </div>
                 <button
                     onClick={handleConfirm}
-                    disabled={!date || !time || submitting || loadingSlots}
+                    disabled={!date || !time || submitting || (!isHomeVisit && loadingSlots)}
                     className="w-full bg-primary text-white py-2.5 rounded-xl hover:bg-primary/90 transition-colors disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center gap-2"
                 >
                     {submitting ? (
