@@ -226,6 +226,8 @@ export const updateAppointmentStatus = async (
           400,
         ),
       );
+    if (msg === "TIME_CONFLICT") {
+      return next(new AppError("This time is no longer available. Another appointment has already been confirmed at the same time.", 409));
     }
     return next(error);
   }
@@ -345,6 +347,7 @@ export const rescheduleAppointment = async (
     if (msg === "DAY_NOT_AVAILABLE") return next(new AppError("The doctor is not available on this day", 400));
     if (msg === "SLOT_NOT_AVAILABLE") return next(new AppError("This time slot is not available", 400));
     if (msg === "SPECIALIST_NOT_FOUND") return next(new AppError("Specialist not found", 404));
+    if (msg === "ALREADY_BOOKED_SAME_DAY") return next(new AppError("You already have an appointment with this doctor on this day", 409));
     return next(error);
   }
 };
