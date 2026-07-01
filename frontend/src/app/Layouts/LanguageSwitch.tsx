@@ -1,4 +1,3 @@
-// src/components/layout/LanguageSwitch.tsx
 import { useTranslation } from "react-i18next";
 
 function LanguageSwitch() {
@@ -13,41 +12,51 @@ function LanguageSwitch() {
     localStorage.setItem("lang", newLang);
   };
 
+  const TRACK_WIDTH = 54;
+  const TRACK_HEIGHT = 32;
+  const BALL_WIDTH = 22;
+  const BALL_HEIGHT = 24;
+  const BALL_TOP = 2; // distance from top of track
+  const BALL_LEFT = 3; // resting (EN) position from left
+  const BALL_TRAVEL = 24; // how far right it slides when AR is active
+  const LABEL_WIDTH = 30; // width of each EN/AR text slot
+
   return (
     <button
       type="button"
       dir="ltr"
       onClick={toggleLanguage}
       aria-label="Toggle language"
-      className="relative flex items-center rounded-full bg-muted border-2 border-border cursor-pointer shrink-0"
-      style={{ width: 80, height: 36, padding: 4 }}
+      className="relative flex items-center rounded-xl bg-muted border-2 border-border cursor-pointer shrink-0"
+      style={{ width: TRACK_WIDTH, height: TRACK_HEIGHT }}
     >
       <span
-        className="absolute rounded-full bg-primary shadow-md transition-transform duration-300 ease-in-out"
+        className="absolute rounded-lg bg-primary shadow-md transition-transform duration-300 ease-in-out"
         style={{
-          top: 2,
-          left: 5,
-          width: 32,
-          height: 28,
-          transform: isArabic ? "translateX(36px)" : "translateX(0px)",
+          top: BALL_TOP,
+          left: BALL_LEFT,
+          width: BALL_WIDTH,
+          height: BALL_HEIGHT,
+          transform: isArabic
+            ? `translateX(${BALL_TRAVEL}px)`
+            : "translateX(0px)",
         }}
       />
 
       <span
-        className="relative z-10 text-xs font-bold transition-colors duration-300 ease-in-out"
+        className="relative z-10 text-[11px] font-bold text-center transition-colors duration-300 ease-in-out"
         style={{
-          width: 36,
-          textAlign: "center",
+          width: LABEL_WIDTH,
+          marginLeft: BALL_LEFT,
           color: isArabic ? "var(--color-fg-muted)" : "#fff",
         }}
       >
         EN
       </span>
       <span
-        className="relative z-10 text-xs font-bold transition-colors duration-300 ease-in-out"
+        className="relative z-10 text-[11px] font-bold text-center transition-colors duration-300 ease-in-out"
         style={{
-          width: 36,
-          textAlign: "center",
+          width: LABEL_WIDTH,
           color: isArabic ? "#fff" : "var(--color-fg-muted)",
         }}
       >
