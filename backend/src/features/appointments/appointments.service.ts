@@ -257,7 +257,7 @@ export const updateAppointmentStatusService = async (
   try {
     await appointment.save();
   } catch (err: unknown) {
-    if ((err as { code?: number }).code === 11000) throw new Error("TIME_CONFLICT");
+    if ((err as { code?: number }).code === 11000) throw new Error("TIME_CONFLICT", { cause: err });
     throw err;
   }
 
