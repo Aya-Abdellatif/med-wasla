@@ -25,7 +25,10 @@ import {
 } from "../../../utils/bookingAccess";
 import Logo from "../../../assets/logo.png";
 import LanguageSwitch from "../../Layouts/LanguageSwitch";
+import { useTranslation } from "react-i18next";
+
 function Navbar() {
+  const { i18n } = useTranslation();
   const [isOpen, setIsOpen] = useState(false);
   const [isProfileOpen, setIsProfileOpen] = useState(false);
   const [underlineStyle, setUnderlineStyle] = useState({ left: 0, width: 0 });
@@ -100,7 +103,13 @@ function Navbar() {
   useLayoutEffect(() => {
     updateUnderline();
   }, [updateUnderline]);
-
+  useEffect(() => {
+    const handleLanguageChange = () => {
+      requestAnimationFrame(() => updateUnderline());
+    };
+    i18n.on("languageChanged", handleLanguageChange);
+    return () => i18n.off("languageChanged", handleLanguageChange);
+  }, [i18n, updateUnderline]);
   useEffect(() => {
     if (typeof document !== "undefined" && "fonts" in document) {
       document.fonts.ready.then(() => updateUnderline());
