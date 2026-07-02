@@ -14,6 +14,8 @@ import salmaImage from "../../../assets/Salma.jpg";
 import ayaImage from "../../../assets/Aya.jpg";
 import hanaImage from "../../../assets/Hana.jpg";
 import ranimImage from "../../../assets/Ranim.jpeg";
+import walaamage from "../../../assets/Walaa.jpg";
+
 
 export const stats = [
   {
@@ -21,15 +23,15 @@ export const stats = [
     label: "Years of Excellence",
   },
   {
-    value: "100+",
+    value: "200+",
     label: "Medical Experts",
   },
   {
-    value: "50,000+",
+    value: "5000+",
     label: "Happy Patients",
   },
   {
-    value: "15",
+    value: "10+",
     label: "Specialized Departments",
   },
 ];
@@ -97,9 +99,9 @@ export const teamMembers = [
    {
     name: "Walaa Khafagy",
     role: "Full Stack Developer",
-    image: "../../assets/Walaa.jpg",
+    image: walaamage,
     linkedin: "https://www.linkedin.com/in/walaa-khafagy",
-    whatsapp: "https://wa.me/201202818745",
+    whatsapp: "https://wa.me/201121041373",
    },
   {
     name: "Aya Abdellatif",

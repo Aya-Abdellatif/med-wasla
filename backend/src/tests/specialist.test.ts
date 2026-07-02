@@ -45,7 +45,6 @@ async function createSpecialist(
     bio: "Experienced cardiologist",
     clinicAddress: "Cairo Clinic",
     consultationFee: 300,
-    // areasOfExpertise: ["Heart", "Blood pressure"],
     certifications: [
       {
         title: "Medical License",

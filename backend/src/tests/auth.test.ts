@@ -46,7 +46,6 @@ describe("Auth Routes", () => {
     mockSendEmail.mockClear();
   });
 
-  // ─── POST /api/auth/register ───────────────────────────────────────────────
   describe("POST /api/auth/register", () => {
     it("registers a new patient and returns 201", async () => {
       const res = await request(app)
@@ -89,7 +88,6 @@ describe("Auth Routes", () => {
     });
   });
 
-  // ─── POST /api/auth/verify-otp ────────────────────────────────────────────
   describe("POST /api/auth/verify-otp", () => {
     it("verifies correct OTP and returns token + user", async () => {
       await request(app).post("/api/auth/register").send(basePatient);
@@ -136,7 +134,6 @@ describe("Auth Routes", () => {
     });
   });
 
-  // ─── POST /api/auth/resend-otp ────────────────────────────────────────────
   describe("POST /api/auth/resend-otp", () => {
     it("resends OTP for unverified user and returns 200", async () => {
       await request(app).post("/api/auth/register").send(basePatient);
@@ -187,7 +184,6 @@ describe("Auth Routes", () => {
     });
   });
 
-  // ─── POST /api/auth/login ─────────────────────────────────────────────────
   describe("POST /api/auth/login", () => {
     it("logs in a verified user and returns token", async () => {
       await registerAndVerify();
@@ -231,7 +227,6 @@ describe("Auth Routes", () => {
     });
   });
 
-  // ─── POST /api/auth/forgot-password ──────────────────────────────────────
   describe("POST /api/auth/forgot-password", () => {
     it("sends OTP to verified user and returns 200", async () => {
       await registerAndVerify();
@@ -276,7 +271,6 @@ describe("Auth Routes", () => {
     });
   });
 
-  // ─── POST /api/auth/reset-password ───────────────────────────────────────
   describe("POST /api/auth/reset-password", () => {
     async function requestPasswordReset() {
       await registerAndVerify();
@@ -347,7 +341,6 @@ describe("Auth Routes", () => {
     });
   });
 
-  // ─── POST /api/auth/logout ────────────────────────────────────────────────
   describe("POST /api/auth/logout", () => {
     it("returns 200 always", async () => {
       const res = await request(app).post("/api/auth/logout");
@@ -357,7 +350,6 @@ describe("Auth Routes", () => {
     });
   });
 
-  // ─── GET /api/auth/me ─────────────────────────────────────────────────────
   describe("GET /api/auth/me", () => {
     async function getAuthToken(): Promise<string> {
       await registerAndVerify();

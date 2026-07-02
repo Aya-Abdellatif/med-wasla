@@ -66,10 +66,7 @@ function sendError(res: Response, error: unknown, fallbackStatus = 500): void {
   });
 }
 
-// ─────────────────────────────────────────────────────────────
 // Public Endpoints
-// ─────────────────────────────────────────────────────────────
-
 export const getAllSpecialists = async (
   req: Request,
   res: Response,
@@ -137,10 +134,7 @@ export const getSpecialistsBySpecialization = async (
   }
 };
 
-// ─────────────────────────────────────────────────────────────
 // Authenticated Specialist Endpoints
-// ─────────────────────────────────────────────────────────────
-
 export const getMe = async (
   req: Request,
   res: Response,

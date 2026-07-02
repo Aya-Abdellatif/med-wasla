@@ -2,7 +2,12 @@ import { useState, useMemo, useEffect } from "react";
 import { Navigate } from "react-router-dom";
 import { useAuth } from "../../context/useAuth";
 import { apiFetch, API_BASE, getToken } from "../../../services/api";
-import { showError, showSuccess, showWarning, getToastUserContext } from "../../../utils/toast";
+import {
+  showError,
+  showSuccess,
+  showWarning,
+  getToastUserContext,
+} from "../../../utils/toast";
 import { VerificationStatusNotice } from "../../components/common/VerificationStatusNotice";
 import type { AvailableSlot } from "../../context/AuthContext";
 import {
@@ -31,7 +36,9 @@ export function SpecialistProfilePage() {
   const [isSavingSlots, setIsSavingSlots] = useState(false);
   const savedProfile = useMemo(() => buildProfileFormFromUser(user), [user]);
   const availableSlots = slotEdits ?? user?.availableSlots ?? [];
-  const [profileData, setProfileData] = useState<ProfileForm>(buildProfileFormFromUser(user));
+  const [profileData, setProfileData] = useState<ProfileForm>(
+    buildProfileFormFromUser(user),
+  );
 
   useEffect(() => {
     if (user?.role === "doctor" || user?.role === "nurse") {
@@ -59,7 +66,10 @@ export function SpecialistProfilePage() {
     if (!file) return;
 
     if (!file.type.startsWith("image/")) {
-      showWarning("Please select an image file (JPG, PNG, etc.)", getToastUserContext(user));
+      showWarning(
+        "Please select an image file (JPG, PNG, etc.)",
+        getToastUserContext(user),
+      );
       return;
     }
 
@@ -96,9 +106,15 @@ export function SpecialistProfilePage() {
 
       updateProfile({ avatar: photoUrl });
       await refreshSpecialistProfile();
-      showSuccess("Profile photo updated successfully!", getToastUserContext(user));
+      showSuccess(
+        "Profile photo updated successfully!",
+        getToastUserContext(user),
+      );
     } catch (err) {
-      showError(err instanceof Error ? err.message : "Failed to upload photo", getToastUserContext(user));
+      showError(
+        err instanceof Error ? err.message : "Failed to upload photo",
+        getToastUserContext(user),
+      );
     } finally {
       setIsUploadingPhoto(false);
     }
@@ -106,10 +122,12 @@ export function SpecialistProfilePage() {
 
   const handleUpdateProfile = async () => {
     if (user?.role === "doctor" && !profileData.specialty) {
-      showWarning("Please select a medical specialty", getToastUserContext(user));
+      showWarning(
+        "Please select a medical specialty",
+        getToastUserContext(user),
+      );
       return;
     }
-
     const payload = buildProfileUpdatePayload(profileData, savedProfile);
     if (Object.keys(payload).length === 0) {
       showWarning("No profile changes to submit", getToastUserContext(user));
@@ -129,7 +147,10 @@ export function SpecialistProfilePage() {
         getToastUserContext(user),
       );
     } catch (err) {
-      showError(err instanceof Error ? err.message : "Failed to update profile", getToastUserContext(user));
+      showError(
+        err instanceof Error ? err.message : "Failed to update profile",
+        getToastUserContext(user),
+      );
     } finally {
       setIsSaving(false);
     }
@@ -149,9 +170,15 @@ export function SpecialistProfilePage() {
       });
       await refreshSpecialistProfile();
       setSlotEdits(null);
-      showSuccess("Availability saved and visible on your public profile.", getToastUserContext(user));
+      showSuccess(
+        "Availability saved and visible on your public profile.",
+        getToastUserContext(user),
+      );
     } catch (err) {
-      showError(err instanceof Error ? err.message : "Failed to save availability", getToastUserContext(user));
+      showError(
+        err instanceof Error ? err.message : "Failed to save availability",
+        getToastUserContext(user),
+      );
     } finally {
       setIsSavingSlots(false);
     }
@@ -159,7 +186,10 @@ export function SpecialistProfilePage() {
 
   const handleAddCertificate = async () => {
     if (!newCert.title || !newCert.issuedBy || !newCert.certificateUrl) {
-      showWarning("Please fill all certificate fields", getToastUserContext(user));
+      showWarning(
+        "Please fill all certificate fields",
+        getToastUserContext(user),
+      );
       return;
     }
 
@@ -171,9 +201,15 @@ export function SpecialistProfilePage() {
       setNewCert({ title: "", issuedBy: "", certificateUrl: "" });
       setShowCertForm(false);
       await refreshSpecialistProfile();
-      showSuccess("Certificate submitted for review!", getToastUserContext(user));
+      showSuccess(
+        "Certificate submitted for review!",
+        getToastUserContext(user),
+      );
     } catch (err) {
-      showError(err instanceof Error ? err.message : "Failed to upload certificate", getToastUserContext(user));
+      showError(
+        err instanceof Error ? err.message : "Failed to upload certificate",
+        getToastUserContext(user),
+      );
     }
   };
 
@@ -213,7 +249,6 @@ export function SpecialistProfilePage() {
         <VerificationStatusNotice status={user.verificationStatus} />
       )}
 
-
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
         <ProfileTab
           user={user}
@@ -234,21 +269,17 @@ export function SpecialistProfilePage() {
           onCancelEditing={cancelEditingProfile}
           onSaveProfile={handleUpdateProfile}
           onSaveAvailability={handleSaveAvailability}
-          onAddSlot={() => {
-            const slots = slotEdits ?? user?.availableSlots ?? [];
-            const nextDay = getNextAvailableDay(slots);
-            if (!nextDay) {
-              showWarning(
-                "All weekdays already have a slot. Each day can only be added once.",
-                getToastUserContext(user),
-              );
-              return;
-            }
-            setSlotEdits([...slots, createEmptySlot(slots)]);
-          }}
+          onAddSlot={() =>
+            setSlotEdits((prev) => [
+              ...(prev ?? user?.availableSlots ?? []),
+              createEmptySlot(),
+            ])
+          }
           onRemoveSlot={(index) =>
             setSlotEdits((prev) =>
-              (prev ?? user?.availableSlots ?? []).filter((_, slotIndex) => slotIndex !== index),
+              (prev ?? user?.availableSlots ?? []).filter(
+                (_, slotIndex) => slotIndex !== index,
+              ),
             )
           }
           onPhotoUpload={handlePhotoUpload}

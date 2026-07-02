@@ -36,11 +36,15 @@ function Navbar() {
   const navigate = useNavigate();
   const location = useLocation();
   const { user, logout, isAuthenticated } = useAuth();
-
+  const getShortName = (name?: string) => {
+    if (!name) return "";
+    return name.trim().split(/\s+/).slice(0, 2).join(" ");
+  };
   const isDoctor = user?.role === "doctor" || user?.role === "nurse";
   const displayName = getSpecialistDisplayName(user?.name);
-  const navUserName = isDoctor ? displayName : user?.name;
-
+  const navUserName = isDoctor
+    ? getShortName(displayName)
+    : getShortName(user?.name);
   const doctorLinks = [
     { name: "Home", path: "/" },
     { name: "Services", path: "/services" },
@@ -199,7 +203,7 @@ function Navbar() {
                   ref={(el) => {
                     linksRef.current[name] = el;
                   }}
-                  className={`px-4 py-2 text-lg font-semibold tracking-wide transition-all duration-300 ease-in-out ${
+                  className={`px-3 py-2 text-lg font-semibold tracking-wide transition-all duration-300 ease-in-out ${
                     desktopActive === name
                       ? "text-primary"
                       : "text-fg-muted hover:text-fg hover:scale-[1.02]"

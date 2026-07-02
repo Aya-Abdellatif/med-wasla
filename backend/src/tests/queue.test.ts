@@ -144,6 +144,8 @@ describe("Queue Routes", () => {
     expect(res.status).toBe(200);
     expect(res.body.status).toBe("success");
     expect(res.body.data.entries).toHaveLength(1);
+    expect(res.body.data.entries[0]).toEqual({ queueNumber: 1, status: "waiting" });
+    expect(res.body.data.entries[0].patientId).toBeUndefined();
   });
 
   it("gets my position in queue", async () => {

@@ -10,8 +10,20 @@ export interface Appointment {
   scheduledAtMs?: number;
   type: string;
   visitType: "clinic" | "home";
-  status: "pending" | "scheduled" | "completed" | "cancelled" | "overdue" | "no_show";
-  backendStatus?: "pending" | "confirmed" | "completed" | "cancelled" | "overdue" | "no_show";
+  status:
+    | "pending"
+    | "scheduled"
+    | "completed"
+    | "cancelled"
+    | "overdue"
+    | "no_show";
+  backendStatus?:
+    | "pending"
+    | "confirmed"
+    | "completed"
+    | "cancelled"
+    | "overdue"
+    | "no_show";
 }
 
 export interface HomeServiceRequest {
@@ -24,7 +36,13 @@ export interface HomeServiceRequest {
   scheduledAtMs?: number;
   status: "pending" | "accepted" | "rejected";
   phone: string;
-  backendStatus?: "pending" | "confirmed" | "completed" | "cancelled" | "overdue" | "no_show";
+  backendStatus?:
+    | "pending"
+    | "confirmed"
+    | "completed"
+    | "cancelled"
+    | "overdue"
+    | "no_show";
 }
 
 export interface ProfileForm {
@@ -81,9 +99,14 @@ export function buildProfileUpdatePayload(
 ): Record<string, string> {
   const payload: Record<string, string> = {};
 
+  if (current.name !== saved.name) payload.name = current.name;
+  if (current.phone !== saved.phone) payload.phone = current.phone;
+  if (current.email !== saved.email) payload.email = current.email;
   if (current.bio !== saved.bio) payload.bio = current.bio;
-  if (current.location !== saved.location) payload.clinicAddress = current.location;
-  if (current.specialty !== saved.specialty) payload.specialization = current.specialty;
+  if (current.location !== saved.location)
+    payload.clinicAddress = current.location;
+  if (current.specialty !== saved.specialty)
+    payload.specialization = current.specialty;
 
   return payload;
 }

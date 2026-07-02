@@ -2,7 +2,11 @@ import { useState, useEffect, useRef } from "react";
 import { useNavigate } from "react-router-dom";
 import { AppointmentTypeModal } from "../components/booking/AppointmentTypeModal";
 import { useAuth } from "../context/useAuth";
-import { canBookAppointments, handleBookClick, isSpecialistAccount } from "../../utils/bookingAccess";
+import {
+  canBookAppointments,
+  handleBookClick,
+  isSpecialistAccount,
+} from "../../utils/bookingAccess";
 import {
   Heart,
   Zap,
@@ -15,13 +19,13 @@ import {
   ChevronLeft,
   ChevronRight,
   LayoutDashboard,
-  CalendarDays
+  CalendarDays,
 } from "lucide-react";
 import docImg from "/src/assets/doctors.avif";
 import whyImg from "/src/assets/trust.jpg";
-import sarah from "/src/assets/sarah.avif";
-import michael from "/src/assets/micheal.png";
-import emily from "/src/assets/emily.jpg";
+import mai from "/src/assets/mai.jpg";
+import hend from "/src/assets/hend.jpg";
+import hazem from "/src/assets/hazem.jpg";
 function useCounter(target: number, duration: number = 2000) {
   const [count, setCount] = useState<number>(0);
 
@@ -109,24 +113,24 @@ const services = [
 const reviews = [
   {
     text: "MedWasla connected me with an amazing cardiologist within hours. The process was seamless and the doctor was exceptional.",
-    name: "Sarah Johnson",
+    name: "Mai Islam",
     role: "Patient",
     rating: 5,
-    img: sarah,
+    img: mai,
   },
   {
     text: "Finding a specialist used to take weeks. Through MedWasla I had an appointment the same day. Truly outstanding service.",
-    name: "Michael Chen",
+    name: "Hazem Fahmy",
     role: "Patient",
     rating: 5,
-    img: michael,
+    img: hazem,
   },
   {
     text: "I've used MedWasla for my whole family. The nurses they connected us with were professional, caring, and highly skilled.",
-    name: "Emily Rodriguez",
+    name: "Hend Mohamed",
     role: "Patient",
     rating: 5,
-    img: emily,
+    img: hend,
   },
 ];
 
@@ -238,10 +242,10 @@ function Home() {
 
       <section className="bg-white border-y border-border py-16">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 grid grid-cols-2 lg:grid-cols-4 gap-10">
-          <Stat target={50000} suffix="+" label="Patients Served" />
-          <Stat target={100} suffix="+" label="Expert Doctors" />
+          <Stat target={5000} suffix="+" label="Patients Served" />
+          <Stat target={200} suffix="+" label="Expert Doctors" />
           <Stat target={25} suffix="+" label="Years Experience" />
-          <Stat target={99} suffix="%" label="Success Rate" />
+          <Stat target={95} suffix="%" label="Success Rate" />
         </div>
       </section>
 
@@ -282,7 +286,7 @@ function Home() {
             onClick={() => navigate("/services")}
             className="flex items-center gap-2 mx-auto border-2 border-primary text-primary font-bold px-8 py-3 rounded-xl hover:bg-primary hover:text-white hover:-translate-y-0.5 transition-all duration-300 cursor-pointer"
           >
-            View All Services {/*<ArrowRight className="h-4 w-4" />*/}
+            View All Services 
           </button>
         </div>
       </section>
@@ -313,7 +317,9 @@ function Home() {
                     <Icon className="h-4 w-4 text-primary" />
                   </div>
                   <div>
-                    <p className="text-md font-semibold text-[#1F2937] mt-1">{title}</p>
+                    <p className="text-md font-semibold text-[#1F2937] mt-1">
+                      {title}
+                    </p>
                     <p className="text-xs text-fg-muted mt-0.5 leading-relaxed">
                       {desc}
                     </p>
@@ -418,7 +424,7 @@ function Home() {
                 onClick={onBookClick}
                 className="group flex items-center gap-2 bg-white text-primary border-2 border-white font-bold px-8 py-3 rounded-xl hover:bg-transparent hover:text-white hover:border-white hover:-translate-y-0.5 transition-all duration-300 cursor-pointer"
               >
-                {/*<CalendarDays className="h-5 w-5" />*/}
+               
                 Book Appointment
               </button>
             )}
@@ -435,7 +441,7 @@ function Home() {
               onClick={() => navigate("/contact")}
               className="group flex items-center gap-2 bg-white text-primary border-2 border-white font-bold px-8 py-3 rounded-xl hover:bg-transparent hover:text-white hover:border-white hover:-translate-y-0.5 transition-all duration-300 cursor-pointer"
             >
-              {/*<MessageCircle className="h-5 w-5" />*/}
+             
               Contact Us
             </button>
           </div>

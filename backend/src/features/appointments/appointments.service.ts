@@ -15,7 +15,6 @@ export function parseLocalAppointment(dateStr: string, timeStr: string) {
   return new Date(year, month - 1, day, hours, minutes, 0, 0);
 }
 
-/** Mark past home visits that were never completed as overdue. */
 export async function expireOverdueAppointments(filter?: {
   patientId?: string;
   specialistId?: string;
@@ -125,8 +124,6 @@ export const createAppointmentService = async (data: {
       .catch(err => console.error("[Queue Sync] Failed to sync on creation:", err));
   }
 
-  // For clinic appointments: send confirmation immediately on booking
-  // For home visits: wait until specialist approves (handled in updateAppointmentStatusService)
   if (data.type !== "home") {
     scheduleAppointmentReminders(appointment, data.patientId, specialist._id as Types.ObjectId)
       .catch(err => console.error("[Reminder] Failed to schedule:", err));
@@ -149,7 +146,6 @@ export const getPatientAppointmentsService = async (patientId: string) => {
 
 
 export const getSpecialistAppointmentsService = async (userId: string) => {
-  // The logged-in specialist's req.user.id is a User._id, not a MedicalSpecialist._id
   const specialist = await MedicalSpecialist.findOne({ userId });
   if (!specialist) throw new Error("SPECIALIST_PROFILE_NOT_FOUND");
 
@@ -273,7 +269,6 @@ export const updateAppointmentStatusService = async (
       .catch(err => console.error("[Queue Sync] Failed to sync on status update:", err));
   }
 
-  // For home visits: send confirmation when specialist approves
   if (newStatus === "confirmed" && appointment.type === "home") {
     scheduleAppointmentReminders(
       appointment,
@@ -325,7 +320,6 @@ export const cancelAppointmentService = async (
       throw new Error("TOO_LATE_TO_CANCEL");
     }
   } else {
-    // Specialist: find their MedicalSpecialist doc and verify ownership
     const specialist = await MedicalSpecialist.findOne({ userId: requesterId });
     if (!specialist) throw new Error("SPECIALIST_PROFILE_NOT_FOUND");
     if (appointment.specialistId.toString() !== specialist._id.toString()) {
@@ -445,7 +439,6 @@ export const rescheduleAppointmentService = async (
     }
   }
 
-  // Prevent rescheduling to a day where the patient already has another appointment with the same specialist
   const [year, month, day] = dateStr.split("-").map(Number);
   const startOfDay = new Date(year, month - 1, day, 0, 0, 0, 0);
   const endOfDay = new Date(year, month - 1, day, 23, 59, 59, 999);
@@ -462,7 +455,6 @@ export const rescheduleAppointmentService = async (
 
   const oldDate = appointment.date;
   appointment.date = newDate;
-  // clinic stays confirmed (auto-approved); home goes back to pending for re-approval
   appointment.status = appointment.type === "clinic" ? "confirmed" : "pending";
   if (notes !== undefined) appointment.notes = notes;
 
@@ -475,11 +467,9 @@ export const rescheduleAppointmentService = async (
   }
 
   if (appointment.type === "clinic") {
-    // Sync old queue
     await syncQueueForSpecialistAndDate(appointment.specialistId.toString(), oldDate).catch(err =>
       console.error("[Queue Sync] Failed to sync old date on reschedule:", err)
     );
-    // Sync new queue
     await syncQueueForSpecialistAndDate(appointment.specialistId.toString(), appointment.date).catch(err =>
       console.error("[Queue Sync] Failed to sync new date on reschedule:", err)
     );
@@ -543,7 +533,6 @@ export const getAvailableSlotsService = async (
     return { availableSlots: [], workingHours: null };
   }
 
-  // Find all existing non-cancelled appointments on this date
   const startOfDay = new Date(date);
   startOfDay.setHours(0, 0, 0, 0);
   const endOfDay = new Date(date);
@@ -555,7 +544,6 @@ export const getAvailableSlotsService = async (
     status: { $nin: ["cancelled", "overdue"] },
   }).select("date");
 
-  // Build 30-minute slots between startTime and endTime
   const [startH, startM] = slot.startTime.split(":").map(Number);
   const [endH, endM] = slot.endTime.split(":").map(Number);
 
@@ -579,9 +567,10 @@ export const getAvailableSlotsService = async (
     if (m >= 60) { h += 1; m -= 60; }
   }
 
-  // If date is today, only return slots that have not passed yet
-  if (isLocalToday(dateStr)) {
-    const minBookableMinutes = getNextBookableSlotMinutes();
+  const todayStr = new Date().toLocaleDateString("en-CA");
+  if (dateStr === todayStr) {
+    const now = new Date();
+    const nowMinutes = now.getHours() * 60 + now.getMinutes();
     return {
       workingHours: { start: slot.startTime, end: slot.endTime },
       availableSlots: availableSlots.filter((timeValue) => {
