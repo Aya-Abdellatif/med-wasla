@@ -26,11 +26,10 @@ export async function scheduleAppointmentReminders(
   }
 
   const { params, patientEmail, patientName } = data;
-  const fullParams = [patientName, ...params]; // [patientName, specialistName, dateStr, timeStr]
+  const fullParams = [patientName, ...params]; 
   const appointmentDate = new Date(appointment.date);
   const now = new Date();
 
-  // Confirmation: WhatsApp via scheduler + Email immediately
   await Reminder.create({
     appointmentId: appointment._id,
     channel: "WHATSAPP",
