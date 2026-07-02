@@ -111,10 +111,6 @@ export function Nurses() {
     });
   };
 
-  // const goToPage = (nextPage: number) => {
-  //   setLoading(true);
-  //   setPage(nextPage);
-  // };
 
   return (
     <div className="flex flex-col">
