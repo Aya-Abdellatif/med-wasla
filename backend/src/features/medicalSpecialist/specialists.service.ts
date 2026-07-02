@@ -23,6 +23,9 @@ export interface GetAllSpecialistsQuery {
 }
 
 export interface UpdateProfileBody {
+  name?: string;
+  email?: string;
+  phone?: string;
   bio?: string;
   clinicAddress?: string;
   specialization?: string;
@@ -34,11 +37,12 @@ export interface UpdateProfileBody {
 
 export interface ProfileUpdateResult {
   updatedFields: IPendingProfileUpdates;
+  updatedUserFields?: Partial<Pick<IUser, "name" | "email" | "phone">>;
   verificationStatus: IMedicalSpecialist["verificationStatus"];
   pendingProfileUpdates?: IPendingProfileUpdates;
 }
 
-const PROFILE_UPDATE_FIELDS: (keyof UpdateProfileBody)[] = [
+const PROFILE_UPDATE_FIELDS = [
   "bio",
   "clinicAddress",
   "specialization",
@@ -46,7 +50,7 @@ const PROFILE_UPDATE_FIELDS: (keyof UpdateProfileBody)[] = [
   "avgWaitMinutes",
   "serviceAreas",
   "homeVisit",
-];
+] as const satisfies readonly (keyof UpdateProfileBody)[];
 
 const valuesEqual = (left: unknown, right: unknown): boolean =>
   JSON.stringify(left) === JSON.stringify(right);
@@ -68,6 +72,25 @@ const pickChangedProfileFields = (
   return changed;
 };
 
+const USER_UPDATE_FIELDS = ["name", "email", "phone"] as const;
+type UserUpdateField = (typeof USER_UPDATE_FIELDS)[number];
+
+const pickChangedUserFields = (
+  body: UpdateProfileBody,
+  current: Pick<IUser, UserUpdateField>,
+): Partial<Pick<IUser, UserUpdateField>> => {
+  const changed: Partial<Pick<IUser, UserUpdateField>> = {};
+
+  for (const field of USER_UPDATE_FIELDS) {
+    const value = body[field];
+    if (value === undefined) continue;
+    if (value !== current[field]) {
+      changed[field] = value;
+    }
+  }
+
+  return changed;
+};
 const mergePendingProfileUpdates = (
   existing: IPendingProfileUpdates | undefined,
   changed: IPendingProfileUpdates,
@@ -147,11 +170,11 @@ export const getAllSpecialistsService = async (
   const pageNum = Math.max(1, parseInt(page));
   const limitNum = Math.min(50, Math.max(1, parseInt(limit)));
   const skip = (pageNum - 1) * limitNum;
- const direction = sortOrder === "asc" ? 1 : -1;
-const sort: Record<string, 1 | -1> = {
-  [sortBy]: direction,
-  _id: 1, 
-};
+  const direction = sortOrder === "asc" ? 1 : -1;
+  const sort: Record<string, 1 | -1> = {
+    [sortBy]: direction,
+    _id: 1,
+  };
 
   const [specialists, total] = await Promise.all([
     MedicalSpecialist.find(filter)
@@ -263,19 +286,47 @@ export const getSpecialistProfileService = async (userId: string) => {
 
   return specialist;
 };
-
 export const updateSpecialistProfileService = async (
   userId: string,
   body: UpdateProfileBody,
 ): Promise<ProfileUpdateResult> => {
   const specialist = await MedicalSpecialist.findOne({ userId });
-
   if (!specialist) throw new Error("Specialist profile not found");
 
+  const user = await User.findById(userId);
+  if (!user) throw new Error("User not found");
+
+  const changedUserFields = pickChangedUserFields(body, user);
   const changedFields = pickChangedProfileFields(body, specialist);
 
-  if (Object.keys(changedFields).length === 0) {
+  if (
+    Object.keys(changedFields).length === 0 &&
+    Object.keys(changedUserFields).length === 0
+  ) {
     throw new Error("No profile changes to submit");
+  }
+
+  let updatedUserFields: Partial<Pick<IUser, UserUpdateField>> | undefined;
+  if (Object.keys(changedUserFields).length > 0) {
+    if (changedUserFields.email && changedUserFields.email !== user.email) {
+      const emailTaken = await User.findOne({
+        email: changedUserFields.email,
+        _id: { $ne: userId },
+      });
+      if (emailTaken) throw new Error("Email is already in use");
+    }
+
+    Object.assign(user, changedUserFields);
+    await user.save();
+    updatedUserFields = changedUserFields;
+  }
+
+  if (Object.keys(changedFields).length === 0) {
+    return {
+      updatedFields: {},
+      updatedUserFields,
+      verificationStatus: specialist.verificationStatus,
+    };
   }
 
   const wasApproved = specialist.verificationStatus === "approved";
@@ -293,6 +344,7 @@ export const updateSpecialistProfileService = async (
 
     return {
       updatedFields: changedFields,
+      updatedUserFields,
       verificationStatus: specialist.verificationStatus,
       pendingProfileUpdates,
     };
@@ -312,6 +364,7 @@ export const updateSpecialistProfileService = async (
 
   return {
     updatedFields: changedFields,
+    updatedUserFields,
     verificationStatus: specialist.verificationStatus,
   };
 };
@@ -362,24 +415,26 @@ export const updateUserPhoto = async (
     process.env.CLOUDINARY_API_SECRET;
 
   if (hasCloudinary) {
-    const uploadResult = await new Promise<{ secure_url: string }>((resolve, reject) => {
-      cloudinary.uploader
-        .upload_stream(
-          {
-            folder: "medwasla/profiles",
-            resource_type: "image",
-            format: mimeType.split("/")[1],
-            transformation: [{ width: 400, height: 400, crop: "fill" }],
-          },
-          (err, result) => {
-            if (err || !result) {
-              return reject(err ?? new Error("Cloudinary upload failed"));
-            }
-            resolve(result);
-          },
-        )
-        .end(fileBuffer);
-    });
+    const uploadResult = await new Promise<{ secure_url: string }>(
+      (resolve, reject) => {
+        cloudinary.uploader
+          .upload_stream(
+            {
+              folder: "medwasla/profiles",
+              resource_type: "image",
+              format: mimeType.split("/")[1],
+              transformation: [{ width: 400, height: 400, crop: "fill" }],
+            },
+            (err, result) => {
+              if (err || !result) {
+                return reject(err ?? new Error("Cloudinary upload failed"));
+              }
+              resolve(result);
+            },
+          )
+          .end(fileBuffer);
+      },
+    );
     photoUrl = uploadResult.secure_url;
   } else {
     const base64 = fileBuffer.toString("base64");
