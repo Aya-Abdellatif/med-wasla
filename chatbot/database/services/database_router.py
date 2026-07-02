@@ -4,7 +4,10 @@ database_router.py
 Maps database intent → actual MongoDB calls
 """
 
-from database.services.database_classifier import classify_database_query
+from database.services.database_classifier import (
+    classify_database_query,
+    extract_specialization
+)
 
 from database.collections.appointment_queries import (
     get_patient_appointments,
@@ -13,6 +16,7 @@ from database.collections.appointment_queries import (
 
 from database.collections.specialist_queries import (
     get_specialists_by_specialization,
+    get_approved_specialists,
     count_approved_specialists
 )
 
@@ -37,9 +41,17 @@ def handle_database_query(user_query: str, user_id: str):
 
     if intent == "SPECIALISTS":
 
+        specialization = extract_specialization(user_query)
+
+        data = (
+            get_specialists_by_specialization(specialization)
+            if specialization
+            else get_approved_specialists()
+        )
+
         return {
             "type": "specialists",
-            "data": get_specialists_by_specialization("")
+            "data": data
         }
 
     if intent == "REVIEWS":

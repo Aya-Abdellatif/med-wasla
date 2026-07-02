@@ -75,10 +75,6 @@ from database.collections.appointment_queries import (
     get_patient_appointments
 )
 
-from database.collections.appointment_queries import (
-    get_patient_appointments
-)
-
 
 def get_patient_specialists(patient_id):
     """

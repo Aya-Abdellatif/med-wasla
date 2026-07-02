@@ -14,32 +14,35 @@ from core.knowledge_base import KnowledgeBase
 def initialize_model():
     """
     Load embedding model + initialize all knowledge bases.
-    Runs only once.
+    Retries on the next call if a previous attempt left the
+    knowledge bases only partially loaded.
     """
 
-    if models.embedder is not None:
+    if models.nhs_kb is not None and models.medwasla_kb is not None:
         return
 
-    print("⚙️ Loading SentenceTransformer model...")
-
-    models.embedder = SentenceTransformer(EMBEDDING_MODEL)
+    if models.embedder is None:
+        print("⚙️ Loading SentenceTransformer model...")
+        models.embedder = SentenceTransformer(EMBEDDING_MODEL)
 
     print("⚙️ Loading Knowledge Bases...")
 
     # ---------------- NHS ----------------
-    models.nhs_kb = KnowledgeBase(
+    nhs_kb = KnowledgeBase(
         json_path=CORPUS_PATH,
         source_name="NHS",
         embedder=models.embedder
     )
-    models.nhs_kb.load()
+    nhs_kb.load()
+    models.nhs_kb = nhs_kb
 
     # ---------------- Med-Wasla ----------------
-    models.medwasla_kb = KnowledgeBase(
+    medwasla_kb = KnowledgeBase(
         json_path=MEDWASLA_CORPUS_PATH,
         source_name="Med-Wasla",
         embedder=models.embedder
     )
-    models.medwasla_kb.load()
+    medwasla_kb.load()
+    models.medwasla_kb = medwasla_kb
 
     print("✅ All knowledge bases initialized successfully.")
