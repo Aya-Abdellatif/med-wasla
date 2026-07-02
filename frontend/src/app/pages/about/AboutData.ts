@@ -9,6 +9,12 @@ import {
   faUserDoctor,
 } from "@fortawesome/free-solid-svg-icons";
 
+import mayarImage from "../../../assets/Mayar.jpg";
+import salmaImage from "../../../assets/Salma.jpg";
+import ayaImage from "../../../assets/Aya.jpg";
+import hanaImage from "../../../assets/Hana.jpg";
+import ranimImage from "../../../assets/Ranim.jpeg";
+
 export const stats = [
   {
     value: "25+",
@@ -77,14 +83,14 @@ export const teamMembers = [
   {
     name: "Mayar Oraby",
     role: "Full Stack Developer",
-    image: "../../assets/Mayar.jpg",
+    image: mayarImage,
     linkedin: "https://www.linkedin.com/in/mayar-oraby",
     whatsapp: "https://wa.me/201202818745",
    },
   {
     name: "Salma Assem",
     role: "Full Stack Developer",
-     image: "../../assets/Salma.jpg",
+    image: salmaImage,
     linkedin: "https://www.linkedin.com/in/salma-assem",
     whatsapp: "https://wa.me/201202818745",
    },
@@ -98,21 +104,21 @@ export const teamMembers = [
   {
     name: "Aya Abdellatif",
     role: `Full Stack Developer (Team Leader)`,
-    image: "../../assets/Aya.jpg",
+    image: ayaImage,
     linkedin: "https://www.linkedin.com/in/aya-abdllatif/",
     whatsapp: "https://wa.me/20128363363",
   },
   {
     name: "Hana Ahmed",
     role: "Full Stack Developer",
-    image: "../../assets/Hana.jpg",
+    image: hanaImage,
     linkedin: "https://www.linkedin.com/in/hanasamir",
     whatsapp: "https://wa.me/201003333333",
   },
   {
     name: "Ranim Mogharab",
     role: "AI Specialist",
-    image: "../../assets/Ranim.jpeg",
+    image: ranimImage,
     linkedin: "https://www.linkedin.com/in/ranim-mohareb/",
     whatsapp: "https://wa.me/201004444444",
   },
