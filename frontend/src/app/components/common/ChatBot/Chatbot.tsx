@@ -1,6 +1,6 @@
 import { X, Bot } from "lucide-react";
-import { useState } from "react";
 
+import { useState, useRef, useEffect } from "react";
 import { useChatBot } from "../../../context/useChatBot";
 import { sendMessageToAI } from "../../../Services/chatbot.service";
 
@@ -34,7 +34,13 @@ function ChatBot() {
   const [showHistory, setShowHistory] = useState(false);
   const [, setIsLoading] = useState(false);
 
+  const messagesEndRef = useRef<HTMLDivElement>(null); // handle auto scroll
+
   const currentChat = chats.find((c) => c.id === selectedChatId);
+ 
+  useEffect(() => { // handle auto scroll
+  messagesEndRef.current?.scrollIntoView({ behavior: "smooth" });
+}, [currentChat?.messages]);
 
   // ---------------- CREATE FIRST CHAT ----------------
 // new chat
@@ -164,37 +170,37 @@ const renderEnhancedText = (text: string,  sources: (string | Source)[] = []) =>
                 .toLowerCase()
                 .replace(/\s+/g, "-");
 
-let linkUrl: string;
+              let linkUrl: string;
 
-if (typeof matchedSource === "string") {
-    linkUrl = `https://www.nhs.uk/conditions/${cleanSlug}`;
-} else {
-    linkUrl =
-        matchedSource.url ||
-        matchedSource.link ||
-        `https://www.nhs.uk/conditions/${cleanSlug}`;
-}
+              if (typeof matchedSource === "string") {
+                  linkUrl = `https://www.nhs.uk/conditions/${cleanSlug}`;
+              } else {
+                  linkUrl =
+                      matchedSource.url ||
+                      matchedSource.link ||
+                      `https://www.nhs.uk/conditions/${cleanSlug}`;
+              }
 
-              return (
-                <a
-                  key={idx}
-                  href={linkUrl}
-                  target="_blank"
-                  rel="noopener noreferrer"
-                  className="inline-flex items-center px-1.5 py-0.5 mx-0.5 rounded text-xs font-semibold bg-teal-50 text-teal-600 hover:bg-teal-100 hover:underline transition-colors decoration-dotted"
-                  title={`Read verified NHS medical content for: ${rawLabel}`}
-                >
-                  {part} ↗
-                </a>
-              );
-            }
+                            return (
+                              <a
+                                key={idx}
+                                href={linkUrl}
+                                target="_blank"
+                                rel="noopener noreferrer"
+                                className="inline-flex items-center px-1.5 py-0.5 mx-0.5 rounded text-xs font-semibold bg-teal-50 text-teal-600 hover:bg-teal-100 hover:underline transition-colors decoration-dotted"
+                                title={`Read verified NHS medical content for: ${rawLabel}`}
+                              >
+                                {part} ↗
+                              </a>
+                            );
+                          }
 
-            return part;
-          })}
-        </span>
-      );
-    });
-  };
+                          return part;
+                        })}
+                      </span>
+                    );
+                  });
+                };
 
   
 
@@ -297,19 +303,24 @@ if (typeof matchedSource === "string") {
   return (
     <>
       {/* floating button */}
-      <div className="fixed bottom-6 right-6 z-50">
-        <button
-          onClick={openChatBot}
-          className="h-14 w-14 rounded-full bg-primary text-white shadow-lg flex items-center justify-center hover:scale-105 transition-transform"
+      {/* Only show the button when the chat is NOT open */}
+      {!isOpen && (
+        <div className="fixed bottom-6 right-6 z-50">
+          <span className="absolute inset-0 rounded-full bg-primary opacity-30 animate-ping" />
+          <span className="absolute inset-0 scale-110 rounded-full bg-primary opacity-20 animate-pulse" />
+      <button
+        onClick={openChatBot}
+        className="relative h-14 w-14 rounded-full bg-primary hover:bg-fg text-white shadow-lg transition-all duration-300 hover:scale-110 flex items-center justify-center cursor-pointer"
         >
-          <Bot className="h-7 w-7" />
-        </button>
-      </div>
+        <Bot className="h-7 w-7" />
+      </button>
+        </div>
+      )}
 
       {/* overlay */}
       {isOpen && (
         <div
-          className="fixed inset-0 bg-black/20 z-40 transition-opacity"
+          className="fixed inset-0 top-20 bg-black/20 z-40 transition-opacity"
           onClick={closeChatBot}
         />
       )}
@@ -317,14 +328,20 @@ if (typeof matchedSource === "string") {
       {/* panel */}
       <div
         className={
-          "fixed top-0 right-0 h-full w-[28rem] bg-white shadow-2xl z-50 flex flex-col transition-transform duration-300 ease-in-out " +
+          // Change 'top-0' to 'top-20' (adjust 20 if your navbar is a different height)
+          // Change 'h-full' to 'h-[calc(100vh-5rem)]' (adjust 5rem to match top-20)
+          "fixed top-20 right-0 h-[calc(100vh-5rem)] w-[28rem] bg-white shadow-2xl z-50 flex flex-col transition-transform duration-300 ease-in-out " +
           (isOpen ? "translate-x-0" : "translate-x-full")
         }
       >
         {/* header */}
-        <div className="flex items-center justify-between px-5 py-4 bg-primary text-white">
-          <div className="flex items-center gap-2">
-            <Bot className="h-5 w-5" />
+        {/* ADDED shrink-0 to prevent layout collapse */}
+        <div className="flex items-center justify-between px-5 py-4 bg-primary text-white shrink-0">
+          <div className="flex items-center gap-3">
+            {/* ADDED this circle container for the icon */}
+            <div className="h-9 w-9 rounded-full bg-white/20 flex items-center justify-center">
+              <Bot className="h-5 w-5" />
+            </div>
             <div>
               <p className="font-bold text-sm">WaslaBot</p>
               <p className="text-xs text-white/70">Always here to help</p>
@@ -366,32 +383,36 @@ if (typeof matchedSource === "string") {
 
           {/* chat */}
           <div className="flex-1 flex flex-col bg-slate-50">
-            <div className="flex-1 overflow-y-auto p-4 space-y-4">
-              {currentChat?.messages.map((msg, i) => {
-                const isAI = msg.sender === "ai";
-                const isThinking = msg.text === "Thinking...";
+            
+          <div className="flex-1 overflow-y-auto p-4 space-y-4">
+            {currentChat?.messages.map((msg, i) => {
+              const isAI = msg.sender === "ai";
+              const isThinking = msg.text === "Thinking...";
 
-                return (
-                  <div key={i} className={`flex ${isAI ? "justify-start" : "justify-end"}`}>
-                    <div
-                      className={`max-w-[85%] rounded-2xl px-4 py-3 shadow-sm ${
-                        isAI
-                          ? "bg-white text-gray-800 rounded-tl-none border border-gray-100"
-                          : "bg-primary text-white rounded-tr-none"
-                      }`}
-                    >
-                      {isAI && !isThinking ? (
-                        renderEnhancedText(msg.text, msg.sources)
-                      ) : (
-                        <p className="text-sm whitespace-pre-wrap leading-relaxed">
-                          {msg.text}
-                        </p>
-                      )}
-                    </div>
+              return (
+                <div key={i} className={`flex ${isAI ? "justify-start" : "justify-end"}`}>
+                  <div
+                    className={`max-w-[85%] rounded-2xl px-4 py-3 shadow-sm ${
+                      isAI
+                        ? "bg-white text-gray-800 rounded-tl-none border border-gray-100"
+                        : "bg-primary text-white rounded-tr-none"
+                    }`}
+                  >
+                    {isAI && !isThinking ? (
+                      renderEnhancedText(msg.text, msg.sources)
+                    ) : (
+                      <p className="text-sm whitespace-pre-wrap leading-relaxed">
+                        {msg.text}
+                      </p>
+                    )}
                   </div>
-                );
-              })}
-            </div>
+                </div>
+              );
+            })}
+            
+            {/* Add this line below to act as the scroll target */}
+            <div ref={messagesEndRef} />
+          </div>
 
             <ChatInput
               message={message}

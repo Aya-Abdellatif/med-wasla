@@ -219,6 +219,9 @@ export const updateAppointmentStatus = async (
     if (msg === "APPOINTMENT_OVERDUE") {
       return next(new AppError("This appointment is overdue and can no longer be updated", 400));
     }
+    if (msg === "TIME_CONFLICT") {
+      return next(new AppError("This time is no longer available. Another appointment has already been confirmed at the same time.", 409));
+    }
     return next(error);
   }
 };
@@ -249,7 +252,10 @@ export const cancelAppointment = async (
     if (msg === "APPOINTMENT_OVERDUE") {
       return next(new AppError("This appointment is overdue and can no longer be cancelled", 400));
     }
-    if (msg === "SPECIALIST_PROFILE_NOT_FOUND") 
+    if (msg === "TOO_LATE_TO_CANCEL") {
+      return next(new AppError("Cancellation window has passed for this appointment", 400));
+    }
+    if (msg === "SPECIALIST_PROFILE_NOT_FOUND")
       return next(new AppError("Specialist profile not found", 404));
     return next(error);
   }
@@ -291,16 +297,28 @@ export const rescheduleAppointment = async (
   next: NextFunction
 ) => {
   try {
-    const { date, notes } = req.body;
+    const { date, time, notes } = req.body;
 
-    if (!date) {
-      return next(new AppError("New date is required", 400));
+    if (!date || !time) {
+      return next(new AppError("New date and time are required", 400));
     }
+
+    if (!/^\d{4}-\d{2}-\d{2}$/.test(date)) {
+      return next(new AppError("date must be in YYYY-MM-DD format", 400));
+    }
+
+    if (!/^\d{2}:\d{2}$/.test(time)) {
+      return next(new AppError("time must be in HH:mm format", 400));
+    }
+
+    const newDate = parseLocalAppointment(date, time);
 
     const appointment = await rescheduleAppointmentService(
       req.params.id as string,
       req.user!.id,
-      new Date(date),
+      newDate,
+      date,
+      time,
       notes
     );
 
@@ -319,6 +337,10 @@ export const rescheduleAppointment = async (
       return next(new AppError("This appointment is overdue and can no longer be rescheduled", 400));
     }
     if (msg === "DATE_IN_PAST") return next(new AppError("New date must be in the future", 400));
+    if (msg === "DAY_NOT_AVAILABLE") return next(new AppError("The doctor is not available on this day", 400));
+    if (msg === "SLOT_NOT_AVAILABLE") return next(new AppError("This time slot is not available", 400));
+    if (msg === "SPECIALIST_NOT_FOUND") return next(new AppError("Specialist not found", 404));
+    if (msg === "ALREADY_BOOKED_SAME_DAY") return next(new AppError("You already have an appointment with this doctor on this day", 409));
     return next(error);
   }
 };

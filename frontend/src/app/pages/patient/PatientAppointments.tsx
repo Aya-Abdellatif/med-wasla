@@ -32,7 +32,6 @@ import { AppointmentTypeModal } from "../../components/booking/AppointmentTypeMo
 import type { Appointment, AppointmentReview,  AppointmentStatus, AppointmentType } from "../../components/patient-appointments/AppointmentTypes";
 import { fetchMyAppointments, cancelAppointment, rescheduleAppointment } from "../../../services/appointmentsApi";
 import { createReview } from "../../../services/reviewsApi";
-import { buildRescheduleIsoDate } from "../../../utils/appointmentReschedule";
 import { useAuth } from "../../context/useAuth";
 import { showError, showSuccess } from "../../../utils/toast";
 
@@ -333,7 +332,7 @@ export function MyAppointments() {
 
     const handleReschedule = async (id: string, date: string, time: string) => {
         try {
-            await rescheduleAppointment(id, buildRescheduleIsoDate(date, time));
+            await rescheduleAppointment(id, date, time);
             await loadAppointments(true);
             setRescheduleModal(null);
             showSuccess("Appointment rescheduled");

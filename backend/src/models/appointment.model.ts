@@ -88,6 +88,14 @@ const appointmentSchema = new Schema<IAppointment>(
   }
 );
 
+appointmentSchema.index(
+  { specialistId: 1, date: 1 },
+  {
+    unique: true,
+    partialFilterExpression: { status: "confirmed" },
+  }
+);
+
 const Appointment = mongoose.model<IAppointment>("Appointment", appointmentSchema);
 
 export default Appointment;

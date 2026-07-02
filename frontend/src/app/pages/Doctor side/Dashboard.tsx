@@ -5,6 +5,7 @@ import {
   fetchSpecialistAppointments,
   updateAppointmentStatus,
   cancelAppointment,
+  cancelDayAppointments,
 } from "../../../services/appointmentsApi";
 import { showError, showSuccess, getToastUserContext } from "../../../utils/toast";
 import { VerificationStatusNotice } from "../../components/common/VerificationStatusNotice";
@@ -97,10 +98,15 @@ export function Dashboard() {
       }
     })();
 
+    const interval = setInterval(() => {
+      if (!cancelled) void loadAppointments(true);
+    }, 30_000);
+
     return () => {
       cancelled = true;
+      clearInterval(interval);
     };
-  }, [user?.id, user?.role, refreshSpecialistProfile]);
+  }, [user?.id, user?.role, refreshSpecialistProfile, loadAppointments]);
 
   const runWithRefresh = async (
     action: () => Promise<unknown>,
@@ -167,19 +173,11 @@ export function Dashboard() {
   };
 
   const handleCancelAllUpcoming = async (date: string) => {
-    const upcomingClinic = appointments.filter(
-      (a) =>
-        a.date === date &&
-        a.visitType === "clinic" &&
-        a.backendStatus === "confirmed",
-    );
-    if (upcomingClinic.length === 0) return;
-
     setUpdatingAppointmentId("bulk-upcoming");
     try {
       await runWithRefresh(
-        () => Promise.all(upcomingClinic.map((a) => cancelAppointment(a.id))),
-        `${upcomingClinic.length} appointment(s) cancelled.`,
+        () => cancelDayAppointments(date),
+        "All appointments for this day cancelled.",
         "Failed to cancel appointments",
       );
     } finally {

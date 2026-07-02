@@ -9,7 +9,7 @@ import generateOtp from "../../utils/generateOtp.js";
 import sendEmail from "../../utils/sendEmail.js";
 import type { RegisterData, AuthResult } from "../../interfaces/auth.interface.js";
 
-const OTP_TTL_MS = 10 * 60 * 1000; // 10 minutes
+const OTP_TTL_MS = 10 * 60 * 1000; 
 
 const signToken = (id: string, role: string): string => {
   const secret = process.env.JWT_SECRET;
@@ -212,7 +212,7 @@ export const verifyUserOtp = async (email: string, otp: string): Promise<AuthRes
   };
 };
 
-const RESEND_COOLDOWN_MS = 60 * 1000; // 60 seconds
+const RESEND_COOLDOWN_MS = 60 * 1000; 
 
 export const resendUserOtp = async (email: string): Promise<void> => {
   const user = await User.findOne({ email });

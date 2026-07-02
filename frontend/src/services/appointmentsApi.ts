@@ -98,10 +98,17 @@ export async function cancelAppointment(appointmentId: string) {
   return data;
 }
 
-export async function rescheduleAppointment(appointmentId: string, date: string, notes?: string) {
+export async function rescheduleAppointment(appointmentId: string, date: string, time: string, notes?: string) {
   const { data } = await axiosClient.patch<{ success: boolean; message: string }>(
     `/api/appointments/${appointmentId}/reschedule`,
-    { date, notes },
+    { date, time, notes },
+  );
+  return data;
+}
+
+export async function cancelDayAppointments(date: string) {
+  const { data } = await axiosClient.delete<{ success: boolean; message: string; data: { cancelledCount: number } }>(
+    `/api/appointments/day/${date}`,
   );
   return data;
 }

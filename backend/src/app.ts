@@ -31,7 +31,6 @@ app.use(
 
 app.use(express.json());
 
-// Routes
 app.use("/api/auth", authRouter);
 app.use("/api/patient", patientRouter);
 app.use("/api/specialists", specialistsRouter);

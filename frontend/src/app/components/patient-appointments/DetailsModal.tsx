@@ -359,7 +359,7 @@ export function DetailsModal({ appointment, onClose }: { appointment: Appointmen
                     {/* Fee */}
                     <div className="flex items-center justify-between p-3 bg-linear-to-r from-primary/5 to-secondary/5 rounded-xl border border-primary/10">
                         <span className="text-sm text-muted-foreground">Consultation Fee</span>
-                        <span className="font-bold text-foreground">${appointment.fee}</span>
+                        <span className="font-bold text-foreground">{appointment.fee} EGP</span>
                     </div>
                 </div>
             </div>

@@ -15,14 +15,13 @@ export function parseLocalAppointment(dateStr: string, timeStr: string) {
   return new Date(year, month - 1, day, hours, minutes, 0, 0);
 }
 
-/** Mark past home visits that were never completed as overdue. */
 export async function expireOverdueAppointments(filter?: {
   patientId?: string;
   specialistId?: string;
 }) {
   const query: Record<string, unknown> = {
     type: "home",
-    status: { $in: ["pending", "confirmed"] },
+    status: "pending",
     date: { $lt: new Date(Date.now() - 30 * 60 * 1000) },
   };
 
@@ -73,18 +72,20 @@ export const createAppointmentService = async (data: {
   if (data.date <= new Date()) 
     throw new Error("DATE_IN_PAST");
 
-  const dayName = data.date.toLocaleDateString("en-US", { weekday: "long" });
-  const worksOnDay = specialist.availableSlots?.some((slot) => slot.day === dayName);
-  if (!worksOnDay) 
-    throw new Error("DAY_NOT_AVAILABLE");
+  if (data.type === "clinic") {
+    const dayName = data.date.toLocaleDateString("en-US", { weekday: "long" });
+    const worksOnDay = specialist.availableSlots?.some((slot) => slot.day === dayName);
+    if (!worksOnDay)
+      throw new Error("DAY_NOT_AVAILABLE");
 
-  const { availableSlots } = await getAvailableSlotsService(
-    data.specialistId,
-    data.dateStr,
-  );
+    const { availableSlots } = await getAvailableSlotsService(
+      data.specialistId,
+      data.dateStr,
+    );
 
-  if (!availableSlots.includes(data.timeStr)) {
-    throw new Error("SLOT_NOT_AVAILABLE");
+    if (!availableSlots.includes(data.timeStr)) {
+      throw new Error("SLOT_NOT_AVAILABLE");
+    }
   }
 
   const [year, month, day] = data.dateStr.split("-").map(Number);
@@ -102,23 +103,27 @@ export const createAppointmentService = async (data: {
     throw new Error("ALREADY_BOOKED_SAME_DAY");
   }
 
-  const appointment = await Appointment.create({
-    patientId: data.patientId,
-    specialistId: data.specialistId,
-    date: data.date,
-    type: data.type,
-    address: data.address,
-    notes: data.notes,
-    status: data.type === "clinic" ? "confirmed" : "pending",
-  });
+  let appointment;
+  try {
+    appointment = await Appointment.create({
+      patientId: data.patientId,
+      specialistId: data.specialistId,
+      date: data.date,
+      type: data.type,
+      address: data.address,
+      notes: data.notes,
+      status: data.type === "clinic" ? "confirmed" : "pending",
+    });
+  } catch (err: unknown) {
+    if ((err as { code?: number }).code === 11000) throw new Error("SLOT_NOT_AVAILABLE", { cause: err });
+    throw err;
+  }
 
   if (appointment.type === "clinic") {
     await syncQueueForSpecialistAndDate(appointment.specialistId.toString(), appointment.date)
       .catch(err => console.error("[Queue Sync] Failed to sync on creation:", err));
   }
 
-  // For clinic appointments: send confirmation immediately on booking
-  // For home visits: wait until specialist approves (handled in updateAppointmentStatusService)
   if (data.type !== "home") {
     scheduleAppointmentReminders(appointment, data.patientId, specialist._id as Types.ObjectId)
       .catch(err => console.error("[Reminder] Failed to schedule:", err));
@@ -141,7 +146,6 @@ export const getPatientAppointmentsService = async (patientId: string) => {
 
 
 export const getSpecialistAppointmentsService = async (userId: string) => {
-  // The logged-in specialist's req.user.id is a User._id, not a MedicalSpecialist._id
   const specialist = await MedicalSpecialist.findOne({ userId });
   if (!specialist) throw new Error("SPECIALIST_PROFILE_NOT_FOUND");
 
@@ -211,16 +215,15 @@ export const updateAppointmentStatusService = async (
   }
 
   if (appointment.type === "home") {
-    if (isAppointmentPast(appointment.date)) {
-      if (appointment.status === "pending" || appointment.status === "confirmed") {
-        appointment.status = "overdue";
-        await appointment.save();
-      }
+    if (appointment.status === "pending" && isAppointmentPast(appointment.date)) {
+      appointment.status = "overdue";
+      await appointment.save();
       throw new Error("APPOINTMENT_OVERDUE");
     }
 
     const homeTransitions: Record<string, AppointmentStatus[]> = {
       pending: ["confirmed"],
+      confirmed: ["completed", "no_show"],
     };
 
     if (!homeTransitions[appointment.status]?.includes(newStatus)) {
@@ -236,15 +239,29 @@ export const updateAppointmentStatusService = async (
     }
   }
 
+  if (newStatus === "confirmed" && appointment.type === "home") {
+    const conflict = await Appointment.findOne({
+      specialistId: appointment.specialistId,
+      date: appointment.date,
+      _id: { $ne: appointment._id },
+      status: "confirmed",
+    });
+    if (conflict) throw new Error("TIME_CONFLICT");
+  }
+
   appointment.status = newStatus;
-  await appointment.save();
+  try {
+    await appointment.save();
+  } catch (err: unknown) {
+    if ((err as { code?: number }).code === 11000) throw new Error("TIME_CONFLICT", { cause: err });
+    throw err;
+  }
 
   if (appointment.type === "clinic") {
     await syncQueueForSpecialistAndDate(appointment.specialistId.toString(), appointment.date)
       .catch(err => console.error("[Queue Sync] Failed to sync on status update:", err));
   }
 
-  // For home visits: send confirmation when specialist approves
   if (newStatus === "confirmed" && appointment.type === "home") {
     scheduleAppointmentReminders(
       appointment,
@@ -268,33 +285,42 @@ export const cancelAppointmentService = async (
   if (
     appointment.status === "completed" ||
     appointment.status === "cancelled" ||
-    appointment.status === "no_show"
+    appointment.status === "no_show" ||
+    appointment.status === "overdue"
   ) {
     throw new Error("CANNOT_CANCEL");
   }
 
-  if (appointment.type === "home") {
-    if (isAppointmentPast(appointment.date)) {
-      if (appointment.status === "pending" || appointment.status === "confirmed") {
-        appointment.status = "overdue";
-        await appointment.save();
-      }
-      throw new Error("APPOINTMENT_OVERDUE");
+  if (appointment.type === "home" && isAppointmentPast(appointment.date)) {
+    if (appointment.status === "pending") {
+      appointment.status = "overdue";
+      await appointment.save();
     }
-
-    if (appointment.status === "overdue") {
-      throw new Error("APPOINTMENT_OVERDUE");
-    }
+    throw new Error("APPOINTMENT_OVERDUE");
   }
+
+  const now = new Date();
+  const appointmentDate = new Date(appointment.date);
+  const hoursUntilAppointment = (appointmentDate.getTime() - now.getTime()) / (1000 * 60 * 60);
 
   if (requesterRole === "patient") {
     if (appointment.patientId.toString() !== requesterId) throw new Error("FORBIDDEN");
+
+    if (appointment.type === "clinic" && hoursUntilAppointment < 6) {
+      throw new Error("TOO_LATE_TO_CANCEL");
+    }
+    if (appointment.type === "home" && hoursUntilAppointment < 24) {
+      throw new Error("TOO_LATE_TO_CANCEL");
+    }
   } else {
-    // Specialist: find their MedicalSpecialist doc and verify ownership
     const specialist = await MedicalSpecialist.findOne({ userId: requesterId });
     if (!specialist) throw new Error("SPECIALIST_PROFILE_NOT_FOUND");
     if (appointment.specialistId.toString() !== specialist._id.toString()) {
       throw new Error("FORBIDDEN");
+    }
+
+    if (appointment.type === "home" && hoursUntilAppointment < 24) {
+      throw new Error("TOO_LATE_TO_CANCEL");
     }
   }
 
@@ -362,6 +388,8 @@ export const rescheduleAppointmentService = async (
   appointmentId: string,
   patientId: string,
   newDate: Date,
+  dateStr: string,
+  timeStr: string,
   notes?: string
 ) => {
   const appointment = await Appointment.findById(appointmentId);
@@ -372,42 +400,69 @@ export const rescheduleAppointmentService = async (
   if (
     appointment.status === "completed" ||
     appointment.status === "cancelled" ||
-    appointment.status === "no_show"
+    appointment.status === "no_show" ||
+    appointment.status === "overdue"
   ) {
     throw new Error("CANNOT_RESCHEDULE");
   }
 
-  if (appointment.type === "home") {
-    if (isAppointmentPast(appointment.date)) {
-      if (appointment.status === "pending" || appointment.status === "confirmed") {
-        appointment.status = "overdue";
-        await appointment.save();
-      }
-      throw new Error("APPOINTMENT_OVERDUE");
+  if (appointment.type === "home" && isAppointmentPast(appointment.date)) {
+    if (appointment.status === "pending") {
+      appointment.status = "overdue";
+      await appointment.save();
     }
-
-    if (appointment.status === "overdue") {
-      throw new Error("APPOINTMENT_OVERDUE");
-    }
+    throw new Error("APPOINTMENT_OVERDUE");
   }
 
   if (newDate <= new Date()) throw new Error("DATE_IN_PAST");
 
+  const specialistId = appointment.specialistId.toString();
+  const specialist = await MedicalSpecialist.findById(specialistId);
+  if (!specialist) throw new Error("SPECIALIST_NOT_FOUND");
+
+  if (appointment.type === "clinic") {
+    const dayName = newDate.toLocaleDateString("en-US", { weekday: "long" });
+    if (!specialist.availableSlots?.some((s) => s.day === dayName)) {
+      throw new Error("DAY_NOT_AVAILABLE");
+    }
+
+    const { availableSlots } = await getAvailableSlotsService(specialistId, dateStr);
+    if (!availableSlots.includes(timeStr)) {
+      throw new Error("SLOT_NOT_AVAILABLE");
+    }
+  }
+
+  const [year, month, day] = dateStr.split("-").map(Number);
+  const startOfDay = new Date(year, month - 1, day, 0, 0, 0, 0);
+  const endOfDay = new Date(year, month - 1, day, 23, 59, 59, 999);
+  const conflictingAppointment = await Appointment.findOne({
+    patientId,
+    specialistId,
+    _id: { $ne: appointmentId },
+    date: { $gte: startOfDay, $lte: endOfDay },
+    status: { $nin: ["cancelled", "overdue"] },
+  });
+  if (conflictingAppointment) {
+    throw new Error("ALREADY_BOOKED_SAME_DAY");
+  }
+
   const oldDate = appointment.date;
   appointment.date = newDate;
-  // clinic stays confirmed (auto-approved); home goes back to pending for re-approval
   appointment.status = appointment.type === "clinic" ? "confirmed" : "pending";
   if (notes !== undefined) appointment.notes = notes;
 
   await cancelAppointmentReminders(appointment._id.toString());
-  await appointment.save();
+  try {
+    await appointment.save();
+  } catch (err: unknown) {
+    if ((err as { code?: number }).code === 11000) throw new Error("SLOT_NOT_AVAILABLE", { cause: err });
+    throw err;
+  }
 
   if (appointment.type === "clinic") {
-    // Sync old queue
     await syncQueueForSpecialistAndDate(appointment.specialistId.toString(), oldDate).catch(err =>
       console.error("[Queue Sync] Failed to sync old date on reschedule:", err)
     );
-    // Sync new queue
     await syncQueueForSpecialistAndDate(appointment.specialistId.toString(), appointment.date).catch(err =>
       console.error("[Queue Sync] Failed to sync new date on reschedule:", err)
     );
@@ -452,7 +507,6 @@ export const getAvailableSlotsService = async (
     return { availableSlots: [], workingHours: null };
   }
 
-  // Find all existing non-cancelled appointments on this date
   const startOfDay = new Date(date);
   startOfDay.setHours(0, 0, 0, 0);
   const endOfDay = new Date(date);
@@ -464,7 +518,6 @@ export const getAvailableSlotsService = async (
     status: { $nin: ["cancelled", "overdue"] },
   }).select("date");
 
-  // Build 30-minute slots between startTime and endTime
   const [startH, startM] = slot.startTime.split(":").map(Number);
   const [endH, endM] = slot.endTime.split(":").map(Number);
 
@@ -488,8 +541,7 @@ export const getAvailableSlotsService = async (
     if (m >= 60) { h += 1; m -= 60; }
   }
 
-  // If date is today, remove slots that have already passed
-  const todayStr = new Date().toLocaleDateString("en-CA"); // YYYY-MM-DD local
+  const todayStr = new Date().toLocaleDateString("en-CA");
   if (dateStr === todayStr) {
     const now = new Date();
     const nowMinutes = now.getHours() * 60 + now.getMinutes();
