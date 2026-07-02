@@ -149,6 +149,11 @@ def classify_question(user_query):
             .upper()
         )
 
+    except requests.exceptions.HTTPError as e:
+        body = e.response.text if e.response is not None else str(e)
+        print("Classifier error:", body)
+        return "CHITCHAT"
+
     except Exception as e:
         print("Classifier error:", e)
         return "CHITCHAT"

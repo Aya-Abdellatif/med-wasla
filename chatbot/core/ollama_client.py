@@ -43,6 +43,11 @@ def generate_response(prompt):
 
         return response.json().get("response", "").strip()
 
+    except requests.exceptions.HTTPError as e:
+        body = e.response.text if e.response is not None else str(e)
+        print("❌ Ollama Error:", body)
+        return "Sorry, I cannot generate a response right now."
+
     except Exception as e:
         print("❌ Ollama Error:", e)
         return "Sorry, I cannot generate a response right now."
