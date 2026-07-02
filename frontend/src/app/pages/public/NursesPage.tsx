@@ -118,9 +118,9 @@ export function Nurses() {
 
   return (
     <div className="flex flex-col">
-      <section className="relative bg-linear-to-br from-[#F6FFFB] via-[#ECFEFF] to-[#F0FDFA] py-20 px-5 text-center">
+      <section className="relative bg-linear-to-br from-[#F6FFFB] via-[#ECFEFF] to-[#F0FDFA] py-14 px-5 text-center">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 text-center">
-          <h1 className="text-4xl md:text-5xl font-bold text-foreground mb-6">
+          <h1 className="text-3xl md:text-4xl font-bold text-foreground mb-6">
             Our Professional Nurses
           </h1>
           <p className="text-xl text-muted-foreground max-w-3xl mx-auto">
