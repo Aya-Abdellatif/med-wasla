@@ -188,22 +188,8 @@ export default function ContactPage() {
           {/* Right Column - 3 cards stacked */}
           <div className="flex flex-col gap-6 mt-24">
 
-            {/* Working Hours */}
-            {/* <div className="bg-white rounded-2xl p-8 shadow-lg hover:shadow-xl transition">
-        <div className="flex items-start gap-4">
-          <div className="w-12 h-12 bg-purple-50 rounded-xl flex items-center justify-center shrink-0">
-            <FontAwesomeIcon icon={faClock} className="text-purple-500 text-xl" />
-          </div>
-          <div>
-            <h3 className="font-bold text-gray-900 mb-3">Working Hours</h3>
-            <div className="space-y-2 text-sm text-gray-600">
-              <p><span className="font-semibold">Mon-Fri:</span> 8AM - 8PM</p>
-              <p><span className="font-semibold">Sat-Sun:</span> 9AM - 5PM</p>
-              <p><span className="font-semibold">Emergency:</span> 24/7</p>
-            </div>
-          </div>
-        </div>
-      </div> */}
+  
+            
 
             {/* Email */}
             <div className="bg-white rounded-2xl p-8 shadow-lg hover:shadow-xl transition">

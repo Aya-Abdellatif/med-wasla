@@ -239,7 +239,7 @@ export function Doctors() {
                       </div>
                     </div>
 
-                    <div className="p-5 flex flex-col flex-1 min-h-[400px]">
+                    <div className="p-5 flex flex-col flex-1 min-h-100">
                       <div className="mb-4">
                         <h3 className="text-xl font-bold text-foreground mb-2">
                           {doctor.name}

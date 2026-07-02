@@ -86,7 +86,7 @@ export default function ServicesPage() {
           {topFeatures.map((feature) => (
             <div key={feature.title}>
               <div className="mx-auto mb-4 flex h-16 w-16 items-center justify-center rounded-full bg-teal-50 text-[#14B8A6]">
-                {/* <FontAwesomeIcon icon={feature.icon} className="text-3xl" /> */}
+                
                 <FontAwesomeIcon icon={feature.icon} className="text-3xl" />
               </div>
 
