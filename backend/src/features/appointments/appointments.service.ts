@@ -73,18 +73,20 @@ export const createAppointmentService = async (data: {
   if (data.date.getTime() < Date.now() - 60_000) 
     throw new Error("DATE_IN_PAST");
 
-  const dayName = data.date.toLocaleDateString("en-US", { weekday: "long" });
-  const worksOnDay = specialist.availableSlots?.some((slot) => slot.day === dayName);
-  if (!worksOnDay) 
-    throw new Error("DAY_NOT_AVAILABLE");
+  if (data.type === "clinic") {
+    const dayName = data.date.toLocaleDateString("en-US", { weekday: "long" });
+    const worksOnDay = specialist.availableSlots?.some((slot) => slot.day === dayName);
+    if (!worksOnDay)
+      throw new Error("DAY_NOT_AVAILABLE");
 
-  const { availableSlots } = await getAvailableSlotsService(
-    data.specialistId,
-    data.dateStr,
-  );
+    const { availableSlots } = await getAvailableSlotsService(
+      data.specialistId,
+      data.dateStr,
+    );
 
-  if (!availableSlots.includes(data.timeStr)) {
-    throw new Error("SLOT_NOT_AVAILABLE");
+    if (!availableSlots.includes(data.timeStr)) {
+      throw new Error("SLOT_NOT_AVAILABLE");
+    }
   }
 
   const [year, month, day] = data.dateStr.split("-").map(Number);
@@ -246,10 +248,23 @@ export const updateAppointmentStatusService = async (
     !isAppointmentPast(appointment.date)
   ) {
     throw new Error("APPOINTMENT_NOT_STARTED");
+  if (newStatus === "confirmed" && appointment.type === "home") {
+    const conflict = await Appointment.findOne({
+      specialistId: appointment.specialistId,
+      date: appointment.date,
+      _id: { $ne: appointment._id },
+      status: "confirmed",
+    });
+    if (conflict) throw new Error("TIME_CONFLICT");
   }
 
   appointment.status = newStatus;
-  await appointment.save();
+  try {
+    await appointment.save();
+  } catch (err: unknown) {
+    if ((err as { code?: number }).code === 11000) throw new Error("TIME_CONFLICT", { cause: err });
+    throw err;
+  }
 
   if (appointment.type === "clinic") {
     await syncQueueForSpecialistAndDate(appointment.specialistId.toString(), appointment.date)
@@ -416,14 +431,31 @@ export const rescheduleAppointmentService = async (
   const specialist = await MedicalSpecialist.findById(specialistId);
   if (!specialist) throw new Error("SPECIALIST_NOT_FOUND");
 
-  const dayName = newDate.toLocaleDateString("en-US", { weekday: "long" });
-  if (!specialist.availableSlots?.some((s) => s.day === dayName)) {
-    throw new Error("DAY_NOT_AVAILABLE");
+  if (appointment.type === "clinic") {
+    const dayName = newDate.toLocaleDateString("en-US", { weekday: "long" });
+    if (!specialist.availableSlots?.some((s) => s.day === dayName)) {
+      throw new Error("DAY_NOT_AVAILABLE");
+    }
+
+    const { availableSlots } = await getAvailableSlotsService(specialistId, dateStr);
+    if (!availableSlots.includes(timeStr)) {
+      throw new Error("SLOT_NOT_AVAILABLE");
+    }
   }
 
-  const { availableSlots } = await getAvailableSlotsService(specialistId, dateStr);
-  if (!availableSlots.includes(timeStr)) {
-    throw new Error("SLOT_NOT_AVAILABLE");
+  // Prevent rescheduling to a day where the patient already has another appointment with the same specialist
+  const [year, month, day] = dateStr.split("-").map(Number);
+  const startOfDay = new Date(year, month - 1, day, 0, 0, 0, 0);
+  const endOfDay = new Date(year, month - 1, day, 23, 59, 59, 999);
+  const conflictingAppointment = await Appointment.findOne({
+    patientId,
+    specialistId,
+    _id: { $ne: appointmentId },
+    date: { $gte: startOfDay, $lte: endOfDay },
+    status: { $nin: ["cancelled", "overdue"] },
+  });
+  if (conflictingAppointment) {
+    throw new Error("ALREADY_BOOKED_SAME_DAY");
   }
 
   const oldDate = appointment.date;

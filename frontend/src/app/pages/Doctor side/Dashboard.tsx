@@ -98,10 +98,15 @@ export function Dashboard() {
       }
     })();
 
+    const interval = setInterval(() => {
+      if (!cancelled) void loadAppointments(true);
+    }, 30_000);
+
     return () => {
       cancelled = true;
+      clearInterval(interval);
     };
-  }, [user?.id, user?.role, refreshSpecialistProfile]);
+  }, [user?.id, user?.role, refreshSpecialistProfile, loadAppointments]);
 
   const runWithRefresh = async (
     action: () => Promise<unknown>,
