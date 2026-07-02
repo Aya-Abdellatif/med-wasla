@@ -147,9 +147,11 @@ export const getAllSpecialistsService = async (
   const pageNum = Math.max(1, parseInt(page));
   const limitNum = Math.min(50, Math.max(1, parseInt(limit)));
   const skip = (pageNum - 1) * limitNum;
-  const sort: Record<string, 1 | -1> = {
-    [sortBy]: sortOrder === "asc" ? 1 : -1,
-  };
+ const direction = sortOrder === "asc" ? 1 : -1;
+const sort: Record<string, 1 | -1> = {
+  [sortBy]: direction,
+  _id: 1, 
+};
 
   const [specialists, total] = await Promise.all([
     MedicalSpecialist.find(filter)
