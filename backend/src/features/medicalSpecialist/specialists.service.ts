@@ -1,4 +1,5 @@
 import MedicalSpecialist, {
+  findCertificationById,
   type IAvailableSlot,
   type IMedicalSpecialist,
   type IPendingProfileUpdates,
@@ -240,6 +241,11 @@ export const updateAvailabilityService = async (
     }
   }
 
+  const days = availableSlots.map((slot) => slot.day);
+  if (new Set(days).size !== days.length) {
+    throw new Error("Each weekday can only have one availability slot");
+  }
+
   const specialist = await MedicalSpecialist.findOneAndUpdate(
     { userId },
     { $set: { availableSlots } },
@@ -383,6 +389,8 @@ export const addSpecialistCertificateService = async (
     ...certificate,
     issuedAt: certificate.issuedAt ? new Date(certificate.issuedAt) : undefined,
     status: "pending" as const,
+    isRegistrationCert: false,
+    isNewAddition: true,
   };
 
   specialist.certifications = [
@@ -400,6 +408,60 @@ export const addSpecialistCertificateService = async (
     certificate: newCertificate,
     verificationStatus: specialist.verificationStatus,
   };
+};
+
+export const updateSpecialistCertificateService = async (
+  userId: string,
+  certId: string,
+  certificate: AddCertificateBody,
+) => {
+  const specialist = await MedicalSpecialist.findOne({ userId });
+  if (!specialist) throw new Error("Specialist profile not found");
+
+  const cert = findCertificationById(specialist.certifications, certId);
+  if (!cert) throw new Error("Certificate not found");
+
+  if (cert.isRegistrationCert && cert.status === "approved") {
+    throw new Error("This verified graduation certificate cannot be edited or deleted");
+  }
+
+  const wasApproved = specialist.verificationStatus === "approved";
+
+  cert.title = certificate.title;
+  cert.issuedBy = certificate.issuedBy;
+  cert.certificateUrl = certificate.certificateUrl;
+  cert.issuedAt = certificate.issuedAt ? new Date(certificate.issuedAt) : cert.issuedAt;
+  cert.status = "pending";
+  cert.isNewAddition = false;
+
+  specialist.verificationStatus = "pending";
+  if (wasApproved) {
+    specialist.revertToApprovedOnReject = true;
+  }
+
+  await specialist.save();
+
+  return { certificate: cert };
+};
+
+export const deleteSpecialistCertificateService = async (
+  userId: string,
+  certId: string,
+) => {
+  const specialist = await MedicalSpecialist.findOne({ userId });
+  if (!specialist) throw new Error("Specialist profile not found");
+
+  const cert = findCertificationById(specialist.certifications, certId);
+  if (!cert) throw new Error("Certificate not found");
+
+  if (cert.isRegistrationCert && cert.status === "approved") {
+    throw new Error("This verified graduation certificate cannot be edited or deleted");
+  }
+
+  cert.deleteOne();
+  await specialist.save();
+
+  return { deleted: true };
 };
 
 export const updateUserPhoto = async (

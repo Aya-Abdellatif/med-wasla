@@ -63,3 +63,17 @@ export async function updateSpecialistVerification(
 
   return data;
 }
+
+export async function updateCertificateVerification(
+  specialistId: string,
+  certId: string,
+  action: "approve" | "reject",
+) {
+  const { data } = await axiosClient.patch<{
+    success: boolean;
+    message?: string;
+    data?: AdminSpecialist;
+  }>(`/api/admin/specialists/${specialistId}/certificates/${certId}/${action}`);
+
+  return data;
+}

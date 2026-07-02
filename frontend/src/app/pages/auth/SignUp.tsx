@@ -148,14 +148,26 @@ function validateStep2(
     errors.serviceArea = "Enter at least one service area";
   }
 
-  const hasCertInput = Boolean(
-    form.certTitle || form.certIssuer || form.certUrl,
-  );
-  if (hasCertInput) {
-    if (!form.certTitle.trim())
-      errors.certTitle = "Certificate title is required";
-    if (!form.certIssuer.trim()) errors.certIssuer = "Issuer is required";
-    if (!form.certUrl.trim()) errors.certUrl = "Certificate URL is required";
+  if (isDoctor) {
+    if (!form.certTitle.trim()) {
+      errors.certTitle = "Graduation certificate title is required";
+    }
+    if (!form.certIssuer.trim()) {
+      errors.certIssuer = "Issuing university is required";
+    }
+    if (!form.certUrl.trim()) {
+      errors.certUrl = "Certificate file URL is required";
+    }
+  } else {
+    const hasCertInput = Boolean(
+      form.certTitle || form.certIssuer || form.certUrl,
+    );
+    if (hasCertInput) {
+      if (!form.certTitle.trim())
+        errors.certTitle = "Certificate title is required";
+      if (!form.certIssuer.trim()) errors.certIssuer = "Issuer is required";
+      if (!form.certUrl.trim()) errors.certUrl = "Certificate URL is required";
+    }
   }
 
   return errors;
@@ -328,6 +340,14 @@ export default function SignUp() {
         if (isDoctor) {
           payload.specialization = form.specialization;
           payload.clinicAddress = form.clinicAddress;
+          payload.certifications = [
+            {
+              title: form.certTitle,
+              issuedBy: form.certIssuer,
+              certificateUrl: form.certUrl,
+              isRegistrationCert: true,
+            },
+          ];
         } else {
           payload.serviceAreas = form.serviceArea
             .split(",")
@@ -335,7 +355,7 @@ export default function SignUp() {
             .filter(Boolean);
         }
 
-        if (form.certTitle && form.certIssuer && form.certUrl) {
+        if (!isDoctor && form.certTitle && form.certIssuer && form.certUrl) {
           payload.certifications = [
             {
               title: form.certTitle,
@@ -639,6 +659,52 @@ export default function SignUp() {
               />
             </Field>
 
+            {isDoctor ? (
+              <div
+                className={`lg:col-span-3 rounded-xl border px-4 pb-4 pt-3 space-y-3 ${
+                  fieldErrors.certTitle ||
+                  fieldErrors.certIssuer ||
+                  fieldErrors.certUrl
+                    ? "border-red-200"
+                    : "border-slate-200"
+                }`}
+              >
+                <div>
+                  <p className="text-sm font-semibold text-slate-800">
+                    Graduation certificate (required)
+                  </p>
+                  <p className="mt-1 text-xs text-slate-500">
+                    Upload your graduation certificate so our admin team can verify your medical credentials.
+                  </p>
+                </div>
+                <Field label="Certificate title" error={fieldErrors.certTitle}>
+                  <input
+                    value={form.certTitle}
+                    onChange={(e) => handleChange("certTitle", e.target.value)}
+                    placeholder="e.g. MBBS, Medical Degree"
+                    className={getInputClass(Boolean(fieldErrors.certTitle))}
+                  />
+                </Field>
+                <div className="grid gap-3 sm:grid-cols-2">
+                  <Field label="Issued by" error={fieldErrors.certIssuer}>
+                    <input
+                      value={form.certIssuer}
+                      onChange={(e) => handleChange("certIssuer", e.target.value)}
+                      placeholder="University name"
+                      className={getInputClass(Boolean(fieldErrors.certIssuer))}
+                    />
+                  </Field>
+                  <Field label="Certificate URL" error={fieldErrors.certUrl}>
+                    <input
+                      value={form.certUrl}
+                      onChange={(e) => handleChange("certUrl", e.target.value)}
+                      placeholder="Link to your certificate file"
+                      className={getInputClass(Boolean(fieldErrors.certUrl))}
+                    />
+                  </Field>
+                </div>
+              </div>
+            ) : (
             <div
               className={`lg:col-span-3 rounded-xl border ${
                 fieldErrors.certTitle ||
@@ -694,6 +760,7 @@ export default function SignUp() {
                 </div>
               )}
             </div>
+            )}
           </div>
         )}
 

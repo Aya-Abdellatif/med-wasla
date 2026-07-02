@@ -244,13 +244,17 @@ export function Dashboard() {
       iconColor: DASHBOARD_THEME.accent,
       bgColor: DASHBOARD_THEME.accentLight,
     },
-    {
-      label: "Pending Requests",
-      value: pendingHomeRequests.length,
-      icon: AlertCircle,
-      iconColor: DASHBOARD_THEME.warning,
-      bgColor: DASHBOARD_THEME.warningLight,
-    },
+    ...(showHomeServiceTab
+      ? [
+          {
+            label: "Pending Requests",
+            value: pendingHomeRequests.length,
+            icon: AlertCircle,
+            iconColor: DASHBOARD_THEME.warning,
+            bgColor: DASHBOARD_THEME.warningLight,
+          },
+        ]
+      : []),
   ];
 
   const todayUpcoming = appointments.filter((a) => a.date === todayStr && a.status === "scheduled");

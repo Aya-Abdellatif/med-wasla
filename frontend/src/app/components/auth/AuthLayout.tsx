@@ -41,7 +41,7 @@ export default function AuthLayout({
         : "p-6 sm:p-8";
 
   const shellClass = fitScreen
-    ? "min-h-screen lg:h-screen lg:overflow-hidden bg-gradient-to-br from-teal-50 via-white to-slate-50 px-4 sm:px-6 py-4 flex flex-col justify-center overflow-y-auto"
+    ? "min-h-screen bg-gradient-to-br from-teal-50 via-white to-slate-50 px-4 sm:px-6 py-4 flex flex-col justify-center"
     : "min-h-screen bg-gradient-to-br from-teal-50 via-white to-slate-50 px-4 py-6 sm:py-8";
 
   const alignClass = center ? "flex items-center justify-center" : "";
@@ -83,7 +83,7 @@ export default function AuthLayout({
             )}
           </div>
           {fitScreen ? (
-            <div className="lg:max-h-[calc(85vh-160px)] lg:overflow-y-auto lg:pr-2 pr-0 overflow-y-visible">
+            <div className="max-h-[min(85dvh,calc(100vh-8rem))] overflow-y-auto overscroll-contain pr-1">
               {children}
             </div>
           ) : (

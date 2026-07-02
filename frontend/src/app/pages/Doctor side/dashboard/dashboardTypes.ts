@@ -7,6 +7,7 @@ export interface Appointment {
   patientAvatar?: string;
   time: string;
   date: string;
+  scheduledAtMs?: number;
   type: string;
   visitType: "clinic" | "home";
   status:
@@ -32,6 +33,7 @@ export interface HomeServiceRequest {
   service: string;
   requestedDate: string;
   requestedTime: string;
+  scheduledAtMs?: number;
   status: "pending" | "accepted" | "rejected";
   phone: string;
   backendStatus?:
@@ -109,6 +111,21 @@ export function buildProfileUpdatePayload(
   return payload;
 }
 
-export function createEmptySlot(): AvailableSlot {
-  return { day: "Sunday", startTime: "09:00", endTime: "17:00" };
+export function createEmptySlot(existingSlots: AvailableSlot[] = []): AvailableSlot {
+  const nextDay = getNextAvailableDay(existingSlots);
+  return {
+    day: nextDay ?? "Sunday",
+    startTime: "09:00",
+    endTime: "17:00",
+  };
+}
+
+export function getNextAvailableDay(slots: AvailableSlot[]): string | null {
+  const used = new Set(slots.map((slot) => slot.day));
+  return WEEK_DAYS.find((day) => !used.has(day)) ?? null;
+}
+
+export function hasDuplicateSlotDays(slots: AvailableSlot[]): boolean {
+  const days = slots.map((slot) => slot.day);
+  return new Set(days).size !== days.length;
 }

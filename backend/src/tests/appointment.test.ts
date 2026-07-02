@@ -30,6 +30,12 @@ function futureDate(days = 1) {
   return d;
 }
 
+function pastDate(hoursAgo = 2) {
+  const d = new Date();
+  d.setHours(d.getHours() - hoursAgo);
+  return d;
+}
+
 async function createUser(role: "patient" | "specialist" | "admin", email: string) {
   return User.create({
     name: `${role} user`,
@@ -130,6 +136,41 @@ describe("Appointments Routes", () => {
       );
 
       expect(res.status).toBe(404);
+    });
+
+    it("returns only remaining future slots for today", async () => {
+      const { specialist } = await createSpecialist();
+      const todayStr = new Date().toLocaleDateString("en-CA");
+      const dayName = new Date().toLocaleDateString("en-US", { weekday: "long" });
+
+      await MedicalSpecialist.findByIdAndUpdate(specialist._id, {
+        availableSlots: [{ day: dayName, startTime: "00:00", endTime: "23:59" }],
+      });
+
+      const res = await request(app).get(
+        `/api/appointments/available-slots/${idOf(specialist)}?date=${todayStr}`,
+      );
+
+      expect(res.status).toBe(200);
+      const slots = res.body.data.availableSlots as string[];
+      expect(slots.length).toBeGreaterThan(0);
+
+      const now = new Date();
+      let minHours = now.getHours();
+      let minMinutes = now.getMinutes();
+      if (minMinutes % 30 !== 0) {
+        minMinutes = Math.ceil(minMinutes / 30) * 30;
+        if (minMinutes >= 60) {
+          minHours += 1;
+          minMinutes = 0;
+        }
+      }
+      const minBookable = minHours * 60 + minMinutes;
+
+      for (const slot of slots) {
+        const [h, m] = slot.split(":").map(Number);
+        expect(h * 60 + m).toBeGreaterThanOrEqual(minBookable);
+      }
     });
   });
 
@@ -480,10 +521,16 @@ describe("Appointments Routes", () => {
       expect(res.body.data.status).toBe("confirmed");
     });
 
-    it("specialist marks clinic appointment as no show", async () => {
+    it("specialist marks clinic appointment as no show after scheduled time", async () => {
       const patient = await createPatient();
       const { user, specialist } = await createSpecialist();
-      const appointment = await createAppointment(idOf(patient), idOf(specialist), "confirmed");
+      const appointment = await Appointment.create({
+        patientId: idOf(patient),
+        specialistId: idOf(specialist),
+        date: pastDate(),
+        type: "clinic",
+        status: "confirmed",
+      });
       const token = createToken(idOf(user), "specialist");
 
       const res = await request(app)
@@ -493,6 +540,21 @@ describe("Appointments Routes", () => {
 
       expect(res.status).toBe(200);
       expect(res.body.data.status).toBe("no_show");
+    });
+
+    it("returns 400 when completing clinic appointment before scheduled time", async () => {
+      const patient = await createPatient();
+      const { user, specialist } = await createSpecialist();
+      const appointment = await createAppointment(idOf(patient), idOf(specialist), "confirmed");
+      const token = createToken(idOf(user), "specialist");
+
+      const res = await request(app)
+        .patch(`/api/appointments/${idOf(appointment)}/status`)
+        .set("Authorization", `Bearer ${token}`)
+        .send({ status: "completed" });
+
+      expect(res.status).toBe(400);
+      expect(res.body.message).toMatch(/scheduled time/i);
     });
 
     it("returns 400 for invalid status transition", async () => {
