@@ -9,6 +9,7 @@ import {
   ChevronDown,
 } from "lucide-react";
 import { useEffect, useState, useRef } from "react";
+import { useTranslation } from "react-i18next";
 import { BookingModal } from "../../components/booking/BookingModal";
 import { Link, useNavigate } from "react-router";
 import { NURSE_EXPERTISE_AREAS } from "../../../constants/medicalSpecializations";
@@ -25,22 +26,15 @@ import {
 } from "../../../utils/bookingAccess";
 
 const SORT_OPTIONS = [
-  { label: "Highest Rated", sortBy: "rating", sortOrder: "desc" as const },
-  { label: "Newest", sortBy: "createdAt", sortOrder: "desc" as const },
-  { label: "Most Reviewed", sortBy: "reviewCount", sortOrder: "desc" as const },
-  {
-    label: "Fee: Low to High",
-    sortBy: "consultationFee",
-    sortOrder: "asc" as const,
-  },
-  {
-    label: "Fee: High to Low",
-    sortBy: "consultationFee",
-    sortOrder: "desc" as const,
-  },
+  { key: "highestRated", sortBy: "rating", sortOrder: "desc" as const },
+  { key: "newest", sortBy: "createdAt", sortOrder: "desc" as const },
+  { key: "mostReviewed", sortBy: "reviewCount", sortOrder: "desc" as const },
+  { key: "feeLowToHigh", sortBy: "consultationFee", sortOrder: "asc" as const },
+  { key: "feeHighToLow", sortBy: "consultationFee", sortOrder: "desc" as const },
 ] as const;
 
 export function Nurses() {
+  const { t } = useTranslation(["nurses"]);
   const navigate = useNavigate();
   const { user } = useAuth();
   const showBooking = canBookAppointments(user);
@@ -116,11 +110,10 @@ export function Nurses() {
       <section className="relative bg-linear-to-br from-[#F6FFFB] via-[#ECFEFF] to-[#F0FDFA] py-14 px-5 text-center">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 text-center">
           <h1 className="text-3xl md:text-4xl font-bold text-fg mb-6">
-            Our Professional Nurses
+            {t("nurses:hero.title")}
           </h1>
           <p className="text-xl text-fg-muted max-w-3xl mx-auto">
-            Compassionate and skilled nurses ready to provide quality home
-            healthcare services tailored to your needs.
+            {t("nurses:hero.subtitle")}
           </p>
         </div>
       </section>
@@ -131,7 +124,7 @@ export function Nurses() {
             <div className="relative flex-1 w-full">
               <SearchCheck
                 strokeWidth={2.5}
-                className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-primary"
+                className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-primary rtl:left-auto rtl:right-3"
               />
               <input
                 type="text"
@@ -141,8 +134,8 @@ export function Nurses() {
                   setPage(1);
                   setLoading(true);
                 }}
-                placeholder="Search by name, bio, or area of expertise..."
-                className="w-full pl-10 pr-4 py-2.5 rounded-2xl border border-border focus:outline-none focus:ring-2 focus:ring-primary/80"
+                placeholder={t("nurses:search.placeholder")}
+                className="w-full pl-10 pr-4 py-2.5 rounded-2xl border border-border focus:outline-none focus:ring-2 focus:ring-primary/80 rtl:pl-4 rtl:pr-10"
               />
             </div>
 
@@ -154,16 +147,16 @@ export function Nurses() {
                   setPage(1);
                   setLoading(true);
                 }}
-                className="appearance-none px-4 py-2.5 pr-10 rounded-2xl border border-border bg-white focus:outline-none focus:ring-2 focus:ring-primary/80"
+                className="appearance-none px-4 py-2.5 pr-10 rounded-2xl border border-border bg-white focus:outline-none focus:ring-2 focus:ring-primary/80 rtl:pr-4 rtl:pl-10"
               >
                 {SORT_OPTIONS.map((opt, idx) => (
-                  <option key={opt.label} value={idx}>
-                    {opt.label}
+                  <option key={opt.key} value={idx}>
+                    {t(`nurses:sort.${opt.key}`)}
                   </option>
                 ))}
               </select>
               <ChevronDown
-                className="pointer-events-none absolute right-3 top-1/2 -translate-y-1/2 text-primary"
+                className="pointer-events-none absolute right-3 top-1/2 -translate-y-1/2 text-primary rtl:right-auto rtl:left-3"
                 size={18}
                 strokeWidth={2.5}
               />
@@ -185,7 +178,7 @@ export function Nurses() {
                     : "bg-muted text-foreground hover:bg-muted/80"
                 }`}
               >
-                {area}
+                {area === "All" ? t("nurses:expertise.all") : area}
               </button>
             ))}
           </div>
@@ -197,13 +190,13 @@ export function Nurses() {
           {loading ? (
             <div className="text-center py-16">
               <p className="text-lg text-muted-foreground">
-                Loading approved nurses...
+                {t("nurses:state.loading")}
               </p>
             </div>
           ) : nurses.length === 0 ? (
             <div className="text-center py-16">
               <p className="text-lg text-muted-foreground">
-                No approved nurses found matching your filters.
+                {t("nurses:state.empty")}
               </p>
             </div>
           ) : (
@@ -220,7 +213,7 @@ export function Nurses() {
                         alt={nurse.name}
                         className="w-full h-full object-cover"
                       />
-                      <div className="absolute top-4 right-4 bg-white px-3 py-1.5 rounded-full shadow-lg flex items-center space-x-1">
+                      <div className="absolute top-4 right-4 bg-white px-3 py-1.5 rounded-full shadow-lg flex items-center space-x-1 rtl:right-auto rtl:left-4 rtl:space-x-reverse">
                         <Star className="w-4 h-4 text-yellow-400 fill-current" />
                         <span className="font-semibold text-foreground">
                           {(nurse.rating ?? 0).toFixed(1)}
@@ -234,7 +227,7 @@ export function Nurses() {
                     <div className="p-5 flex flex-col flex-1 min-h-87.5">
                       <div className="mb-4">
                         <h3 className="text-xl font-bold text-foreground mb-2">
-                          {`Nurse ${nurse.name}`}
+                          {t("nurses:card.namePrefix", { name: nurse.name })}
                         </h3>
                         <span className="inline-block px-3 py-1 bg-primary/10 text-primary rounded-full text-sm font-medium">
                           {nurse.specialty}
@@ -256,13 +249,15 @@ export function Nurses() {
                           <span>
                             {nurse.serviceAreas && nurse.serviceAreas.length > 0
                               ? nurse.serviceAreas.join(", ")
-                              : "Service areas not listed"}
+                              : t("nurses:card.serviceAreasEmpty")}
                           </span>
                         </div>
 
                         <div className="flex items-start gap-3 text-sm">
                           <CalendarDays className="w-5 h-5 text-primary shrink-0 mt-0.5" />
-                          <span>Available: {nurse.availability}</span>
+                          <span>
+                            {t("nurses:card.available")}: {nurse.availability}
+                          </span>
                         </div>
                       </div>
 
@@ -273,14 +268,14 @@ export function Nurses() {
                           to={`/nurse/${nurse.id}`}
                           className="group flex items-center justify-center gap-2 bg-transparent text-primary border-2 border-primary font-bold text-base px-4 py-2 rounded-xl cursor-pointer transition-all duration-300 ease-in-out hover:border-primary hover:-translate-y-0.5 hover:bg-primary hover:text-white hover:shadow-md whitespace-nowrap"
                         >
-                          View Details
+                          {t("nurses:card.viewDetails")}
                         </Link>
                         {showBooking && (
                           <button
                             onClick={() => handleBookNurse(nurse)}
                             className="group flex items-center justify-center gap-2 bg-primary text-white border-2 border-primary font-bold text-base px-4 py-2 rounded-xl cursor-pointer transition-all duration-300 ease-in-out hover:border-primary hover:-translate-y-0.5 hover:bg-transparent hover:text-primary hover:shadow-md whitespace-nowrap"
                           >
-                            Book Now
+                            {t("nurses:card.bookNow")}
                           </button>
                         )}
                       </div>
@@ -296,7 +291,7 @@ export function Nurses() {
                     disabled={loading || page === 1}
                     className="p-2 rounded-lg border border-border disabled:opacity-40 disabled:cursor-not-allowed hover:bg-muted"
                   >
-                    <ChevronLeft className="w-4 h-4" />
+                    <ChevronLeft className="w-4 h-4 rtl:rotate-180" />
                   </button>
 
                   {Array.from(
@@ -323,7 +318,7 @@ export function Nurses() {
                     disabled={loading || page === pagination.totalPages}
                     className="p-2 rounded-lg border border-border disabled:opacity-40 disabled:cursor-not-allowed hover:bg-muted"
                   >
-                    <ChevronRight className="w-4 h-4" />
+                    <ChevronRight className="w-4 h-4 rtl:rotate-180" />
                   </button>
                 </div>
               )}
