@@ -33,6 +33,8 @@ import enDoctors from "./en/doctors.json";
 import arDoctors from "./ar/doctors.json";
 import enNurses from "./en/nurses.json";
 import arNurses from "./ar/nurses.json";
+import enAbout from "./en/about.json";
+import arAbout from "./ar/about.json";
 
 export const namespaces = [
   "common",
@@ -52,6 +54,7 @@ export const namespaces = [
   "services",
   "doctors",
   "nurses",
+  "about",
 ] as const;
 
 export type AppNamespace = (typeof namespaces)[number];
@@ -75,6 +78,7 @@ export const resources = {
     services: enServices,
     doctors: enDoctors,
     nurses: enNurses,
+    about: enAbout,
   },
   ar: {
     common: arCommon,
@@ -94,5 +98,6 @@ export const resources = {
     services: arServices,
     doctors: arDoctors,
     nurses: arNurses,
+    about: arAbout,
   },
 } as const;
