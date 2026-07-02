@@ -60,14 +60,25 @@ describe("Patient Profile Routes", () => {
     });
 
     it("returns 404 when patient profile not found", async () => {
-      const { token } = await createPatient();
       const fakeUserId = new Types.ObjectId().toString();
+      const token = createToken(fakeUserId, "patient");
 
       const res = await request(app)
         .get(`/api/patient/profile/${fakeUserId}`)
         .set("Authorization", `Bearer ${token}`);
 
       expect(res.status).toBe(404);
+    });
+
+    it("returns 403 when requesting another patient's profile", async () => {
+      const { user } = await createPatient();
+      const otherToken = createToken(new Types.ObjectId().toString(), "patient");
+
+      const res = await request(app)
+        .get(`/api/patient/profile/${idOf(user)}`)
+        .set("Authorization", `Bearer ${otherToken}`);
+
+      expect(res.status).toBe(403);
     });
 
     it("returns 401 without token", async () => {
@@ -200,8 +211,8 @@ describe("Patient Profile Routes", () => {
     });
 
     it("returns 404 when patient not found", async () => {
-      const { token } = await createPatient();
       const fakeUserId = new Types.ObjectId().toString();
+      const token = createToken(fakeUserId, "patient");
 
       const res = await request(app)
         .patch(`/api/patient/profile/${fakeUserId}`)
@@ -211,6 +222,18 @@ describe("Patient Profile Routes", () => {
         });
 
       expect(res.status).toBe(404);
+    });
+
+    it("returns 403 when updating another patient's profile", async () => {
+      const { user } = await createPatient();
+      const otherToken = createToken(new Types.ObjectId().toString(), "patient");
+
+      const res = await request(app)
+        .patch(`/api/patient/profile/${idOf(user)}`)
+        .set("Authorization", `Bearer ${otherToken}`)
+        .send({ name: "Hacked Name" });
+
+      expect(res.status).toBe(403);
     });
   });
 });
