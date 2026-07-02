@@ -1,4 +1,5 @@
 import MedicalSpecialist, {
+  findCertificationById,
   type IAvailableSlot,
   type IMedicalSpecialist,
   type IPendingProfileUpdates,
@@ -362,7 +363,7 @@ export const updateSpecialistCertificateService = async (
   const specialist = await MedicalSpecialist.findOne({ userId });
   if (!specialist) throw new Error("Specialist profile not found");
 
-  const cert = specialist.certifications?.id(certId);
+  const cert = findCertificationById(specialist.certifications, certId);
   if (!cert) throw new Error("Certificate not found");
 
   if (cert.isRegistrationCert && cert.status === "approved") {
@@ -395,7 +396,7 @@ export const deleteSpecialistCertificateService = async (
   const specialist = await MedicalSpecialist.findOne({ userId });
   if (!specialist) throw new Error("Specialist profile not found");
 
-  const cert = specialist.certifications?.id(certId);
+  const cert = findCertificationById(specialist.certifications, certId);
   if (!cert) throw new Error("Certificate not found");
 
   if (cert.isRegistrationCert && cert.status === "approved") {

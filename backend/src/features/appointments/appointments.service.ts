@@ -248,6 +248,8 @@ export const updateAppointmentStatusService = async (
     !isAppointmentPast(appointment.date)
   ) {
     throw new Error("APPOINTMENT_NOT_STARTED");
+  }
+
   if (newStatus === "confirmed" && appointment.type === "home") {
     const conflict = await Appointment.findOne({
       specialistId: appointment.specialistId,

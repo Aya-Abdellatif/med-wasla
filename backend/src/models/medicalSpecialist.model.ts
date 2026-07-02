@@ -217,6 +217,13 @@ medicalSpecialistSchema.virtual("isVerified").get(function (
   return this.verificationStatus === "approved";
 });
 
+export function findCertificationById(
+  certifications: ICertification[] | undefined,
+  certId: string,
+) {
+  return (certifications as Types.DocumentArray<ICertification> | undefined)?.id(certId);
+}
+
 const MedicalSpecialist = mongoose.model<IMedicalSpecialist>(
   "MedicalSpecialist",
   medicalSpecialistSchema,

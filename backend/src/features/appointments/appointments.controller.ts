@@ -226,13 +226,13 @@ export const updateAppointmentStatus = async (
           400,
         ),
       );
+    }
     if (msg === "TIME_CONFLICT") {
       return next(new AppError("This time is no longer available. Another appointment has already been confirmed at the same time.", 409));
     }
     return next(error);
   }
 };
-
 
 export const cancelAppointment = async (
   req: Request,

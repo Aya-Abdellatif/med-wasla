@@ -1,4 +1,5 @@
 import MedicalSpecialist, {
+  findCertificationById,
   type IPendingProfileUpdates,
 } from "../../models/medicalSpecialist.model.js";
 
@@ -124,7 +125,7 @@ export class AdminService {
       throw new Error("Medical specialist not found");
     }
 
-    const cert = specialist.certifications?.id(certId);
+    const cert = findCertificationById(specialist.certifications, certId);
     if (!cert) {
       throw new Error("Certificate not found");
     }
@@ -154,7 +155,7 @@ export class AdminService {
       throw new Error("Medical specialist not found");
     }
 
-    const cert = specialist.certifications?.id(certId);
+    const cert = findCertificationById(specialist.certifications, certId);
     if (!cert) {
       throw new Error("Certificate not found");
     }
