@@ -75,15 +75,26 @@ export function hasTodayHoursEnded(
 }
 
 export function getEarliestBookableDate(
-  availableSlots: Array<{ day: string; startTime: string; endTime: string }>,
+  _availableSlots: Array<{ day: string; startTime: string; endTime: string }>,
 ): string {
-  if (hasTodayHoursEnded(availableSlots)) {
-    const tomorrow = new Date();
-    tomorrow.setDate(tomorrow.getDate() + 1);
-    return getLocalDateString(tomorrow);
+  // Always allow today; remaining times are loaded from the API when a date is selected.
+  return getLocalDateString();
+}
+
+/** Minutes from midnight for the next bookable 30-minute slot (local time). */
+export function getNextBookableSlotMinutes(now = new Date()): number {
+  let hours = now.getHours();
+  let minutes = now.getMinutes();
+
+  if (minutes % 30 !== 0) {
+    minutes = Math.ceil(minutes / 30) * 30;
+    if (minutes >= 60) {
+      hours += 1;
+      minutes = 0;
+    }
   }
 
-  return getLocalDateString();
+  return hours * 60 + minutes;
 }
 
 export function describeEmptySlotsMessage(
@@ -102,7 +113,7 @@ export function describeEmptySlotsMessage(
   }
 
   if (isToday) {
-    return "No more times left today. Please choose a future date.";
+    return "No more times left today. All remaining slots are booked or have passed.";
   }
 
   return "All slots are booked for this day. Please pick another date.";

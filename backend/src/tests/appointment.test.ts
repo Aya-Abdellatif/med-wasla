@@ -137,6 +137,41 @@ describe("Appointments Routes", () => {
 
       expect(res.status).toBe(404);
     });
+
+    it("returns only remaining future slots for today", async () => {
+      const { specialist } = await createSpecialist();
+      const todayStr = new Date().toLocaleDateString("en-CA");
+      const dayName = new Date().toLocaleDateString("en-US", { weekday: "long" });
+
+      await MedicalSpecialist.findByIdAndUpdate(specialist._id, {
+        availableSlots: [{ day: dayName, startTime: "00:00", endTime: "23:59" }],
+      });
+
+      const res = await request(app).get(
+        `/api/appointments/available-slots/${idOf(specialist)}?date=${todayStr}`,
+      );
+
+      expect(res.status).toBe(200);
+      const slots = res.body.data.availableSlots as string[];
+      expect(slots.length).toBeGreaterThan(0);
+
+      const now = new Date();
+      let minHours = now.getHours();
+      let minMinutes = now.getMinutes();
+      if (minMinutes % 30 !== 0) {
+        minMinutes = Math.ceil(minMinutes / 30) * 30;
+        if (minMinutes >= 60) {
+          minHours += 1;
+          minMinutes = 0;
+        }
+      }
+      const minBookable = minHours * 60 + minMinutes;
+
+      for (const slot of slots) {
+        const [h, m] = slot.split(":").map(Number);
+        expect(h * 60 + m).toBeGreaterThanOrEqual(minBookable);
+      }
+    });
   });
 
   describe("POST /api/appointments", () => {

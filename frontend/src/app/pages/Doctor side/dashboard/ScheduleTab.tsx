@@ -78,12 +78,8 @@ export function ScheduleTab({
         </label>
       </div>
 
-      <p className="text-sm mb-6" style={{ color: DASHBOARD_THEME.muted }}>
-        {formatDateLabel(selectedDate)}
-      </p>
-
       <div className="space-y-8">
-        {pendingAppointments.length > 0 && (
+        {offersHomeService && pendingAppointments.length > 0 && (
           <div>
             <div className="flex flex-wrap items-center justify-between gap-3 mb-4">
               <h3 className="text-lg font-semibold" style={{ color: DASHBOARD_THEME.text }}>
@@ -213,6 +209,7 @@ export function ScheduleTab({
           </div>
         </div>
 
+        {offersHomeService && (
         <MissedAppointmentsPanel
           count={overdueAppointments.length}
           title="Missed Home Visits"
@@ -227,6 +224,7 @@ export function ScheduleTab({
             />
           ))}
         </MissedAppointmentsPanel>
+        )}
       </div>
     </div>
   );
