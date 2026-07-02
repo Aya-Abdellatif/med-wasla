@@ -14,8 +14,6 @@ import {
   buildProfileFormFromUser,
   buildProfileUpdatePayload,
   createEmptySlot,
-  getNextAvailableDay,
-  hasDuplicateSlotDays,
   type NewCertificateForm,
   type ProfileForm,
 } from "../Doctor side/dashboard/dashboardTypes";
@@ -157,11 +155,6 @@ export function SpecialistProfilePage() {
   };
 
   const handleSaveAvailability = async () => {
-    if (hasDuplicateSlotDays(availableSlots)) {
-      showWarning("Each weekday can only have one slot.", getToastUserContext(user));
-      return;
-    }
-
     setIsSavingSlots(true);
     try {
       await apiFetch("/api/specialists/availability", {
@@ -213,36 +206,6 @@ export function SpecialistProfilePage() {
     }
   };
 
-  const handleUpdateCertificate = async (certId: string, cert: NewCertificateForm) => {
-    if (!cert.title || !cert.issuedBy || !cert.certificateUrl) {
-      showWarning("Please fill all certificate fields", getToastUserContext(user));
-      return;
-    }
-
-    try {
-      await apiFetch(`/api/specialists/me/certificates/${certId}`, {
-        method: "PATCH",
-        body: JSON.stringify(cert),
-      });
-      await refreshSpecialistProfile();
-      showSuccess("Certificate updated and submitted for review.", getToastUserContext(user));
-    } catch (err) {
-      showError(err instanceof Error ? err.message : "Failed to update certificate", getToastUserContext(user));
-    }
-  };
-
-  const handleDeleteCertificate = async (certId: string) => {
-    try {
-      await apiFetch(`/api/specialists/me/certificates/${certId}`, {
-        method: "DELETE",
-      });
-      await refreshSpecialistProfile();
-      showSuccess("Certificate removed.", getToastUserContext(user));
-    } catch (err) {
-      showError(err instanceof Error ? err.message : "Failed to delete certificate", getToastUserContext(user));
-    }
-  };
-
   return (
     <div className="min-h-screen" style={{ backgroundColor: "#f8fafc" }}>
       {user.verificationStatus && (
@@ -284,8 +247,6 @@ export function SpecialistProfilePage() {
           }
           onPhotoUpload={handlePhotoUpload}
           onAddCertificate={handleAddCertificate}
-          onUpdateCertificate={handleUpdateCertificate}
-          onDeleteCertificate={handleDeleteCertificate}
         />
       </div>
     </div>
