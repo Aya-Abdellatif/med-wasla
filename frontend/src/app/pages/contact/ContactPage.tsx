@@ -71,7 +71,7 @@ export default function ContactPage() {
   return (
     <main className="min-h-screen bg-white text-gray-900">
       {/* Hero Section */}
-      <section className="bg-linear-to-br from-[#F6FFFB] via-[#ECFEFF] to-[#F0FDFA] py-14 px-4 text-center relative overflow-hidden">
+      <section className="bg-linear-to-br from-[#F6FFFB] via-[#ECFEFF] to-[#F0FDFA] py-14 px-5 text-center relative overflow-hidden">
         <div className="absolute inset-0 opacity-10">
           <div className="absolute top-10 right-10 w-40 h-40 bg-teal-300 rounded-full blur-3xl" />
           <div className="absolute bottom-10 left-10 w-40 h-40 bg-cyan-300 rounded-full blur-3xl" />
@@ -80,7 +80,7 @@ export default function ContactPage() {
           <h1 className="mb-6 text-3xl font-bold md:text-4xl">
             Get in Touch
           </h1>
-          <p className="mx-auto max-w-3xl text-xl leading-8 text-[#6B7280]">
+          <p className="mx-auto max-w-3xl text-xl  text-[#6B7280]">
             Have questions or need assistance? Our team is here to help. Reach out and we'll respond within 24-48 hours.
           </p>
         </div>
