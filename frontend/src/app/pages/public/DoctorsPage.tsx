@@ -122,7 +122,7 @@ export function Doctors() {
     <div className="flex flex-col">
       <section className="relative bg-linear-to-br bg-[#f0fffe] py-14">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 text-center">
-          <h1 className="text-3xl md:text-4xl font-bold text-foreground mb-6">
+          <h1 className="text-3xl md:text-4xl font-bold text-fg mb-6">
             Meet Our Expert Doctors
           </h1>
           <p className="text-xl text-fg-muted max-w-3xl mx-auto">
