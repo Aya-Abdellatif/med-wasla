@@ -1,4 +1,5 @@
 import type { ReactNode } from "react";
+import { useTranslation } from "react-i18next";
 import Logo from "../../../assets/logo.png";
 
 interface AuthLayoutProps {
@@ -22,6 +23,7 @@ export default function AuthLayout({
   center = true,
   fitScreen = false,
 }: AuthLayoutProps) {
+  const { t } = useTranslation("common");
   const cardWidthClass = fitScreen
     ? "max-w-4xl"
     : wide
@@ -54,14 +56,14 @@ export default function AuthLayout({
         >
           <img
             src={Logo}
-            alt="MedWasla Logo"
-            className={`${fitScreen ? "h-12 w-14" : "w-19 h-17"} -mr-6 transition-transform duration-300`}
+            alt={t("brand.logoAlt")}
+            className={`${fitScreen ? "h-12 w-14" : "w-19 h-17"} -me-6 transition-transform duration-300`}
           />
           <h1
             className={`${fitScreen ? "text-2xl" : "text-3xl"} font-semibold`}
           >
-            <span className="text-fg">Med</span>
-            <span className="text-primary">Wasla</span>
+            <span className="text-fg">{t("brand.med")}</span>
+            <span className="text-primary">{t("brand.wasla")}</span>
           </h1>
         </div>
 

@@ -1,0 +1,73 @@
+{
+  "filters": {
+    "all": "All"
+  },
+  "sort": {
+    "highestRated": "Highest Rated",
+    "newest": "Newest",
+    "mostReviewed": "Most Reviewed",
+    "shortestWait": "Shortest Wait",
+    "feeLowHigh": "Fee: Low to High",
+    "feeHighLow": "Fee: High to Low"
+  },
+  "weekdays": {
+    "sunday": "Sunday",
+    "monday": "Monday",
+    "tuesday": "Tuesday",
+    "wednesday": "Wednesday",
+    "thursday": "Thursday",
+    "friday": "Friday",
+    "saturday": "Saturday"
+  },
+  "governorates": {
+    "cairo": "Cairo",
+    "giza": "Giza",
+    "alexandria": "Alexandria",
+    "qalyubia": "Qalyubia",
+    "portSaid": "Port Said",
+    "suez": "Suez",
+    "luxor": "Luxor",
+    "aswan": "Aswan",
+    "asyut": "Asyut",
+    "beheira": "Beheira",
+    "beniSuef": "Beni Suef",
+    "dakahlia": "Dakahlia",
+    "damietta": "Damietta",
+    "fayoum": "Fayoum",
+    "gharbia": "Gharbia",
+    "ismailia": "Ismailia",
+    "kafrElSheikh": "Kafr El Sheikh",
+    "matrouh": "Matrouh",
+    "minya": "Minya",
+    "monufia": "Monufia",
+    "newValley": "New Valley",
+    "northSinai": "North Sinai",
+    "qena": "Qena",
+    "redSea": "Red Sea",
+    "sharqia": "Sharqia",
+    "sohag": "Sohag",
+    "southSinai": "South Sinai"
+  },
+  "specializations": {
+    "cardiology": "Cardiology",
+    "orthopedics": "Orthopedics",
+    "dermatology": "Dermatology",
+    "pediatrics": "Pediatrics",
+    "neurology": "Neurology",
+    "psychiatry": "Psychiatry",
+    "gynecology": "Gynecology",
+    "ent": "ENT",
+    "ophthalmology": "Ophthalmology",
+    "generalPractice": "General Practice",
+    "urology": "Urology",
+    "oncology": "Oncology"
+  },
+  "nurseExpertise": {
+    "homeCare": "Home Care",
+    "pediatric": "Pediatric",
+    "geriatric": "Geriatric",
+    "woundCare": "Wound Care",
+    "ivTherapy": "IV Therapy",
+    "postOpCare": "Post-Op Care"
+  }
+}

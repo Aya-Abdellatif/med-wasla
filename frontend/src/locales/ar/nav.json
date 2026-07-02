@@ -1,0 +1,27 @@
+{
+  "links": {
+    "home": "الرئيسية",
+    "services": "الخدمات",
+    "about": "من نحن",
+    "contact": "تواصل",
+    "contactUs": "تواصل معنا",
+    "doctors": "الأطباء",
+    "nurses": "الممرضون",
+    "dashboard": "لوحة التحكم",
+    "profile": "الملف الشخصي",
+    "appointments": "المواعيد"
+  },
+  "menu": {
+    "viewProfile": "عرض الملف الشخصي",
+    "viewAppointments": "عرض المواعيد"
+  },
+  "actions": {
+    "login": "تسجيل الدخول",
+    "logout": "تسجيل الخروج",
+    "signUp": "إنشاء حساب",
+    "bookAppointment": "حجز موعد"
+  },
+  "aria": {
+    "toggleMenu": "فتح/إغلاق القائمة"
+  }
+}

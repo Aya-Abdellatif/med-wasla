@@ -7,6 +7,7 @@ import {
   faPhone,
   faEnvelope,
 } from "@fortawesome/free-solid-svg-icons";
+import { useTranslation } from "react-i18next";
 import { showSuccess } from "../../../utils/toast";
 
 import { departments, faqs } from "./ContactData";
@@ -21,6 +22,7 @@ const initialFormData: ContactFormData = {
 };
 
 export default function ContactPage() {
+  const { t } = useTranslation(["public", "toast"]);
   const [formData, setFormData] = useState<ContactFormData>(initialFormData);
   const [isSubmitted, setIsSubmitted] = useState(false);
   const [expandedFAQ, setExpandedFAQ] = useState<number | null>(null);
@@ -37,7 +39,7 @@ export default function ContactPage() {
 
   const handleSubmit = (e: React.FormEvent<HTMLFormElement>) => {
     e.preventDefault();
-    showSuccess("Message sent! We'll get back to you within 24-48 hours.");
+    showSuccess(t("toast:contact.messageSent"));
     setIsSubmitted(true);
 
     setTimeout(() => {

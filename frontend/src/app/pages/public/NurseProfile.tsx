@@ -13,6 +13,7 @@ import {
   Heart,
 } from "lucide-react";
 import { useEffect, useState } from "react";
+import { useTranslation } from "react-i18next";
 import { BookingModal } from "../../components/booking/BookingModal";
 import {
   fetchSpecialistProfile,
@@ -23,12 +24,13 @@ import { useAuth } from "../../context/useAuth";
 import { canBookAppointments, handleBookClick } from "../../../utils/bookingAccess";
 
 export function NurseProfile() {
+  const { t } = useTranslation("public");
   const { id } = useParams<{ id: string }>();
 
   if (!id) {
     return (
       <div className="min-h-screen bg-muted/30 flex items-center justify-center">
-        <p className="text-lg text-muted-foreground">Invalid nurse profile.</p>
+        <p className="text-lg text-muted-foreground">{t("profile.invalidNurse")}</p>
       </div>
     );
   }
@@ -37,6 +39,7 @@ export function NurseProfile() {
 }
 
 function NurseProfileView({ id }: { id: string }) {
+  const { t } = useTranslation(["public", "common"]);
   const navigate = useNavigate();
   const { user } = useAuth();
   const showBooking = canBookAppointments(user);
@@ -70,7 +73,7 @@ function NurseProfileView({ id }: { id: string }) {
       .catch((err) => {
         if (cancelled) return;
         setNurse(null);
-        setError(err instanceof Error ? err.message : "Failed to load nurse profile");
+        setError(err instanceof Error ? err.message : t("profile.loadNurseFailed"));
       })
       .finally(() => {
         if (!cancelled) setLoading(false);
@@ -79,7 +82,7 @@ function NurseProfileView({ id }: { id: string }) {
     return () => {
       cancelled = true;
     };
-  }, [id]);
+  }, [id, t]);
 
   const hasReviews = reviews.length > 0;
   const totalPages = Math.max(Math.ceil(reviews.length / REVIEWS_PER_PAGE), 1);
@@ -91,7 +94,7 @@ function NurseProfileView({ id }: { id: string }) {
   if (loading) {
     return (
       <div className="min-h-screen bg-muted/30 flex items-center justify-center">
-        <p className="text-lg text-muted-foreground">Loading nurse profile...</p>
+        <p className="text-lg text-muted-foreground">{t("profile.loadingNurse")}</p>
       </div>
     );
   }
@@ -103,16 +106,16 @@ function NurseProfileView({ id }: { id: string }) {
           <div className="mx-auto mb-6 flex h-20 w-20 items-center justify-center rounded-full bg-primary/10 text-primary">
             <AlertCircle className="h-10 w-10" />
           </div>
-          <h2 className="text-3xl font-bold text-foreground mb-3">Nurse Not Found</h2>
+          <h2 className="text-3xl font-bold text-foreground mb-3">{t("profile.nurseNotFound")}</h2>
           <p className="text-base leading-7 text-muted-foreground mb-8">
-            {error ?? "Please return to the nurses page and choose another profile."}
+            {error ?? t("profile.nurseNotFoundDesc")}
           </p>
           <button
             onClick={() => navigate("/nurses")}
             className="inline-flex items-center justify-center gap-2 rounded-full bg-primary px-7 py-3 text-sm font-semibold text-white shadow-xl shadow-primary/20 transition-all duration-200 hover:bg-primary/90"
           >
-            <ArrowLeft className="h-4 w-4" />
-            Back to Nurses
+            <ArrowLeft className="h-4 w-4 rtl:rotate-180" />
+            {t("profile.backToNurses")}
           </button>
         </div>
       </div>
@@ -150,7 +153,7 @@ function NurseProfileView({ id }: { id: string }) {
                     onClick={onBookClick}
                     className="w-full md:w-auto px-8 py-4 bg-primary text-white rounded-lg hover:bg-primary/90 transition-colors font-medium text-lg"
                   >
-                    Book Appointment
+                    {t("common:actions.bookAppointment")}
                   </button>
                 )}
               </div>
@@ -159,45 +162,44 @@ function NurseProfileView({ id }: { id: string }) {
 
             <div className="md:col-span-5 md:row-start-2 md:col-start-1">
               <div className="grid md:grid-cols-3 gap-4 mb-6">
-                <div className="flex items-center space-x-3 p-4 bg-muted/50 rounded-lg">
+                <div className="flex items-center gap-3 p-4 bg-muted/50 rounded-lg">
                   <Award className="w-5 h-5 text-primary shrink-0" />
                   <div>
-                    <p className="text-sm text-muted-foreground">Experience</p>
+                    <p className="text-sm text-muted-foreground">{t("profile.fields.experience")}</p>
                     <p className="font-semibold text-foreground">{nurse.experience}</p>
                   </div>
                 </div>
-                <div className="row-span-2 flex items-start space-x-3 p-4 bg-muted/50 rounded-lg">
+                <div className="row-span-2 flex items-start gap-3 p-4 bg-muted/50 rounded-lg">
                   <MapPin className="w-5 h-5 text-primary shrink-0" />
                   <div>
-                    <p className="text-sm text-muted-foreground">Service Areas</p>
-                    {/* <p className="mt-2 font-semibold text-foreground">in {nurse.location}:</p> */}
-                    <ul className="mt-3 space-y-2 text-foreground pl-4">
+                    <p className="text-sm text-muted-foreground">{t("profile.fields.serviceAreas")}</p>
+                    <ul className="mt-3 space-y-2 text-foreground ps-4">
                       {nurse.serviceAreas.map((area) => (
-                        <li key={area} className="list-disc pl-4 text-sm font-semibold marker:text-primary">
+                        <li key={area} className="list-disc ps-4 text-sm font-semibold marker:text-primary">
                           {area}
                         </li>
                       ))}
                     </ul>
                   </div>
                 </div>
-                <div className="flex items-center space-x-3 p-4 bg-muted/50 rounded-lg">
+                <div className="flex items-center gap-3 p-4 bg-muted/50 rounded-lg">
                   <DollarSign className="w-5 h-5 text-primary shrink-0" />
                   <div>
-                    <p className="text-sm text-muted-foreground">Home Visit Fee</p>
-                    <p className="font-semibold text-foreground">{nurse.consultationFee} EGP</p>
+                    <p className="text-sm text-muted-foreground">{t("profile.fields.homeVisitFee")}</p>
+                    <p className="font-semibold text-foreground">{nurse.consultationFee} {t("common:currency.egp")}</p>
                   </div>
                 </div>
-                <div className="flex items-center space-x-3 p-4 bg-muted/50 rounded-lg">
+                <div className="flex items-center gap-3 p-4 bg-muted/50 rounded-lg">
                   <GraduationCap className="w-5 h-5 text-primary shrink-0" />
                   <div>
-                    <p className="text-sm text-muted-foreground">Education</p>
+                    <p className="text-sm text-muted-foreground">{t("profile.fields.education")}</p>
                     <p className="font-semibold text-foreground">{nurse.education}</p>
                   </div>
                 </div>
-                <div className="flex items-center space-x-3 p-4 bg-muted/50 rounded-lg">
+                <div className="flex items-center gap-3 p-4 bg-muted/50 rounded-lg">
                   <Clock className="w-5 h-5 text-primary shrink-0" />
                   <div>
-                    <p className="text-sm text-muted-foreground">Availability</p>
+                    <p className="text-sm text-muted-foreground">{t("profile.fields.availability")}</p>
                     <p className="font-semibold text-foreground">{nurse.availability}</p>
                   </div>
                 </div>
@@ -211,9 +213,9 @@ function NurseProfileView({ id }: { id: string }) {
         <div className={`${pageContainer} space-y-16`}>
           <div>
             <div className="text-left mb-8">
-              <h2 className={`${sectionHeading} mb-2`}>Expertise</h2>
+              <h2 className={`${sectionHeading} mb-2`}>{t("profile.sections.expertise")}</h2>
               <p className="text-muted-foreground">
-                Areas of expertise and specialized care provided by {nurse.name}.
+                {t("profile.sections.expertiseDesc", { name: nurse.name })}
               </p>
             </div>
             {nurse.expertise.length > 0 ? (
@@ -232,16 +234,16 @@ function NurseProfileView({ id }: { id: string }) {
               </div>
             ) : (
               <div className="bg-white border border-border rounded-2xl p-8 text-center shadow-sm">
-                <p className="text-fg-muted">No expertise listed yet.</p>
+                <p className="text-fg-muted">{t("profile.sections.noExpertise")}</p>
               </div>
             )}
           </div>
 
           <div>
             <div className="text-left mb-8">
-              <h2 className={`${sectionHeading} mb-2`}>Patient Reviews</h2>
+              <h2 className={`${sectionHeading} mb-2`}>{t("profile.sections.reviews")}</h2>
               <p className="text-muted-foreground">
-                Hear what our patients have to say about their experiences with {nurse.name}.
+                {t("profile.sections.reviewsDesc", { name: nurse.name })}
               </p>
             </div>
             {hasReviews ? (
@@ -267,7 +269,7 @@ function NurseProfileView({ id }: { id: string }) {
                 </div>
                 <div className="flex items-center justify-center gap-4 mt-8">
                   <button onClick={prev} className="h-9 w-9 rounded-full border-2 border-border hover:border-primary hover:text-primary flex items-center justify-center transition-all duration-200 cursor-pointer">
-                    <ChevronLeft className="h-5 w-5" />
+                    <ChevronLeft className="h-5 w-5 rtl:rotate-180" />
                   </button>
                   {Array.from({ length: totalPages }).map((_, i) => (
                     <button
@@ -280,13 +282,13 @@ function NurseProfileView({ id }: { id: string }) {
                     />
                   ))}
                   <button onClick={next} className="h-9 w-9 rounded-full border-2 border-border hover:border-primary hover:text-primary flex items-center justify-center transition-all duration-200 cursor-pointer">
-                    <ChevronRight className="h-5 w-5" />
+                    <ChevronRight className="h-5 w-5 rtl:rotate-180" />
                   </button>
                 </div>
               </>
             ) : (
               <div className="bg-white border border-border rounded-2xl p-8 text-center shadow-sm">
-                <p className="text-fg">No reviews available at the moment.</p>
+                <p className="text-fg">{t("profile.sections.noReviews")}</p>
               </div>
             )}
           </div>

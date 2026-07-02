@@ -1,3 +1,5 @@
+import i18n from "../i18n";
+
 export function getFirstName(name?: string | null): string {
   if (!name) return "";
 
@@ -12,7 +14,7 @@ export function getDisplayInitial(name?: string | null): string {
 export function getSpecialistDisplayName(name?: string | null): string {
   const firstName = getFirstName(name);
   if (!firstName) return "";
-  return `DR. ${firstName}`;
+  return i18n.t("common:titles.dr", { name: firstName });
 }
 
 export type ToastUserRole = "patient" | "doctor" | "nurse" | "admin";
@@ -24,7 +26,7 @@ export function getToastUserLabel(
 ): string {
   const firstName = getFirstName(name);
   if (!firstName) return "";
-  if (role === "doctor") return `Dr. ${firstName}`;
+  if (role === "doctor") return i18n.t("common:titles.drShort", { name: firstName });
   return firstName;
 }
 
@@ -32,7 +34,9 @@ export function formatSpecialistName(
   name?: string | null,
   type: "doctor" | "nurse" = "doctor",
 ): string {
-  if (!name?.trim()) return type === "doctor" ? "Doctor" : "Nurse";
+  if (!name?.trim()) {
+    return i18n.t(type === "doctor" ? "common:roles.doctor" : "common:roles.nurse");
+  }
   if (/^Dr\.?\s/i.test(name.trim())) return name.trim();
-  return type === "doctor" ? `Dr. ${name.trim()}` : name.trim();
+  return type === "doctor" ? i18n.t("common:titles.drShort", { name: name.trim() }) : name.trim();
 }

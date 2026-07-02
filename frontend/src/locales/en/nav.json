@@ -1,0 +1,27 @@
+{
+  "links": {
+    "home": "Home",
+    "services": "Services",
+    "about": "About",
+    "contact": "Contact",
+    "contactUs": "Contact Us",
+    "doctors": "Doctors",
+    "nurses": "Nurses",
+    "dashboard": "Dashboard",
+    "profile": "Profile",
+    "appointments": "Appointments"
+  },
+  "menu": {
+    "viewProfile": "View Profile",
+    "viewAppointments": "View Appointments"
+  },
+  "actions": {
+    "login": "Login",
+    "logout": "Logout",
+    "signUp": "Sign Up",
+    "bookAppointment": "Book Appointment"
+  },
+  "aria": {
+    "toggleMenu": "Toggle menu"
+  }
+}
