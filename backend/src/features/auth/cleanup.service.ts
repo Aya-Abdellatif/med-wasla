@@ -3,7 +3,7 @@ import Patient from "../../models/patient.model.js";
 import MedicalSpecialist from "../../models/medicalSpecialist.model.js";
 import OTP from "../../models/otp.model.js";
 
-const UNVERIFIED_TTL_MS = 24 * 60 * 60 * 1000; // 24 hours
+const UNVERIFIED_TTL_MS = 24 * 60 * 60 * 1000; 
 
 export async function cleanupUnverifiedUsers(): Promise<void> {
   const cutoff = new Date(Date.now() - UNVERIFIED_TTL_MS);
