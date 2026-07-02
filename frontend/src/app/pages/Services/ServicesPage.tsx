@@ -72,7 +72,7 @@ export default function ServicesPage() {
             {isProvider ? "Provider Hub & Tools" : "Our Healthcare Services"}
           </h1>
 
-          <p className="mx-auto max-w-3xl text-xl leading-8 text-[#6B7280]">
+          <p className="mx-auto max-w-3xl text-xl  text-[#6B7280]">
             {isProvider
               ? "Manage your medical practice, configure scheduling, and handle patient requests with ease."
               : "Discover smart healthcare solutions designed to connect patients with doctors, nurses, and AI-powered medical guidance."}

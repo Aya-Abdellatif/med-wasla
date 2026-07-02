@@ -6,6 +6,11 @@ import AppError from "../../utils/AppError.js";
 export const getPatientProfile = async (req: Request, res: Response, next: NextFunction) => {
   try {
     const { userId } = req.params;
+
+    if (req.user!.id !== userId) {
+      throw new AppError("You don't have access to this profile", 403);
+    }
+
     const profile = await getPatientProfileByUserId(userId as string);
 
     res.status(200).json(profile);
@@ -18,6 +23,10 @@ export const updatePatientProfile = async (req: Request, res: Response, next: Ne
   try {
 
     const { userId } = req.params;
+
+    if (req.user!.id !== userId) {
+      throw new AppError("You don't have access to this profile", 403);
+    }
 
     const updatedProfile = await updatePatientProfileByUserId(
       userId as string,
