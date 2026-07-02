@@ -120,10 +120,10 @@ export function Nurses() {
     <div className="flex flex-col">
       <section className="relative bg-linear-to-br from-[#F6FFFB] via-[#ECFEFF] to-[#F0FDFA] py-14 px-5 text-center">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 text-center">
-          <h1 className="text-3xl md:text-4xl font-bold text-foreground mb-6">
+          <h1 className="text-3xl md:text-4xl font-bold text-fg mb-6">
             Our Professional Nurses
           </h1>
-          <p className="text-xl text-muted-foreground max-w-3xl mx-auto">
+          <p className="text-xl text-fg-muted max-w-3xl mx-auto">
             Compassionate and skilled nurses ready to provide quality home
             healthcare services tailored to your needs.
           </p>
@@ -255,7 +255,7 @@ export function Nurses() {
                           <GraduationCap className="w-5 h-5 text-primary shrink-0" />
                           <span>{nurse.education}</span>
                         </div>
-                        
+
                         <div className="flex items-start gap-3 text-sm">
                           <MapPin className="w-5 h-5 text-primary shrink-0 mt-0.5" />
                           <span>
