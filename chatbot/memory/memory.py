@@ -43,6 +43,8 @@ def add_message(chat_id, role, text):
         "text": text
     })
 
+    limit_history(chat_id)
+
 
 def limit_history(chat_id, max_messages=20):
     """

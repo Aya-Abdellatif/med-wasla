@@ -330,7 +330,7 @@ const renderEnhancedText = (text: string,  sources: (string | Source)[] = []) =>
         className={
           // Change 'top-0' to 'top-20' (adjust 20 if your navbar is a different height)
           // Change 'h-full' to 'h-[calc(100vh-5rem)]' (adjust 5rem to match top-20)
-          "fixed top-20 right-0 h-[calc(100vh-5rem)] w-[28rem] bg-white shadow-2xl z-50 flex flex-col transition-transform duration-300 ease-in-out " +
+          "fixed top-20 right-0 h-[calc(100vh-5rem)] w-md bg-white shadow-2xl z-50 flex flex-col transition-transform duration-300 ease-in-out " +
           (isOpen ? "translate-x-0" : "translate-x-full")
         }
       >

@@ -112,24 +112,28 @@ MEDICAL_KEYWORDS = {
 }
 
 
+def _contains_keyword(text, keyword):
+    return re.search(rf"\b{re.escape(keyword)}\b", text) is not None
+
+
 def keyword_route(text):
 
     text = text.lower()
 
     for keyword in CHITCHAT_KEYWORDS:
-        if keyword in text:
+        if _contains_keyword(text, keyword):
             return "CHITCHAT"
 
     for keyword in DATABASE_KEYWORDS:
-        if keyword in text:
+        if _contains_keyword(text, keyword):
             return "DATABASE"
 
     for keyword in WEBSITE_KEYWORDS:
-        if keyword in text:
+        if _contains_keyword(text, keyword):
             return "WEBSITE"
 
     for keyword in MEDICAL_KEYWORDS:
-        if keyword in text:
+        if _contains_keyword(text, keyword):
             return "MEDICAL"
 
     return None

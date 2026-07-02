@@ -1,6 +1,6 @@
 import re
 
-from memory.memory import get_history
+import models
 
 
 def is_gibberish(text, chat_id):
@@ -19,11 +19,13 @@ def is_gibberish(text, chat_id):
     if re.fullmatch(r"[0-9\s]+", text):
 
         # Allow numbers if the bot previously asked for one.
-        if get_history(chat_id):
+        history = models.chat_sessions.get(chat_id, [])
+
+        if history:
 
             last_bot = None
 
-            for turn in reversed(get_history(chat_id)):
+            for turn in reversed(history):
 
                 if turn["role"] == "assistant":
                     last_bot = turn["text"].lower()

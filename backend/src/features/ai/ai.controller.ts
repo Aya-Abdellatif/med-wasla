@@ -3,13 +3,19 @@ import { sendMessageToAI } from "./ai.service.js";
 
 export const chatWithAI = async (req: Request, res: Response) => {
   try {
-    const { message } = req.body;
+    const { message, sessionId } = req.body;
 
     if (!message) {
       return res.status(400).json({ error: "Message is required" });
     }
 
-    const aiResponse = await sendMessageToAI(message);
+    if (!sessionId) {
+      return res.status(400).json({ error: "sessionId is required" });
+    }
+
+    const userId = req.user?.id;
+
+    const aiResponse = await sendMessageToAI(message, sessionId, userId);
 
     return res.status(200).json({
       success: true,
