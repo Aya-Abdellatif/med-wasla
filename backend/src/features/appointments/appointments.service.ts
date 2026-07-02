@@ -69,7 +69,7 @@ export const createAppointmentService = async (data: {
   if (data.type === "home" && !specialist.homeVisit)
     throw new Error("SPECIALIST_NO_HOME_VISIT");
 
-  if (data.date.getTime() < Date.now() - 60_000) 
+  if (data.date <= new Date()) 
     throw new Error("DATE_IN_PAST");
 
   if (data.type === "clinic") {
@@ -237,13 +237,6 @@ export const updateAppointmentStatusService = async (
     if (!clinicTransitions[appointment.status]?.includes(newStatus)) {
       throw new Error("INVALID_TRANSITION");
     }
-  }
-
-  if (
-    (newStatus === "completed" || newStatus === "no_show") &&
-    !isAppointmentPast(appointment.date)
-  ) {
-    throw new Error("APPOINTMENT_NOT_STARTED");
   }
 
   if (newStatus === "confirmed" && appointment.type === "home") {
@@ -421,7 +414,7 @@ export const rescheduleAppointmentService = async (
     throw new Error("APPOINTMENT_OVERDUE");
   }
 
-  if (newDate.getTime() < Date.now() - 60_000) throw new Error("DATE_IN_PAST");
+  if (newDate <= new Date()) throw new Error("DATE_IN_PAST");
 
   const specialistId = appointment.specialistId.toString();
   const specialist = await MedicalSpecialist.findById(specialistId);
@@ -486,25 +479,6 @@ export const rescheduleAppointmentService = async (
   return appointment;
 };
 
-
-export function getNextBookableSlotMinutes(now = new Date()): number {
-  let hours = now.getHours();
-  let minutes = now.getMinutes();
-
-  if (minutes % 30 !== 0) {
-    minutes = Math.ceil(minutes / 30) * 30;
-    if (minutes >= 60) {
-      hours += 1;
-      minutes = 0;
-    }
-  }
-
-  return hours * 60 + minutes;
-}
-
-function isLocalToday(dateStr: string): boolean {
-  return dateStr === new Date().toLocaleDateString("en-CA");
-}
 
 export const getAvailableSlotsService = async (
   specialistId: string,
@@ -573,9 +547,9 @@ export const getAvailableSlotsService = async (
     const nowMinutes = now.getHours() * 60 + now.getMinutes();
     return {
       workingHours: { start: slot.startTime, end: slot.endTime },
-      availableSlots: availableSlots.filter((timeValue) => {
-        const [slotH, slotM] = timeValue.split(":").map(Number);
-        return slotH * 60 + slotM >= minBookableMinutes;
+      availableSlots: availableSlots.filter(s => {
+        const [sh, sm] = s.split(":").map(Number);
+        return sh * 60 + sm > nowMinutes;
       }),
     };
   }
