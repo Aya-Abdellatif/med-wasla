@@ -3,7 +3,6 @@ import {
   useEffect,
   useRef,
   useLayoutEffect,
-  useCallback,
 } from "react";
 import {
   LogOut,
@@ -28,6 +27,28 @@ import LanguageSwitch from "../../Layouts/LanguageSwitch";
 import { useTranslation } from "react-i18next";
 
 type NavLink = { nameKey: string; path: string };
+
+function getUnderlineStyle(
+  container: HTMLDivElement | null,
+  links: Record<string, HTMLElement | null>,
+  activeKey: string | null,
+): { left: number; width: number } {
+  if (!activeKey || !container) {
+    return { left: 0, width: 0 };
+  }
+
+  const el = links[activeKey];
+  if (!el) {
+    return { left: 0, width: 0 };
+  }
+
+  const elRect = el.getBoundingClientRect();
+  const containerRect = container.getBoundingClientRect();
+  return {
+    left: elRect.left - containerRect.left,
+    width: elRect.width,
+  };
+}
 
 function Navbar() {
   const { t, i18n } = useTranslation(["nav", "common", "toast"]);
@@ -89,38 +110,27 @@ function Navbar() {
   const linksRef = useRef<Record<string, HTMLElement | null>>({});
   const profileRef = useRef<HTMLDivElement | null>(null);
 
-  const updateUnderline = useCallback(() => {
-    const container = containerRef.current;
-
-    if (!desktopActive || !container) {
-      setUnderlineStyle({ left: 0, width: 0 });
-      return;
-    }
-
-    const el = linksRef.current[desktopActive];
-    if (el) {
-      const elRect = el.getBoundingClientRect();
-      const containerRect = container.getBoundingClientRect();
-      setUnderlineStyle({
-        left: elRect.left - containerRect.left,
-        width: elRect.width,
-      });
-    }
+  useLayoutEffect(() => {
+    setUnderlineStyle(
+      getUnderlineStyle(containerRef.current, linksRef.current, desktopActive),
+    );
   }, [desktopActive]);
 
-  useLayoutEffect(() => {
-    updateUnderline();
-  }, [updateUnderline]);
   useEffect(() => {
-    const handleLanguageChange = () => {
-      requestAnimationFrame(() => updateUnderline());
+    const updateUnderline = () => {
+      setUnderlineStyle(
+        getUnderlineStyle(containerRef.current, linksRef.current, desktopActive),
+      );
     };
+
+    const handleLanguageChange = () => {
+      requestAnimationFrame(updateUnderline);
+    };
+
     i18n.on("languageChanged", handleLanguageChange);
-    return () => i18n.off("languageChanged", handleLanguageChange);
-  }, [i18n, updateUnderline, t]);
-  useEffect(() => {
+
     if (typeof document !== "undefined" && "fonts" in document) {
-      document.fonts.ready.then(() => updateUnderline());
+      document.fonts.ready.then(updateUnderline);
     }
 
     window.addEventListener("resize", updateUnderline);
@@ -128,15 +138,16 @@ function Navbar() {
     const container = containerRef.current;
     let resizeObserver: ResizeObserver | undefined;
     if (container && typeof ResizeObserver !== "undefined") {
-      resizeObserver = new ResizeObserver(() => updateUnderline());
+      resizeObserver = new ResizeObserver(updateUnderline);
       resizeObserver.observe(container);
     }
 
     return () => {
+      i18n.off("languageChanged", handleLanguageChange);
       window.removeEventListener("resize", updateUnderline);
       resizeObserver?.disconnect();
     };
-  }, [updateUnderline]);
+  }, [desktopActive, i18n]);
 
   useEffect(() => {
     if (!isProfileOpen) return;
