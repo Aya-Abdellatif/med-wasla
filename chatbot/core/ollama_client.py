@@ -16,50 +16,6 @@ from config import (
 )
 
 
-def classify_question(user_query):
-    """
-    Classify user query into:
-    MEDICAL / WEBSITE / DATABASE / CHITCHAT
-    """
-
-    prompt = f"""
-You are a classifier.
-
-Classify the user's question into ONE category:
-
-MEDICAL
-WEBSITE
-DATABASE
-CHITCHAT
-
-Return ONLY one word.
-
-Question:
-{user_query}
-
-Category:
-"""
-
-    try:
-        response = requests.post(
-            f"{OLLAMA_HOST}/api/generate",
-            json={
-                "model": OLLAMA_MODEL,
-                "prompt": prompt,
-                "stream": False,
-                "options": {"temperature": 0}
-            },
-            timeout=60
-        )
-
-        response.raise_for_status()
-        return response.json()["response"].strip().upper()
-
-    except Exception as e:
-        print("Classifier error:", e)
-        return "CHITCHAT"
-
-
 def generate_response(prompt):
     """
     Send final prompt to Ollama

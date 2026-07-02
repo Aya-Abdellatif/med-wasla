@@ -132,20 +132,23 @@ def classify_question(user_query):
         }
     }
 
-    response = requests.post(
-        f"{OLLAMA_HOST}/api/generate",
-        json=payload,
-        timeout=60
-    )
+    try:
+        response = requests.post(
+            f"{OLLAMA_HOST}/api/generate",
+            json=payload,
+            timeout=60
+        )
 
-    response.raise_for_status()
+        response.raise_for_status()
 
-    result = (
-    response.json()["response"]
-    .strip()
-    .split()[0]
-    .replace(".", "")
-    .upper()
-)
+        return (
+            response.json()["response"]
+            .strip()
+            .split()[0]
+            .replace(".", "")
+            .upper()
+        )
 
-    return result
+    except Exception as e:
+        print("Classifier error:", e)
+        return "CHITCHAT"

@@ -1,5 +1,5 @@
 
-def build_combined_prompt(context_docs, user_query, history_buffer):
+def build_combined_prompt(context_docs, user_query, history_buffer, user_context=None):
 
     context_text = ""
 
@@ -13,6 +13,9 @@ def build_combined_prompt(context_docs, user_query, history_buffer):
             f"Title: {doc['title']}\n"
             f"{snippet}\n\n"
         )
+
+    # Build the user account context section (from MongoDB), if any
+    user_context_text = user_context if user_context else "No account information available."
 
     # Build the prompt AFTER the loop
     prompt = f"""
@@ -89,6 +92,12 @@ KNOWLEDGE BASE
 ========================
 
 {context_text}
+
+========================
+USER ACCOUNT DATA
+========================
+
+{user_context_text}
 
 ========================
 USER QUESTION

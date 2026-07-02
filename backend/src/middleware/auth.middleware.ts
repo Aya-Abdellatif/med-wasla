@@ -44,6 +44,40 @@ export const protect = (req: Request, _res: Response, next: NextFunction) => {
     }
 };
 
+export const optionalAuth = (req: Request, _res: Response, next: NextFunction) => {
+
+    const authHeader = req.headers.authorization;
+
+    if (!authHeader || !authHeader.startsWith("Bearer ")) {
+        return next();
+    }
+
+    const token = authHeader.split(" ")[1];
+
+    if (!token?.trim()) {
+        return next();
+    }
+
+    try {
+        const secret = process.env.JWT_SECRET;
+
+        if (!secret) {
+            throw new Error("JWT_SECRET is not defined");
+        }
+
+        const decoded = jwt.verify(token, secret) as {
+            id: string;
+            role: "patient" | "specialist" | "admin"
+        };
+
+        req.user = decoded;
+    } catch {
+        // Guest or invalid/expired token: continue without req.user
+    }
+
+    next();
+};
+
 export const restrictTo = (...roles: ("patient" | "specialist" | "admin")[]) => {
     return (req: Request, _res: Response, next: NextFunction) => {
         if (!req.user || !roles.includes(req.user.role)) {

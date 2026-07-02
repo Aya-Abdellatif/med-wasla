@@ -38,12 +38,12 @@ EMBEDDING_MODEL = os.getenv(
 
 CORPUS_PATH = os.getenv(
     "NHS_CORPUS_PATH",
-    os.path.join(BASE_DIR, "nhs_conditions.json")
+    os.path.join(BASE_DIR, "data", "nhs_conditions.json")
 )
 
 MEDWASLA_CORPUS_PATH = os.getenv(
     "MEDWASLA_CORPUS_PATH",
-    os.path.join(BASE_DIR, "medwasla_knowledge.json")
+    os.path.join(BASE_DIR, "data", "medwasla_knowledge.json")
 )
 
 # ------------------------------------------------------------
