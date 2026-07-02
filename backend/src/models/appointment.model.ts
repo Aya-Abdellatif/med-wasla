@@ -88,9 +88,6 @@ const appointmentSchema = new Schema<IAppointment>(
   }
 );
 
-// Prevent two confirmed appointments at the same time.
-// Clinic: booked directly as confirmed → index prevents race conditions.
-// Home: multiple pending requests allowed; uniqueness enforced only on confirmed.
 appointmentSchema.index(
   { specialistId: 1, date: 1 },
   {

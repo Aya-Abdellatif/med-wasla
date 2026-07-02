@@ -111,19 +111,15 @@ export function Nurses() {
     });
   };
 
-  // const goToPage = (nextPage: number) => {
-  //   setLoading(true);
-  //   setPage(nextPage);
-  // };
 
   return (
     <div className="flex flex-col">
-      <section className="relative bg-linear-to-br from-[#F6FFFB] via-[#ECFEFF] to-[#F0FDFA] py-20 px-5 text-center">
+      <section className="relative bg-linear-to-br from-[#F6FFFB] via-[#ECFEFF] to-[#F0FDFA] py-14 px-5 text-center">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 text-center">
-          <h1 className="text-4xl md:text-5xl font-bold text-foreground mb-6">
+          <h1 className="text-3xl md:text-4xl font-bold text-fg mb-6">
             Our Professional Nurses
           </h1>
-          <p className="text-xl text-muted-foreground max-w-3xl mx-auto">
+          <p className="text-xl text-fg-muted max-w-3xl mx-auto">
             Compassionate and skilled nurses ready to provide quality home
             healthcare services tailored to your needs.
           </p>
@@ -236,7 +232,7 @@ export function Nurses() {
                       </div>
                     </div>
 
-                    <div className="p-5 flex flex-col flex-1 min-h-[350px]">
+                    <div className="p-5 flex flex-col flex-1 min-h-87.5">
                       <div className="mb-4">
                         <h3 className="text-xl font-bold text-foreground mb-2">
                           {nurse.name}
@@ -255,14 +251,7 @@ export function Nurses() {
                           <GraduationCap className="w-5 h-5 text-primary shrink-0" />
                           <span>{nurse.education}</span>
                         </div>
-                        {/* <div className="flex items-center gap-3 text-sm">
-                          <Clock className="w-5 h-5 text-primary shrink-0" />
-                          <span>{nurse.experience}</span>
-                        </div> */}
 
-                        {/* Service areas row replaces the old location row —
-                            nurses cover areas for home visits, they don't
-                            have a single clinic address. */}
                         <div className="flex items-start gap-3 text-sm">
                           <MapPin className="w-5 h-5 text-primary shrink-0 mt-0.5" />
                           <span>

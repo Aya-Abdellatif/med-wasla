@@ -1,4 +1,3 @@
-// auth.interface.ts
 import type { Governorate, UserRole } from "../models/user.model.js";
 import type { SpecialistType } from "../models/medicalSpecialist.model.js";
 
