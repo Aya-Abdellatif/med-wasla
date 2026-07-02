@@ -7,6 +7,7 @@ import OTP from "../../models/otp.model.js";
 import AppError from "../../utils/AppError.js";
 import generateOtp from "../../utils/generateOtp.js";
 import sendEmail from "../../utils/sendEmail.js";
+import { isMongoDuplicateKeyError, getDuplicateKeyMessage } from "../../utils/mongoErrors.js";
 import type { RegisterData, AuthResult } from "../../interfaces/auth.interface.js";
 
 const OTP_TTL_MS = 10 * 60 * 1000; 
@@ -51,19 +52,6 @@ const createAndSendOtp = async (email: string): Promise<void> => {
   if (process.env.NODE_ENV !== "production") {
     console.log(`[DEV] OTP for ${email}: ${code}`);
   }
-};
-
-const isMongoDuplicateKeyError = (err: unknown): err is { code?: number; keyPattern?: Record<string, unknown> } =>
-  typeof err === "object" &&
-  err !== null &&
-  "code" in err &&
-  (err as { code?: number }).code === 11000;
-
-const getDuplicateKeyMessage = (err: { keyPattern?: Record<string, unknown> }): string => {
-  const field = err.keyPattern ? Object.keys(err.keyPattern)[0] : undefined;
-  if (field === "email") return "This email is already registered";
-  if (field === "licenseNumber") return "This license number is already registered";
-  return "A record with this information already exists";
 };
 
 const toAppError = (err: unknown): AppError => {

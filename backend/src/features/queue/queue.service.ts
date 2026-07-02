@@ -36,7 +36,17 @@ export const joinQueue = async (patientId: string, specialistId: string, appoint
 export const getQueue = async (specialistId: string) => {
 	const date = startOfDay(new Date());
 	const queue = await Queue.findOne({ specialistId, date }).lean();
-	return queue;
+	if (!queue) return null;
+
+	// Public endpoint (no auth) — never expose patientId/appointmentId to anonymous callers.
+	return {
+		isActive: queue.isActive ?? true,
+		currentNumber: queue.currentNumber || 0,
+		entries: queue.entries.map((e) => ({
+			queueNumber: e.queueNumber,
+			status: e.status,
+		})),
+	};
 };
 
 export const getMyPosition = async (patientId: string) => {
@@ -215,9 +225,24 @@ export const syncQueueForSpecialistAndDate = async (specialistId: string, date: 
 	return queue;
 };
 
-export const getQueueForAppointment = async (appointmentId: string) => {
+export const getQueueForAppointment = async (
+	appointmentId: string,
+	requesterId: string,
+	requesterRole: "patient" | "specialist" | "admin",
+) => {
 	const appointment = await Appointment.findById(appointmentId);
 	if (!appointment) throw new AppError("Appointment not found", 404);
+
+	if (requesterRole === "patient") {
+		if (appointment.patientId.toString() !== requesterId) {
+			throw new AppError("You don't have access to this appointment", 403);
+		}
+	} else if (requesterRole === "specialist") {
+		const specialist = await MedicalSpecialist.findOne({ userId: requesterId });
+		if (!specialist || appointment.specialistId.toString() !== specialist._id.toString()) {
+			throw new AppError("You don't have access to this appointment", 403);
+		}
+	}
 
 	const queue = await syncQueueForSpecialistAndDate(
 		appointment.specialistId.toString(),
