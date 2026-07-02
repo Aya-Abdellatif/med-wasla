@@ -29,15 +29,26 @@ const AboutPage = () => {
       </section>
 
       {/* Stats Section */}
+      
       <section className="-mt-10 px-5 relative z-10">
-        <div className="mx-auto max-w-7xl rounded-3xl border border-[#E5E7EB] bg-white p-8 shadow-lg md:p-10">
-          <div className="grid gap-8 grid-cols-2 md:grid-cols-4 divide-y md:divide-y-0 md:divide-x divide-gray-100">
+        <div className="mx-auto max-w-7xl rounded-3xl border border-[#E5E7EB] bg-white p-6 shadow-lg md:p-10">
+          <div className="grid grid-cols-2 md:grid-cols-4">
             {stats.map((stat, idx) => (
-              <div key={stat.label} className={`text-center ${idx > 0 ? "pt-6 md:pt-0" : ""}`}>
-                <p className="text-3xl font-extrabold text-[#14B8A6] md:text-4xl">
+              <div
+                key={stat.label}
+                className={`
+            text-center p-5
+            ${idx % 2 === 1 ? "border-l border-gray-100" : ""}
+            ${idx > 1 ? "border-t border-gray-100" : ""}
+            md:border-t-0
+            md:border-l
+            ${idx === 0 ? "md:border-l-0" : ""}
+          `}
+              >
+                <p className="text-2xl font-extrabold text-[#14B8A6] md:text-4xl">
                   {stat.value}
                 </p>
-                <p className="mt-2 text-xs font-semibold uppercase tracking-wider text-[#6B7280]">
+                <p className="mt-2 text-[10px] font-semibold uppercase tracking-wider text-[#6B7280] md:text-xs">
                   {stat.label}
                 </p>
               </div>
@@ -45,7 +56,7 @@ const AboutPage = () => {
           </div>
         </div>
       </section>
-
+      
       {/* Mission & Vision */}
       <section className="px-5 py-20">
         <div className="mx-auto grid max-w-7xl gap-8 lg:grid-cols-2">
