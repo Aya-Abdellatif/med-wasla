@@ -111,7 +111,6 @@ export function Nurses() {
     });
   };
 
-
   return (
     <div className="flex flex-col">
       <section className="relative bg-linear-to-br from-[#F6FFFB] via-[#ECFEFF] to-[#F0FDFA] py-14 px-5 text-center">
@@ -235,7 +234,7 @@ export function Nurses() {
                     <div className="p-5 flex flex-col flex-1 min-h-87.5">
                       <div className="mb-4">
                         <h3 className="text-xl font-bold text-foreground mb-2">
-                          {nurse.name}
+                          {`Nurse ${nurse.name}`}
                         </h3>
                         <span className="inline-block px-3 py-1 bg-primary/10 text-primary rounded-full text-sm font-medium">
                           {nurse.specialty}

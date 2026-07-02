@@ -23,15 +23,15 @@ export const stats = [
     label: "Years of Excellence",
   },
   {
-    value: "100+",
+    value: "200+",
     label: "Medical Experts",
   },
   {
-    value: "50,000+",
+    value: "5000+",
     label: "Happy Patients",
   },
   {
-    value: "15",
+    value: "10+",
     label: "Specialized Departments",
   },
 ];
