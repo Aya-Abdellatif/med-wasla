@@ -16,9 +16,9 @@ const AboutPage = () => {
   return (
     <main className="min-h-screen bg-[#FFFFFF] text-[#1F2937]">
       {/* Hero */}
-      <section className="bg-linear-to-br from-[#F6FFFB] via-[#ECFEFF] to-[#F0FDFA] px-5 py-24 text-center">
+      <section className="bg-linear-to-br from-[#F6FFFB] via-[#ECFEFF] to-[#F0FDFA] px-5 py-14 text-center">
         <div className="mx-auto max-w-4xl">
-          <h2 className="text-4xl font-extrabold tracking-tight text-[#1F2937] sm:text-5xl">
+          <h2 className="text-3xl font-bold tracking-tight text-[#1F2937] sm:text-4xl">
             About MedWasla
           </h2>
 

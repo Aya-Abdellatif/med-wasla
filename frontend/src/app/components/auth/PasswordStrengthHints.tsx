@@ -1,3 +1,4 @@
+import { useTranslation } from "react-i18next";
 import { PASSWORD_RULES } from "../../../utils/authValidation";
 
 interface PasswordStrengthHintsProps {
@@ -6,6 +7,8 @@ interface PasswordStrengthHintsProps {
 }
 
 export function PasswordStrengthHints({ password, showErrors = false }: PasswordStrengthHintsProps) {
+  const { t } = useTranslation("validation");
+
   if (!password && !showErrors) return null;
 
   return (
@@ -21,7 +24,7 @@ export function PasswordStrengthHints({ password, showErrors = false }: Password
               passed ? "text-emerald-600" : showFail ? "text-red-500" : "text-slate-400"
             }`}
           >
-            {passed ? "✓" : showFail ? "•" : "○"} {rule.label}
+            {passed ? "✓" : showFail ? "•" : "○"} {t(rule.labelKey)}
           </li>
         );
       })}

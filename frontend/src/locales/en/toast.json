@@ -1,0 +1,65 @@
+{
+  "auth": {
+    "loggedOut": "Logged out successfully",
+    "welcomeBack": "Welcome back, {{name}}!",
+    "verifyRedirect": "Your email is not verified. Redirecting to verification page...",
+    "loginFailed": "Login failed. Please verify credentials.",
+    "otpSent": "OTP sent! Check your email.",
+    "otpSendFailed": "Failed to send OTP",
+    "passwordReset": "Password reset successfully!",
+    "passwordResetFailed": "Failed to reset password",
+    "codeResent": "A new code was sent to your email.",
+    "codeResendFailed": "Could not resend code",
+    "verifySuccess": "Email verified! Welcome to MedWasla.",
+    "verifyFailed": "Verification failed",
+    "verificationCodeResent": "A new verification code was sent to your email.",
+    "registrationCheckEmail": "Check your email for the verification code."
+  },
+  "contact": {
+    "messageSent": "Message sent! We'll get back to you within 24-48 hours."
+  },
+  "booking": {
+    "success": "Appointment booked successfully!",
+    "duplicate": "You already booked an appointment with this doctor on this day.",
+    "signInRequired": "Please sign in as a patient to book an appointment",
+    "missingSpecialist": "Unable to book: specialist information is missing",
+    "fillRequired": "Please fill in all required fields",
+    "loadTimesFailed": "Failed to load available times"
+  },
+  "patient": {
+    "profileSaved": "Personal information saved successfully.",
+    "profileSaveFailed": "Unable to save profile.",
+    "passwordUpdated": "Password updated successfully.",
+    "securitySaveFailed": "Unable to save security settings.",
+    "profileLoadFailed": "Unable to load patient profile.",
+    "reviewSubmitted": "Review submitted successfully",
+    "reviewFailed": "Failed to submit review",
+    "appointmentCancelled": "Appointment cancelled",
+    "cancelFailed": "Failed to cancel appointment",
+    "appointmentRescheduled": "Appointment rescheduled",
+    "rescheduleFailed": "Failed to reschedule appointment",
+    "appointmentsLoadFailed": "Failed to load appointments"
+  },
+  "public": {
+    "doctorsLoadFailed": "Failed to load doctors. Please try again.",
+    "nursesLoadFailed": "Failed to load nurses. Please try again."
+  },
+  "dashboard": {
+    "homeVisitAccepted": "Home visit request accepted",
+    "homeVisitDeclined": "Home visit request declined",
+    "appointmentCancelled": "Appointment cancelled",
+    "markedComplete": "Appointment marked as complete",
+    "markedNoShow": "Appointment marked as no show",
+    "loadFailed": "Failed to load dashboard data",
+    "actionFailed": "Action failed. Please try again."
+  },
+  "profile": {
+    "imageType": "Please select a valid image file (JPEG, PNG, or WebP).",
+    "imageSize": "Image must be smaller than 5MB",
+    "noChanges": "No profile changes to submit",
+    "saved": "Profile updated successfully",
+    "saveFailed": "Failed to save profile",
+    "certUploaded": "Certificate uploaded successfully",
+    "certUploadFailed": "Failed to upload certificate"
+  }
+}

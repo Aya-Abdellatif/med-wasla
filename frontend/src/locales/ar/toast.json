@@ -1,0 +1,65 @@
+{
+  "auth": {
+    "loggedOut": "تم تسجيل الخروج بنجاح",
+    "welcomeBack": "مرحباً بعودتك، {{name}}!",
+    "verifyRedirect": "بريدك الإلكتروني غير موثق. جاري التوجيه لصفحة التحقق...",
+    "loginFailed": "فشل تسجيل الدخول. يرجى التحقق من البيانات.",
+    "otpSent": "تم إرسال الرمز! تحقق من بريدك الإلكتروني.",
+    "otpSendFailed": "فشل إرسال الرمز",
+    "passwordReset": "تم إعادة تعيين كلمة المرور بنجاح!",
+    "passwordResetFailed": "فشل إعادة تعيين كلمة المرور",
+    "codeResent": "تم إرسال رمز جديد إلى بريدك الإلكتروني.",
+    "codeResendFailed": "تعذر إعادة إرسال الرمز",
+    "verifySuccess": "تم التحقق من البريد! مرحباً بك في ميد وصلة.",
+    "verifyFailed": "فشل التحقق",
+    "verificationCodeResent": "تم إرسال رمز تحقق جديد إلى بريدك الإلكتروني.",
+    "registrationCheckEmail": "تحقق من بريدك الإلكتروني للحصول على رمز التحقق."
+  },
+  "contact": {
+    "messageSent": "تم إرسال الرسالة! سنتواصل معك خلال 24-48 ساعة."
+  },
+  "booking": {
+    "success": "تم حجز الموعد بنجاح!",
+    "duplicate": "لقد حجزت موعداً مع هذا الطبيب في نفس اليوم.",
+    "signInRequired": "يرجى تسجيل الدخول كمريض لحجز موعد",
+    "missingSpecialist": "تعذر الحجز: معلومات المتخصص غير متوفرة",
+    "fillRequired": "يرجى ملء جميع الحقول المطلوبة",
+    "loadTimesFailed": "فشل تحميل الأوقات المتاحة"
+  },
+  "patient": {
+    "profileSaved": "تم حفظ المعلومات الشخصية بنجاح.",
+    "profileSaveFailed": "تعذر حفظ الملف الشخصي.",
+    "passwordUpdated": "تم تحديث كلمة المرور بنجاح.",
+    "securitySaveFailed": "تعذر حفظ إعدادات الأمان.",
+    "profileLoadFailed": "تعذر تحميل الملف الشخصي.",
+    "reviewSubmitted": "تم إرسال التقييم بنجاح",
+    "reviewFailed": "فشل إرسال التقييم",
+    "appointmentCancelled": "تم إلغاء الموعد",
+    "cancelFailed": "فشل إلغاء الموعد",
+    "appointmentRescheduled": "تم إعادة جدولة الموعد",
+    "rescheduleFailed": "فشل إعادة جدولة الموعد",
+    "appointmentsLoadFailed": "فشل تحميل المواعيد"
+  },
+  "public": {
+    "doctorsLoadFailed": "فشل تحميل الأطباء. يرجى المحاولة مرة أخرى.",
+    "nursesLoadFailed": "فشل تحميل الممرضين. يرجى المحاولة مرة أخرى."
+  },
+  "dashboard": {
+    "homeVisitAccepted": "تم قبول طلب الزيارة المنزلية",
+    "homeVisitDeclined": "تم رفض طلب الزيارة المنزلية",
+    "appointmentCancelled": "تم إلغاء الموعد",
+    "markedComplete": "تم تحديد الموعد كمكتمل",
+    "markedNoShow": "تم تحديد الموعد كعدم حضور",
+    "loadFailed": "فشل تحميل بيانات لوحة التحكم",
+    "actionFailed": "فشلت العملية. يرجى المحاولة مرة أخرى."
+  },
+  "profile": {
+    "imageType": "يرجى اختيار ملف صورة صالح (JPEG أو PNG أو WebP).",
+    "imageSize": "يجب أن يكون حجم الصورة أقل من 5 ميجابايت",
+    "noChanges": "لا توجد تغييرات لحفظها",
+    "saved": "تم تحديث الملف الشخصي بنجاح",
+    "saveFailed": "فشل حفظ الملف الشخصي",
+    "certUploaded": "تم رفع الشهادة بنجاح",
+    "certUploadFailed": "فشل رفع الشهادة"
+  }
+}

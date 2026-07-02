@@ -66,9 +66,9 @@ export default function ServicesPage() {
   return (
     <main className="min-h-screen bg-white text-[#1F2937] ">
       {/* Hero Section */}
-      <section className="relative bg-linear-to-br from-[#F6FFFB] via-[#ECFEFF] to-[#F0FDFA] py-20 px-5 text-center">
+      <section className="relative bg-linear-to-br from-[#F6FFFB] via-[#ECFEFF] to-[#F0FDFA] py-14 px-5 text-center">
         <div className="mx-auto max-w-7xl">
-          <h1 className="mb-6 text-4xl font-bold md:text-5xl">
+          <h1 className="mb-6 text-3xl font-bold md:text-4xl">
             {isProvider ? "Provider Hub & Tools" : "Our Healthcare Services"}
           </h1>
 
@@ -86,7 +86,7 @@ export default function ServicesPage() {
           {topFeatures.map((feature) => (
             <div key={feature.title}>
               <div className="mx-auto mb-4 flex h-16 w-16 items-center justify-center rounded-full bg-teal-50 text-[#14B8A6]">
-                {/* <FontAwesomeIcon icon={feature.icon} className="text-3xl" /> */}
+                
                 <FontAwesomeIcon icon={feature.icon} className="text-3xl" />
               </div>
 

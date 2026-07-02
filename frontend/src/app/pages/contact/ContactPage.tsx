@@ -7,6 +7,7 @@ import {
   faPhone,
   faEnvelope,
 } from "@fortawesome/free-solid-svg-icons";
+import { useTranslation } from "react-i18next";
 import { showSuccess } from "../../../utils/toast";
 
 import { departments, faqs } from "./ContactData";
@@ -21,6 +22,7 @@ const initialFormData: ContactFormData = {
 };
 
 export default function ContactPage() {
+  const { t } = useTranslation(["public", "toast"]);
   const [formData, setFormData] = useState<ContactFormData>(initialFormData);
   const [isSubmitted, setIsSubmitted] = useState(false);
   const [expandedFAQ, setExpandedFAQ] = useState<number | null>(null);
@@ -37,7 +39,7 @@ export default function ContactPage() {
 
   const handleSubmit = (e: React.FormEvent<HTMLFormElement>) => {
     e.preventDefault();
-    showSuccess("Message sent! We'll get back to you within 24-48 hours.");
+    showSuccess(t("toast:contact.messageSent"));
     setIsSubmitted(true);
 
     setTimeout(() => {
@@ -71,13 +73,13 @@ export default function ContactPage() {
   return (
     <main className="min-h-screen bg-white text-gray-900">
       {/* Hero Section */}
-      <section className="bg-linear-to-br from-[#F6FFFB] via-[#ECFEFF] to-[#F0FDFA] py-24 px-4 text-center relative overflow-hidden">
+      <section className="bg-linear-to-br from-[#F6FFFB] via-[#ECFEFF] to-[#F0FDFA] py-14 px-4 text-center relative overflow-hidden">
         <div className="absolute inset-0 opacity-10">
           <div className="absolute top-10 right-10 w-40 h-40 bg-teal-300 rounded-full blur-3xl" />
           <div className="absolute bottom-10 left-10 w-40 h-40 bg-cyan-300 rounded-full blur-3xl" />
         </div>
         <div className="max-w-4xl mx-auto relative z-10">
-          <h1 className="mb-6 text-4xl font-bold md:text-5xl">
+          <h1 className="mb-6 text-3xl font-bold md:text-4xl">
             Get in Touch
           </h1>
           <p className="mx-auto max-w-3xl text-xl leading-8 text-[#6B7280]">
@@ -188,22 +190,8 @@ export default function ContactPage() {
           {/* Right Column - 3 cards stacked */}
           <div className="flex flex-col gap-6 mt-24">
 
-            {/* Working Hours */}
-            {/* <div className="bg-white rounded-2xl p-8 shadow-lg hover:shadow-xl transition">
-        <div className="flex items-start gap-4">
-          <div className="w-12 h-12 bg-purple-50 rounded-xl flex items-center justify-center shrink-0">
-            <FontAwesomeIcon icon={faClock} className="text-purple-500 text-xl" />
-          </div>
-          <div>
-            <h3 className="font-bold text-gray-900 mb-3">Working Hours</h3>
-            <div className="space-y-2 text-sm text-gray-600">
-              <p><span className="font-semibold">Mon-Fri:</span> 8AM - 8PM</p>
-              <p><span className="font-semibold">Sat-Sun:</span> 9AM - 5PM</p>
-              <p><span className="font-semibold">Emergency:</span> 24/7</p>
-            </div>
-          </div>
-        </div>
-      </div> */}
+  
+            
 
             {/* Email */}
             <div className="bg-white rounded-2xl p-8 shadow-lg hover:shadow-xl transition">

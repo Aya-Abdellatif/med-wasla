@@ -286,7 +286,7 @@ function Home() {
             onClick={() => navigate("/services")}
             className="flex items-center gap-2 mx-auto border-2 border-primary text-primary font-bold px-8 py-3 rounded-xl hover:bg-primary hover:text-white hover:-translate-y-0.5 transition-all duration-300 cursor-pointer"
           >
-            View All Services {/*<ArrowRight className="h-4 w-4" />*/}
+            View All Services 
           </button>
         </div>
       </section>
@@ -424,7 +424,7 @@ function Home() {
                 onClick={onBookClick}
                 className="group flex items-center gap-2 bg-white text-primary border-2 border-white font-bold px-8 py-3 rounded-xl hover:bg-transparent hover:text-white hover:border-white hover:-translate-y-0.5 transition-all duration-300 cursor-pointer"
               >
-                {/*<CalendarDays className="h-5 w-5" />*/}
+               
                 Book Appointment
               </button>
             )}
@@ -441,7 +441,7 @@ function Home() {
               onClick={() => navigate("/contact")}
               className="group flex items-center gap-2 bg-white text-primary border-2 border-white font-bold px-8 py-3 rounded-xl hover:bg-transparent hover:text-white hover:border-white hover:-translate-y-0.5 transition-all duration-300 cursor-pointer"
             >
-              {/*<MessageCircle className="h-5 w-5" />*/}
+             
               Contact Us
             </button>
           </div>

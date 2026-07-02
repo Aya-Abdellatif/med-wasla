@@ -1,0 +1,61 @@
+{
+  "email": {
+    "required": "البريد الإلكتروني مطلوب",
+    "invalid": "أدخل بريداً إلكترونياً صالحاً"
+  },
+  "password": {
+    "required": "كلمة المرور مطلوبة",
+    "weak": "كلمة المرور غير قوية بما يكفي",
+    "minLength": "يجب أن تكون كلمة المرور 8 أحرف على الأقل",
+    "rules": {
+      "length": "8 أحرف على الأقل",
+      "upper": "حرف كبير واحد",
+      "lower": "حرف صغير واحد",
+      "number": "رقم واحد"
+    },
+    "strength": {
+      "weak": "ضعيفة",
+      "fair": "مقبولة",
+      "good": "جيدة",
+      "strong": "قوية"
+    },
+    "match": "كلمتا المرور متطابقتان",
+    "mismatch": "كلمتا المرور غير متطابقتين"
+  },
+  "signUp": {
+    "firstNameRequired": "الاسم الأول مطلوب",
+    "lastNameRequired": "اسم العائلة مطلوب",
+    "phoneRequired": "رقم الهاتف مطلوب",
+    "phoneInvalid": "أدخل رقم هاتف صالحاً",
+    "dobRequired": "تاريخ الميلاد مطلوب",
+    "confirmPasswordRequired": "يرجى تأكيد كلمة المرور",
+    "specializationRequired": "يرجى اختيار التخصص الطبي",
+    "licenseRequired": "رقم الترخيص مطلوب",
+    "serviceAreaRequired": "أدخل منطقة خدمة واحدة على الأقل",
+    "certTitleRequired": "عنوان الشهادة مطلوب",
+    "certIssuerRequired": "الجهة المُصدِرة مطلوبة",
+    "certUrlRequired": "رابط الشهادة مطلوب",
+    "fixField_one": "يرجى تصحيح الحقل المميز",
+    "fixField_other": "يرجى تصحيح {{count}} حقول مميزة"
+  },
+  "register": {
+    "emailInUse": "هذا البريد الإلكتروني مستخدم بالفعل"
+  },
+  "signIn": {
+    "credentialsRequired": "يرجى إدخال البريد الإلكتروني وكلمة المرور"
+  },
+  "forgotPassword": {
+    "emailRequired": "يرجى إدخال بريدك الإلكتروني"
+  },
+  "resetPassword": {
+    "otpRequired": "يرجى إدخال رمز التحقق"
+  },
+  "verifyOtp": {
+    "fieldsRequired": "يرجى إدخال البريد الإلكتروني ورمز التحقق",
+    "emailRequired": "أدخل بريدك الإلكتروني لإعادة إرسال الرمز"
+  },
+  "patient": {
+    "imageType": "يرجى اختيار ملف صورة (JPEG أو PNG أو WebP).",
+    "imageSize": "يجب أن يكون حجم الصورة أقل من 5 ميجابايت."
+  }
+}

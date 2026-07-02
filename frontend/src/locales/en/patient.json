@@ -1,0 +1,70 @@
+{
+  "profile": {
+    "header": "Patient · MedWasla",
+    "tabs": {
+      "personal": "Personal Information",
+      "security": "Account & Security",
+      "medicalHistory": "Medical History"
+    },
+    "personal": {
+      "editProfile": "Edit Profile",
+      "editing": "Editing",
+      "saveChanges": "Save Changes",
+      "saving": "Saving...",
+      "uploadPhoto": "Upload Photo",
+      "removePhoto": "Remove Photo",
+      "showPhoto": "Show Photo",
+      "searchGovernorate": "Search governorate...",
+      "fields": {
+        "firstName": "First Name",
+        "lastName": "Last Name",
+        "email": "Email",
+        "phone": "Phone",
+        "dob": "Date of Birth",
+        "governorate": "Governorate",
+        "address": "Address"
+      },
+      "emailReadonly": "Email cannot be changed"
+    },
+    "security": {
+      "changePassword": "Change Password",
+      "currentPassword": "Current Password",
+      "newPassword": "New Password",
+      "confirmPassword": "Confirm New Password",
+      "updatePassword": "Update Password",
+      "updating": "Updating..."
+    },
+    "medicalHistory": {
+      "readOnly": "Medical history is read-only and managed by your healthcare providers.",
+      "diagnosed": "Diagnosed",
+      "treatedBy": "Treated by",
+      "empty": "No medical history records yet."
+    }
+  },
+  "appointments": {
+    "title": "My Appointments",
+    "subtitle": "View and manage your upcoming and past appointments.",
+    "summary": {
+      "upcoming": "Upcoming",
+      "completed": "Completed",
+      "cancelled": "Cancelled"
+    },
+    "filters": {
+      "allStatus": "All Status",
+      "allTypes": "All Types",
+      "searchPlaceholder": "Search by doctor name..."
+    },
+    "empty": "No appointments found.",
+    "emptyFiltered": "No appointments match your filters.",
+    "results": "{{count}} appointment(s) found",
+    "actions": {
+      "reschedule": "Reschedule",
+      "cancel": "Cancel",
+      "addReview": "Add Review",
+      "viewReview": "View Review",
+      "bookAgain": "Book Again",
+      "viewDetails": "View Details"
+    },
+    "cta": "Book a New Appointment"
+  }
+}
