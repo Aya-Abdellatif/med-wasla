@@ -117,7 +117,7 @@ function Navbar() {
     };
     i18n.on("languageChanged", handleLanguageChange);
     return () => i18n.off("languageChanged", handleLanguageChange);
-  }, [i18n, updateUnderline]);
+  }, [i18n, updateUnderline, t]);
   useEffect(() => {
     if (typeof document !== "undefined" && "fonts" in document) {
       document.fonts.ready.then(() => updateUnderline());

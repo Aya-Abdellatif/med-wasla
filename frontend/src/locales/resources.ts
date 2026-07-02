@@ -25,6 +25,8 @@ import arDashboard from "./ar/dashboard.json";
 import arBooking from "./ar/booking.json";
 import arChatbot from "./ar/chatbot.json";
 import arConstants from "./ar/constants.json";
+import enHome from "./en/home.json";
+import arHome from "./ar/home.json";
 
 export const namespaces = [
   "common",
@@ -40,6 +42,7 @@ export const namespaces = [
   "booking",
   "chatbot",
   "constants",
+  "home",
 ] as const;
 
 export type AppNamespace = (typeof namespaces)[number];
@@ -59,6 +62,7 @@ export const resources = {
     booking,
     chatbot,
     constants,
+    home: enHome,
   },
   ar: {
     common: arCommon,
@@ -74,5 +78,6 @@ export const resources = {
     booking: arBooking,
     chatbot: arChatbot,
     constants: arConstants,
+    home: arHome,
   },
 } as const;
