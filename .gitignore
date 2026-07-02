@@ -1,5 +1,30 @@
+# Dependencies
 node_modules/
+venv/
+.venv/
+
+# Environment variables
 .env
+
+# Build outputs
 dist/
+
+# Python cache
 __pycache__/
 *.pyc
+
+# ML / HF / FAISS caches
+.cache/
+.huggingface/
+models--*
+
+# Logs
+*.log
+logs/
+
+# OS files
+Thumbs.db
+.DS_Store
+
+# Jupyter
+.ipynb_checkpoints/
