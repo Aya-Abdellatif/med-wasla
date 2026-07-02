@@ -15,7 +15,7 @@ export interface IQueue extends Document {
   entries: IQueueEntry[];
   currentNumber?: number;
   avgWaitMinutes?: number;
-  isActive?: boolean; // added by ranim
+  isActive?: boolean; 
   createdAt?: Date;
   updatedAt?: Date;
 }

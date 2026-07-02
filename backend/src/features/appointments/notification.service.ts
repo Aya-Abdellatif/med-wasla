@@ -9,7 +9,7 @@ export interface NotificationData {
   patientPhone: string;
   patientName: string;
   patientEmail: string | null;
-  params: string[]; // [specialistName, dateStr, timeStr, typeText]
+  params: string[]; 
 }
 
 export async function buildNotificationData(
@@ -55,7 +55,6 @@ export async function sendCancellationNotification(
   const data = await buildNotificationData(appointment, patientUserId, specialistId);
   if (!data) return;
 
-  // cancellation params: [patientName, specialistName, dateStr, timeStr]
   const params = [data.patientName, ...data.params];
 
   await sendWhatsAppMessage(data.patientPhone, "appointment_cancel", params)
