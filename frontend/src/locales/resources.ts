@@ -29,6 +29,8 @@ import enHome from "./en/home.json";
 import arHome from "./ar/home.json";
 import enServices from "./en/services.json";
 import arServices from "./ar/services.json";
+import enDoctors from "./en/doctors.json";
+import arDoctors from "./ar/doctors.json";
 
 export const namespaces = [
   "common",
@@ -46,6 +48,7 @@ export const namespaces = [
   "constants",
   "home",
   "services",
+  "doctors",
 ] as const;
 
 export type AppNamespace = (typeof namespaces)[number];
@@ -67,6 +70,7 @@ export const resources = {
     constants,
     home: enHome,
     services: enServices,
+    doctors: enDoctors,
   },
   ar: {
     common: arCommon,
@@ -84,5 +88,6 @@ export const resources = {
     constants: arConstants,
     home: arHome,
     services: arServices,
+    doctors: arDoctors,
   },
 } as const;

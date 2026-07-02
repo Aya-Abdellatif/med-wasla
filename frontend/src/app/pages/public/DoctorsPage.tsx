@@ -11,6 +11,7 @@ import {
   ChevronDown,
 } from "lucide-react";
 import { useEffect, useState, useRef } from "react";
+import { useTranslation } from "react-i18next";
 import { BookingModal } from "../../components/booking/BookingModal";
 import { MEDICAL_SPECIALIZATIONS } from "../../../constants/medicalSpecializations";
 import {
@@ -23,27 +24,16 @@ import { useAuth } from "../../context/useAuth";
 import { canBookAppointments, handleBookClick } from "../../../utils/bookingAccess";
 
 const SORT_OPTIONS = [
-  { label: "Highest Rated", sortBy: "rating", sortOrder: "desc" as const },
-  { label: "Newest", sortBy: "createdAt", sortOrder: "desc" as const },
-  { label: "Most Reviewed", sortBy: "reviewCount", sortOrder: "desc" as const },
-  {
-    label: "Shortest Wait",
-    sortBy: "avgWaitMinutes",
-    sortOrder: "asc" as const,
-  },
-  {
-    label: "Fee: Low to High",
-    sortBy: "consultationFee",
-    sortOrder: "asc" as const,
-  },
-  {
-    label: "Fee: High to Low",
-    sortBy: "consultationFee",
-    sortOrder: "desc" as const,
-  },
+  { key: "highestRated", sortBy: "rating", sortOrder: "desc" as const },
+  { key: "newest", sortBy: "createdAt", sortOrder: "desc" as const },
+  { key: "mostReviewed", sortBy: "reviewCount", sortOrder: "desc" as const },
+  { key: "shortestWait", sortBy: "avgWaitMinutes", sortOrder: "asc" as const },
+  { key: "feeLowToHigh", sortBy: "consultationFee", sortOrder: "asc" as const },
+  { key: "feeHighToLow", sortBy: "consultationFee", sortOrder: "desc" as const },
 ] as const;
 
 export function Doctors() {
+  const { t } = useTranslation(["doctors"]);
   const navigate = useNavigate();
   const { user } = useAuth();
   const showBooking = canBookAppointments(user);
@@ -61,19 +51,13 @@ export function Doctors() {
   const [pagination, setPagination] = useState<PaginationMeta | null>(null);
   const [loading, setLoading] = useState(true);
   const resultsRef = useRef<HTMLDivElement>(null);
-  // debounce search input -> debouncedSearch (waits 400ms after typing stops)
+
   useEffect(() => {
     const timer = setTimeout(() => setDebouncedSearch(searchInput.trim()), 400);
     return () => clearTimeout(timer);
   }, [searchInput]);
 
-  // any filter change resets back to page 1
-  // useEffect(() => {
-  //   setPage(1);
-  // }, [debouncedSearch, selectedSpecialty, sortIndex]);
-
   useEffect(() => {
-    // setLoading(true);
     const { sortBy, sortOrder } = SORT_OPTIONS[sortIndex];
 
     fetchApprovedSpecialists("doctor", {
@@ -98,6 +82,7 @@ export function Doctors() {
       })
       .finally(() => setLoading(false));
   }, [debouncedSearch, selectedSpecialty, sortIndex, page]);
+
   const isFirstRender = useRef(true);
   useEffect(() => {
     if (isFirstRender.current) {
@@ -109,6 +94,7 @@ export function Doctors() {
       block: "start",
     });
   }, [page]);
+
   const specialties = ["All", ...MEDICAL_SPECIALIZATIONS];
 
   const handleBookDoctor = (doctor: SpecialistCard) => {
@@ -123,11 +109,10 @@ export function Doctors() {
       <section className="relative bg-linear-to-br bg-[#f0fffe] py-14">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 text-center">
           <h1 className="text-3xl md:text-4xl font-bold text-fg mb-6">
-            Meet Our Expert Doctors
+            {t("doctors:hero.title")}
           </h1>
           <p className="text-xl text-fg-muted max-w-3xl mx-auto">
-            Our team of board-certified physicians brings years of experience
-            and dedication to providing exceptional healthcare.
+            {t("doctors:hero.subtitle")}
           </p>
         </div>
       </section>
@@ -138,7 +123,7 @@ export function Doctors() {
             <div className="relative flex-1 w-full">
               <SearchCheck
                 strokeWidth={2.5}
-                className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-primary"
+                className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-primary rtl:left-auto rtl:right-3"
               />
               <input
                 type="text"
@@ -148,8 +133,8 @@ export function Doctors() {
                   setPage(1);
                   setLoading(true);
                 }}
-                placeholder="Search by name, bio, or specialization..."
-                className="w-full pl-10 pr-4 py-2.5 rounded-2xl border border-border focus:outline-none focus:ring-2 focus:ring-primary/80"
+                placeholder={t("doctors:search.placeholder")}
+                className="w-full pl-10 pr-4 py-2.5 rounded-2xl border border-border focus:outline-none focus:ring-2 focus:ring-primary/80 rtl:pl-4 rtl:pr-10"
               />
             </div>
 
@@ -161,17 +146,17 @@ export function Doctors() {
                   setPage(1);
                   setLoading(true);
                 }}
-                className="appearance-none px-4 py-2.5 pr-10 rounded-2xl border border-border bg-white focus:outline-none focus:ring-2 focus:ring-primary/80"
+                className="appearance-none px-4 py-2.5 pr-10 rounded-2xl border border-border bg-white focus:outline-none focus:ring-2 focus:ring-primary/80 rtl:pr-4 rtl:pl-10"
               >
                 {SORT_OPTIONS.map((opt, idx) => (
-                  <option key={opt.label} value={idx}>
-                    {opt.label}
+                  <option key={opt.key} value={idx}>
+                    {t(`doctors:sort.${opt.key}`)}
                   </option>
                 ))}
               </select>
 
               <ChevronDown
-                className="pointer-events-none absolute right-3 top-1/2 -translate-y-1/2 text-primary"
+                className="pointer-events-none absolute right-3 top-1/2 -translate-y-1/2 text-primary rtl:right-auto rtl:left-3"
                 size={18}
                 strokeWidth={2.5}
               />
@@ -193,7 +178,7 @@ export function Doctors() {
                     : "bg-muted text-foreground hover:bg-muted/80"
                 }`}
               >
-                {specialty}
+                {specialty === "All" ? t("doctors:specialties.all") : specialty}
               </button>
             ))}
           </div>
@@ -205,14 +190,12 @@ export function Doctors() {
           {loading ? (
             <div className="text-center py-16">
               <p className="text-lg text-muted-foreground">
-                Loading approved doctors...
+                {t("doctors:state.loading")}
               </p>
             </div>
           ) : doctors.length === 0 ? (
             <div className="text-center py-16">
-              <p className="text-lg text-fg">
-                No approved doctors found matching your filters.
-              </p>
+              <p className="text-lg text-fg">{t("doctors:state.empty")}</p>
             </div>
           ) : (
             <>
@@ -228,7 +211,7 @@ export function Doctors() {
                         alt={doctor.name}
                         className="w-full h-full object-cover"
                       />
-                      <div className="absolute top-4 right-4 bg-white px-3 py-1.5 rounded-full shadow-lg flex items-center space-x-1">
+                      <div className="absolute top-4 right-4 bg-white px-3 py-1.5 rounded-full shadow-lg flex items-center space-x-1 rtl:right-auto rtl:left-4 rtl:space-x-reverse">
                         <Star className="w-4 h-4 text-yellow-400 fill-current" />
                         <span className="font-semibold text-foreground">
                           {doctor.rating}
@@ -252,28 +235,28 @@ export function Doctors() {
                         {doctor.description}
                       </p>
                       <div className="space-y-3 mb-6">
-                        <div className="flex items-center space-x-3 text-sm">
+                        <div className="flex items-center space-x-3 text-sm rtl:space-x-reverse">
                           <GraduationCap className="w-5 h-5 text-primary shrink-0" />
                           <span className="text-foreground">
                             {doctor.education}
                           </span>
                         </div>
-                        <div className="flex items-center space-x-3 text-sm">
+                        <div className="flex items-center space-x-3 text-sm rtl:space-x-reverse">
                           <Clock className="w-5 h-5 text-primary shrink-0" />
                           <span className="text-foreground">
                             {doctor.experience}
                           </span>
                         </div>
-                        <div className="flex items-center space-x-3 text-sm">
+                        <div className="flex items-center space-x-3 text-sm rtl:space-x-reverse">
                           <MapPin className="w-5 h-5 text-primary shrink-0" />
                           <span className="text-foreground">
                             {doctor.location}
                           </span>
                         </div>
-                        <div className="flex items-start space-x-3 text-sm">
+                        <div className="flex items-start space-x-3 text-sm rtl:space-x-reverse">
                           <CalendarDays className="w-5 h-5 text-primary shrink-0 mt-0.5" />
                           <span className="text-foreground">
-                            Available: {doctor.availability}
+                            {t("doctors:card.available")}: {doctor.availability}
                           </span>
                         </div>
                       </div>
@@ -282,14 +265,14 @@ export function Doctors() {
                           to={`/doctor/${doctor.id}`}
                           className="group flex items-center justify-center gap-2 bg-transparent text-primary border-2 border-primary font-bold text-base px-4 py-2 rounded-xl cursor-pointer transition-all duration-300 ease-in-out hover:border-primary hover:-translate-y-0.5 hover:bg-primary hover:text-white hover:shadow-md whitespace-nowrap"
                         >
-                          <span>View Details</span>
+                          <span>{t("doctors:card.viewDetails")}</span>
                         </Link>
                         {showBooking && (
                           <button
                             onClick={() => handleBookDoctor(doctor)}
                             className="group flex items-center justify-center gap-2 bg-primary text-white border-2 border-primary font-bold text-base px-4 py-2 rounded-xl cursor-pointer transition-all duration-300 ease-in-out hover:border-primary hover:-translate-y-0.5 hover:bg-transparent hover:text-primary hover:shadow-md whitespace-nowrap"
                           >
-                            Book Now
+                            {t("doctors:card.bookNow")}
                           </button>
                         )}
                       </div>
@@ -305,7 +288,7 @@ export function Doctors() {
                     disabled={loading || page === 1}
                     className="p-2 rounded-lg border border-border disabled:opacity-40 disabled:cursor-not-allowed hover:bg-muted"
                   >
-                    <ChevronLeft className="w-4 h-4" />
+                    <ChevronLeft className="w-4 h-4 rtl:rotate-180" />
                   </button>
 
                   {Array.from(
@@ -332,7 +315,7 @@ export function Doctors() {
                     disabled={loading || page === pagination.totalPages}
                     className="p-2 rounded-lg border border-border disabled:opacity-40 disabled:cursor-not-allowed hover:bg-muted"
                   >
-                    <ChevronRight className="w-4 h-4" />
+                    <ChevronRight className="w-4 h-4 rtl:rotate-180" />
                   </button>
                 </div>
               )}
