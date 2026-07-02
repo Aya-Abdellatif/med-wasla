@@ -1,7 +1,7 @@
 import { useRef } from "react";
 import { Calendar } from "lucide-react";
 import type { Appointment } from "./dashboardTypes";
-import { DASHBOARD_THEME, formatDateLabel } from "./dashboardUtils";
+import { DASHBOARD_THEME } from "./dashboardUtils";
 import { AppointmentRow } from "./AppointmentRow";
 import { MissedAppointmentsPanel } from "./MissedAppointmentsPanel";
 
