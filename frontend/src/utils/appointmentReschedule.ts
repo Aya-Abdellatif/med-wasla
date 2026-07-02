@@ -75,9 +75,14 @@ export function hasTodayHoursEnded(
 }
 
 export function getEarliestBookableDate(
-  _availableSlots: Array<{ day: string; startTime: string; endTime: string }>,
+  availableSlots: Array<{ day: string; startTime: string; endTime: string }>,
 ): string {
-  // Always allow today; remaining times are loaded from the API when a date is selected.
+  if (hasTodayHoursEnded(availableSlots)) {
+    const tomorrow = new Date();
+    tomorrow.setDate(tomorrow.getDate() + 1);
+    return getLocalDateString(tomorrow);
+  }
+
   return getLocalDateString();
 }
 

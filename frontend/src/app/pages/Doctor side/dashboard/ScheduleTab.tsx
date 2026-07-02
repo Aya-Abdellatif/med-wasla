@@ -7,6 +7,7 @@ import { MissedAppointmentsPanel } from "./MissedAppointmentsPanel";
 
 interface ScheduleTabProps {
   selectedDate: string;
+  
   onSelectedDateChange: (date: string) => void;
   filteredUpcoming: Appointment[];
   filteredCompleted: Appointment[];
