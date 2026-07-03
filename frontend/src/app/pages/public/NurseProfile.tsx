@@ -30,7 +30,7 @@ export function NurseProfile() {
   if (!id) {
     return (
       <div className="min-h-screen bg-muted/30 flex items-center justify-center">
-        <p className="text-lg text-muted-foreground">{t("profile.invalidNurse")}</p>
+        <p className="text-lg text-fg-muted">{t("profile.invalidNurse")}</p>
       </div>
     );
   }
@@ -94,7 +94,7 @@ function NurseProfileView({ id }: { id: string }) {
   if (loading) {
     return (
       <div className="min-h-screen bg-muted/30 flex items-center justify-center">
-        <p className="text-lg text-muted-foreground">{t("profile.loadingNurse")}</p>
+        <p className="text-lg text-fg-muted">{t("profile.loadingNurse")}</p>
       </div>
     );
   }
@@ -107,7 +107,7 @@ function NurseProfileView({ id }: { id: string }) {
             <AlertCircle className="h-10 w-10" />
           </div>
           <h2 className="text-3xl font-bold text-foreground mb-3">{t("profile.nurseNotFound")}</h2>
-          <p className="text-base leading-7 text-muted-foreground mb-8">
+          <p className="text-base leading-7 text-fg-muted mb-8">
             {error ?? t("profile.nurseNotFoundDesc")}
           </p>
           <button
@@ -131,10 +131,10 @@ function NurseProfileView({ id }: { id: string }) {
             <div className="md:col-span-1">
               <div className="relative rounded-2xl overflow-hidden shadow-xl">
                 <img src={nurse.image} alt={nurse.name} className="w-full aspect-square object-cover" />
-                <div className="absolute top-4 right-4 bg-white px-3 py-1.5 rounded-full shadow-lg flex items-center space-x-1">
+                <div className="absolute top-4 end-4 bg-white px-3 py-1.5 rounded-full shadow-lg flex items-center gap-1">
                   <Star className="w-4 h-4 text-yellow-400 fill-current" />
                   <span className="font-semibold text-foreground">{reviewStats.averageRating || nurse.rating}</span>
-                  <span className="text-sm text-muted-foreground">({reviewStats.totalReviews || nurse.reviews})</span>
+                  <span className="text-sm text-fg-muted">({reviewStats.totalReviews || nurse.reviews})</span>
                 </div>
               </div>
             </div>
@@ -143,7 +143,7 @@ function NurseProfileView({ id }: { id: string }) {
               <div className="flex items-start justify-between mb-4 gap-4 flex-wrap">
                 <div>
                   <h1 className="text-4xl font-bold text-foreground mb-2">{nurse.name}</h1>
-                  <span className="inline-flex items-center space-x-2 px-4 py-2 bg-primary/10 text-primary rounded-full font-medium">
+                  <span className="inline-flex items-center gap-2 px-4 py-2 bg-primary/10 text-primary rounded-full font-medium">
                     <Award className="w-4 h-4" />
                     <span>{nurse.specialty}</span>
                   </span>
@@ -151,13 +151,13 @@ function NurseProfileView({ id }: { id: string }) {
                 {showBooking && (
                   <button
                     onClick={onBookClick}
-                    className="w-full md:w-auto px-8 py-4 bg-primary text-white rounded-lg hover:bg-primary/90 transition-colors font-medium text-lg"
+                    className="group flex items-center gap-2 bg-primary text-white border-2 border-primary font-bold px-8 py-3 rounded-xl hover:bg-transparent hover:text-primary hover:border-primary hover:-translate-y-0.5 transition-all duration-300 cursor-pointer"
                   >
                     {t("common:actions.bookAppointment")}
                   </button>
                 )}
               </div>
-              <p className="text-lg text-muted-foreground mb-6">{nurse.description}</p>
+              <p className="text-lg text-fg-muted mb-6">{nurse.description}</p>
             </div>
 
             <div className="md:col-span-5 md:row-start-2 md:col-start-1">
@@ -165,14 +165,14 @@ function NurseProfileView({ id }: { id: string }) {
                 <div className="flex items-center gap-3 p-4 bg-muted/50 rounded-lg">
                   <Award className="w-5 h-5 text-primary shrink-0" />
                   <div>
-                    <p className="text-sm text-muted-foreground">{t("profile.fields.experience")}</p>
+                    <p className="text-sm text-fg-muted">{t("profile.fields.experience")}</p>
                     <p className="font-semibold text-foreground">{nurse.experience}</p>
                   </div>
                 </div>
                 <div className="row-span-2 flex items-start gap-3 p-4 bg-muted/50 rounded-lg">
                   <MapPin className="w-5 h-5 text-primary shrink-0" />
                   <div>
-                    <p className="text-sm text-muted-foreground">{t("profile.fields.serviceAreas")}</p>
+                    <p className="text-sm text-fg-muted">{t("profile.fields.serviceAreas")}</p>
                     <ul className="mt-3 space-y-2 text-foreground ps-4">
                       {nurse.serviceAreas.map((area) => (
                         <li key={area} className="list-disc ps-4 text-sm font-semibold marker:text-primary">
@@ -185,21 +185,21 @@ function NurseProfileView({ id }: { id: string }) {
                 <div className="flex items-center gap-3 p-4 bg-muted/50 rounded-lg">
                   <DollarSign className="w-5 h-5 text-primary shrink-0" />
                   <div>
-                    <p className="text-sm text-muted-foreground">{t("profile.fields.homeVisitFee")}</p>
+                    <p className="text-sm text-fg-muted">{t("profile.fields.homeVisitFee")}</p>
                     <p className="font-semibold text-foreground">{nurse.consultationFee} {t("common:currency.egp")}</p>
                   </div>
                 </div>
                 <div className="flex items-center gap-3 p-4 bg-muted/50 rounded-lg">
                   <GraduationCap className="w-5 h-5 text-primary shrink-0" />
                   <div>
-                    <p className="text-sm text-muted-foreground">{t("profile.fields.education")}</p>
+                    <p className="text-sm text-fg-muted">{t("profile.fields.education")}</p>
                     <p className="font-semibold text-foreground">{nurse.education}</p>
                   </div>
                 </div>
                 <div className="flex items-center gap-3 p-4 bg-muted/50 rounded-lg">
                   <Clock className="w-5 h-5 text-primary shrink-0" />
                   <div>
-                    <p className="text-sm text-muted-foreground">{t("profile.fields.availability")}</p>
+                    <p className="text-sm text-fg-muted">{t("profile.fields.availability")}</p>
                     <p className="font-semibold text-foreground">{nurse.availability}</p>
                   </div>
                 </div>
@@ -212,9 +212,9 @@ function NurseProfileView({ id }: { id: string }) {
       <section className="py-12">
         <div className={`${pageContainer} space-y-16`}>
           <div>
-            <div className="text-left mb-8">
+            <div className="text-start mb-8">
               <h2 className={`${sectionHeading} mb-2`}>{t("profile.sections.expertise")}</h2>
-              <p className="text-muted-foreground">
+              <p className="text-fg-muted">
                 {t("profile.sections.expertiseDesc", { name: nurse.name })}
               </p>
             </div>
@@ -240,9 +240,9 @@ function NurseProfileView({ id }: { id: string }) {
           </div>
 
           <div>
-            <div className="text-left mb-8">
+            <div className="text-start mb-8">
               <h2 className={`${sectionHeading} mb-2`}>{t("profile.sections.reviews")}</h2>
-              <p className="text-muted-foreground">
+              <p className="text-fg-muted">
                 {t("profile.sections.reviewsDesc", { name: nurse.name })}
               </p>
             </div>
