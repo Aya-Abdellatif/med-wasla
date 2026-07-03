@@ -3,14 +3,13 @@ import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
 import {
   faCheckCircle,
   faPaperPlane,
-  // faLocationDot,
   faPhone,
   faEnvelope,
 } from "@fortawesome/free-solid-svg-icons";
 import { useTranslation } from "react-i18next";
 import { showSuccess } from "../../../utils/toast";
 
-import { departments, faqs } from "./ContactData";
+import { departmentKeys, faqKeys } from "./ContactData";
 import type { ContactFormData } from "./contactTypes";
 
 const initialFormData: ContactFormData = {
@@ -22,7 +21,7 @@ const initialFormData: ContactFormData = {
 };
 
 export default function ContactPage() {
-  const { t } = useTranslation(["public", "toast"]);
+  const { t } = useTranslation(["public", "toast", "contact"]);
   const [formData, setFormData] = useState<ContactFormData>(initialFormData);
   const [isSubmitted, setIsSubmitted] = useState(false);
   const [expandedFAQ, setExpandedFAQ] = useState<number | null>(null);
@@ -59,12 +58,14 @@ export default function ContactPage() {
             />
           </div>
           <h2 className="text-3xl font-bold text-gray-900 mb-4">
-            Message Sent!
+            {t("contact:success.title")}
           </h2>
           <p className="text-gray-600 mb-6">
-            Thank you for contacting us. We'll get back to you as soon as possible.
+            {t("contact:success.description")}
           </p>
-          <p className="text-sm text-gray-500">Expected response time: 24-48 hours</p>
+          <p className="text-sm text-gray-500">
+            {t("contact:success.responseTime")}
+          </p>
         </div>
       </main>
     );
@@ -75,15 +76,15 @@ export default function ContactPage() {
       {/* Hero Section */}
       <section className="bg-linear-to-br from-[#F6FFFB] via-[#ECFEFF] to-[#F0FDFA] py-14 px-5 text-center relative overflow-hidden">
         <div className="absolute inset-0 opacity-10">
-          <div className="absolute top-10 right-10 w-40 h-40 bg-teal-300 rounded-full blur-3xl" />
-          <div className="absolute bottom-10 left-10 w-40 h-40 bg-cyan-300 rounded-full blur-3xl" />
+          <div className="absolute top-10 right-10 w-40 h-40 bg-teal-300 rounded-full blur-3xl rtl:right-auto rtl:left-10" />
+          <div className="absolute bottom-10 left-10 w-40 h-40 bg-cyan-300 rounded-full blur-3xl rtl:left-auto rtl:right-10" />
         </div>
         <div className="max-w-4xl mx-auto relative z-10">
           <h1 className="mb-6 text-3xl font-bold md:text-4xl">
-            Get in Touch
+            {t("contact:hero.title")}
           </h1>
-          <p className="mx-auto max-w-3xl text-xl  text-[#6B7280]">
-            Have questions or need assistance? Our team is here to help. Reach out and we'll respond within 24-48 hours.
+          <p className="mx-auto max-w-3xl text-xl text-[#6B7280]">
+            {t("contact:hero.subtitle")}
           </p>
         </div>
       </section>
@@ -93,12 +94,12 @@ export default function ContactPage() {
         <div className="max-w-7xl mx-auto grid lg:grid-cols-2 gap-8 items-start bg-linear-to-br from-[#F6FFFB] via-[#ECFEFF] to-[#F0FDFA] p-10 rounded-2xl shadow-lg">
           {/* Form */}
           <div className="lg:col-span-1">
-            <h2 className="text-4xl font-bold mb-8">Send us a Message</h2>
+            <h2 className="text-4xl font-bold mb-8">{t("contact:form.title")}</h2>
 
             <form onSubmit={handleSubmit} className="space-y-6">
               <div>
                 <label className="block text-sm font-semibold mb-3 text-gray-900">
-                  Full Name *
+                  {t("contact:form.fullName")}
                 </label>
                 <input
                   type="text"
@@ -106,7 +107,7 @@ export default function ContactPage() {
                   value={formData.name}
                   onChange={handleChange}
                   required
-                  placeholder="John Doe"
+                  placeholder={t("contact:form.fullNamePlaceholder")}
                   className="w-full bg-white border-2 border-gray-200 rounded-xl px-4 py-3 outline-none focus:border-teal-500 focus:shadow-lg transition placeholder-gray-400"
                 />
               </div>
@@ -114,7 +115,7 @@ export default function ContactPage() {
               <div className="grid md:grid-cols-2 gap-6">
                 <div>
                   <label className="block text-sm font-semibold mb-3 text-gray-900">
-                    Email Address *
+                    {t("contact:form.email")}
                   </label>
                   <input
                     type="email"
@@ -122,21 +123,21 @@ export default function ContactPage() {
                     value={formData.email}
                     onChange={handleChange}
                     required
-                    placeholder="john@example.com"
+                    placeholder={t("contact:form.emailPlaceholder")}
                     className="w-full bg-white border-2 border-gray-200 rounded-xl px-4 py-3 outline-none focus:border-teal-500 focus:shadow-lg transition placeholder-gray-400"
                   />
                 </div>
 
                 <div>
                   <label className="block text-sm font-semibold mb-3 text-gray-900">
-                    Phone Number
+                    {t("contact:form.phone")}
                   </label>
                   <input
                     type="tel"
                     name="phone"
                     value={formData.phone}
                     onChange={handleChange}
-                    placeholder="+1 (234) 567-890"
+                    placeholder={t("contact:form.phonePlaceholder")}
                     className="w-full bg-white border-2 border-gray-200 rounded-xl px-4 py-3 outline-none focus:border-teal-500 focus:shadow-lg transition placeholder-gray-400"
                   />
                 </div>
@@ -144,7 +145,7 @@ export default function ContactPage() {
 
               <div>
                 <label className="block text-sm font-semibold mb-3 text-gray-900">
-                  Subject *
+                  {t("contact:form.subject")}
                 </label>
                 <select
                   name="subject"
@@ -153,10 +154,10 @@ export default function ContactPage() {
                   required
                   className="w-full bg-white border-2 border-gray-200 rounded-xl px-4 py-3 outline-none focus:border-teal-500 focus:shadow-lg transition"
                 >
-                  <option value="">Select a subject</option>
-                  {departments.map((department) => (
-                    <option key={department} value={department}>
-                      {department}
+                  <option value="">{t("contact:form.subjectPlaceholder")}</option>
+                  {departmentKeys.map((key) => (
+                    <option key={key} value={t(`contact:departments.${key}`)}>
+                      {t(`contact:departments.${key}`)}
                     </option>
                   ))}
                 </select>
@@ -164,7 +165,7 @@ export default function ContactPage() {
 
               <div>
                 <label className="block text-sm font-semibold mb-3 text-gray-900">
-                  Message *
+                  {t("contact:form.message")}
                 </label>
                 <textarea
                   name="message"
@@ -172,27 +173,23 @@ export default function ContactPage() {
                   onChange={handleChange}
                   required
                   rows={5}
-                  placeholder="Tell us how we can help..."
+                  placeholder={t("contact:form.messagePlaceholder")}
                   className="w-full bg-white border-2 border-gray-200 rounded-xl px-4 py-3 outline-none focus:border-teal-500 focus:shadow-lg transition resize-none placeholder-gray-400"
                 />
               </div>
 
               <button
                 type="submit"
-                className="group flex items-center w-full gap-2 bg-primary text-white border-2 border-primary font-bold text-base px-4 py-2  rounded-xl cursor-pointer transition-all duration-300 ease-in-out hover:border-primary hover:-translate-y-0.5 hover:bg-transparent hover:text-primary hover:shadow-md whitespace-nowrap"
+                className="group flex items-center w-full gap-2 bg-primary text-white border-2 border-primary font-bold text-base px-4 py-2 rounded-xl cursor-pointer transition-all duration-300 ease-in-out hover:border-primary hover:-translate-y-0.5 hover:bg-transparent hover:text-primary hover:shadow-md whitespace-nowrap"
               >
                 <FontAwesomeIcon icon={faPaperPlane} />
-                <span>Send Message</span>
+                <span>{t("contact:form.submit")}</span>
               </button>
             </form>
           </div>
 
-          {/* Right Column - 3 cards stacked */}
+          {/* Right Column - 2 cards stacked */}
           <div className="flex flex-col gap-6 mt-24">
-
-  
-            
-
             {/* Email */}
             <div className="bg-white rounded-2xl p-8 shadow-lg hover:shadow-xl transition">
               <div className="flex items-start gap-4">
@@ -200,43 +197,50 @@ export default function ContactPage() {
                   <FontAwesomeIcon icon={faEnvelope} className="text-primary text-xl" />
                 </div>
                 <div>
-                  <h3 className="font-bold text-gray-900 mb-2 text-lg">Email</h3>
+                  <h3 className="font-bold text-gray-900 mb-2 text-lg">
+                    {t("contact:info.email.title")}
+                  </h3>
                   <div className="space-y-1">
-                    <p className="text-sm text-gray-600">medwasla@healthcareplus.com</p>
-                    <p className="text-sm text-gray-600">medwaslasupport@healthcareplus.com</p>
+                    <p className="text-sm text-gray-600">
+                      {t("contact:info.email.primary")}
+                    </p>
+                    <p className="text-sm text-gray-600">
+                      {t("contact:info.email.secondary")}
+                    </p>
                   </div>
                 </div>
               </div>
             </div>
 
             {/* Emergency */}
-            <div className="group whitespace-nowrap rounded-2xl border border-transparent bg-primary p-8 text-white shadow-lg transition-all duration-300 ease-in-out  ">
+            <div className="group whitespace-nowrap rounded-2xl border border-transparent bg-primary p-8 text-white shadow-lg transition-all duration-300 ease-in-out">
               <div className="flex items-start gap-4">
                 <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-xl bg-white/20 transition-colors duration-300">
                   <FontAwesomeIcon
                     icon={faPhone}
-                    className="text-xl text-white transition-colors duration-300 "
+                    className="text-xl text-white transition-colors duration-300"
                   />
                 </div>
 
                 <div>
-                  <h3 className="mb-2 text-lg font-bold">Support Number</h3>
+                  <h3 className="mb-2 text-lg font-bold">
+                    {t("contact:info.support.title")}
+                  </h3>
 
                   <a
                     href="tel:+12345678891"
                     className="flex items-center gap-2 text-lg font-bold hover:underline"
                   >
-                    +1 (234) 567-891
+                    {t("contact:info.support.number")}
                   </a>
 
-                  <p className="mt-2 text-xs text-white/80 transition-colors duration-300 ">
-                    Available 24/7
+                  <p className="mt-2 text-xs text-white/80 transition-colors duration-300">
+                    {t("contact:info.support.availability")}
                   </p>
                 </div>
               </div>
             </div>
           </div>
-
         </div>
       </section>
 
@@ -244,21 +248,23 @@ export default function ContactPage() {
       <section className="py-20 px-4 bg-linear-to-br from-[#F6FFFB] via-[#ECFEFF] to-[#F0FDFA]">
         <div className="max-w-4xl mx-auto">
           <div className="text-center mb-12">
-            <h2 className="text-4xl font-bold mb-4">Frequently Asked Questions</h2>
-            <p className="text-lg text-gray-600">Quick answers to common questions</p>
+            <h2 className="text-4xl font-bold mb-4">{t("contact:faqSection.title")}</h2>
+            <p className="text-lg text-gray-600">{t("contact:faqSection.subtitle")}</p>
           </div>
 
           <div className="space-y-4">
-            {faqs.map((faq, index) => (
+            {faqKeys.map((key, index) => (
               <div
-                key={index}
+                key={key}
                 className="bg-white rounded-xl overflow-hidden hover:shadow-md transition"
               >
                 <button
                   onClick={() => setExpandedFAQ(expandedFAQ === index ? null : index)}
-                  className="w-full p-6 text-left flex items-center justify-between font-semibold hover:bg-gray-100 transition"
+                  className="w-full p-6 text-left rtl:text-right flex items-center justify-between font-semibold hover:bg-gray-100 transition"
                 >
-                  <span className="text-lg text-gray-900">{faq.question}</span>
+                  <span className="text-lg text-gray-900">
+                    {t(`contact:faqs.${key}.question`)}
+                  </span>
                   <span
                     className={`text-teal-500 transition-transform ${expandedFAQ === index ? "rotate-180" : ""
                       }`}
@@ -268,7 +274,9 @@ export default function ContactPage() {
                 </button>
                 {expandedFAQ === index && (
                   <div className="px-6 pt-6 pb-6 border-t border-gray-200">
-                    <p className="text-gray-600 leading-relaxed">{faq.answer}</p>
+                    <p className="text-gray-600 leading-relaxed">
+                      {t(`contact:faqs.${key}.answer`)}
+                    </p>
                   </div>
                 )}
               </div>

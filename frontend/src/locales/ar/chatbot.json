@@ -1,26 +1,26 @@
 {
-  "welcome": "Hi! I am WaslaBot. How can I help you today?",
-  "thinking": "Thinking...",
-  "error": "Something went wrong. Please try again.",
-  "noResponse": "No response received",
-  "noText": "No text returned from server",
+  "welcome": "مرحبًا! أنا وصلة بوت. كيف يمكنني مساعدتك اليوم؟",
+  "thinking": "جارٍ التفكير...",
+  "error": "حدث خطأ ما. يُرجى المحاولة مرة أخرى.",
+  "noResponse": "لم يتم استلام أي استجابة",
+  "noText": "لم يتم إرجاع أي نص من الخادم",
   "header": {
-    "title": "WaslaBot",
-    "subtitle": "Always here to help"
+    "title": "وصلة بوت",
+    "subtitle": "دائمًا هنا لمساعدتك"
   },
-  "chatTitle": "Chat {{number}}",
+  "chatTitle": "المحادثة {{number}}",
   "input": {
-    "placeholder": "Type a message...",
-    "voiceUnsupported": "Voice input is not supported in your browser.",
-    "fileComingSoon": "File upload coming soon!"
+    "placeholder": "اكتب رسالة...",
+    "voiceUnsupported": "إدخال الصوت غير مدعوم في متصفحك.",
+    "fileComingSoon": "رفع الملفات سيتوفر قريبًا!"
   },
   "history": {
-    "title": "Chats",
-    "newChat": "+ New Chat"
+    "title": "المحادثات",
+    "newChat": "+ محادثة جديدة"
   },
   "sources": {
-    "title": "Sources",
-    "confidence": "Confidence: {{percent}}%",
-    "linkTitle": "Read verified NHS medical content for: {{label}}"
+    "title": "المصادر",
+    "confidence": "مستوى الثقة: {{percent}}%",
+    "linkTitle": "اقرأ المحتوى الطبي الموثق من NHS حول: {{label}}"
   }
 }

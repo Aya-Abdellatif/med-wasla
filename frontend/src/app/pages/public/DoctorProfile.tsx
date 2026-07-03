@@ -132,7 +132,7 @@ function DoctorProfileView({ id }: { id: string }) {
             <div className="md:col-span-1">
               <div className="relative rounded-2xl overflow-hidden shadow-xl">
                 <img src={doctor.image} alt={doctor.name} className="w-full aspect-square object-cover" />
-                <div className="absolute top-4 right-4 bg-white px-3 py-1.5 rounded-full shadow-lg flex items-center space-x-1">
+                <div className="absolute top-4 end-4 bg-white px-3 py-1.5 rounded-full shadow-lg flex items-center gap-1">
                   <Star className="w-4 h-4 text-yellow-400 fill-current" />
                   <span className="font-semibold text-foreground">{reviewStats.averageRating || doctor.rating}</span>
                   <span className="text-sm text-muted-foreground">({reviewStats.totalReviews || doctor.reviews})</span>
@@ -144,7 +144,7 @@ function DoctorProfileView({ id }: { id: string }) {
               <div className="flex items-start justify-between mb-4 gap-4 flex-wrap">
                 <div>
                   <h1 className="text-4xl font-bold text-foreground mb-2">{doctor.name}</h1>
-                  <span className="inline-flex items-center space-x-2 px-4 py-2 bg-primary/10 text-primary rounded-full font-medium">
+                  <span className="inline-flex items-center gap-2 px-4 py-2 bg-primary/10 text-primary rounded-full font-medium">
                     <Award className="w-4 h-4" />
                     <span>{doctor.specialty}</span>
                   </span>
@@ -152,8 +152,8 @@ function DoctorProfileView({ id }: { id: string }) {
                 {showBooking && (
                   <button
                     onClick={onBookClick}
-                    className="w-full md:w-auto px-8 py-4 bg-primary text-white rounded-lg hover:bg-primary/90 transition-colors font-medium text-lg"
-                  >
+                    className="group flex items-center gap-2 bg-primary text-white border-2 border-primary font-bold px-8 py-3 rounded-xl hover:bg-transparent hover:text-primary hover:border-primary hover:-translate-y-0.5 transition-all duration-300 cursor-pointer"
+                    >
                     {t("common:actions.bookAppointment")}
                   </button>
                 )}
@@ -223,8 +223,8 @@ function DoctorProfileView({ id }: { id: string }) {
       <section className="py-12">
         <div className={`${pageContainer} space-y-16`}>
           <div>
-            <div className="text-left mb-8">
-              <h2 className={`${sectionHeading} mb-2`}>{t("profile.sections.certifications")}</h2>
+          <div className="text-start mb-8">
+          <h2 className={`${sectionHeading} mb-2`}>{t("profile.sections.certifications")}</h2>
               <p className="text-muted-foreground">
                 {t("profile.sections.certificationsDesc", { name: doctor.name })}
               </p>
@@ -251,8 +251,8 @@ function DoctorProfileView({ id }: { id: string }) {
           </div>
 
           <div>
-            <div className="text-left mb-8">
-              <h2 className={`${sectionHeading} mb-2`}>{t("profile.sections.reviews")}</h2>
+          <div className="text-start mb-8">
+          <h2 className={`${sectionHeading} mb-2`}>{t("profile.sections.reviews")}</h2>
               <p className="text-muted-foreground">
                 {t("profile.sections.reviewsDesc", { name: doctor.name })}
               </p>

@@ -1,0 +1,66 @@
+{
+    "status": {
+      "upcoming": "Upcoming",
+      "pending": "Pending",
+      "completed": "Completed",
+      "cancelled": "Cancelled",
+      "overdue": "Overdue",
+      "no_show": "No Show"
+    },
+    "visitType": {
+      "clinic": "Clinic Visit",
+      "home": "Home Visit",
+      "all": "All Types"
+    },
+    "card": {
+      "bookAgain": "Book Again",
+      "viewDetails": "View Details",
+      "viewProfile": "View Profile",
+      "reschedule": "Reschedule",
+      "cancel": "Cancel",
+      "addReview": "Add Review",
+      "viewReview": "View Review"
+    },
+    "empty": {
+      "titleAll": "No appointments",
+      "titleFiltered": "No {{status}} appointments",
+      "descriptionAll": "You don't have any appointments yet. Book one with our specialists today.",
+      "descriptionFiltered": "You have no {{status}} appointments matching your filters.",
+      "bookButton": "Book Appointment"
+    },
+    "summary": {
+      "upcoming": "Upcoming",
+      "pending": "Pending",
+      "noShow": "No Show",
+      "overdue": "Overdue",
+      "completed": "Completed",
+      "cancelled": "Cancelled"
+    },
+    "search": {
+      "placeholder": "Search by doctor, specialty, or reason...",
+      "filtersButton": "Filters",
+      "statusLabel": "Status:",
+      "typeLabel": "Type:",
+      "allStatus": "All Status",
+      "clear": "Clear"
+    },
+    "results": {
+      "showing": "Showing <bold>{{filtered}}</bold> of {{total}} appointments",
+      "clearAllFilters": "Clear all filters"
+    },
+    "loading": "Loading appointments...",
+    "cta": {
+      "title": "Need another appointment?",
+      "description": "Browse our specialists and book a new appointment in minutes.",
+      "bookNow": "Book Now"
+    },
+    "toast": {
+      "loadError": "Failed to load appointments",
+      "reviewSuccess": "Review submitted successfully",
+      "reviewError": "Failed to submit review",
+      "cancelSuccess": "Appointment cancelled",
+      "cancelError": "Failed to cancel appointment",
+      "rescheduleSuccess": "Appointment rescheduled",
+      "rescheduleError": "Failed to reschedule appointment"
+    }
+  }

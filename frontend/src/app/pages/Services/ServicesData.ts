@@ -13,40 +13,20 @@ import homeImage from "../../../assets/home.jpeg";
 import type { ServiceFeature, ServiceItem } from "./serviceTypes";
 
 export const topFeatures: ServiceFeature[] = [
-  {
-    icon: faClock,
-    title: "24/7 Access",
-    description: "Access healthcare services anytime from anywhere.",
-  },
-  {
-    icon: faUserDoctor,
-    title: "Qualified Doctors",
-    description: "Book with experienced doctors across multiple specialties.",
-  },
-  {
-    icon: faRobot,
-    title: "AI Assistance",
-    description:
-      "Smart guidance for patients and healthcare providers, anytime.",
-  },
-  {
-    icon: faShieldHeart,
-    title: "Trusted Care",
-    description:
-      "Every healthcare professional here is verified to ensure safe, reliable, and quality care.",
-  },
+  { icon: faClock, key: "access247" },
+  { icon: faUserDoctor, key: "qualifiedDoctors" },
+  { icon: faRobot, key: "aiAssistance" },
+  { icon: faShieldHeart, key: "trustedCare" },
 ];
 
 export const aiMedicalAssistantService: ServiceItem = {
   icon: faBrain,
-  title: "AI Medical Assistant",
-  description:
-    "Describe your symptoms and let our chatbot guide you to the most suitable medical specialty.",
-  features: [
-    "Symptom Analysis",
-    "Specialty Recommendation",
-    "24/7 Assistance",
-    "Smart Healthcare Guidance",
+  key: "aiMedicalAssistant",
+  featureKeys: [
+    "symptomAnalysis",
+    "specialtyRecommendation",
+    "assistance247",
+    "smartHealthcareGuidance",
   ],
   color: "bg-purple-50 text-purple-500",
   image:
@@ -56,14 +36,12 @@ export const aiMedicalAssistantService: ServiceItem = {
 export const services: ServiceItem[] = [
   {
     icon: faCalendarCheck,
-    title: "Doctor Reservation",
-    description:
-      "Book appointments with qualified healthcare professionals based on specialty, availability, and patient needs.",
-    features: [
-      "Specialist Search",
-      "Online Booking",
-      "Appointment Reminders",
-      "Home Visit Scheduling",
+    key: "doctorReservation",
+    featureKeys: [
+      "specialistSearch",
+      "onlineBooking",
+      "appointmentReminders",
+      "homeVisitScheduling",
     ],
     color: "bg-teal-50 text-[#14B8A6]",
     image:
@@ -71,14 +49,12 @@ export const services: ServiceItem[] = [
   },
   {
     icon: faUserNurse,
-    title: "Nursing Care",
-    description:
-      "Schedule professional nursing services at home for follow-up care, monitoring, injections, and medical support.",
-    features: [
-      "Home Nursing Services",
-      "Medication & Injection Support",
-      "Patient Monitoring",
-      "Flexible Nurse Scheduling",
+    key: "nursingCare",
+    featureKeys: [
+      "homeNursingServices",
+      "medicationInjectionSupport",
+      "patientMonitoring",
+      "flexibleNurseScheduling",
     ],
     color: "bg-blue-50 text-blue-500",
     image: nurseImage,
@@ -88,41 +64,35 @@ export const services: ServiceItem[] = [
 
 export const providerAiMedicalAssistantService: ServiceItem = {
   ...aiMedicalAssistantService,
-  description:
-    "Use AI support for quick clinical reference, patient intake questions, and specialty guidance while you manage your practice.",
-  features: [
-    "Clinical Reference Support",
-    "Patient Intake Guidance",
-    "24/7 Assistance",
-    "Smart Practice Support",
+  featureKeys: [
+    "clinicalReferenceSupport",
+    "patientIntakeGuidance",
+    "assistance247",
+    "smartPracticeSupport",
   ],
 };
 
 export const providerServices: ServiceItem[] = [
   {
     icon: faCalendarCheck,
-    title: "Clinic & Schedule Management",
-    description:
-      "Manage your weekly schedule, define your working hours, and let patients book appointments directly with automated slot coordination.",
-    features: [
-      "Custom Working Hours",
-      "Automated Booking Management",
-      "Real-time Appointment Reminders",
-      "Patient Medical History Access",
+    key: "clinicSchedule",
+    featureKeys: [
+      "customWorkingHours",
+      "automatedBookingManagement",
+      "realTimeAppointmentReminders",
+      "patientMedicalHistoryAccess",
     ],
     color: "bg-teal-50 text-[#14B8A6]",
     image: clinicImage,
   },
   {
     icon: faUserNurse,
-    title: "Home Visit & Nursing Requests",
-    description:
-      "Receive and manage home visit and care requests from patients in your area, and coordinate with nursing staff easily.",
-    features: [
-      "Home Visit Request Management",
-      "Geographic Service Area Setup",
-      "Direct Patient Communication",
-      "Digital Prescription Issuance",
+    key: "homeVisitRequests",
+    featureKeys: [
+      "homeVisitRequestManagement",
+      "geographicServiceAreaSetup",
+      "directPatientCommunication",
+      "digitalPrescriptionIssuance",
     ],
     color: "bg-blue-50 text-blue-500",
     image: homeImage,

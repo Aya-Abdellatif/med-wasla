@@ -1,0 +1,153 @@
+{
+    "header": {
+      "roleLabel": "Patient · MedWasla",
+      "defaultName": "Patient"
+    },
+    "tabs": {
+      "personal": "Personal Information",
+      "security": "Account & Security"
+    },
+    "personal": {
+      "loading": "Loading profile...",
+      "notSet": "Not set",
+      "view": {
+        "description": "Your personal details as registered on MedWasla.",
+        "editButton": "Edit Profile"
+      },
+      "edit": {
+        "description": "Update your personal details below.",
+        "editingBadge": "Editing"
+      },
+      "fields": {
+        "fullName": "Full Name",
+        "fullNamePlaceholder": "e.g. Ahmed Mohamed",
+        "phone": "Phone Number",
+        "phonePlaceholder": "1123456789",
+        "dob": "Date of Birth",
+        "governorate": "Governorate",
+        "governoratePlaceholder": "Select governorate",
+        "governorateSearchPlaceholder": "Search governorate...",
+        "governorateNoResults": "No results",
+        "address": "Address Details",
+        "addressOptional": "(Optional)",
+        "addressPlaceholder": "Street, building, apartment..."
+      },
+      "errors": {
+        "nameRequired": "Full name is required.",
+        "nameTooShort": "Name must be at least 3 characters.",
+        "phoneRequired": "Phone number is required.",
+        "phoneInvalid": "Enter a valid phone number.",
+        "dobRequired": "Date of birth is required.",
+        "governorateRequired": "Governorate is required."
+      },
+      "photo": {
+        "editButton": "Edit",
+        "uploadOption": "Upload Photo",
+        "removeOption": "Remove Photo",
+        "showOption": "Show Photo",
+        "previewAlt": "Profile photo preview",
+        "previewClose": "Close photo preview",
+        "invalidType": "Please select an image file (JPEG, PNG, or WebP).",
+        "tooLarge": "Image must be smaller than 5MB."
+      },
+      "actions": {
+        "save": "Save Changes",
+        "saving": "Saving...",
+        "cancel": "Cancel"
+      },
+      "toast": {
+        "saveSuccess": "Personal information saved successfully.",
+        "saveError": "Unable to save profile.",
+        "loadError": "Unable to load patient profile."
+      }
+    },
+    "security": {
+      "view": {
+        "description": "View your email and change your password.",
+        "editButton": "Edit Security",
+        "emailLabel": "Email Address",
+        "passwordLabel": "Password"
+      },
+      "edit": {
+        "description": "Change your password below.",
+        "editingBadge": "Editing",
+        "emailLabel": "Email Address",
+        "emailHint": "Your email address cannot be changed.",
+        "divider": "Change Password",
+        "currentPassword": "Current Password",
+        "currentPasswordPlaceholder": "Enter current password",
+        "newPassword": "New Password",
+        "newPasswordPlaceholder": "Enter new password",
+        "confirmPassword": "Confirm New Password",
+        "confirmPasswordPlaceholder": "Repeat new password",
+        "passwordsMatch": "Passwords match"
+      },
+      "strength": {
+        "empty": "Password must be at least 8 characters",
+        "weak": "Weak password",
+        "fair": "Fair password",
+        "good": "Good password",
+        "strong": "Strong password"
+      },
+      "errors": {
+        "newPasswordRequiredToSave": "Enter a new password to save changes.",
+        "currentPasswordRequired": "Current password is required to change your password.",
+        "newPasswordRequired": "New password is required.",
+        "newPasswordTooShort": "Password must be at least 8 characters.",
+        "passwordsMismatch": "Passwords do not match."
+      },
+      "actions": {
+        "save": "Save Changes",
+        "cancel": "Cancel"
+      },
+      "toast": {
+        "saveSuccess": "Password updated successfully.",
+        "saveError": "Unable to save security settings."
+      }
+    },
+    "medicalHistory": {
+      "title": "Medical History",
+      "readOnlyBadge": "Read-only for patients",
+      "notice": "Your medical history can only be updated by your doctor or administrator for accuracy and security.",
+      "diagnosed": "Diagnosed",
+      "treatedBy": "Treated by",
+      "empty": {
+        "title": "No medical history recorded yet.",
+        "subtitle": "Your doctor will add records during consultations."
+      },
+      "status": {
+        "active": "Active",
+        "under_treatment": "Under Treatment",
+        "resolved": "Resolved"
+      }
+    },
+    "governorates": {
+      "Cairo": "Cairo",
+      "Giza": "Giza",
+      "Alexandria": "Alexandria",
+      "Dakahlia": "Dakahlia",
+      "Red Sea": "Red Sea",
+      "Beheira": "Beheira",
+      "Fayoum": "Fayoum",
+      "Gharbia": "Gharbia",
+      "Ismailia": "Ismailia",
+      "Menofia": "Menofia",
+      "Minya": "Minya",
+      "Qaliubiya": "Qaliubiya",
+      "New Valley": "New Valley",
+      "Suez": "Suez",
+      "Aswan": "Aswan",
+      "Assiut": "Assiut",
+      "Beni Suef": "Beni Suef",
+      "Port Said": "Port Said",
+      "Damietta": "Damietta",
+      "Sharqia": "Sharqia",
+      "South Sinai": "South Sinai",
+      "Kafr El Sheikh": "Kafr El Sheikh",
+      "Matruh": "Matruh",
+      "Luxor": "Luxor",
+      "Qena": "Qena",
+      "North Sinai": "North Sinai",
+      "Sohag": "Sohag"
+    }
+  }

@@ -1,0 +1,29 @@
+{
+    "hero": {
+      "title": "Meet Our Expert Doctors",
+      "subtitle": "Our team of board-certified physicians brings years of experience and dedication to providing exceptional healthcare."
+    },
+    "search": {
+      "placeholder": "Search by name, bio, or specialization..."
+    },
+    "sort": {
+      "highestRated": "Highest Rated",
+      "newest": "Newest",
+      "mostReviewed": "Most Reviewed",
+      "shortestWait": "Shortest Wait",
+      "feeLowToHigh": "Fee: Low to High",
+      "feeHighToLow": "Fee: High to Low"
+    },
+    "specialties": {
+      "all": "All"
+    },
+    "state": {
+      "loading": "Loading approved doctors...",
+      "empty": "No approved doctors found matching your filters."
+    },
+    "card": {
+      "available": "Available",
+      "viewDetails": "View Details",
+      "bookNow": "Book Now"
+    }
+  }

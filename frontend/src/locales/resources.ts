@@ -27,6 +27,21 @@ import arChatbot from "./ar/chatbot.json";
 import arConstants from "./ar/constants.json";
 import enHome from "./en/home.json";
 import arHome from "./ar/home.json";
+import enServices from "./en/services.json";
+import arServices from "./ar/services.json";
+import enDoctors from "./en/doctors.json";
+import arDoctors from "./ar/doctors.json";
+import enNurses from "./en/nurses.json";
+import arNurses from "./ar/nurses.json";
+import enAbout from "./en/about.json";
+import arAbout from "./ar/about.json";
+import enContact from "./en/contact.json";
+import arContact from "./ar/contact.json";
+import enPatientProfile from "./en/patientProfile.json";
+import arPatientProfile from "./ar/patientProfile.json";
+import enPatientAppointments from "./en/patientAppointments.json";
+import arPatientAppointments from "./ar/patientAppointments.json";
+
 
 export const namespaces = [
   "common",
@@ -43,6 +58,13 @@ export const namespaces = [
   "chatbot",
   "constants",
   "home",
+  "services",
+  "doctors",
+  "nurses",
+  "about",
+  "contact",
+  "patientProfile",
+  "patientAppointments",
 ] as const;
 
 export type AppNamespace = (typeof namespaces)[number];
@@ -63,6 +85,13 @@ export const resources = {
     chatbot,
     constants,
     home: enHome,
+    services: enServices,
+    doctors: enDoctors,
+    nurses: enNurses,
+    about: enAbout,
+    contact: enContact,
+    patientProfile: enPatientProfile,
+    patientAppointments: enPatientAppointments,
   },
   ar: {
     common: arCommon,
@@ -79,5 +108,12 @@ export const resources = {
     chatbot: arChatbot,
     constants: arConstants,
     home: arHome,
+    services: arServices,
+    doctors: arDoctors,
+    nurses: arNurses,
+    about: arAbout,
+    contact: arContact,
+    patientProfile: arPatientProfile,
+    patientAppointments: arPatientAppointments,
   },
 } as const;

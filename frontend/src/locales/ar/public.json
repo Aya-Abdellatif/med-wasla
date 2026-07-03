@@ -1,227 +1,259 @@
 {
   "notFound": {
-    "message": "Oops! This page doesn't exist."
+    "message": "عذرًا! هذه الصفحة غير موجودة."
   },
   "home": {
-    "badge": "Trusted Healthcare Platform",
-    "heroTitle": "Your Health,",
-    "heroTitleHighlight": "Our Priority",
-    "heroDescription": "Experience world-class healthcare by connecting with expert doctors and nurses. We're committed to your well-being every step of the way.",
-    "ourServices": "Our Services",
-    "supportTitle": "24/7 Support",
-    "supportSubtitle": "Always Available",
-    "doctorAlt": "Doctor",
-    "whyAlt": "Why MedWasla",
+    "badge": "منصة رعاية صحية موثوقة",
+    "heroTitle": "صحتك،",
+    "heroTitleHighlight": "أولويتنا",
+    "heroDescription": "استمتع برعاية صحية عالمية المستوى من خلال التواصل مع نخبة من الأطباء والممرضين. نحن ملتزمون بصحتك وراحتك في كل خطوة.",
+    "ourServices": "خدماتنا",
+    "supportTitle": "دعم على مدار الساعة",
+    "supportSubtitle": "متوفر دائمًا",
+    "doctorAlt": "طبيب",
+    "whyAlt": "لماذا ميدواصلة",
     "stats": {
-      "patients": "Patients Served",
-      "doctors": "Expert Doctors",
-      "experience": "Years Experience",
-      "success": "Success Rate"
+      "patients": "المرضى الذين تمت خدمتهم",
+      "doctors": "أطباء متخصصون",
+      "experience": "سنوات من الخبرة",
+      "success": "معدل النجاح"
     },
     "services": {
-      "title": "Our Medical Services",
-      "subtitle": "Comprehensive healthcare solutions tailored to meet your needs with excellence and compassion.",
-      "viewAll": "View All Services",
-      "cardiology": { "title": "Cardiology", "desc": "Connect with top cardiologists for comprehensive heart care using state-of-the-art technology." },
-      "emergency": { "title": "Emergency Care", "desc": "24/7 access to emergency medical professionals with rapid response and advanced support." },
-      "primary": { "title": "Primary Care", "desc": "Book trusted general practitioners for health checkups and preventive care for all ages." },
-      "pediatrics": { "title": "Pediatrics", "desc": "Find specialized pediatric doctors in a child-friendly, caring environment." }
+      "title": "خدماتنا الطبية",
+      "subtitle": "حلول رعاية صحية متكاملة مصممة لتلبية احتياجاتك بأعلى مستويات الجودة والاهتمام.",
+      "viewAll": "عرض جميع الخدمات",
+      "cardiology": {
+        "title": "أمراض القلب",
+        "desc": "تواصل مع أفضل أطباء القلب للحصول على رعاية شاملة باستخدام أحدث التقنيات."
+      },
+      "emergency": {
+        "title": "رعاية الطوارئ",
+        "desc": "وصول إلى متخصصي الطوارئ الطبية على مدار الساعة مع استجابة سريعة ودعم متقدم."
+      },
+      "primary": {
+        "title": "الرعاية الأولية",
+        "desc": "احجز موعدًا مع أطباء عامين موثوقين للفحوصات الدورية والرعاية الوقائية لجميع الأعمار."
+      },
+      "pediatrics": {
+        "title": "طب الأطفال",
+        "desc": "اعثر على أطباء أطفال متخصصين في بيئة ودية وآمنة للأطفال."
+      }
     },
     "whyChoose": {
-      "title": "Why Choose",
-      "brand": "MedWasla?",
-      "subtitle": "We bridge the gap between patients and healthcare professionals — making quality medical care accessible, fast, and personal.",
-      "learnMore": "Learn More About Us",
-      "network": { "title": "Expert Medical Network", "desc": "Access to board-certified doctors and nurses with years of specialized experience." },
-      "matching": { "title": "Instant Matching", "desc": "Our platform connects you to the right medical professional within minutes." },
-      "patientCentered": { "title": "Patient-Centered", "desc": "Personalized care tailored to your needs, all managed through one easy platform." },
-      "availability": { "title": "24/7 Availability", "desc": "Round-the-clock access to healthcare professionals whenever you need them most." }
+      "title": "لماذا تختار",
+      "brand": "ميدواصلة؟",
+      "subtitle": "نربط بين المرضى ومقدمي الرعاية الصحية، مما يجعل الرعاية الطبية عالية الجودة أكثر سهولة وسرعة وخصوصية.",
+      "learnMore": "اعرف المزيد عنا",
+      "network": {
+        "title": "شبكة طبية متخصصة",
+        "desc": "الوصول إلى أطباء وممرضين معتمدين يتمتعون بسنوات من الخبرة المتخصصة."
+      },
+      "matching": {
+        "title": "مطابقة فورية",
+        "desc": "توصلك منصتنا بمقدم الرعاية الصحية المناسب خلال دقائق."
+      },
+      "patientCentered": {
+        "title": "رعاية تتمحور حول المريض",
+        "desc": "رعاية مخصصة تناسب احتياجاتك، تُدار جميعها من خلال منصة سهلة الاستخدام."
+      },
+      "availability": {
+        "title": "متاح 24/7",
+        "desc": "وصول إلى مقدمي الرعاية الصحية في أي وقت تحتاج إليهم."
+      }
     },
     "reviews": {
-      "title": "What Our Patients Say",
-      "subtitle": "Don't just take our word for it — hear from some of our satisfied patients.",
-      "review1": "MedWasla connected me with an amazing cardiologist within hours. The process was seamless and the doctor was exceptional.",
-      "review2": "Finding a specialist used to take weeks. Through MedWasla I had an appointment the same day. Truly outstanding service.",
-      "review3": "I've used MedWasla for my whole family. The nurses they connected us with were professional, caring, and highly skilled.",
-      "role": "Patient"
+      "title": "ماذا يقول مرضانا",
+      "subtitle": "لا تعتمد على كلامنا فقط، بل استمع إلى تجارب بعض مرضانا.",
+      "review1": "ساعدتني ميدواصلة في التواصل مع طبيب قلب متميز خلال ساعات. كانت العملية سهلة والطبيب رائعًا.",
+      "review2": "كان العثور على طبيب متخصص يستغرق أسابيع، لكن عبر ميدواصلة حصلت على موعد في اليوم نفسه. خدمة استثنائية.",
+      "review3": "استخدمت ميدواصلة لجميع أفراد عائلتي، وكان الممرضون محترفين، متعاونين، وذوي كفاءة عالية.",
+      "role": "مريض"
     },
     "cta": {
-      "title": "Ready to Take Control of Your Health?",
-      "patientSubtitle": "Book an appointment with our expert doctors today and experience healthcare excellence.",
-      "specialistSubtitle": "Manage your schedule, appointments, and profile from your professional dashboard."
+      "title": "هل أنت مستعد للاهتمام بصحتك؟",
+      "patientSubtitle": "احجز موعدًا مع أحد أطبائنا المتخصصين اليوم واستمتع برعاية صحية متميزة.",
+      "specialistSubtitle": "قم بإدارة جدولك ومواعيدك وملفك الشخصي من خلال لوحة التحكم الخاصة بك."
     }
   },
   "doctors": {
-    "heroTitle": "Meet Our Expert Doctors",
-    "heroSubtitle": "Browse verified doctors, compare specialties, and book appointments that fit your schedule.",
-    "searchPlaceholder": "Search by name or specialty...",
-    "loading": "Loading doctors...",
-    "empty": "No doctors found matching your criteria.",
-    "loadFailed": "Unable to load doctors. Please try again later.",
-    "available": "Available: {{time}}",
-    "card": { "viewDetails": "View Details", "bookNow": "Book Now" }
-  },
-  "nurses": {
-    "heroTitle": "Meet Our Expert Nurses",
-    "heroSubtitle": "Find licensed nurses for home care and specialized nursing services.",
-    "searchPlaceholder": "Search by name or expertise...",
-    "loading": "Loading nurses...",
-    "empty": "No nurses found matching your criteria.",
-    "loadFailed": "Unable to load nurses. Please try again later.",
-    "serviceAreasNotListed": "Service areas not listed",
-    "card": { "viewDetails": "View Details", "bookNow": "Book Now" }
-  },
-  "profile": {
-    "invalidDoctor": "Invalid doctor profile.",
-    "invalidNurse": "Invalid nurse profile.",
-    "loadingDoctor": "Loading doctor profile...",
-    "loadingNurse": "Loading nurse profile...",
-    "doctorNotFound": "Doctor Not Found",
-    "nurseNotFound": "Nurse Not Found",
-    "backToDoctors": "Back to Doctors",
-    "backToNurses": "Back to Nurses",
-    "doctorNotFoundDesc": "Please return to the doctors page and choose another profile.",
-    "nurseNotFoundDesc": "Please return to the nurses page and choose another profile.",
-    "loadDoctorFailed": "Failed to load doctor profile",
-    "loadNurseFailed": "Failed to load nurse profile",
-    "fields": {
-      "experience": "Experience",
-      "location": "Location",
-      "consultationFee": "Consultation Fee",
-      "homeVisitFee": "Home Visit Fee",
-      "education": "Education",
-      "availability": "Availability",
-      "avgWaitTime": "Average Wait Time",
-      "serviceAreas": "Service Areas",
-      "serviceAreasIn": "in {{location}}:"
-    },
-    "homeVisitAvailable": "Available on request",
-    "sections": {
-      "certifications": "Certifications",
-      "certificationsDesc": "Professional credentials and qualifications earned by {{name}}.",
-      "noCertifications": "No certifications listed yet.",
-      "expertise": "Expertise",
-      "expertiseDesc": "Areas of expertise and specialized care provided by {{name}}.",
-      "noExpertise": "No expertise listed yet.",
-      "reviews": "Patient Reviews",
-      "reviewsDesc": "Hear what our patients have to say about their experiences with {{name}}.",
-      "noReviews": "No reviews available at the moment."
+    "heroTitle": "تعرف على أطبائنا المتخصصين",
+    "heroSubtitle": "تصفح الأطباء المعتمدين، وقارن بين التخصصات، واحجز الموعد الذي يناسبك.",
+    "searchPlaceholder": "ابحث بالاسم أو التخصص...",
+    "loading": "جارٍ تحميل الأطباء...",
+    "empty": "لم يتم العثور على أطباء يطابقون معايير البحث.",
+    "loadFailed": "تعذر تحميل قائمة الأطباء. يرجى المحاولة لاحقًا.",
+    "available": "متاح: {{time}}",
+    "card": {
+      "viewDetails": "عرض التفاصيل",
+      "bookNow": "احجز الآن"
     }
   },
-  "about": {
-    "title": "About MedWasla",
-    "subtitle": "Your trusted healthcare platform for booking appointments, managing care, and connecting with medical professionals effortlessly.",
-    "coreValues": "Our Core Values",
-    "whyChoose": "Why Choose Med-Wasla?",
-    "team": "Meet Our Team",
-    "linkedin": "LinkedIn",
-    "whatsapp": "WhatsApp",
-    "stats": {
-      "years": "Years of Excellence",
-      "experts": "Medical Experts",
-      "patients": "Happy Patients",
-      "departments": "Specialized Departments"
-    },
-    "mission": {
-      "title": "Our Mission",
-      "description": "To simplify healthcare access by connecting patients with trusted doctors, nurses, and healthcare specialists through a secure and user-friendly digital platform. We are committed to making healthcare more accessible, efficient, and reliable for everyone."
-    },
-    "vision": {
-      "title": "Our Vision",
-      "description": "To become the leading digital healthcare platform that empowers patients to find the right healthcare professionals easily while enabling medical specialists to deliver quality care anytime and anywhere."
-    },
-    "values": {
-      "trusted": { "title": "Trusted Professionals", "description": "We connect patients with verified doctors, nurses, and healthcare specialists to ensure safe and reliable care." },
-      "access": { "title": "Easy Access", "description": "We make healthcare services easier to reach by allowing patients to book appointments and manage care online." },
-      "patientFirst": { "title": "Patient First", "description": "We focus on patient needs by providing a simple, convenient, and supportive healthcare experience." },
-      "digital": { "title": "Digital Healthcare", "description": "We use technology to simplify communication between patients and medical professionals anytime and anywhere." }
-    },
-    "highlights": {
-      "booking": { "title": "Anytime Booking", "description": "Our platform allows patients to book appointments online 24/7, making healthcare access simple, convenient, and always available." },
-      "departments": { "title": "Specialized Departments", "description": "10+ specialized departments covering all major medical disciplines." },
-      "experts": { "title": "Expert Doctors", "description": "100+ board-certified physicians with decades of combined expertise." }
-    },
-    "teamRoles": {
-      "fullStack": "Full Stack Developer",
-      "teamLeader": "Full Stack Developer (Team Leader)",
-      "aiSpecialist": "AI Specialist"
+  "nurses": {
+    "heroTitle": "تعرف على ممرضينا المتخصصين",
+    "heroSubtitle": "اعثر على ممرضين مرخصين للرعاية المنزلية والخدمات التمريضية المتخصصة.",
+    "searchPlaceholder": "ابحث بالاسم أو مجال الخبرة...",
+    "loading": "جارٍ تحميل الممرضين...",
+    "empty": "لم يتم العثور على ممرضين يطابقون معايير البحث.",
+    "loadFailed": "تعذر تحميل قائمة الممرضين. يرجى المحاولة لاحقًا.",
+    "serviceAreasNotListed": "مناطق الخدمة غير مذكورة",
+    "card": {
+      "viewDetails": "عرض التفاصيل",
+      "bookNow": "احجز الآن"
     }
   },
   "contact": {
-    "heroTitle": "Get in Touch",
-    "heroSubtitle": "Have questions or need assistance? Our team is here to help. Reach out and we'll respond within 24-48 hours.",
-    "formTitle": "Send us a Message",
+    "heroTitle": "تواصل معنا",
+    "heroSubtitle": "هل لديك استفسار أو تحتاج إلى مساعدة؟ فريقنا هنا لخدمتك. تواصل معنا وسنرد عليك خلال 24 إلى 48 ساعة.",
+    "formTitle": "أرسل لنا رسالة",
     "fields": {
-      "fullName": "Full Name",
-      "email": "Email",
-      "phone": "Phone",
-      "subject": "Subject",
-      "message": "Message"
+      "fullName": "الاسم الكامل",
+      "email": "البريد الإلكتروني",
+      "phone": "رقم الهاتف",
+      "subject": "الموضوع",
+      "message": "الرسالة"
     },
     "placeholders": {
-      "fullName": "John Doe",
-      "email": "john@example.com",
+      "fullName": "محمد أحمد",
+      "email": "example@email.com",
       "phone": "+20 123 456 7890",
-      "message": "How can we help you?"
+      "message": "كيف يمكننا مساعدتك؟"
     },
-    "submit": "Send Message",
+    "submit": "إرسال الرسالة",
     "success": {
-      "title": "Message Sent!",
-      "description": "Thank you for contacting us. We'll get back to you as soon as possible.",
-      "responseTime": "Expected response time: 24-48 hours"
+      "title": "تم إرسال الرسالة!",
+      "description": "شكرًا لتواصلك معنا. سنرد عليك في أقرب وقت ممكن.",
+      "responseTime": "الوقت المتوقع للرد: 24–48 ساعة"
     },
     "info": {
-      "email": "Email",
-      "supportNumber": "Support Number",
-      "available": "Available 24/7"
+      "email": "البريد الإلكتروني",
+      "supportNumber": "رقم الدعم",
+      "available": "متاح على مدار الساعة"
     },
-    "faqTitle": "Frequently Asked Questions",
+    "faqTitle": "الأسئلة الشائعة",
     "departments": {
-      "general": "General Inquiry",
-      "appointment": "Appointment Scheduling",
-      "records": "Medical Records",
-      "billing": "Billing & Insurance",
-      "emergency": "Emergency",
-      "feedback": "Feedback & Complaints"
+      "general": "استفسار عام",
+      "appointment": "حجز المواعيد",
+      "records": "السجلات الطبية",
+      "billing": "الفواتير والتأمين",
+      "emergency": "الطوارئ",
+      "feedback": "الملاحظات والشكاوى"
     },
     "faq": {
-      "q1": "Can I manage my appointments online?",
-      "a1": "Yes. You can schedule, view, and manage your appointments directly through the MedWasla platform.",
-      "q2": "Do you accept insurance?",
-      "a2": "Yes, we accept most major insurance plans. Please contact our billing department or check with your insurance provider.",
-      "q3": "How do I schedule an appointment?",
-      "a3": "You can schedule an appointment through our online booking system, by phone, or by visiting our facility.",
-      "q4": "Do you offer telemedicine services?",
-      "a4": "Yes, we offer telemedicine consultations for certain medical conditions."
+      "q1": "هل يمكنني إدارة مواعيدي عبر الإنترنت؟",
+      "a1": "نعم، يمكنك حجز مواعيدك وعرضها وإدارتها مباشرةً من خلال منصة ميدواصلة.",
+      "q2": "هل تقبلون التأمين الصحي؟",
+      "a2": "نعم، نقبل معظم شركات التأمين الصحي. يُرجى التواصل مع قسم الفواتير أو مراجعة شركة التأمين الخاصة بك.",
+      "q3": "كيف يمكنني حجز موعد؟",
+      "a3": "يمكنك حجز موعد عبر نظام الحجز الإلكتروني، أو عبر الهاتف، أو بزيارة مقرنا.",
+      "q4": "هل تقدمون خدمات الطب عن بُعد؟",
+      "a4": "نعم، نقدم استشارات طبية عن بُعد لبعض الحالات الطبية."
     }
   },
   "services": {
-    "heroPatientTitle": "Our Healthcare Services",
-    "heroPatientSubtitle": "Everything you need to access quality healthcare — from booking doctors to home nursing care.",
-    "heroProviderTitle": "Provider Hub & Tools",
-    "heroProviderSubtitle": "Manage your practice, schedule, and patient requests from one professional dashboard.",
+    "heroPatientTitle": "خدماتنا الصحية",
+    "heroPatientSubtitle": "كل ما تحتاجه للحصول على رعاية صحية عالية الجودة، من حجز الأطباء إلى خدمات التمريض المنزلي.",
+    "heroProviderTitle": "بوابة مقدمي الرعاية الصحية",
+    "heroProviderSubtitle": "أدر عيادتك وجدولك وطلبات المرضى من خلال لوحة تحكم احترافية واحدة.",
     "features": {
-      "access": { "title": "24/7 Access", "desc": "Book and manage care anytime, anywhere." },
-      "doctors": { "title": "Qualified Doctors", "desc": "Verified specialists across every major discipline." },
-      "ai": { "title": "AI Assistance", "desc": "Get instant health guidance from WaslaBot." },
-      "trusted": { "title": "Trusted Care", "desc": "Licensed professionals you can rely on." }
+      "access": {
+        "title": "وصول على مدار الساعة",
+        "desc": "احجز وأدر خدمات الرعاية الصحية في أي وقت ومن أي مكان."
+      },
+      "doctors": {
+        "title": "أطباء مؤهلون",
+        "desc": "أطباء متخصصون ومعتمدون في جميع التخصصات الرئيسية."
+      },
+      "ai": {
+        "title": "مساعدة بالذكاء الاصطناعي",
+        "desc": "احصل على إرشادات صحية فورية من WaslaBot."
+      },
+      "trusted": {
+        "title": "رعاية موثوقة",
+        "desc": "متخصصون مرخصون يمكنك الاعتماد عليهم."
+      }
     },
     "patient": {
-      "doctorReservation": { "title": "Doctor Reservation", "desc": "Book clinic visits with verified doctors.", "f1": "Browse by specialty", "f2": "Real-time availability", "f3": "Instant confirmation" },
-      "nursingCare": { "title": "Nursing Care", "desc": "Licensed nurses for home visits and specialized care.", "f1": "Home visit booking", "f2": "Verified nurses", "f3": "Flexible scheduling" },
-      "aiAssistant": { "title": "AI Medical Assistant", "desc": "Get health information and guidance 24/7.", "f1": "Instant responses", "f2": "Verified sources", "f3": "Always available" }
+      "doctorReservation": {
+        "title": "حجز الأطباء",
+        "desc": "احجز زيارات العيادة مع أطباء معتمدين.",
+        "f1": "التصفح حسب التخصص",
+        "f2": "مواعيد متاحة في الوقت الفعلي",
+        "f3": "تأكيد فوري"
+      },
+      "nursingCare": {
+        "title": "الرعاية التمريضية",
+        "desc": "ممرضون مرخصون للزيارات المنزلية والرعاية المتخصصة.",
+        "f1": "حجز الزيارات المنزلية",
+        "f2": "ممرضون معتمدون",
+        "f3": "مواعيد مرنة"
+      },
+      "aiAssistant": {
+        "title": "المساعد الطبي بالذكاء الاصطناعي",
+        "desc": "احصل على معلومات وإرشادات صحية على مدار الساعة.",
+        "f1": "استجابات فورية",
+        "f2": "مصادر موثوقة",
+        "f3": "متاح دائمًا"
+      }
     },
     "provider": {
-      "clinicManagement": { "title": "Clinic & Schedule Management", "desc": "Manage your appointments and availability.", "f1": "Daily schedule view", "f2": "Patient requests", "f3": "Profile management" },
-      "homeVisits": { "title": "Home Visit & Nursing Requests", "desc": "Accept and manage home service requests.", "f1": "Request notifications", "f2": "Accept or decline", "f3": "Track visits" },
-      "aiProvider": { "title": "AI Medical Assistant", "desc": "Clinical reference and patient communication support.", "f1": "Medical references", "f2": "Quick answers", "f3": "24/7 access" }
+      "clinicManagement": {
+        "title": "إدارة العيادة والمواعيد",
+        "desc": "أدر مواعيدك وأوقات توافرك بسهولة.",
+        "f1": "عرض الجدول اليومي",
+        "f2": "طلبات المرضى",
+        "f3": "إدارة الملف الشخصي"
+      },
+      "homeVisits": {
+        "title": "طلبات الزيارات المنزلية والتمريض",
+        "desc": "استقبل وأدر طلبات الخدمات المنزلية.",
+        "f1": "إشعارات الطلبات",
+        "f2": "قبول أو رفض الطلب",
+        "f3": "متابعة الزيارات"
+      },
+      "aiProvider": {
+        "title": "المساعد الطبي بالذكاء الاصطناعي",
+        "desc": "مرجع طبي ودعم للتواصل مع المرضى.",
+        "f1": "مراجع طبية",
+        "f2": "إجابات سريعة",
+        "f3": "متاح على مدار الساعة"
+      }
     },
     "cta": {
-      "startChatbot": "Start Chatbot",
-      "goToDashboard": "Go to Dashboard",
-      "goToDoctors": "Go to Doctors",
-      "goToNurses": "Go to Nurses",
-      "goToHomeServices": "Go to Home Services"
+      "startChatbot": "ابدأ المحادثة مع روبوت الدردشة",
+      "goToDashboard": "الانتقال إلى لوحة التحكم",
+      "goToDoctors": "الانتقال إلى الأطباء",
+      "goToNurses": "الانتقال إلى الممرضين",
+      "goToHomeServices": "الانتقال إلى الخدمات المنزلية"
+    }
+  }, "profile": {
+    "invalidDoctor": "ملف الطبيب غير صالح.",
+    "loadDoctorFailed": "فشل تحميل ملف الطبيب.",
+    "loadingDoctor": "جاري تحميل ملف الطبيب...",
+    "doctorNotFound": "الطبيب غير موجود",
+    "doctorNotFoundDesc": "لم نتمكن من العثور على الطبيب الذي تبحث عنه.",
+    "backToDoctors": "العودة إلى الأطباء",
+    "homeVisitAvailable": "متاحة",
+    "fields": {
+      "experience": "الخبرة",
+      "location": "الموقع",
+      "consultationFee": "رسوم الاستشارة",
+      "education": "المؤهل العلمي",
+      "availability": "أوقات التوفر",
+      "avgWaitTime": "متوسط وقت الانتظار",
+      "homeVisits": "الزيارات المنزلية",
+      "serviceAreas": "مناطق الخدمة",
+      "homeVisitFee": "رسوم الزيارة المنزلية"
+    },
+    "sections": {
+      "certifications": "الشهادات والاعتمادات",
+      "certificationsDesc": "المؤهلات والشهادات التي يحملها {{name}}",
+      "noCertifications": "لا توجد شهادات مضافة حتى الآن.",
+      "reviews": "تقييمات المرضى",
+      "reviewsDesc": "ماذا يقول المرضى عن {{name}}",
+      "noReviews": "لا توجد تقييمات بعد.",
+      "expertise": "الخبرات والمهارات",
+      "expertiseDesc": "الخبرات والمهارات التي يحملها {{name}}",
+      "noExpertise": "لا توجد خبرات ومهارات مضافة حتى الآن."
     }
   }
 }

@@ -1,0 +1,30 @@
+{
+    "hero": {
+      "title": "Our Professional Nurses",
+      "subtitle": "Compassionate and skilled nurses ready to provide quality home healthcare services tailored to your needs."
+    },
+    "search": {
+      "placeholder": "Search by name, bio, or area of expertise..."
+    },
+    "sort": {
+      "highestRated": "Highest Rated",
+      "newest": "Newest",
+      "mostReviewed": "Most Reviewed",
+      "feeLowToHigh": "Fee: Low to High",
+      "feeHighToLow": "Fee: High to Low"
+    },
+    "expertise": {
+      "all": "All"
+    },
+    "state": {
+      "loading": "Loading approved nurses...",
+      "empty": "No approved nurses found matching your filters."
+    },
+    "card": {
+      "namePrefix": "Nurse {{name}}",
+      "serviceAreasEmpty": "Service areas not listed",
+      "available": "Available",
+      "viewDetails": "View Details",
+      "bookNow": "Book Now"
+    }
+  }

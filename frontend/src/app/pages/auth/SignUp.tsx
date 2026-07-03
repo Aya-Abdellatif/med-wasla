@@ -1,8 +1,8 @@
 import { useState } from "react";
 import { Link, useLocation, useNavigate } from "react-router-dom";
+import { useTranslation } from "react-i18next";
 import {
   ArrowLeft,
-  // ChevronRight,
   User,
   Stethoscope,
   HeartPulse,
@@ -11,7 +11,7 @@ import {
 import AuthLayout from "../../components/auth/AuthLayout";
 import { PasswordStrengthHints } from "../../components/auth/PasswordStrengthHints";
 import { apiFetch } from "../../../services/api";
-import { MEDICAL_SPECIALIZATIONS } from "../../../constants/medicalSpecializations";
+import { specialtyToKey, MEDICAL_SPECIALIZATIONS } from "../../../constants/medicalSpecializations";
 import {
   mapRegisterErrorMessage,
   validateEmail,
@@ -80,74 +80,89 @@ function Field({
   );
 }
 
-const roleMeta = {
-  patient: {
-    label: "Patient",
-    icon: User,
-    color: "bg-primary text-white",
-  },
-  doctor: {
-    label: "Doctor",
-    icon: Stethoscope,
-    color: "bg-primary text-white",
-  },
-  nurse: {
-    label: "Nurse",
-    icon: HeartPulse,
-    color: "bg-primary text-white",
-  },
-} as const;
+const governorateOptions: Governorate[] = ["Cairo", "Giza", "Alexandria"];
+const governorateKeyMap: Record<Governorate, string> = {
+  Cairo: "cairo",
+  Giza: "giza",
+  Alexandria: "alexandria",
+};
 
-function validateStep1(form: FormData): FieldErrors {
-  const errors: FieldErrors = {};
+export default function SignUp() {
+  const { t } = useTranslation(["auth", "constants"]);
+  const location = useLocation();
+  const navigate = useNavigate();
+  const roleParam = (new URLSearchParams(location.search).get("role") ??
+    "patient") as "patient" | "doctor" | "nurse";
+  const isDoctor = roleParam === "doctor";
+  const isNurse = roleParam === "nurse";
+  const isSpecialist = isDoctor || isNurse;
+  const totalSteps = isSpecialist ? 2 : 1;
 
-  if (!form.firstName.trim()) errors.firstName = "First name is required";
-  if (!form.lastName.trim()) errors.lastName = "Last name is required";
+  const roleMeta = {
+    patient: {
+      label: t("roles.patient"),
+      icon: User,
+      color: "bg-primary text-white",
+    },
+    doctor: {
+      label: t("roles.doctor"),
+      icon: Stethoscope,
+      color: "bg-primary text-white",
+    },
+    nurse: {
+      label: t("roles.nurse"),
+      icon: HeartPulse,
+      color: "bg-primary text-white",
+    },
+  } as const;
 
-  const emailError = validateEmail(form.email);
-  if (emailError) errors.email = emailError;
+  function validateStep1(form: FormData): FieldErrors {
+    const errors: FieldErrors = {};
 
-  if (!form.phone.trim()) {
-    errors.phone = "Phone number is required";
-  } else if (form.phone.trim().length < 8) {
-    errors.phone = "Enter a valid phone number";
+    if (!form.firstName.trim())
+      errors.firstName = t("validation.firstNameRequired");
+    if (!form.lastName.trim())
+      errors.lastName = t("validation.lastNameRequired");
+
+    const emailError = validateEmail(form.email);
+    if (emailError) errors.email = emailError;
+
+    if (!form.phone.trim()) {
+      errors.phone = t("validation.phoneRequired");
+    } else if (form.phone.trim().length < 8) {
+      errors.phone = t("validation.phoneInvalid");
+    }
+
+    const passwordError = validatePassword(form.password);
+    if (passwordError) errors.password = passwordError;
+
+    if (!form.dob) {
+      errors.dob = t("validation.dobRequired");
+    }
+
+    if (!form.confirmPassword) {
+      errors.confirmPassword = t("validation.confirmPasswordRequired");
+    } else if (form.password !== form.confirmPassword) {
+      errors.confirmPassword = t("validation.passwordMismatch");
+    }
+
+    return errors;
   }
 
-  const passwordError = validatePassword(form.password);
-  if (passwordError) errors.password = passwordError;
+  function validateStep2(
+    form: FormData,
+    isDoctor: boolean,
+    isNurse: boolean,
+  ): FieldErrors {
+    const errors: FieldErrors = {};
 
-  if (!form.dob) {
-    errors.dob = "Date of birth is required";
-  }
+    if (isDoctor && !form.specialization) {
+      errors.specialization = t("validation.specializationRequired");
+    }
 
-  if (!form.confirmPassword) {
-    errors.confirmPassword = "Please confirm your password";
-  } else if (form.password !== form.confirmPassword) {
-    errors.confirmPassword = "Passwords do not match";
-  }
-
-  return errors;
-}
-
-function validateStep2(
-  form: FormData,
-  isDoctor: boolean,
-  isNurse: boolean,
-): FieldErrors {
-  const errors: FieldErrors = {};
-
-  if (isDoctor && !form.specialization) {
-    errors.specialization = "Please select a medical specialty";
-  }
-
-  if (!form.licenseNumber.trim()) {
-    errors.licenseNumber = "License number is required";
-  }
-
-  if (isNurse && !form.serviceArea.trim()) {
-    errors.serviceArea = "Enter at least one service area";
-  }
-
+    if (!form.licenseNumber.trim()) {
+      errors.licenseNumber = t("validation.licenseRequired");
+    }
   if (isDoctor) {
     if (!form.certTitle.trim()) {
       errors.certTitle = "Graduation certificate title is required";
@@ -170,22 +185,28 @@ function validateStep2(
     }
   }
 
-  return errors;
-}
+    if (isNurse && !form.serviceArea.trim()) {
+      errors.serviceArea = t("validation.serviceAreaRequired");
+    }
 
-function hasErrors(errors: FieldErrors) {
-  return Object.keys(errors).length > 0;
-}
+    const hasCertInput = Boolean(
+      form.certTitle || form.certIssuer || form.certUrl,
+    );
+    if (hasCertInput) {
+      if (!form.certTitle.trim())
+        errors.certTitle = t("validation.certTitleRequired");
+      if (!form.certIssuer.trim())
+        errors.certIssuer = t("validation.certIssuerRequired");
+      if (!form.certUrl.trim())
+        errors.certUrl = t("validation.certUrlRequired");
+    }
 
-export default function SignUp() {
-  const location = useLocation();
-  const navigate = useNavigate();
-  const roleParam = (new URLSearchParams(location.search).get("role") ??
-    "patient") as "patient" | "doctor" | "nurse";
-  const isDoctor = roleParam === "doctor";
-  const isNurse = roleParam === "nurse";
-  const isSpecialist = isDoctor || isNurse;
-  const totalSteps = isSpecialist ? 2 : 1;
+    return errors;
+  }
+
+  function hasErrors(errors: FieldErrors) {
+    return Object.keys(errors).length > 0;
+  }
 
   const [formStep, setFormStep] = useState(1);
   const [showCert, setShowCert] = useState(false);
@@ -229,8 +250,8 @@ export default function SignUp() {
     const count = Object.keys(errors).length;
     showWarning(
       count === 1
-        ? "Please fix the highlighted field"
-        : `Please fix ${count} highlighted fields`,
+        ? t("toast.fixOneField")
+        : t("toast.fixNFields", { count }),
     );
   };
 
@@ -268,9 +289,9 @@ export default function SignUp() {
       setFieldErrors((prev) => {
         const next = { ...prev };
         if (!form.confirmPassword) {
-          next.confirmPassword = "Please confirm your password";
+          next.confirmPassword = t("validation.confirmPasswordRequired");
         } else if (form.password !== form.confirmPassword) {
-          next.confirmPassword = "Passwords do not match";
+          next.confirmPassword = t("validation.passwordMismatch");
         } else {
           delete next.confirmPassword;
         }
@@ -371,11 +392,11 @@ export default function SignUp() {
         body: JSON.stringify(payload),
       });
 
-      showSuccess("Check your email for the verification code.");
+      showSuccess(t("toast.registrationSuccess"));
       navigate(`/verify-otp?email=${encodeURIComponent(form.email.trim())}`);
     } catch (err) {
       const message =
-        err instanceof Error ? err.message : "Registration failed";
+        err instanceof Error ? err.message : t("toast.registrationFailed");
       const mapped = mapRegisterErrorMessage(message);
 
       if (mapped.field === "email") {
@@ -399,11 +420,11 @@ export default function SignUp() {
 
   return (
     <AuthLayout
-      title="Create account"
+      title={t("signUp.title")}
       subtitle={
         isSpecialist
-          ? "Set up your professional profile"
-          : "Join MedWasla in a few steps"
+          ? t("signUp.subtitleSpecialist")
+          : t("signUp.subtitlePatient")
       }
       fitScreen
     >
@@ -412,8 +433,8 @@ export default function SignUp() {
         onClick={goBack}
         className="mb-2 inline-flex items-center gap-1 text-sm font-medium text-fg-muted transition-all duration-200 hover:text-primary hover:-translate-y-0.5"
       >
-        <ArrowLeft className="h-4 w-4" />
-        {formStep > 1 ? "Previous step" : "Change role"}
+        <ArrowLeft className="h-4 w-4 rtl:rotate-180" />
+        {formStep > 1 ? t("signUp.previousStep") : t("signUp.changeRole")}
       </button>
 
       <div className="mb-4 flex flex-wrap items-center justify-between gap-3">
@@ -439,7 +460,7 @@ export default function SignUp() {
               />
             ))}
             <span className="text-xs font-medium text-slate-400">
-              {formStep}/{totalSteps}
+              {t("signUp.step", { current: formStep, total: totalSteps })}
             </span>
           </div>
         )}
@@ -448,50 +469,54 @@ export default function SignUp() {
       <form onSubmit={handleRegister} className="space-y-3" noValidate>
         {formStep === 1 && (
           <div className="grid gap-3 lg:grid-cols-3">
-            <Field label="First name" error={fieldErrors.firstName}>
+            <Field label={t("fields.firstName")} error={fieldErrors.firstName}>
               <input
                 value={form.firstName}
                 onChange={(e) => handleChange("firstName", e.target.value)}
                 className={getInputClass(Boolean(fieldErrors.firstName))}
               />
             </Field>
-            <Field label="Last name" error={fieldErrors.lastName}>
+            <Field label={t("fields.lastName")} error={fieldErrors.lastName}>
               <input
                 value={form.lastName}
                 onChange={(e) => handleChange("lastName", e.target.value)}
                 className={getInputClass(Boolean(fieldErrors.lastName))}
               />
             </Field>
-            <Field label="Email" error={fieldErrors.email}>
+            <Field label={t("fields.email")} error={fieldErrors.email}>
               <input
                 type="email"
                 value={form.email}
                 onChange={(e) => handleChange("email", e.target.value)}
                 onBlur={() => handleBlur("email")}
                 className={getInputClass(Boolean(fieldErrors.email))}
-                placeholder="you@example.com"
+                placeholder={t("placeholders.email")}
               />
             </Field>
 
-            <Field label="Phone" error={fieldErrors.phone}>
+            <Field label={t("fields.phone")} error={fieldErrors.phone}>
               <input
                 value={form.phone}
                 onChange={(e) => handleChange("phone", e.target.value)}
                 className={getInputClass(Boolean(fieldErrors.phone))}
               />
             </Field>
-            <Field label="Governorate">
+            <Field label={t("fields.governorate")}>
               <select
                 value={form.address}
-                onChange={(e) => handleChange("address", e.target.value)}
+                onChange={(e) =>
+                  handleChange("address", e.target.value as Governorate)
+                }
                 className={getInputClass()}
               >
-                <option value="Cairo">Cairo</option>
-                <option value="Giza">Giza</option>
-                <option value="Alexandria">Alexandria</option>
+                {governorateOptions.map((gov) => (
+                  <option key={gov} value={gov}>
+                    {t(`constants:governorates.${governorateKeyMap[gov]}`)}
+                  </option>
+                ))}
               </select>
             </Field>
-            <Field label="Date of birth" error={fieldErrors.dob}>
+            <Field label={t("fields.dob")} error={fieldErrors.dob}>
               <input
                 type="date"
                 value={form.dob}
@@ -501,7 +526,7 @@ export default function SignUp() {
             </Field>
 
             <Field
-              label="Password"
+              label={t("fields.password")}
               error={fieldErrors.password}
               className="lg:col-span-1"
             >
@@ -511,7 +536,7 @@ export default function SignUp() {
                 onChange={(e) => handleChange("password", e.target.value)}
                 onBlur={() => handleBlur("password")}
                 className={getInputClass(Boolean(fieldErrors.password))}
-                placeholder="Create a strong password"
+                placeholder={t("placeholders.createPassword")}
               />
               <PasswordStrengthHints
                 password={form.password}
@@ -519,7 +544,7 @@ export default function SignUp() {
               />
             </Field>
             <Field
-              label="Confirm password"
+              label={t("fields.confirmPassword")}
               error={fieldErrors.confirmPassword}
               className="lg:col-span-2"
             >
@@ -531,7 +556,7 @@ export default function SignUp() {
                 }
                 onBlur={() => handleBlur("confirmPassword")}
                 className={getInputClass(Boolean(fieldErrors.confirmPassword))}
-                placeholder="Re-enter your password"
+                placeholder={t("placeholders.confirmPasswordField")}
               />
             </Field>
           </div>
@@ -542,7 +567,7 @@ export default function SignUp() {
             {isDoctor && (
               <>
                 <Field
-                  label="Medical specialty"
+                  label={t("fields.specialization")}
                   error={fieldErrors.specialization}
                 >
                   <select
@@ -555,16 +580,21 @@ export default function SignUp() {
                     )}
                   >
                     <option value="" disabled>
-                      Select specialty
+                      {t("signUp.selectSpecialty")}
                     </option>
-                    {MEDICAL_SPECIALIZATIONS.map((specialty) => (
-                      <option key={specialty} value={specialty}>
-                        {specialty}
-                      </option>
-                    ))}
+                    {MEDICAL_SPECIALIZATIONS.map((specialty) => {
+                      const key = specialtyToKey(specialty);
+                      return (
+                        <option key={specialty} value={specialty}>
+                          {key
+                            ? t(`constants:specializations.${key}`)
+                            : specialty}
+                        </option>
+                      );
+                    })}
                   </select>
                 </Field>
-                <Field label="License number" error={fieldErrors.licenseNumber}>
+                <Field label={t("fields.licenseNumber")} error={fieldErrors.licenseNumber}>
                   <input
                     value={form.licenseNumber}
                     onChange={(e) =>
@@ -575,7 +605,7 @@ export default function SignUp() {
                     )}
                   />
                 </Field>
-                <Field label="Consultation fee (EGP)">
+                <Field label={t("fields.consultationFeeEgp")}>
                   <input
                     type="number"
                     value={form.consultationFee}
@@ -585,7 +615,7 @@ export default function SignUp() {
                     className={getInputClass()}
                   />
                 </Field>
-                <Field label="Clinic address" className="lg:col-span-2">
+                <Field label={t("fields.clinicAddress")} className="lg:col-span-2">
                   <input
                     value={form.clinicAddress}
                     onChange={(e) =>
@@ -594,16 +624,16 @@ export default function SignUp() {
                     className={getInputClass()}
                   />
                 </Field>
-                <Field label="Home visits">
+                <Field label={t("fields.homeVisit")}>
                   <div className="grid grid-cols-2 gap-2">
                     <ToggleOption
                       active={form.homeVisit}
-                      label="Yes"
+                      label={t("common.yes")}
                       onClick={() => handleChange("homeVisit", true)}
                     />
                     <ToggleOption
                       active={!form.homeVisit}
-                      label="No"
+                      label={t("common.no")}
                       onClick={() => handleChange("homeVisit", false)}
                     />
                   </div>
@@ -614,7 +644,7 @@ export default function SignUp() {
             {isNurse && (
               <>
                 <Field
-                  label="Nursing license"
+                  label={t("fields.nursingLicense")}
                   error={fieldErrors.licenseNumber}
                 >
                   <input
@@ -627,9 +657,9 @@ export default function SignUp() {
                     )}
                   />
                 </Field>
-                <Field label="Service areas" error={fieldErrors.serviceArea}>
+                <Field label={t("fields.serviceArea")} error={fieldErrors.serviceArea}>
                   <input
-                    placeholder="e.g. Maadi, Nasr City"
+                    placeholder={t("placeholders.serviceArea")}
                     value={form.serviceArea}
                     onChange={(e) =>
                       handleChange("serviceArea", e.target.value)
@@ -637,7 +667,7 @@ export default function SignUp() {
                     className={getInputClass(Boolean(fieldErrors.serviceArea))}
                   />
                 </Field>
-                <Field label="Consultation fee (EGP)">
+                <Field label={t("fields.consultationFeeEgp")}>
                   <input
                     type="number"
                     value={form.consultationFee}
@@ -650,12 +680,12 @@ export default function SignUp() {
               </>
             )}
 
-            <Field label="Short bio" className="lg:col-span-3">
+            <Field label={t("fields.shortBio")} className="lg:col-span-3">
               <input
                 value={form.bio}
                 onChange={(e) => handleChange("bio", e.target.value)}
                 className={getInputClass()}
-                placeholder="Brief intro..."
+                placeholder={t("placeholders.bio")}
               />
             </Field>
 
@@ -717,16 +747,16 @@ export default function SignUp() {
               <button
                 type="button"
                 onClick={() => setShowCert((v) => !v)}
-                className="flex w-full items-center justify-between px-4 py-3 text-left text-sm font-semibold text-slate-700 transition-colors hover:bg-slate-50"
+                className="flex w-full items-center justify-between px-4 py-3 text-start text-sm font-semibold text-slate-700 transition-colors hover:bg-slate-50"
               >
-                Add certificate (optional)
+                {t("signUp.addCertificate")}
                 <ChevronDown
                   className={`h-4 w-4 text-slate-400 transition-transform ${showCert ? "rotate-180" : ""}`}
                 />
               </button>
               {showCert && (
                 <div className="space-y-3 border-t border-slate-100 px-4 pb-4 pt-3">
-                  <Field label="Title" error={fieldErrors.certTitle}>
+                  <Field label={t("fields.certTitle")} error={fieldErrors.certTitle}>
                     <input
                       value={form.certTitle}
                       onChange={(e) =>
@@ -736,7 +766,7 @@ export default function SignUp() {
                     />
                   </Field>
                   <div className="grid gap-3 sm:grid-cols-2">
-                    <Field label="Issued by" error={fieldErrors.certIssuer}>
+                    <Field label={t("fields.certIssuer")} error={fieldErrors.certIssuer}>
                       <input
                         value={form.certIssuer}
                         onChange={(e) =>
@@ -747,7 +777,7 @@ export default function SignUp() {
                         )}
                       />
                     </Field>
-                    <Field label="Certificate URL" error={fieldErrors.certUrl}>
+                    <Field label={t("fields.certUrl")} error={fieldErrors.certUrl}>
                       <input
                         value={form.certUrl}
                         onChange={(e) =>
@@ -771,8 +801,7 @@ export default function SignUp() {
               onClick={goNext}
               className="w-full rounded-xl bg-primary border-2 border-primary py-3 text-base font-bold cursor-pointer text-white shadow-lg  transition-all duration-300 ease-in-out hover:-translate-y-0.5 hover:bg-transparent hover:text-primary hover:shadow-md whitespace-nowrap"
             >
-              Continue
-              {/* <ChevronRight className="h-4 w-4" /> */}
+              {t("signUp.continue")}
             </button>
           ) : (
             <button
@@ -780,18 +809,18 @@ export default function SignUp() {
               disabled={isLoading}
               className="w-full rounded-xl bg-primary border-2 border-primary py-3 text-base font-bold cursor-pointer text-white shadow-lg  transition-all duration-300 ease-in-out hover:-translate-y-0.5 hover:bg-transparent hover:text-primary hover:shadow-md whitespace-nowrap"
             >
-              {isLoading ? "Creating account..." : "Create account"}
+              {isLoading ? t("signUp.submitting") : t("signUp.submit")}
             </button>
           )}
         </div>
 
         <p className="mt-6 text-center text-lg text-fg-muted">
-          Already have an account?{" "}
+          {t("signUp.hasAccount")}{" "}
           <Link
             to="/login"
             className="inline-block font-bold text-primary transition-transform duration-200 hover:text-primary/80 hover:-translate-y-0.5"
           >
-            Sign in
+            {t("signUp.signInLink")}
           </Link>
         </p>
       </form>

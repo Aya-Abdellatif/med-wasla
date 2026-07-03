@@ -1,0 +1,70 @@
+{
+    "hero": {
+      "title": "About MedWasla",
+      "subtitle": "Your trusted healthcare platform for booking appointments, managing care, and connecting with medical professionals effortlessly."
+    },
+    "stats": {
+      "yearsExcellence": "Years of Excellence",
+      "medicalExperts": "Medical Experts",
+      "happyPatients": "Happy Patients",
+      "specializedDepartments": "Specialized Departments"
+    },
+    "missionVision": {
+      "mission": {
+        "title": "Our Mission",
+        "description": "To simplify healthcare access by connecting patients with trusted doctors, nurses, and healthcare specialists through a secure and user-friendly digital platform. We are committed to making healthcare more accessible, efficient, and reliable for everyone."
+      },
+      "vision": {
+        "title": "Our Vision",
+        "description": "To become the leading digital healthcare platform that empowers patients to find the right healthcare professionals easily while enabling medical specialists to deliver quality care anytime and anywhere."
+      }
+    },
+    "coreValues": {
+      "sectionTitle": "Our Core Values",
+      "sectionSubtitle": "The principles that guide our commitment to exceptional healthcare.",
+      "trustedProfessionals": {
+        "title": "Trusted Professionals",
+        "description": "We connect patients with verified doctors, nurses, and healthcare specialists to ensure safe and reliable care."
+      },
+      "easyAccess": {
+        "title": "Easy Access",
+        "description": "We make healthcare services easier to reach by allowing patients to book appointments and manage care online."
+      },
+      "patientFirst": {
+        "title": "Patient First",
+        "description": "We focus on patient needs by providing a simple, convenient, and supportive healthcare experience."
+      },
+      "digitalHealthcare": {
+        "title": "Digital Healthcare",
+        "description": "We use technology to simplify communication between patients and medical professionals anytime and anywhere."
+      }
+    },
+    "whyChooseUs": {
+      "sectionTitle": "Why Choose Med-Wasla?",
+      "sectionSubtitle": "Excellence, innovation, and patient care at the heart of everything we do.",
+      "anytimeBooking": {
+        "title": "Anytime Booking",
+        "description": "Our platform allows patients to book appointments online 24/7, making healthcare access simple, convenient, and always available."
+      },
+      "specializedDepartments": {
+        "title": "Specialized Departments",
+        "description": "10+ specialized departments covering all major medical disciplines."
+      },
+      "expertDoctors": {
+        "title": "Expert Doctors",
+        "description": "100+ board-certified physicians with decades of combined expertise."
+      }
+    },
+    "team": {
+      "eyebrow": "The people behind your care",
+      "sectionTitle": "Meet Our Team",
+      "sectionSubtitle": "Our team is united by one goal: your wellbeing.",
+      "linkedin": "LinkedIn",
+      "whatsapp": "WhatsApp",
+      "roles": {
+        "fullStackDeveloper": "Full Stack Developer",
+        "fullStackDeveloperLead": "Full Stack Developer (Team Leader)",
+        "aiSpecialist": "AI Specialist"
+      }
+    }
+  }
