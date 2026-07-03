@@ -83,7 +83,7 @@ export const teamMembers = [
   },
   {
     name: "Ranim Mogharab",
-    roleKey: "fullStackDeveloper",
+    roleKey: "fullStackDeveloperAiSpecialist",
     image: ranimImage,
     linkedin: "https://www.linkedin.com/in/ranim-mohareb/",
     whatsapp: "https://wa.me/201004444444",

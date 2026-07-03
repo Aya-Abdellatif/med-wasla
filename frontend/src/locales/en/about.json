@@ -64,7 +64,8 @@
       "roles": {
         "fullStackDeveloper": "Full Stack Developer",
         "fullStackDeveloperLead": "Full Stack Developer (Team Leader)",
-        "aiSpecialist": "AI Specialist"
+        "aiSpecialist": "AI Specialist",
+        "fullStackDeveloperAiSpecialist": "Full Stack Developer & AI Specialist"
       }
     }
   }

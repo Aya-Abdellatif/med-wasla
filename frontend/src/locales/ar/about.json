@@ -64,7 +64,8 @@
       "roles": {
         "fullStackDeveloper": "مطوّر ويب متكامل",
         "fullStackDeveloperLead": "مطوّرة ويب متكاملة (قائدة الفريق)",
-        "aiSpecialist": "مختصة ذكاء اصطناعي"
+        "aiSpecialist": "مختصة ذكاء اصطناعي",
+        "fullStackDeveloperAiSpecialist": "مطور ويب متكامل ومتخصص ذكاء اصطناعي"
       }
     }
   }
