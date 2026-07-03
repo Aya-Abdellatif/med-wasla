@@ -19,7 +19,7 @@ import {
 } from "../../../utils/authValidation";
 import { showError, showSuccess, showWarning } from "../../../utils/toast";
 
-type Governorate = "Alexandria" | "Cairo" | "Giza";
+import { EgyptianGovernorates, governorateKeyMap, type Governorate } from "../../../constants/governorates";
 
 type FormData = {
   firstName: string;
@@ -51,11 +51,10 @@ const labelClass =
   "mb-1 block text-xs font-semibold uppercase tracking-wide text-slate-500";
 
 function getInputClass(hasError?: boolean) {
-  return `${inputBaseClass} ${
-    hasError
+  return `${inputBaseClass} ${hasError
       ? "border-red-300 bg-red-50/40 focus:border-red-400 focus:ring-red-400/20"
       : "border-slate-200 focus:border-teal-400 focus:ring-teal-400/20"
-  }`;
+    }`;
 }
 
 function Field({
@@ -79,13 +78,6 @@ function Field({
     </div>
   );
 }
-
-const governorateOptions: Governorate[] = ["Cairo", "Giza", "Alexandria"];
-const governorateKeyMap: Record<Governorate, string> = {
-  Cairo: "cairo",
-  Giza: "giza",
-  Alexandria: "alexandria",
-};
 
 export default function SignUp() {
   const { t } = useTranslation(["auth", "constants"]);
@@ -163,27 +155,27 @@ export default function SignUp() {
     if (!form.licenseNumber.trim()) {
       errors.licenseNumber = t("validation.licenseRequired");
     }
-  if (isDoctor) {
-    if (!form.certTitle.trim()) {
-      errors.certTitle = "Graduation certificate title is required";
+    if (isDoctor) {
+      if (!form.certTitle.trim()) {
+        errors.certTitle = "Graduation certificate title is required";
+      }
+      if (!form.certIssuer.trim()) {
+        errors.certIssuer = "Issuing university is required";
+      }
+      if (!form.certUrl.trim()) {
+        errors.certUrl = "Certificate file URL is required";
+      }
+    } else {
+      const hasCertInput = Boolean(
+        form.certTitle || form.certIssuer || form.certUrl,
+      );
+      if (hasCertInput) {
+        if (!form.certTitle.trim())
+          errors.certTitle = "Certificate title is required";
+        if (!form.certIssuer.trim()) errors.certIssuer = "Issuer is required";
+        if (!form.certUrl.trim()) errors.certUrl = "Certificate URL is required";
+      }
     }
-    if (!form.certIssuer.trim()) {
-      errors.certIssuer = "Issuing university is required";
-    }
-    if (!form.certUrl.trim()) {
-      errors.certUrl = "Certificate file URL is required";
-    }
-  } else {
-    const hasCertInput = Boolean(
-      form.certTitle || form.certIssuer || form.certUrl,
-    );
-    if (hasCertInput) {
-      if (!form.certTitle.trim())
-        errors.certTitle = "Certificate title is required";
-      if (!form.certIssuer.trim()) errors.certIssuer = "Issuer is required";
-      if (!form.certUrl.trim()) errors.certUrl = "Certificate URL is required";
-    }
-  }
 
     if (isNurse && !form.serviceArea.trim()) {
       errors.serviceArea = t("validation.serviceAreaRequired");
@@ -450,13 +442,12 @@ export default function SignUp() {
             {Array.from({ length: totalSteps }, (_, i) => i + 1).map((n) => (
               <div
                 key={n}
-                className={`h-2 rounded-xl transition-all duration-300 ${
-                  n === formStep
+                className={`h-2 rounded-xl transition-all duration-300 ${n === formStep
                     ? "w-8 bg-teal-500"
                     : n < formStep
                       ? "w-2 bg-teal-300"
                       : "w-2 bg-slate-200"
-                }`}
+                  }`}
               />
             ))}
             <span className="text-xs font-medium text-slate-400">
@@ -509,7 +500,7 @@ export default function SignUp() {
                 }
                 className={getInputClass()}
               >
-                {governorateOptions.map((gov) => (
+                {EgyptianGovernorates.map((gov) => (
                   <option key={gov} value={gov}>
                     {t(`constants:governorates.${governorateKeyMap[gov]}`)}
                   </option>
@@ -691,13 +682,12 @@ export default function SignUp() {
 
             {isDoctor ? (
               <div
-                className={`lg:col-span-3 rounded-xl border px-4 pb-4 pt-3 space-y-3 ${
-                  fieldErrors.certTitle ||
-                  fieldErrors.certIssuer ||
-                  fieldErrors.certUrl
+                className={`lg:col-span-3 rounded-xl border px-4 pb-4 pt-3 space-y-3 ${fieldErrors.certTitle ||
+                    fieldErrors.certIssuer ||
+                    fieldErrors.certUrl
                     ? "border-red-200"
                     : "border-slate-200"
-                }`}
+                  }`}
               >
                 <div>
                   <p className="text-sm font-semibold text-slate-800">
@@ -735,61 +725,60 @@ export default function SignUp() {
                 </div>
               </div>
             ) : (
-            <div
-              className={`lg:col-span-3 rounded-xl border ${
-                fieldErrors.certTitle ||
-                fieldErrors.certIssuer ||
-                fieldErrors.certUrl
-                  ? "border-red-200"
-                  : "border-slate-200"
-              }`}
-            >
-              <button
-                type="button"
-                onClick={() => setShowCert((v) => !v)}
-                className="flex w-full items-center justify-between px-4 py-3 text-start text-sm font-semibold text-slate-700 transition-colors hover:bg-slate-50"
+              <div
+                className={`lg:col-span-3 rounded-xl border ${fieldErrors.certTitle ||
+                    fieldErrors.certIssuer ||
+                    fieldErrors.certUrl
+                    ? "border-red-200"
+                    : "border-slate-200"
+                  }`}
               >
-                {t("signUp.addCertificate")}
-                <ChevronDown
-                  className={`h-4 w-4 text-slate-400 transition-transform ${showCert ? "rotate-180" : ""}`}
-                />
-              </button>
-              {showCert && (
-                <div className="space-y-3 border-t border-slate-100 px-4 pb-4 pt-3">
-                  <Field label={t("fields.certTitle")} error={fieldErrors.certTitle}>
-                    <input
-                      value={form.certTitle}
-                      onChange={(e) =>
-                        handleChange("certTitle", e.target.value)
-                      }
-                      className={getInputClass(Boolean(fieldErrors.certTitle))}
-                    />
-                  </Field>
-                  <div className="grid gap-3 sm:grid-cols-2">
-                    <Field label={t("fields.certIssuer")} error={fieldErrors.certIssuer}>
+                <button
+                  type="button"
+                  onClick={() => setShowCert((v) => !v)}
+                  className="flex w-full items-center justify-between px-4 py-3 text-start text-sm font-semibold text-slate-700 transition-colors hover:bg-slate-50"
+                >
+                  {t("signUp.addCertificate")}
+                  <ChevronDown
+                    className={`h-4 w-4 text-slate-400 transition-transform ${showCert ? "rotate-180" : ""}`}
+                  />
+                </button>
+                {showCert && (
+                  <div className="space-y-3 border-t border-slate-100 px-4 pb-4 pt-3">
+                    <Field label={t("fields.certTitle")} error={fieldErrors.certTitle}>
                       <input
-                        value={form.certIssuer}
+                        value={form.certTitle}
                         onChange={(e) =>
-                          handleChange("certIssuer", e.target.value)
+                          handleChange("certTitle", e.target.value)
                         }
-                        className={getInputClass(
-                          Boolean(fieldErrors.certIssuer),
-                        )}
+                        className={getInputClass(Boolean(fieldErrors.certTitle))}
                       />
                     </Field>
-                    <Field label={t("fields.certUrl")} error={fieldErrors.certUrl}>
-                      <input
-                        value={form.certUrl}
-                        onChange={(e) =>
-                          handleChange("certUrl", e.target.value)
-                        }
-                        className={getInputClass(Boolean(fieldErrors.certUrl))}
-                      />
-                    </Field>
+                    <div className="grid gap-3 sm:grid-cols-2">
+                      <Field label={t("fields.certIssuer")} error={fieldErrors.certIssuer}>
+                        <input
+                          value={form.certIssuer}
+                          onChange={(e) =>
+                            handleChange("certIssuer", e.target.value)
+                          }
+                          className={getInputClass(
+                            Boolean(fieldErrors.certIssuer),
+                          )}
+                        />
+                      </Field>
+                      <Field label={t("fields.certUrl")} error={fieldErrors.certUrl}>
+                        <input
+                          value={form.certUrl}
+                          onChange={(e) =>
+                            handleChange("certUrl", e.target.value)
+                          }
+                          className={getInputClass(Boolean(fieldErrors.certUrl))}
+                        />
+                      </Field>
+                    </div>
                   </div>
-                </div>
-              )}
-            </div>
+                )}
+              </div>
             )}
           </div>
         )}
@@ -841,11 +830,10 @@ function ToggleOption({
     <button
       type="button"
       onClick={onClick}
-      className={`rounded-xl border-2 px-3 py-2.5 text-sm font-semibold transition-all ${
-        active
+      className={`rounded-xl border-2 px-3 py-2.5 text-sm font-semibold transition-all ${active
           ? "border-teal-500 bg-teal-50 text-teal-700"
           : "border-slate-200 bg-white text-slate-600 hover:border-slate-300"
-      }`}
+        }`}
     >
       {label}
     </button>

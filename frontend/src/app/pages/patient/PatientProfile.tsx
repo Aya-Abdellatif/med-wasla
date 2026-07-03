@@ -28,15 +28,7 @@ import {
 } from "lucide-react";
 import { ImageWithFallback } from "../../figma/ImageWithFallback";
 import { showError, showSuccess } from "../../../utils/toast";
-
-
-const EGYPTIAN_GOVERNORATES = [
-  "Cairo", "Giza", "Alexandria", "Dakahlia", "Red Sea", "Beheira",
-  "Fayoum", "Gharbia", "Ismailia", "Menofia", "Minya", "Qaliubiya",
-  "New Valley", "Suez", "Aswan", "Assiut", "Beni Suef", "Port Said",
-  "Damietta", "Sharqia", "South Sinai", "Kafr El Sheikh", "Matruh",
-  "Luxor", "Qena", "North Sinai", "Sohag",
-];
+import { EgyptianGovernorates } from "../../../constants/governorates";
 
 function stripPhoneDisplay(phone: string): string {
   const digits = phone.replace(/\D/g, "");
@@ -193,7 +185,7 @@ function PersonalTab({ profile, onSave, isLoading }: {
     return <div className="py-10 text-center text-sm text-fg-muted">{t("patientProfile:personal.loading")}</div>;
   }
 
-  const filteredGovs = EGYPTIAN_GOVERNORATES.filter((g) =>
+  const filteredGovs = EgyptianGovernorates.filter((g) =>
     t(`patientProfile:governorates.${g}`).toLowerCase().includes(govSearch.toLowerCase())
     || g.toLowerCase().includes(govSearch.toLowerCase())
   );
