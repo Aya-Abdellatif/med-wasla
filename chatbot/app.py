@@ -17,6 +17,8 @@ CORS(app)
 
 print("--- WASLABOT BACKEND ACTIVE ---")
 
+INTERNAL_API_SECRET = os.getenv("INTERNAL_API_SECRET")
+
 
 # ------------------------------------------------------------
 # CHAT ENDPOINT
@@ -26,6 +28,15 @@ print("--- WASLABOT BACKEND ACTIVE ---")
 def chat():
 
     try:
+        # Only Express should be able to reach this endpoint: it's the
+        # one place that verifies the user's real identity (JWT) before
+        # forwarding a user_id here. Without this check, anyone with the
+        # public URL could pass any user_id and read someone else's data.
+        if INTERNAL_API_SECRET and request.headers.get("X-Internal-Secret") != INTERNAL_API_SECRET:
+            return jsonify({
+                "error": "Unauthorized"
+            }), 401
+
         data = request.get_json()
 
         if not data:
