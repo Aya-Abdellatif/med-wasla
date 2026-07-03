@@ -1,3 +1,4 @@
+import { useTranslation } from "react-i18next";
 import type { Appointment, DashboardStat } from "./dashboardTypes";
 import { DASHBOARD_THEME } from "./dashboardUtils";
 import { AppointmentRow } from "./AppointmentRow";
@@ -35,6 +36,8 @@ export function OverviewTab({
   loading = false,
   todayStr,
 }: OverviewTabProps) {
+  const { t } = useTranslation("dashboard");
+
   const cancellablePending = pendingAppointments.filter(
     (a) => a.backendStatus === "pending" && a.visitType === "home",
   );
@@ -80,7 +83,7 @@ export function OverviewTab({
       <div className="bg-white rounded-xl p-6" style={{ boxShadow: "0 1px 3px rgba(0,0,0,0.1)" }}>
         <div className="flex flex-wrap items-center justify-between gap-3 mb-6">
           <h2 className="text-xl font-bold" style={{ color: DASHBOARD_THEME.text }}>
-            Pending Home Visit Requests
+            {t("overview.pendingHomeVisits")}
           </h2>
           {cancellablePending.length > 1 && onCancelAllPending && (
             <button
@@ -90,14 +93,14 @@ export function OverviewTab({
               className="px-4 py-2 text-sm font-medium rounded-lg text-white disabled:opacity-50"
               style={{ backgroundColor: DASHBOARD_THEME.danger }}
             >
-              {isBulkHome ? "Cancelling..." : "Cancel All Home Requests"}
+              {isBulkHome ? t("overview.cancelling") : t("overview.cancelAllHomeRequests")}
             </button>
           )}
         </div>
         <div className="space-y-4">
           {loading ? (
             <p className="text-sm text-center py-6" style={{ color: DASHBOARD_THEME.muted }}>
-              Loading appointments...
+              {t("overview.loadingAppointments")}
             </p>
           ) : pendingAppointments.length > 0 ? (
             pendingAppointments.map((appointment) => (
@@ -115,7 +118,7 @@ export function OverviewTab({
             ))
           ) : (
             <p className="text-sm text-center py-6" style={{ color: DASHBOARD_THEME.muted }}>
-              No pending home visit requests.
+              {t("overview.emptyRequests")}
             </p>
           )}
         </div>
@@ -125,7 +128,7 @@ export function OverviewTab({
       <div className="bg-white rounded-xl p-6" style={{ boxShadow: "0 1px 3px rgba(0,0,0,0.1)" }}>
         <div className="flex flex-wrap items-center justify-between gap-3 mb-6">
           <h2 className="text-xl font-bold" style={{ color: DASHBOARD_THEME.text }}>
-            Today&apos;s Schedule
+            {t("overview.todaySchedule")}
           </h2>
           <div className="flex items-center gap-3">
             {cancellableToday.length > 1 && onCancelAllUpcoming && (
@@ -136,7 +139,7 @@ export function OverviewTab({
                 className="px-4 py-2 text-sm font-medium rounded-lg text-white disabled:opacity-50"
                 style={{ backgroundColor: DASHBOARD_THEME.danger }}
               >
-                {isBulkUpcoming ? "Cancelling..." : "Cancel All"}
+                {isBulkUpcoming ? t("overview.cancelling") : t("overview.cancelAll")}
               </button>
             )}
             <button
@@ -144,14 +147,14 @@ export function OverviewTab({
               className="text-sm font-medium hover:underline transition-colors"
               style={{ color: DASHBOARD_THEME.primary }}
             >
-              View All
+              {t("overview.viewAll")}
             </button>
           </div>
         </div>
         <div className="space-y-4">
           {loading ? (
             <p className="text-sm text-center py-6" style={{ color: DASHBOARD_THEME.muted }}>
-              Loading appointments...
+              {t("overview.loadingAppointments")}
             </p>
           ) : todayUpcoming.length > 0 ? (
             todayUpcoming.map((appointment) => (
@@ -168,7 +171,7 @@ export function OverviewTab({
             ))
           ) : (
             <p className="text-sm text-center py-6" style={{ color: DASHBOARD_THEME.muted }}>
-              No confirmed appointments for today.
+              {t("overview.emptySchedule")}
             </p>
           )}
         </div>

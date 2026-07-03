@@ -1,5 +1,6 @@
 import { useState, useEffect, useCallback, useRef } from "react";
 import { Calendar, Users, CheckCircle, AlertCircle } from "lucide-react";
+import { useTranslation } from "react-i18next";
 import { useAuth } from "../../context/useAuth";
 import {
   fetchSpecialistAppointments,
@@ -27,6 +28,7 @@ function isSpecialistRole(role?: string) {
 }
 
 export function Dashboard() {
+  const { t, i18n } = useTranslation("dashboard");
   const { user, refreshSpecialistProfile } = useAuth();
   const userRef = useRef(user);
 
@@ -61,13 +63,13 @@ export function Dashboard() {
       setHomeServiceRequests(nextHomeRequests);
     } catch (err) {
       showError(
-        err instanceof Error ? err.message : "Failed to load appointments",
+        err instanceof Error ? err.message : t("toast.loadFailed"),
         getToastUserContext(currentUser),
       );
     } finally {
       if (!silent) setLoadingAppointments(false);
     }
-  }, []);
+  }, [t]);
 
   useEffect(() => {
     if (!user?.id || !isSpecialistRole(user.role)) return;
@@ -90,7 +92,7 @@ export function Dashboard() {
       } catch (err) {
         if (cancelled) return;
         showError(
-          err instanceof Error ? err.message : "Failed to load appointments",
+          err instanceof Error ? err.message : t("toast.loadFailed"),
           getToastUserContext(userRef.current),
         );
       } finally {
@@ -106,7 +108,7 @@ export function Dashboard() {
       cancelled = true;
       clearInterval(interval);
     };
-  }, [user?.id, user?.role, refreshSpecialistProfile, loadAppointments]);
+  }, [user?.id, user?.role, refreshSpecialistProfile, loadAppointments, t]);
 
   const runWithRefresh = async (
     action: () => Promise<unknown>,
@@ -133,8 +135,8 @@ export function Dashboard() {
             await cancelAppointment(requestId);
           }
         },
-        action === "accepted" ? "Home visit accepted!" : "Home visit declined.",
-        "Failed to update home visit request",
+        action === "accepted" ? t("toast.homeVisitAccepted") : t("toast.homeVisitDeclined"),
+        t("toast.requestUpdateFailed"),
       );
     } finally {
       setUpdatingRequestId(null);
@@ -146,8 +148,8 @@ export function Dashboard() {
     try {
       await runWithRefresh(
         () => cancelAppointment(appointmentId),
-        "Appointment cancelled.",
-        "Failed to cancel appointment",
+        t("toast.appointmentCancelled"),
+        t("toast.cancelAppointmentFailed"),
       );
     } finally {
       setUpdatingAppointmentId(null);
@@ -164,8 +166,8 @@ export function Dashboard() {
     try {
       await runWithRefresh(
         () => Promise.all(pendingHome.map((a) => cancelAppointment(a.id))),
-        `${pendingHome.length} home visit request(s) cancelled.`,
-        "Failed to cancel home visit requests",
+        t("toast.homeVisitsCancelled", { count: pendingHome.length }),
+        t("toast.bulkCancelFailed"),
       );
     } finally {
       setUpdatingAppointmentId(null);
@@ -177,8 +179,8 @@ export function Dashboard() {
     try {
       await runWithRefresh(
         () => cancelDayAppointments(date),
-        "All appointments for this day cancelled.",
-        "Failed to cancel appointments",
+        t("toast.allCancelled"),
+        t("toast.bulkCancelFailed"),
       );
     } finally {
       setUpdatingAppointmentId(null);
@@ -190,8 +192,8 @@ export function Dashboard() {
     try {
       await runWithRefresh(
         () => updateAppointmentStatus(appointmentId, "completed"),
-        "Appointment marked as completed.",
-        "Failed to complete appointment",
+        t("toast.markedComplete"),
+        t("toast.completeFailed"),
       );
     } finally {
       setUpdatingAppointmentId(null);
@@ -203,8 +205,8 @@ export function Dashboard() {
     try {
       await runWithRefresh(
         () => updateAppointmentStatus(appointmentId, "no_show"),
-        "Appointment marked as no show.",
-        "Failed to mark appointment as no show",
+        t("toast.markedNoShow"),
+        t("toast.noShowFailed"),
       );
     } finally {
       setUpdatingAppointmentId(null);
@@ -224,21 +226,21 @@ export function Dashboard() {
 
   const stats = [
     {
-      label: "Today's Appointments",
+      label: t("stats.todaysAppointments"),
       value: appointments.filter((a) => a.date === todayStr && a.status === "scheduled").length,
       icon: Calendar,
       iconColor: DASHBOARD_THEME.primary,
       bgColor: DASHBOARD_THEME.primaryLight,
     },
     {
-      label: "Completed Today",
+      label: t("stats.completedToday"),
       value: appointments.filter((a) => a.date === todayStr && a.status === "completed").length,
       icon: CheckCircle,
       iconColor: DASHBOARD_THEME.success,
       bgColor: DASHBOARD_THEME.successLight,
     },
     {
-      label: "Total Patients",
+      label: t("stats.totalPatients"),
       value: countUniquePatients(appointments),
       icon: Users,
       iconColor: DASHBOARD_THEME.accent,
@@ -247,7 +249,7 @@ export function Dashboard() {
     ...(showHomeServiceTab
       ? [
           {
-            label: "Pending Requests",
+            label: t("stats.pendingRequests"),
             value: pendingHomeRequests.length,
             icon: AlertCircle,
             iconColor: DASHBOARD_THEME.warning,
@@ -290,7 +292,7 @@ export function Dashboard() {
       <DashboardTabs
         activeTab={visibleTab}
         onTabChange={setActiveTab}
-        formattedDate={getFormattedToday()}
+        formattedDate={getFormattedToday(i18n.language)}
         showRequestsTab={showHomeServiceTab}
         pendingRequestsCount={pendingHomeRequests.length}
       />

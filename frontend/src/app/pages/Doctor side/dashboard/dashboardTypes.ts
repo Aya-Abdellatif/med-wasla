@@ -1,4 +1,5 @@
 import type { ComponentType, CSSProperties } from "react";
+import type { TFunction } from "i18next";
 import type { User, AvailableSlot } from "../../../context/AuthContext";
 
 export interface Appointment {
@@ -92,6 +93,10 @@ export const WEEK_DAYS = [
   "Friday",
   "Saturday",
 ] as const;
+
+export function translateWeekDay(t: TFunction, day: string): string {
+  return t(`days.${day}`, { defaultValue: day, ns: "booking" });
+}
 
 export function buildProfileUpdatePayload(
   current: ProfileForm,
