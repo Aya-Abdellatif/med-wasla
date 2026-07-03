@@ -23,6 +23,7 @@ import {
   ExternalLink,
   Users 
 } from "lucide-react";
+import Logo from "../../../assets/logo.png";
 
 type FilterTab = "all" | "pending" | "approved" | "rejected";
 
@@ -161,7 +162,13 @@ function AdminDashboardView() {
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 h-20 flex items-center justify-between">
           <div className="flex items-center gap-3">
             <div className="w-10 h-10 rounded-xl bg-linear-to-tr from-teal-500 to-emerald-400 flex items-center justify-center text-white shadow-md shadow-teal-200">
-              🛡️
+              <img
+                src={Logo}
+                alt={("common:brand.logoAlt")}
+                width={80}
+                height={68}
+                className="w-20 h-17 -mr-4 transition-transform duration-300"
+              />
             </div>
             <div>
               <span className="text-2xl font-bold tracking-tight">
