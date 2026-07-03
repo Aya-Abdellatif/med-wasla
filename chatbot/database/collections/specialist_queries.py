@@ -36,7 +36,7 @@ def get_specialists_by_specialization(specialization):
                 "specialization": specialization,
                 "verificationStatus": "approved"
             }
-        )
+        ).sort("rating", -1)
     )
 
 
@@ -46,7 +46,7 @@ def get_approved_specialists():
             {
                 "verificationStatus": "approved"
             }
-        )
+        ).sort("rating", -1)
     )
 
 

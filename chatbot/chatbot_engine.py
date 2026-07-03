@@ -90,11 +90,10 @@ def predict(user_query, chat_id="default_session"):
     if ENABLE_DATABASE:
         user_id = get_user(chat_id)
 
-        if user_id:
-            try:
-                user_context = get_user_context(processed_query, user_id)
-            except Exception as e:
-                print("Database Error:", e)
+        try:
+            user_context = get_user_context(processed_query, user_id)
+        except Exception as e:
+            print("Database Error:", e)
 
     # =========================
     # DATABASE RESPONSE

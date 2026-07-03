@@ -79,12 +79,12 @@ def is_gibberish(text, chat_id):
         if len(word) == 1:
             return True
 
-        # kb, df...
-        if len(word) == 2 and vowels == 0:
+        # Same character repeated (ee, eee, rrrr...)
+        if len(set(word)) == 1:
             return True
 
-        # xpt, jgd...
-        if len(word) == 3 and vowels == 0:
+        # kb, df, xpt, jgd, wxyz...
+        if 2 <= len(word) <= 4 and vowels == 0:
             return True
 
         # qwrty, zxcvb...
