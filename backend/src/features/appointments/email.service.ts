@@ -7,7 +7,7 @@ export function buildEmailContent(
   if (templateName === "appointment_confirm") {
     const [patientName, specialistName, dateStr, timeStr] = params;
     return {
-      subject: "تأكيد موعدك - ميد واصلة",
+      subject: "تأكيد موعدك - ميد وصلة",
       html: `<div dir="rtl" style="font-family:Arial,sans-serif;padding:24px;color:#111827">
         <p>مرحبًا <strong>${patientName}</strong>،</p>
         <p>تم تأكيد موعدك مع <strong>${specialistName}</strong>.</p>
@@ -15,7 +15,7 @@ export function buildEmailContent(
         <p>🕒 الوقت: <strong>${timeStr}</strong></p>
         <br/>
         <p>نتطلع لاستقبالكم في الموعد المحدد.</p>
-        <p>فريق ميد واصلة</p>
+        <p>فريق ميد وصلة</p>
       </div>`,
     };
   }
@@ -23,7 +23,7 @@ export function buildEmailContent(
   if (templateName === "appointment_reminder") {
     const [patientName, specialistName, dateStr, timeStr] = params;
     return {
-      subject: "تذكير بموعدك - ميد واصلة",
+      subject: "تذكير بموعدك - ميد وصلة",
       html: `<div dir="rtl" style="font-family:Arial,sans-serif;padding:24px;color:#111827">
         <p>مرحبًا <strong>${patientName}</strong>،</p>
         <p>نود تذكيرك بموعدك مع <strong>${specialistName}</strong>.</p>
@@ -31,7 +31,7 @@ export function buildEmailContent(
         <p>🕒 الوقت: <strong>${timeStr}</strong></p>
         <br/>
         <p>نتمنى لك دوام الصحة.</p>
-        <p>فريق ميد واصلة</p>
+        <p>فريق ميد وصلة</p>
       </div>`,
     };
   }
@@ -39,18 +39,18 @@ export function buildEmailContent(
   if (templateName === "appointment_cancel") {
     const [patientName, specialistName, dateStr, timeStr] = params;
     return {
-      subject: "إشعار بإلغاء الموعد - ميد واصلة",
+      subject: "إشعار بإلغاء الموعد - ميد وصلة",
       html: `<div dir="rtl" style="font-family:Arial,sans-serif;padding:24px;color:#111827">
         <p>مرحبًا <strong>${patientName}</strong>،</p>
         <p>نأسف لإبلاغك بأنه تم إلغاء موعدك مع <strong>${specialistName}</strong>، والذي كان مقررًا يوم <strong>${dateStr}</strong> في تمام <strong>${timeStr}</strong>.</p>
         <br/>
         <p>يمكنك حجز موعد جديد من خلال التطبيق.</p>
-        <p>فريق ميد واصلة</p>
+        <p>فريق ميد وصلة</p>
       </div>`,
     };
   }
 
-  return { subject: "إشعار من ميد واصلة", html: "" };
+  return { subject: "إشعار من ميد وصلة", html: "" };
 }
 
 export async function sendAppointmentEmail(
