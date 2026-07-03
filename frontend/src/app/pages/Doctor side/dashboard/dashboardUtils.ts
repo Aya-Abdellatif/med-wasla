@@ -31,9 +31,14 @@ export function getAvatarColor(name: string): { bg: string; text: string } {
   return colors[index];
 }
 
-export function formatDateLabel(dateStr: string): string {
+/**
+ * Formats a "YYYY-MM-DD" date string as a long localized date label,
+ * e.g. "Tuesday, July 3, 2026" (en) or "الثلاثاء، ٣ يوليو ٢٠٢٦" (ar).
+ * Pass the current i18n language (e.g. from useTranslation()'s i18n.language).
+ */
+export function formatDateLabel(dateStr: string, locale: string = "en-US"): string {
   const date = new Date(`${dateStr}T00:00:00`);
-  return date.toLocaleDateString("en-US", {
+  return date.toLocaleDateString(locale, {
     weekday: "long",
     year: "numeric",
     month: "long",
@@ -84,8 +89,12 @@ export function offersHomeService(user: { role?: string; homeVisit?: boolean } |
   return user.role === "doctor" && user.homeVisit === true;
 }
 
-export function getFormattedToday(): string {
-  return new Date().toLocaleDateString("en-US", {
+/**
+ * Returns today's date as a long localized label.
+ * Pass the current i18n language so it matches the active UI language.
+ */
+export function getFormattedToday(locale: string = "en-US"): string {
+  return new Date().toLocaleDateString(locale, {
     weekday: "long",
     year: "numeric",
     month: "long",

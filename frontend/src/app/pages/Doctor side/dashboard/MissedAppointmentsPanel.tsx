@@ -1,5 +1,6 @@
 import { useState } from "react";
 import { ChevronDown, History } from "lucide-react";
+import { useTranslation } from "react-i18next";
 import { DASHBOARD_THEME } from "./dashboardUtils";
 
 interface MissedAppointmentsPanelProps {
@@ -11,13 +12,17 @@ interface MissedAppointmentsPanelProps {
 
 export function MissedAppointmentsPanel({
   count,
-  title = "Missed appointments",
-  description = "These passed without confirmation or completion. No action is required.",
+  title,
+  description,
   children,
 }: MissedAppointmentsPanelProps) {
+  const { t } = useTranslation("dashboard");
   const [expanded, setExpanded] = useState(false);
 
   if (count === 0) return null;
+
+  const resolvedTitle = title ?? t("missed.title");
+  const resolvedDescription = description ?? t("missed.description");
 
   return (
     <div
@@ -27,7 +32,7 @@ export function MissedAppointmentsPanel({
       <button
         type="button"
         onClick={() => setExpanded((open) => !open)}
-        className="w-full flex items-center justify-between gap-3 px-4 py-3 text-left transition-colors hover:bg-gray-50"
+        className="w-full flex items-center justify-between gap-3 px-4 py-3 text-start transition-colors hover:bg-gray-50"
       >
         <div className="flex items-center gap-3 min-w-0">
           <div
@@ -38,13 +43,13 @@ export function MissedAppointmentsPanel({
           </div>
           <div className="min-w-0">
             <p className="text-sm font-semibold" style={{ color: DASHBOARD_THEME.text }}>
-              {title}
-              <span className="ml-2 font-normal" style={{ color: DASHBOARD_THEME.muted }}>
+              {resolvedTitle}
+              <span className="ms-2 font-normal" style={{ color: DASHBOARD_THEME.muted }}>
                 ({count})
               </span>
             </p>
             <p className="text-xs truncate sm:whitespace-normal" style={{ color: DASHBOARD_THEME.muted }}>
-              {description}
+              {resolvedDescription}
             </p>
           </div>
         </div>

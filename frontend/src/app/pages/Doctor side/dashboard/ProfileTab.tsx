@@ -1,4 +1,5 @@
 import { useRef, useState } from "react";
+import { useTranslation } from "react-i18next";
 import {
   Edit,
   Save,
@@ -15,10 +16,10 @@ import {
 } from "lucide-react";
 import { showWarning } from "../../../../utils/toast";
 import type { User, AvailableSlot } from "../../../context/AuthContext";
-import { MEDICAL_SPECIALIZATIONS } from "../../../../constants/medicalSpecializations";
+import { specialtyToKey, MEDICAL_SPECIALIZATIONS } from "../../../../constants/medicalSpecializations";
 import { getFirstName } from "../../../../utils/displayName";
 import type { NewCertificateForm, ProfileForm } from "./dashboardTypes";
-import { WEEK_DAYS } from "./dashboardTypes";
+import { WEEK_DAYS, translateWeekDay } from "./dashboardTypes";
 import { Avatar } from "./Avatar";
 
 interface ProfileTabProps {
@@ -74,6 +75,7 @@ export function ProfileTab({
   onAvailableSlotsChange,
   isSavingSlots,
 }: ProfileTabProps) {
+  const { t, i18n } = useTranslation("dashboard");
   const [editingCertId, setEditingCertId] = useState<string | null>(null);
   const [editingCert, setEditingCert] = useState<NewCertificateForm>({
     title: "",
@@ -99,7 +101,7 @@ export function ProfileTab({
         (slot, slotIndex) => slotIndex !== index && slot.day === value,
       );
       if (isDuplicate) {
-        showWarning("This day already has a slot. Each weekday can only be added once.");
+        showWarning(t("profile.slots.duplicateDay"));
         return;
       }
     }
@@ -129,33 +131,40 @@ export function ProfileTab({
 
   const pending = user?.pendingProfileUpdates;
 
+  const roleSubtitle =
+    user?.role === "doctor"
+      ? t("profile.roleSubtitle.doctor", { specialty: user.specialty || t("profile.roleSubtitle.generalFallback") })
+      : user?.role === "nurse"
+        ? t("profile.roleSubtitle.nurse")
+        : t("profile.roleSubtitle.patient");
+
   return (
     <div className="bg-white rounded-xl p-8" style={{ boxShadow: "0 1px 3px rgba(0,0,0,0.1)" }}>
       <div className="flex items-center justify-between mb-8">
-        <h2 className="text-xl font-bold" style={{ color: "#111827" }}>Profile Information</h2>
+        <h2 className="text-xl font-bold" style={{ color: "#111827" }}>{t("profile.title")}</h2>
         {!isEditingProfile ? (
           <button
             onClick={onStartEditing}
-            className="flex items-center space-x-2 px-4 py-2 text-white rounded-lg transition-colors text-sm bg-teal-500 hover:bg-teal-600"
+            className="flex items-center gap-2 px-4 py-2 text-white rounded-lg transition-colors text-sm bg-teal-500 hover:bg-teal-600"
           >
             <Edit className="w-4 h-4" />
-            <span>Edit Profile</span>
+            <span>{t("profile.edit")}</span>
           </button>
         ) : (
-          <div className="flex space-x-2">
+          <div className="flex gap-2">
             <button
               onClick={onCancelEditing}
               className="px-4 py-2 border rounded-lg transition-colors text-sm border-gray-200 text-gray-700 hover:bg-gray-50"
             >
-              Cancel
+              {t("profile.cancel")}
             </button>
             <button
               onClick={onSaveProfile}
               disabled={isSaving}
-              className="flex items-center space-x-2 px-4 py-2 text-white rounded-lg transition-colors text-sm disabled:opacity-50 bg-teal-500 hover:bg-teal-600"
+              className="flex items-center gap-2 px-4 py-2 text-white rounded-lg transition-colors text-sm disabled:opacity-50 bg-teal-500 hover:bg-teal-600"
             >
               <Save className="w-4 h-4" />
-              <span>{isSaving ? "Saving..." : "Save"}</span>
+              <span>{isSaving ? t("profile.saving") : t("profile.save")}</span>
             </button>
           </div>
         )}
@@ -163,28 +172,26 @@ export function ProfileTab({
 
       {pending && Object.keys(pending).length > 0 && (
         <div className="mb-6 rounded-lg border border-amber-200 bg-amber-50 px-4 py-3 text-sm text-amber-900">
-          <p className="font-semibold">Pending admin review</p>
-          <p className="mt-1 text-amber-800">
-            Your live profile still shows the approved version until the admin approves these changes.
-          </p>
+          <p className="font-semibold">{t("profile.pendingReviewTitle")}</p>
+          <p className="mt-1 text-amber-800">{t("profile.pendingReview")}</p>
           <ul className="mt-2 space-y-1">
-            {pending.bio && <li>Bio update submitted</li>}
-            {pending.location && <li>Location update submitted</li>}
-            {pending.specialty && <li>Specialty update submitted</li>}
+            {pending.bio && <li>{t("profile.pendingItems.bio")}</li>}
+            {pending.location && <li>{t("profile.pendingItems.location")}</li>}
+            {pending.specialty && <li>{t("profile.pendingItems.specialty")}</li>}
           </ul>
         </div>
       )}
 
       <div className="space-y-6">
-        <div className="flex items-center space-x-6">
+        <div className="flex items-center gap-6">
           <div className="relative group">
             <Avatar src={user?.avatar} name={user?.name || "U"} size="lg" />
             <button
               type="button"
               onClick={() => photoInputRef.current?.click()}
               disabled={isUploadingPhoto}
-              className="absolute bottom-0 right-0 p-2 bg-teal-500 text-white rounded-full shadow-md hover:bg-teal-600 transition-colors disabled:opacity-50"
-              title="Upload profile photo"
+              className="absolute bottom-0 end-0 p-2 bg-teal-500 text-white rounded-full shadow-md hover:bg-teal-600 transition-colors disabled:opacity-50"
+              title={t("profile.uploadPhotoTitle")}
             >
               <Upload className="w-4 h-4" />
             </button>
@@ -198,26 +205,20 @@ export function ProfileTab({
           </div>
           <div>
             <h3 className="text-lg font-semibold" style={{ color: "#111827" }}>{firstName}</h3>
-            <p style={{ color: "#6b7280" }}>
-              {user?.role === "doctor"
-                ? `${user.specialty || "General"} Specialist`
-                : user?.role === "nurse"
-                ? "Home Care Nurse"
-                : "Patient"}
-            </p>
+            <p style={{ color: "#6b7280" }}>{roleSubtitle}</p>
             <p className="text-xs mt-1 text-gray-400">
               {isUploadingPhoto
-                ? "Uploading photo..."
+                ? t("profile.uploadingPhoto")
                 : user?.avatar
-                ? "Click the upload icon to change your photo"
-                : "No photo yet — upload one or your initial will be shown"}
+                  ? t("profile.changePhotoHint")
+                  : t("profile.noPhotoHint")}
             </p>
           </div>
         </div>
 
         <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
           <div>
-            <label className="block mb-2 text-sm font-medium" style={{ color: "#374151" }}>Full Name</label>
+            <label className="block mb-2 text-sm font-medium" style={{ color: "#374151" }}>{t("profile.fields.name")}</label>
             <input
               type="text"
               value={formValues.name}
@@ -233,15 +234,15 @@ export function ProfileTab({
           </div>
 
           <div>
-            <label className="block mb-2 text-sm font-medium" style={{ color: "#374151" }}>Email</label>
+            <label className="block mb-2 text-sm font-medium" style={{ color: "#374151" }}>{t("profile.fields.email")}</label>
             <div className="relative">
-              <Mail className="absolute left-4 top-1/2 -translate-y-1/2 w-4 h-4" style={{ color: "#9ca3af" }} />
+              <Mail className="absolute start-4 top-1/2 -translate-y-1/2 w-4 h-4" style={{ color: "#9ca3af" }} />
               <input
                 type="email"
                 value={formValues.email}
                 onChange={(e) => setField("email", e.target.value)}
                 disabled={!isEditingProfile}
-                className="w-full pl-11 pr-4 py-3 border rounded-lg focus:outline-none focus:ring-2 text-sm"
+                className="w-full ps-11 pe-4 py-3 border rounded-lg focus:outline-none focus:ring-2 text-sm"
                 style={{
                   borderColor: "#e5e7eb",
                   backgroundColor: isEditingProfile ? "#fff" : "#f9fafb",
@@ -252,15 +253,15 @@ export function ProfileTab({
           </div>
 
           <div>
-            <label className="block mb-2 text-sm font-medium" style={{ color: "#374151" }}>Phone</label>
+            <label className="block mb-2 text-sm font-medium" style={{ color: "#374151" }}>{t("profile.fields.phone")}</label>
             <div className="relative">
-              <Phone className="absolute left-4 top-1/2 -translate-y-1/2 w-4 h-4" style={{ color: "#9ca3af" }} />
+              <Phone className="absolute start-4 top-1/2 -translate-y-1/2 w-4 h-4" style={{ color: "#9ca3af" }} />
               <input
                 type="tel"
                 value={formValues.phone}
                 onChange={(e) => setField("phone", e.target.value)}
                 disabled={!isEditingProfile}
-                className="w-full pl-11 pr-4 py-3 border rounded-lg focus:outline-none focus:ring-2 text-sm"
+                className="w-full ps-11 pe-4 py-3 border rounded-lg focus:outline-none focus:ring-2 text-sm"
                 style={{
                   borderColor: "#e5e7eb",
                   backgroundColor: isEditingProfile ? "#fff" : "#f9fafb",
@@ -274,7 +275,7 @@ export function ProfileTab({
             <>
               {user?.role === "doctor" && (
                 <div>
-                  <label className="block mb-2 text-sm font-medium" style={{ color: "#374151" }}>Specialty</label>
+                  <label className="block mb-2 text-sm font-medium" style={{ color: "#374151" }}>{t("profile.fields.specialty")}</label>
                   <select
                     value={formValues.specialty}
                     onChange={(e) => setField("specialty", e.target.value)}
@@ -287,27 +288,30 @@ export function ProfileTab({
                     }}
                   >
                     <option value="" disabled>
-                      Select medical specialty
+                      {t("profile.selectSpecialty")}
                     </option>
-                    {MEDICAL_SPECIALIZATIONS.map((specialty) => (
-                      <option key={specialty} value={specialty}>
-                        {specialty}
-                      </option>
-                    ))}
+                    {MEDICAL_SPECIALIZATIONS.map((specialty) => {
+                      const key = specialtyToKey(specialty);
+                      return (
+                        <option key={specialty} value={specialty}>
+                          {key ? t(`constants:specializations.${key}`) : specialty}
+                        </option>
+                      );
+                    })}
                   </select>
                 </div>
               )}
 
               <div>
-                <label className="block mb-2 text-sm font-medium" style={{ color: "#374151" }}>Experience</label>
+                <label className="block mb-2 text-sm font-medium" style={{ color: "#374151" }}>{t("profile.fields.experience")}</label>
                 <div className="relative">
-                  <Award className="absolute left-4 top-1/2 -translate-y-1/2 w-4 h-4" style={{ color: "#9ca3af" }} />
+                  <Award className="absolute start-4 top-1/2 -translate-y-1/2 w-4 h-4" style={{ color: "#9ca3af" }} />
                   <input
                     type="text"
                     value={formValues.experience}
                     onChange={(e) => setField("experience", e.target.value)}
                     disabled={!isEditingProfile}
-                    className="w-full pl-11 pr-4 py-3 border rounded-lg focus:outline-none focus:ring-2 text-sm"
+                    className="w-full ps-11 pe-4 py-3 border rounded-lg focus:outline-none focus:ring-2 text-sm"
                     style={{
                       borderColor: "#e5e7eb",
                       backgroundColor: isEditingProfile ? "#fff" : "#f9fafb",
@@ -318,15 +322,15 @@ export function ProfileTab({
               </div>
 
               <div>
-                <label className="block mb-2 text-sm font-medium" style={{ color: "#374151" }}>Location</label>
+                <label className="block mb-2 text-sm font-medium" style={{ color: "#374151" }}>{t("profile.fields.location")}</label>
                 <div className="relative">
-                  <MapPin className="absolute left-4 top-1/2 -translate-y-1/2 w-4 h-4" style={{ color: "#9ca3af" }} />
+                  <MapPin className="absolute start-4 top-1/2 -translate-y-1/2 w-4 h-4" style={{ color: "#9ca3af" }} />
                   <input
                     type="text"
                     value={formValues.location}
                     onChange={(e) => setField("location", e.target.value)}
                     disabled={!isEditingProfile}
-                    className="w-full pl-11 pr-4 py-3 border rounded-lg focus:outline-none focus:ring-2 text-sm"
+                    className="w-full ps-11 pe-4 py-3 border rounded-lg focus:outline-none focus:ring-2 text-sm"
                     style={{
                       borderColor: "#e5e7eb",
                       backgroundColor: isEditingProfile ? "#fff" : "#f9fafb",
@@ -340,7 +344,7 @@ export function ProfileTab({
         </div>
 
         <div>
-          <label className="block mb-2 text-sm font-medium" style={{ color: "#374151" }}>Bio</label>
+          <label className="block mb-2 text-sm font-medium" style={{ color: "#374151" }}>{t("profile.fields.bio")}</label>
           <textarea
             value={formValues.bio}
             onChange={(e) => setField("bio", e.target.value)}
@@ -360,19 +364,19 @@ export function ProfileTab({
             <div className="flex items-center justify-between mb-4">
               <div>
                 <h3 className="text-lg font-semibold" style={{ color: "#111827" }}>
-                  Available Slots
+                  {t("profile.availableSlots")}
                 </h3>
                 <p className="text-sm mt-1" style={{ color: "#6b7280" }}>
-                  Saved immediately and shown on your public doctor/nurse card.
+                  {t("profile.slots.savedHint")}
                 </p>
               </div>
               <button
                 type="button"
                 onClick={onAddSlot}
-                className="flex items-center space-x-2 px-4 py-2 border rounded-lg text-sm transition-colors border-gray-200 text-gray-700 hover:bg-gray-50"
+                className="flex items-center gap-2 px-4 py-2 border rounded-lg text-sm transition-colors border-gray-200 text-gray-700 hover:bg-gray-50"
               >
                 <Plus className="w-4 h-4" />
-                <span>Add Slot</span>
+                <span>{t("profile.slots.addSlot")}</span>
               </button>
             </div>
 
@@ -395,8 +399,8 @@ export function ProfileTab({
                         );
                         return (
                           <option key={day} value={day} disabled={dayTaken}>
-                            {day}
-                            {dayTaken ? " (added)" : ""}
+                            {translateWeekDay(t, day)}
+                            {dayTaken ? ` ${t("profile.slots.added")}` : ""}
                           </option>
                         );
                       })}
@@ -419,14 +423,14 @@ export function ProfileTab({
                       className="flex items-center justify-center gap-2 px-3 py-2 border border-rose-200 text-rose-600 rounded-lg text-sm hover:bg-rose-50"
                     >
                       <Trash2 className="w-4 h-4" />
-                      Remove
+                      {t("profile.slots.remove")}
                     </button>
                   </div>
                 ))
               ) : (
                 <div className="text-center py-6 rounded-lg" style={{ backgroundColor: "#f9fafb" }}>
                   <ClockIcon className="w-10 h-10 mx-auto mb-2" style={{ color: "#9ca3af" }} />
-                  <p style={{ color: "#6b7280" }}>No availability slots yet</p>
+                  <p style={{ color: "#6b7280" }}>{t("profile.slots.empty")}</p>
                 </div>
               )}
             </div>
@@ -437,7 +441,7 @@ export function ProfileTab({
               disabled={isSavingSlots}
               className="mt-4 px-4 py-2 bg-teal-500 text-white rounded-lg text-sm font-semibold hover:bg-teal-600 transition-colors disabled:opacity-50"
             >
-              {isSavingSlots ? "Saving availability..." : "Save Availability"}
+              {isSavingSlots ? t("profile.slots.saving") : t("profile.slots.save")}
             </button>
           </div>
         )}
@@ -445,32 +449,32 @@ export function ProfileTab({
         {(user?.role === "doctor" || user?.role === "nurse") && (
           <div className="pt-6 border-t" style={{ borderColor: "#e5e7eb" }}>
             <div className="flex items-center justify-between mb-4">
-              <h3 className="text-lg font-semibold" style={{ color: "#111827" }}>Certificates & Credentials</h3>
+              <h3 className="text-lg font-semibold" style={{ color: "#111827" }}>{t("profile.certificates")}</h3>
               <button
                 onClick={() => onShowCertFormChange(!showCertForm)}
-                className="flex items-center space-x-2 px-4 py-2 border rounded-lg text-sm transition-colors border-gray-200 text-gray-700 hover:bg-gray-50 hover:border-teal-300"
+                className="flex items-center gap-2 px-4 py-2 border rounded-lg text-sm transition-colors border-gray-200 text-gray-700 hover:bg-gray-50 hover:border-teal-300"
               >
                 <Upload className="w-4 h-4" />
-                <span>Upload New</span>
+                <span>{t("profile.uploadNew")}</span>
               </button>
             </div>
 
             {showCertForm && (
               <div className="mb-4 p-4 border rounded-lg space-y-3" style={{ borderColor: "#e5e7eb" }}>
                 <input
-                  placeholder="Certificate title"
+                  placeholder={t("profile.cert.titlePlaceholder")}
                   value={newCert.title}
                   onChange={(e) => onNewCertChange({ ...newCert, title: e.target.value })}
                   className="w-full px-3 py-2 border rounded-lg text-sm"
                 />
                 <input
-                  placeholder="Issued by"
+                  placeholder={t("profile.cert.issuedByPlaceholder")}
                   value={newCert.issuedBy}
                   onChange={(e) => onNewCertChange({ ...newCert, issuedBy: e.target.value })}
                   className="w-full px-3 py-2 border rounded-lg text-sm"
                 />
                 <input
-                  placeholder="Certificate URL"
+                  placeholder={t("profile.cert.urlPlaceholder")}
                   value={newCert.certificateUrl}
                   onChange={(e) => onNewCertChange({ ...newCert, certificateUrl: e.target.value })}
                   className="w-full px-3 py-2 border rounded-lg text-sm"
@@ -479,7 +483,7 @@ export function ProfileTab({
                   onClick={onAddCertificate}
                   className="px-4 py-2 bg-teal-500 text-white rounded-lg text-sm font-semibold hover:bg-teal-600 transition-colors"
                 >
-                  Save Certificate
+                  {t("profile.cert.saveCertificate")}
                 </button>
               </div>
             )}
@@ -508,7 +512,7 @@ export function ProfileTab({
                     {editingCertId === cert.id ? (
                       <div className="space-y-3">
                         <input
-                          placeholder="Certificate title"
+                          placeholder={t("profile.cert.titlePlaceholder")}
                           value={editingCert.title}
                           onChange={(e) =>
                             setEditingCert({ ...editingCert, title: e.target.value })
@@ -516,7 +520,7 @@ export function ProfileTab({
                           className="w-full px-3 py-2 border rounded-lg text-sm"
                         />
                         <input
-                          placeholder="Issued by"
+                          placeholder={t("profile.cert.issuedByPlaceholder")}
                           value={editingCert.issuedBy}
                           onChange={(e) =>
                             setEditingCert({ ...editingCert, issuedBy: e.target.value })
@@ -524,7 +528,7 @@ export function ProfileTab({
                           className="w-full px-3 py-2 border rounded-lg text-sm"
                         />
                         <input
-                          placeholder="Certificate URL"
+                          placeholder={t("profile.cert.urlPlaceholder")}
                           value={editingCert.certificateUrl}
                           onChange={(e) =>
                             setEditingCert({
@@ -544,20 +548,20 @@ export function ProfileTab({
                             }}
                             className="px-4 py-2 bg-teal-500 text-white rounded-lg text-sm font-semibold hover:bg-teal-600"
                           >
-                            Save changes
+                            {t("profile.cert.saveChanges")}
                           </button>
                           <button
                             type="button"
                             onClick={cancelEditingCert}
                             className="px-4 py-2 border rounded-lg text-sm text-gray-700 hover:bg-gray-50"
                           >
-                            Cancel
+                            {t("profile.cancel")}
                           </button>
                         </div>
                       </div>
                     ) : (
                     <div className="flex items-start justify-between gap-3">
-                      <div className="flex items-start space-x-3 flex-1">
+                      <div className="flex items-start gap-3 flex-1">
                         <div
                           className="w-10 h-10 rounded-lg flex items-center justify-center shrink-0"
                           style={{ backgroundColor: cert.verified ? "#dcfce7" : "#fef3c7" }}
@@ -575,25 +579,26 @@ export function ProfileTab({
                             </h4>
                             {cert.isRegistrationCert && (
                               <span className="px-2 py-0.5 text-xs rounded-full bg-sky-100 text-sky-800 font-medium">
-                                Graduation certificate
+                                {t("profile.cert.graduationBadge")}
                               </span>
                             )}
                           </div>
                           <p className="text-sm mt-1" style={{ color: "#6b7280" }}>
-                            Issued by {cert.issuer}
+                            {t("profile.cert.issuedBy", { issuer: cert.issuer })}
                           </p>
                           <p className="text-sm" style={{ color: "#6b7280" }}>
-                            Issue Date:{" "}
-                            {new Date(cert.issueDate).toLocaleDateString("en-US", {
-                              year: "numeric",
-                              month: "long",
-                              day: "numeric",
+                            {t("profile.cert.issueDate", {
+                              date: new Date(cert.issueDate).toLocaleDateString(i18n.language, {
+                                year: "numeric",
+                                month: "long",
+                                day: "numeric",
+                              }),
                             })}
                           </p>
                           {cert.locked && (
                             <p className="mt-2 flex items-center gap-1.5 text-xs text-emerald-800">
                               <Lock className="w-3.5 h-3.5" />
-                              Verified by admin — cannot be edited or deleted
+                              {t("profile.cert.lockedNotice")}
                             </p>
                           )}
                         </div>
@@ -608,18 +613,18 @@ export function ProfileTab({
                           }
                         >
                           {cert.status === "rejected"
-                            ? "Rejected"
+                            ? t("profile.cert.statusRejected")
                             : cert.verified
-                            ? "Verified"
-                            : "Pending Verification"}
+                            ? t("profile.cert.statusVerified")
+                            : t("profile.cert.statusPending")}
                         </span>
                         {!cert.locked && (
                           <div className="flex gap-1">
                             <button
                               type="button"
                               onClick={() => startEditingCert(cert.id)}
-                              title="Edit certificate"
-                              aria-label="Edit certificate"
+                              title={t("profile.cert.editTitle")}
+                              aria-label={t("profile.cert.editTitle")}
                               className="p-2 border rounded-lg text-gray-700 hover:bg-white hover:border-teal-300 transition-colors"
                             >
                               <Edit className="w-4 h-4" />
@@ -627,8 +632,8 @@ export function ProfileTab({
                             <button
                               type="button"
                               onClick={() => void onDeleteCertificate(cert.id)}
-                              title="Delete certificate"
-                              aria-label="Delete certificate"
+                              title={t("profile.cert.deleteTitle")}
+                              aria-label={t("profile.cert.deleteTitle")}
                               className="p-2 border border-rose-200 rounded-lg text-rose-600 hover:bg-rose-50 transition-colors"
                             >
                               <Trash2 className="w-4 h-4" />
@@ -643,7 +648,7 @@ export function ProfileTab({
               ) : (
                 <div className="text-center py-8 rounded-lg" style={{ backgroundColor: "#f9fafb" }}>
                   <FileCheck className="w-12 h-12 mx-auto mb-2" style={{ color: "#9ca3af" }} />
-                  <p style={{ color: "#6b7280" }}>No certificates uploaded yet</p>
+                  <p style={{ color: "#6b7280" }}>{t("profile.cert.empty")}</p>
                 </div>
               )}
             </div>
