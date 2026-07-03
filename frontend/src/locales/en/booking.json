@@ -17,7 +17,9 @@
       "f2": "Specialized care",
       "f3": "Flexible scheduling",
       "cta": "Choose Nurse"
-    }
+    },
+    "footnoteLabel": "Note:",
+    "footnoteText": "After selecting a service type, you'll be directed to choose your preferred doctor or nurse. You can then book directly from their profile."
   },
   "modal": {
     "bookAppointment": "Book Appointment",
@@ -51,7 +53,23 @@
     },
     "successHome": "Home visit booked successfully! Check My Appointments to track it.",
     "successClinic": "Appointment booked successfully! Check My Appointments to track it.",
-    "bookFailed": "Failed to book appointment"
+    "bookFailed": "Failed to book appointment",
+    "preferredTime": "Preferred Time",
+    "availableTime": "Available Time",
+    "selectDateFirst": "Select a date first",
+    "workingHours": "Working hours: {{start}} - {{end}}",
+    "name": "Name:",
+    "specialty": "Specialty:",
+    "location": "Location:",
+    "homeVisitsAvailable": "Home visits:",
+    "available": "Available",
+    "cancel": "Cancel",
+    "fillRequiredFields": "Please fill in all required fields",
+    "signInAsPatient": "Please sign in as a patient to book an appointment",
+    "missingSpecialist": "Unable to book: specialist information is missing",
+    "alreadyBooked": "You already booked an appointment with this doctor on this day.",
+    "loadSlotsFailed": "Failed to load available times",
+    "listSeparator": ", "
   },
   "slots": {
     "notAvailableDay": "Not available this day",
@@ -102,5 +120,14 @@
     "submitting": "Submitting...",
     "noComment": "No written comment",
     "reviewedOn": "Reviewed on {{date}}"
+  },
+  "days": {
+    "Monday": "Monday",
+    "Tuesday": "Tuesday",
+    "Wednesday": "Wednesday",
+    "Thursday": "Thursday",
+    "Friday": "Friday",
+    "Saturday": "Saturday",
+    "Sunday": "Sunday"
   }
 }

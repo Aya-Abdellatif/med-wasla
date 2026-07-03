@@ -1,5 +1,6 @@
 import { X, Stethoscope, Home } from "lucide-react";
 import { useNavigate } from "react-router";
+import { useTranslation } from "react-i18next";
 
 interface BookingTypeModalProps {
   isOpen: boolean;
@@ -7,6 +8,7 @@ interface BookingTypeModalProps {
 }
 
 export function BookingTypeModal({ isOpen, onClose }: BookingTypeModalProps) {
+  const { t } = useTranslation("booking");
   const navigate = useNavigate();
 
   const handleSelection = (type: "doctor" | "nurse") => {
@@ -26,10 +28,8 @@ export function BookingTypeModal({ isOpen, onClose }: BookingTypeModalProps) {
         {/* Header */}
         <div className="border-b border-border px-6 py-4 flex items-center justify-between">
           <div>
-            <h2 className="text-2xl font-bold text-foreground">Choose Service Type</h2>
-            <p className="text-sm text-muted-foreground mt-1">
-              Select the type of healthcare service you need
-            </p>
+            <h2 className="text-2xl font-bold text-foreground">{t("typeModal.title")}</h2>
+            <p className="text-sm text-muted-foreground mt-1">{t("typeModal.note")}</p>
           </div>
           <button
             onClick={onClose}
@@ -45,7 +45,7 @@ export function BookingTypeModal({ isOpen, onClose }: BookingTypeModalProps) {
             {/* Doctor Appointment Option */}
             <button
               onClick={() => handleSelection("doctor")}
-              className="group relative overflow-hidden bg-white border-2 border-border rounded-xl p-8 hover:border-primary transition-all hover:shadow-xl text-left"
+              className="group relative overflow-hidden bg-white border-2 border-border rounded-xl p-8 hover:border-primary transition-all hover:shadow-xl text-start"
             >
               <div className="absolute inset-0 bg-linear-to-br from-teal-500 to-blue-600 opacity-0 group-hover:opacity-5 transition-opacity" />
               <div className="relative">
@@ -53,28 +53,28 @@ export function BookingTypeModal({ isOpen, onClose }: BookingTypeModalProps) {
                   <Stethoscope className="w-8 h-8 text-white" />
                 </div>
                 <h3 className="text-xl font-bold text-foreground mb-2">
-                  Book Doctor Appointment
+                  {t("typeModal.doctor.title")}
                 </h3>
                 <p className="text-muted-foreground mb-4">
-                  Schedule a consultation with our expert doctors at the clinic
+                  {t("typeModal.doctor.description")}
                 </p>
                 <ul className="space-y-2 text-sm text-muted-foreground">
-                  <li className="flex items-center space-x-2">
+                  <li className="flex items-center gap-2">
                     <div className="w-1.5 h-1.5 rounded-full bg-primary" />
-                    <span>In-clinic consultations</span>
+                    <span>{t("typeModal.doctor.f1")}</span>
                   </li>
-                  <li className="flex items-center space-x-2">
+                  <li className="flex items-center gap-2">
                     <div className="w-1.5 h-1.5 rounded-full bg-primary" />
-                    <span>Multiple specialties available</span>
+                    <span>{t("typeModal.doctor.f2")}</span>
                   </li>
-                  <li className="flex items-center space-x-2">
+                  <li className="flex items-center gap-2">
                     <div className="w-1.5 h-1.5 rounded-full bg-primary" />
-                    <span>Advanced diagnostic facilities</span>
+                    <span>{t("typeModal.doctor.f3")}</span>
                   </li>
                 </ul>
-                <div className="mt-6 inline-flex items-center text-primary font-medium group-hover:translate-x-1 transition-transform">
-                  Choose Doctor
-                  <span className="ml-2">→</span>
+                <div className="mt-6 inline-flex items-center text-primary font-medium group-hover:translate-x-1 rtl:group-hover:-translate-x-1 transition-transform">
+                  {t("typeModal.doctor.cta")}
+                  <span className="ms-2 rtl:rotate-180">→</span>
                 </div>
               </div>
             </button>
@@ -82,7 +82,7 @@ export function BookingTypeModal({ isOpen, onClose }: BookingTypeModalProps) {
             {/* Home Service Option */}
             <button
               onClick={() => handleSelection("nurse")}
-              className="group relative overflow-hidden bg-white border-2 border-border rounded-xl p-8 hover:border-primary transition-all hover:shadow-xl text-left"
+              className="group relative overflow-hidden bg-white border-2 border-border rounded-xl p-8 hover:border-primary transition-all hover:shadow-xl text-start"
             >
               <div className="absolute inset-0 bg-linear-to-br from-pink-500 to-pink-600 opacity-0 group-hover:opacity-5 transition-opacity" />
               <div className="relative">
@@ -90,28 +90,28 @@ export function BookingTypeModal({ isOpen, onClose }: BookingTypeModalProps) {
                   <Home className="w-8 h-8 text-white" />
                 </div>
                 <h3 className="text-xl font-bold text-foreground mb-2">
-                  Request Home Service
+                  {t("typeModal.nurse.title")}
                 </h3>
                 <p className="text-muted-foreground mb-4">
-                  Get professional nursing care in the comfort of your home
+                  {t("typeModal.nurse.description")}
                 </p>
                 <ul className="space-y-2 text-sm text-muted-foreground">
-                  <li className="flex items-center space-x-2">
+                  <li className="flex items-center gap-2">
                     <div className="w-1.5 h-1.5 rounded-full bg-primary" />
-                    <span>Home nursing services</span>
+                    <span>{t("typeModal.nurse.f1")}</span>
                   </li>
-                  <li className="flex items-center space-x-2">
+                  <li className="flex items-center gap-2">
                     <div className="w-1.5 h-1.5 rounded-full bg-primary" />
-                    <span>Convenient and comfortable</span>
+                    <span>{t("typeModal.nurse.f2")}</span>
                   </li>
-                  <li className="flex items-center space-x-2">
+                  <li className="flex items-center gap-2">
                     <div className="w-1.5 h-1.5 rounded-full bg-primary" />
-                    <span>Specialized care at home</span>
+                    <span>{t("typeModal.nurse.f3")}</span>
                   </li>
                 </ul>
-                <div className="mt-6 inline-flex items-center text-primary font-medium group-hover:translate-x-1 transition-transform">
-                  Choose Nurse
-                  <span className="ml-2">→</span>
+                <div className="mt-6 inline-flex items-center text-primary font-medium group-hover:translate-x-1 rtl:group-hover:-translate-x-1 transition-transform">
+                  {t("typeModal.nurse.cta")}
+                  <span className="ms-2 rtl:rotate-180">→</span>
                 </div>
               </div>
             </button>
@@ -119,9 +119,7 @@ export function BookingTypeModal({ isOpen, onClose }: BookingTypeModalProps) {
 
           <div className="mt-6 p-4 bg-blue-50 rounded-lg border border-blue-200">
             <p className="text-sm text-blue-900">
-              <strong>Note:</strong> After selecting a service type, you'll be directed to choose your
-              preferred {" "}
-              <span className="font-medium">doctor or nurse</span>. You can then book directly from their profile.
+              <strong>{t("typeModal.footnoteLabel")}</strong> {t("typeModal.footnoteText")}
             </p>
           </div>
         </div>

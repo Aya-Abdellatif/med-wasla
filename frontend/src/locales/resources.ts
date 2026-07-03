@@ -42,6 +42,7 @@ import arPatientProfile from "./ar/patientProfile.json";
 import enPatientAppointments from "./en/patientAppointments.json";
 import arPatientAppointments from "./ar/patientAppointments.json";
 
+
 export const namespaces = [
   "common",
   "nav",
