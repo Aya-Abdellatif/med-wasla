@@ -13,7 +13,7 @@ import mayarImage from "../../../assets/Mayar.jpg";
 import salmaImage from "../../../assets/Salma.jpg";
 import ayaImage from "../../../assets/Aya.jpg";
 import hanaImage from "../../../assets/Hana.jpg";
-import ranimImage from "../../../assets/Ranim.jpeg";
+import ranimImage from "../../../assets/Ranem.jpeg";
 import walaamage from "../../../assets/Walaa.jpg";
 
 export const stats = [
@@ -83,7 +83,7 @@ export const teamMembers = [
   },
   {
     name: "Ranim Mogharab",
-    roleKey: "aiSpecialist",
+    roleKey: "fullStackDeveloper",
     image: ranimImage,
     linkedin: "https://www.linkedin.com/in/ranim-mohareb/",
     whatsapp: "https://wa.me/201004444444",
