@@ -37,7 +37,7 @@ export default function VerifyOtp() {
       if (data.user.role === "specialist") {
         window.location.assign("/dashboard");
       } else {
-        window.location.assign("/home");
+        window.location.assign("/");
       }
     } catch (err) {
       showError(err instanceof Error ? err.message : t("toast:auth.verifyFailed"));
