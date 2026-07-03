@@ -1,0 +1,79 @@
+{
+    "success": {
+      "title": "Message Sent!",
+      "description": "Thank you for contacting us. We'll get back to you as soon as possible.",
+      "responseTime": "Expected response time: 24-48 hours"
+    },
+    "hero": {
+      "title": "Get in Touch",
+      "subtitle": "Have questions or need assistance? Our team is here to help. Reach out and we'll respond within 24-48 hours."
+    },
+    "form": {
+      "title": "Send us a Message",
+      "fullName": "Full Name *",
+      "fullNamePlaceholder": "John Doe",
+      "email": "Email Address *",
+      "emailPlaceholder": "john@example.com",
+      "phone": "Phone Number",
+      "phonePlaceholder": "+1 (234) 567-890",
+      "subject": "Subject *",
+      "subjectPlaceholder": "Select a subject",
+      "message": "Message *",
+      "messagePlaceholder": "Tell us how we can help...",
+      "submit": "Send Message"
+    },
+    "departments": {
+      "generalInquiry": "General Inquiry",
+      "appointmentScheduling": "Appointment Scheduling",
+      "medicalRecords": "Medical Records",
+      "billingInsurance": "Billing & Insurance",
+      "emergency": "Emergency",
+      "feedbackComplaints": "Feedback & Complaints"
+    },
+    "info": {
+      "address": {
+        "title": "Address",
+        "line1": "123 Healthcare Ave",
+        "line2": "Medical District",
+        "line3": "New York, NY 10001"
+      },
+      "email": {
+        "title": "Email",
+        "primary": "medwasla@healthcareplus.com",
+        "secondary": "medwaslasupport@healthcareplus.com"
+      },
+      "support": {
+        "title": "Support Number",
+        "number": "+1 (234) 567-891",
+        "availability": "Available 24/7"
+      },
+      "hours": {
+        "title": "Working Hours",
+        "weekdays": "Monday - Friday: 8AM - 8PM",
+        "weekend": "Saturday - Sunday: 9AM - 5PM",
+        "emergency": "Emergency: 24/7"
+      }
+    },
+    "faqSection": {
+      "title": "Frequently Asked Questions",
+      "subtitle": "Quick answers to common questions"
+    },
+    "faqs": {
+      "manageOnline": {
+        "question": "Can I manage my appointments online?",
+        "answer": "Yes. You can schedule, view, and manage your appointments directly through the MedWasla platform."
+      },
+      "insurance": {
+        "question": "Do you accept insurance?",
+        "answer": "Yes, we accept most major insurance plans. Please contact our billing department or check with your insurance provider."
+      },
+      "scheduleAppointment": {
+        "question": "How do I schedule an appointment?",
+        "answer": "You can schedule an appointment through our online booking system, by phone, or by visiting our facility."
+      },
+      "telemedicine": {
+        "question": "Do you offer telemedicine services?",
+        "answer": "Yes, we offer telemedicine consultations for certain medical conditions."
+      }
+    }
+  }

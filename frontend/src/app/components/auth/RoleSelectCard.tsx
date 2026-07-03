@@ -1,4 +1,5 @@
 import type { ReactNode } from "react";
+import { useTranslation } from "react-i18next";
 
 interface RoleSelectCardProps {
   icon: ReactNode;
@@ -13,6 +14,7 @@ export default function RoleSelectCard({
   description,
   onClick,
 }: RoleSelectCardProps) {
+  const { t } = useTranslation("common");
   return (
     <button
       type="button"
@@ -29,7 +31,7 @@ export default function RoleSelectCard({
       </div>
 
       <span className="block translate-y-2 text-sm font-semibold text-primary opacity-0 transition-all duration-200 group-hover:translate-y-0 group-hover:opacity-100">
-        Get started
+        {t("getStarted")}
       </span>
     </button>
   );

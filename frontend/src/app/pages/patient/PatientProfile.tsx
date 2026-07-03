@@ -1,5 +1,6 @@
 import { useEffect, useState, useRef, type ChangeEvent } from "react";
 import { createPortal } from "react-dom";
+import { useTranslation } from "react-i18next";
 import { useAuth } from "../../context/useAuth";
 import type { DiseaseRecord, User } from "../../context/AuthContext";
 import { fetchPatientProfile, updatePatientProfile, updatePatientPhoto, removePatientPhoto, updatePatientSecurity, type PatientProfileApi } from "../../../services/patientApi";
@@ -27,15 +28,7 @@ import {
 } from "lucide-react";
 import { ImageWithFallback } from "../../figma/ImageWithFallback";
 import { showError, showSuccess } from "../../../utils/toast";
-
-
-const EGYPTIAN_GOVERNORATES = [
-  "Cairo", "Giza", "Alexandria", "Dakahlia", "Red Sea", "Beheira",
-  "Fayoum", "Gharbia", "Ismailia", "Menofia", "Minya", "Qaliubiya",
-  "New Valley", "Suez", "Aswan", "Assiut", "Beni Suef", "Port Said",
-  "Damietta", "Sharqia", "South Sinai", "Kafr El Sheikh", "Matruh",
-  "Luxor", "Qena", "North Sinai", "Sohag",
-];
+import { EgyptianGovernorates } from "../../../constants/governorates";
 
 function stripPhoneDisplay(phone: string): string {
   const digits = phone.replace(/\D/g, "");
@@ -58,12 +51,13 @@ function FieldError({ msg }: { msg?: string }) {
 
 // ─── Read-only info row ────────────────────────────────────────
 function InfoRow({ label, value, icon: Icon }: { label: string; value?: string; icon?: React.ElementType }) {
+  const { t } = useTranslation(["patientProfile"]);
   return (
     <div>
       <p className="text-xs font-medium text-fg-muted uppercase tracking-wider mb-1">{label}</p>
       <div className="flex items-center gap-2">
         {Icon && <Icon className="w-4 h-4 text-fg-muted flex-shrink-0" />}
-        <p className="text-sm text-fg">{value || <span className="text-fg-muted italic">Not set</span>}</p>
+        <p className="text-sm text-fg">{value || <span className="text-fg-muted italic">{t("patientProfile:personal.notSet")}</span>}</p>
       </div>
     </div>
   );
@@ -83,6 +77,9 @@ function PersonalTab({ profile, onSave, isLoading }: {
     removePhoto?: boolean;
   }) => Promise<{ photoUrl?: string }>;
 }) {
+  const { t, i18n } = useTranslation(["patientProfile"]);
+  const dateLocale = i18n.language === "ar" ? "ar-EG" : "en-US";
+
   const getInitialState = (p: PatientProfileApi["user"] | null) => ({
     name: p?.name || "",
     phone: p?.phone || "",
@@ -155,12 +152,12 @@ function PersonalTab({ profile, onSave, isLoading }: {
     if (!file) return;
 
     if (!file.type.startsWith("image/")) {
-      showError("Please select an image file (JPEG, PNG, or WebP).");
+      showError(t("patientProfile:personal.photo.invalidType"));
       return;
     }
 
     if (file.size > 5 * 1024 * 1024) {
-      showError("Image must be smaller than 5MB.");
+      showError(t("patientProfile:personal.photo.tooLarge"));
       return;
     }
 
@@ -185,21 +182,22 @@ function PersonalTab({ profile, onSave, isLoading }: {
   };
 
   if (isLoading && !profile) {
-    return <div className="py-10 text-center text-sm text-fg-muted">Loading profile...</div>;
+    return <div className="py-10 text-center text-sm text-fg-muted">{t("patientProfile:personal.loading")}</div>;
   }
 
-  const filteredGovs = EGYPTIAN_GOVERNORATES.filter((g) =>
-    g.toLowerCase().includes(govSearch.toLowerCase())
+  const filteredGovs = EgyptianGovernorates.filter((g) =>
+    t(`patientProfile:governorates.${g}`).toLowerCase().includes(govSearch.toLowerCase())
+    || g.toLowerCase().includes(govSearch.toLowerCase())
   );
 
   const validate = () => {
     const e: Record<string, string> = {};
-    if (!form.name.trim()) e.name = "Full name is required.";
-    else if (form.name.trim().length < 3) e.name = "Name must be at least 3 characters.";
-    if (!form.phone.trim()) e.phone = "Phone number is required.";
-    else if (!/^0?1[0125][0-9]{8}$/.test(form.phone.replace(/\s/g, ""))) e.phone = "Enter a valid phone number.";
-    if (!form.dob) e.dob = "Date of birth is required.";
-    if (!form.governorate) e.governorate = "Governorate is required.";
+    if (!form.name.trim()) e.name = t("patientProfile:personal.errors.nameRequired");
+    else if (form.name.trim().length < 3) e.name = t("patientProfile:personal.errors.nameTooShort");
+    if (!form.phone.trim()) e.phone = t("patientProfile:personal.errors.phoneRequired");
+    else if (!/^0?1[0125][0-9]{8}$/.test(form.phone.replace(/\s/g, ""))) e.phone = t("patientProfile:personal.errors.phoneInvalid");
+    if (!form.dob) e.dob = t("patientProfile:personal.errors.dobRequired");
+    if (!form.governorate) e.governorate = t("patientProfile:personal.errors.governorateRequired");
     return e;
   };
 
@@ -230,12 +228,12 @@ function PersonalTab({ profile, onSave, isLoading }: {
       setRemovePhotoRequested(false);
       if (fileInputRef.current) fileInputRef.current.value = "";
       setErrors({});
-      showSuccess("Personal information saved successfully.");
+      showSuccess(t("patientProfile:personal.toast.saveSuccess"));
       setPhotoMenuOpen(false);
       setShowPhotoPreview(false);
       setEditing(false);
     } catch (error) {
-      showError(error instanceof Error ? error.message : "Unable to save profile.");
+      showError(error instanceof Error ? error.message : t("patientProfile:personal.toast.saveError"));
     } finally {
       setIsSaving(false);
     }
@@ -257,30 +255,30 @@ function PersonalTab({ profile, onSave, isLoading }: {
     return (
       <div className="space-y-6">
         <div className="flex items-center justify-between">
-          <p className="text-sm text-fg-muted">Your personal details as registered on MedWasla.</p>
+          <p className="text-sm text-fg-muted">{t("patientProfile:personal.view.description")}</p>
           <button
             onClick={() => setEditing(true)}
             className="group flex items-center gap-2 bg-primary text-white border-2 border-primary text-base px-4 py-1.5 rounded-xl cursor-pointer transition-all duration-300 ease-in-out hover:border-primary hover:-translate-y-0.5 hover:bg-white hover:text-primary hover:shadow-md whitespace-nowrap"
           >
             <Edit className="w-3.5 h-3.5" />
-            Edit Profile
+            {t("patientProfile:personal.view.editButton")}
           </button>
         </div>
 
         <div className="grid grid-cols-1 md:grid-cols-2 gap-x-8 gap-y-5">
           <div className="md:col-span-2">
-            <InfoRow label="Full Name" value={saved?.name} icon={UserIcon} />
+            <InfoRow label={t("patientProfile:personal.fields.fullName")} value={saved?.name} icon={UserIcon} />
           </div>
           <InfoRow
-            label="Phone Number"
+            label={t("patientProfile:personal.fields.phone")}
             value={saved?.phone ? `+20 ${stripPhoneDisplay(saved.phone)}` : undefined}
             icon={Phone}
           />
           <InfoRow
-            label="Date of Birth"
+            label={t("patientProfile:personal.fields.dob")}
             value={
               saved?.dob
-                ? new Date(saved.dob).toLocaleDateString("en-US", {
+                ? new Date(saved.dob).toLocaleDateString(dateLocale, {
                   year: "numeric",
                   month: "long",
                   day: "numeric",
@@ -289,8 +287,12 @@ function PersonalTab({ profile, onSave, isLoading }: {
             }
             icon={Calendar}
           />
-          <InfoRow label="Governorate" value={saved?.governorate} icon={MapPin} />
-          <InfoRow label="Address Details" value={saved?.address} icon={MapPin} />
+          <InfoRow
+            label={t("patientProfile:personal.fields.governorate")}
+            value={saved?.governorate ? t(`patientProfile:governorates.${saved.governorate}`) : undefined}
+            icon={MapPin}
+          />
+          <InfoRow label={t("patientProfile:personal.fields.address")} value={saved?.address} icon={MapPin} />
         </div>
       </div>
     );
@@ -300,8 +302,8 @@ function PersonalTab({ profile, onSave, isLoading }: {
   return (
     <div className="space-y-6">
       <div className="flex items-center justify-between">
-        <p className="text-sm text-fg-muted">Update your personal details below.</p>
-        <span className="text-xs text-primary bg-primary/5 px-2.5 py-1 rounded-full">Editing</span>
+        <p className="text-sm text-fg-muted">{t("patientProfile:personal.edit.description")}</p>
+        <span className="text-xs text-primary bg-primary/5 px-2.5 py-1 rounded-full">{t("patientProfile:personal.edit.editingBadge")}</span>
       </div>
 
       {/* Avatar + Row 1 — Full Name */}
@@ -319,23 +321,23 @@ function PersonalTab({ profile, onSave, isLoading }: {
             ref={photoEditButtonRef}
             type="button"
             onClick={() => setPhotoMenuOpen((open) => !open)}
-            className="absolute -bottom-1 -right-1 flex items-center gap-1 bg-white border border-border rounded-full pl-1.5 pr-2 py-1 shadow-sm hover:bg-muted transition-colors text-[11px] font-medium text-primary whitespace-nowrap"
+            className="absolute -bottom-1 -right-1 flex items-center gap-1 bg-white border border-border rounded-full pl-1.5 pr-2 py-1 shadow-sm hover:bg-muted transition-colors text-[11px] font-medium text-primary whitespace-nowrap rtl:-right-auto rtl:-left-1"
             aria-expanded={photoMenuOpen}
             aria-haspopup="menu"
           >
             <Camera className="w-3.5 h-3.5" />
-            Edit
+            {t("patientProfile:personal.photo.editButton")}
           </button>
 
           <input ref={fileInputRef} onChange={handleFileChange} accept="image/*" type="file" className="hidden" />
         </div>
         <div className="flex-1">
-          <label className="block text-sm font-medium text-fg mb-1.5">Full Name</label>
+          <label className="block text-sm font-medium text-fg mb-1.5">{t("patientProfile:personal.fields.fullName")}</label>
           <input
             type="text"
             value={form.name}
             onChange={(e) => { setForm({ ...form, name: e.target.value }); setErrors({ ...errors, name: "" }); }}
-            placeholder="e.g. Ahmed Mohamed"
+            placeholder={t("patientProfile:personal.fields.fullNamePlaceholder")}
             className={`w-full px-4 py-3 bg-input-background border rounded-xl focus:outline-none focus:ring-2 focus:ring-primary transition-colors ${errors.name ? "border-red-400 focus:ring-red-300" : "border-border"}`}
           />
           <FieldError msg={errors.name} />
@@ -345,9 +347,9 @@ function PersonalTab({ profile, onSave, isLoading }: {
       {/* Row 2 — Phone + DOB */}
       <div className="grid grid-cols-1 md:grid-cols-2 gap-5">
         <div>
-          <label className="block text-sm font-medium text-fg mb-1.5">Phone Number</label>
+          <label className="block text-sm font-medium text-fg mb-1.5">{t("patientProfile:personal.fields.phone")}</label>
           <div className={`flex rounded-xl border overflow-hidden focus-within:ring-2 focus-within:ring-primary transition-colors ${errors.phone ? "border-red-400" : "border-border"}`}>
-            <div className="flex items-center gap-2 px-3 py-3 bg-muted/50 border-r border-border flex-shrink-0 select-none">
+            <div className="flex items-center gap-2 px-3 py-3 bg-muted/50 border-r border-border rtl:border-r-0 rtl:border-l flex-shrink-0 select-none">
               <span className="text-lg leading-none">🇪🇬</span>
               <span className="text-sm font-medium text-fg">+20</span>
               <ChevronDown className="w-3.5 h-3.5 text-fg-muted" />
@@ -359,7 +361,7 @@ function PersonalTab({ profile, onSave, isLoading }: {
                 setForm({ ...form, phone: e.target.value });
                 setErrors({ ...errors, phone: "" });
               }}
-              placeholder="1123456789"
+              placeholder={t("patientProfile:personal.fields.phonePlaceholder")}
               className="flex-1 px-4 py-3 bg-input-background focus:outline-none text-sm"
             />
           </div>
@@ -367,7 +369,7 @@ function PersonalTab({ profile, onSave, isLoading }: {
         </div>
 
         <div>
-          <label className="block text-sm font-medium text-fg mb-1.5">Date of Birth</label>
+          <label className="block text-sm font-medium text-fg mb-1.5">{t("patientProfile:personal.fields.dob")}</label>
           <input
             type="date"
             value={form.dob}
@@ -381,14 +383,14 @@ function PersonalTab({ profile, onSave, isLoading }: {
       {/* Row 3 — Governorate + Address */}
       <div className="grid grid-cols-1 md:grid-cols-2 gap-5">
         <div className="relative">
-          <label className="block text-sm font-medium text-fg mb-1.5">Governorate</label>
+          <label className="block text-sm font-medium text-fg mb-1.5">{t("patientProfile:personal.fields.governorate")}</label>
           <button
             type="button"
             onClick={() => { setGovOpen(!govOpen); setGovSearch(""); }}
-            className="w-full flex items-center justify-between px-4 py-3 bg-input-background border border-border rounded-xl focus:outline-none focus:ring-2 focus:ring-primary transition-colors text-sm text-left"
+            className="w-full flex items-center justify-between px-4 py-3 bg-input-background border border-border rounded-xl focus:outline-none focus:ring-2 focus:ring-primary transition-colors text-sm text-left rtl:text-right"
           >
             <span className={form.governorate ? "text-fg" : "text-fg-muted"}>
-              {form.governorate || "Select governorate"}
+              {form.governorate ? t(`patientProfile:governorates.${form.governorate}`) : t("patientProfile:personal.fields.governoratePlaceholder")}
             </span>
             <ChevronDown className={`w-4 h-4 text-fg-muted transition-transform ${govOpen ? "rotate-180" : ""}`} />
           </button>
@@ -399,23 +401,23 @@ function PersonalTab({ profile, onSave, isLoading }: {
                   type="text"
                   value={govSearch}
                   onChange={(e) => setGovSearch(e.target.value)}
-                  placeholder="Search governorate..."
+                  placeholder={t("patientProfile:personal.fields.governorateSearchPlaceholder")}
                   autoFocus
                   className="w-full px-3 py-2 bg-input-background border border-border rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-primary"
                 />
               </div>
               <ul className="max-h-40 overflow-y-auto">
                 {filteredGovs.length === 0 && (
-                  <li className="px-4 py-3 text-sm text-fg-muted text-center">No results</li>
+                  <li className="px-4 py-3 text-sm text-fg-muted text-center">{t("patientProfile:personal.fields.governorateNoResults")}</li>
                 )}
                 {filteredGovs.map((g) => (
                   <li key={g}>
                     <button
                       type="button"
                       onClick={() => { setForm({ ...form, governorate: g }); setGovOpen(false); }}
-                      className={`w-full text-left px-4 py-2.5 text-sm hover:bg-primary/5 transition-colors ${form.governorate === g ? "text-primary bg-primary/5" : "text-fg"}`}
+                      className={`w-full text-left rtl:text-right px-4 py-2.5 text-sm hover:bg-primary/5 transition-colors ${form.governorate === g ? "text-primary bg-primary/5" : "text-fg"}`}
                     >
-                      {g}
+                      {t(`patientProfile:governorates.${g}`)}
                     </button>
                   </li>
                 ))}
@@ -426,17 +428,17 @@ function PersonalTab({ profile, onSave, isLoading }: {
 
         <div>
           <label className="block text-sm font-medium text-fg mb-1.5">
-            Address Details
-            <span className="ml-1 text-fg-muted">(Optional)</span>
+            {t("patientProfile:personal.fields.address")}
+            <span className="ml-1 rtl:ml-0 rtl:mr-1 text-fg-muted">{t("patientProfile:personal.fields.addressOptional")}</span>
           </label>
           <div className="relative">
-            <MapPin className="absolute left-3 top-3.5 w-4 h-4 text-fg-muted" />
+            <MapPin className="absolute left-3 top-3.5 w-4 h-4 text-fg-muted rtl:left-auto rtl:right-3" />
             <input
               type="text"
               value={form.address}
               onChange={(e) => setForm({ ...form, address: e.target.value })}
-              placeholder="Street, building, apartment..."
-              className="w-full pl-9 pr-4 py-3 bg-input-background border border-border rounded-xl focus:outline-none focus:ring-2 focus:ring-primary transition-colors text-sm"
+              placeholder={t("patientProfile:personal.fields.addressPlaceholder")}
+              className="w-full pl-9 pr-4 py-3 bg-input-background border border-border rounded-xl focus:outline-none focus:ring-2 focus:ring-primary transition-colors text-sm rtl:pl-4 rtl:pr-9"
             />
           </div>
         </div>
@@ -452,12 +454,12 @@ function PersonalTab({ profile, onSave, isLoading }: {
           {isSaving ? (
             <>
               <div className="animate-spin rounded-full h-4 w-4 border-2 border-current border-t-transparent" />
-              Saving...
+              {t("patientProfile:personal.actions.saving")}
             </>
           ) : (
             <>
               <Save className="w-4 h-4" />
-              Save Changes
+              {t("patientProfile:personal.actions.save")}
             </>
           )}
         </button>
@@ -466,7 +468,7 @@ function PersonalTab({ profile, onSave, isLoading }: {
           disabled={isSaving}
           className="group flex items-center gap-2 bg-white text-fg border-2 border-fg/10 text-base px-3 py-1 rounded-xl cursor-pointer transition-all duration-300 ease-in-out hover:border-fg-muted hover:-translate-y-0.5 hover:bg-fg-muted hover:text-white hover:shadow-md whitespace-nowrap disabled:opacity-50 disabled:cursor-not-allowed"
         >
-          Cancel
+          {t("patientProfile:personal.actions.cancel")}
         </button>
       </div>
 
@@ -487,7 +489,7 @@ function PersonalTab({ profile, onSave, isLoading }: {
             className="w-full flex items-center gap-2.5 px-3.5 py-2.5 text-sm text-fg hover:bg-primary/5 transition-colors"
           >
             <UploadCloud className="w-4 h-4 text-primary shrink-0" />
-            Upload Photo
+            {t("patientProfile:personal.photo.uploadOption")}
           </button>
           <button
             type="button"
@@ -497,7 +499,7 @@ function PersonalTab({ profile, onSave, isLoading }: {
             className="w-full flex items-center gap-2.5 px-3.5 py-2.5 text-sm text-fg hover:bg-red-50 transition-colors disabled:opacity-40 disabled:cursor-not-allowed disabled:hover:bg-transparent"
           >
             <Trash2 className="w-4 h-4 text-red-500 shrink-0" />
-            Remove Photo
+            {t("patientProfile:personal.photo.removeOption")}
           </button>
           <button
             type="button"
@@ -510,7 +512,7 @@ function PersonalTab({ profile, onSave, isLoading }: {
             className="w-full flex items-center gap-2.5 px-3.5 py-2.5 text-sm text-fg hover:bg-primary/5 transition-colors disabled:opacity-40 disabled:cursor-not-allowed disabled:hover:bg-transparent"
           >
             <Eye className="w-4 h-4 text-fg-muted shrink-0" />
-            Show Photo
+            {t("patientProfile:personal.photo.showOption")}
           </button>
         </div>,
         document.body,
@@ -525,14 +527,14 @@ function PersonalTab({ profile, onSave, isLoading }: {
             <button
               type="button"
               onClick={() => setShowPhotoPreview(false)}
-              className="absolute -top-3 -right-3 bg-white rounded-full p-2 shadow-lg hover:bg-muted transition-colors"
-              aria-label="Close photo preview"
+              className="absolute -top-3 -right-3 bg-white rounded-full p-2 shadow-lg hover:bg-muted transition-colors rtl:-right-auto rtl:-left-3"
+              aria-label={t("patientProfile:personal.photo.previewClose")}
             >
               <X className="w-4 h-4 text-fg" />
             </button>
             <img
               src={form.photoUrl}
-              alt="Profile photo preview"
+              alt={t("patientProfile:personal.photo.previewAlt")}
               className="w-full max-h-[80vh] object-contain rounded-2xl bg-white"
             />
           </div>
@@ -544,6 +546,7 @@ function PersonalTab({ profile, onSave, isLoading }: {
 
 // ─── Security Tab ───────────────────────────────────────────────
 function SecurityTab({ user, onSave }: { user: User | null; onSave: (payload: { currentPassword: string; password: string }) => Promise<void>; }) {
+  const { t } = useTranslation(["patientProfile"]);
   const [editing, setEditing] = useState(false);
   const email = user?.email || "";
   const [form, setForm] = useState({
@@ -565,7 +568,7 @@ function SecurityTab({ user, onSave }: { user: User | null; onSave: (payload: { 
     return s;
   };
 
-  const strengthLabel = ["Password must be at least 8 characters", "Weak password", "Fair password", "Good password", "Strong password"];
+  const strengthLabelKeys = ["empty", "weak", "fair", "good", "strong"] as const;
   const strengthColor = ["", "bg-red-400", "bg-amber-400", "bg-blue-400", "bg-emerald-400"];
   const strengthText = ["", "text-red-600", "text-amber-600", "text-blue-600", "text-emerald-600"];
   const strength = getStrength(form.newPassword);
@@ -575,17 +578,17 @@ function SecurityTab({ user, onSave }: { user: User | null; onSave: (payload: { 
     const isPasswordChanged = form.newPassword || form.confirmPassword;
 
     if (!isPasswordChanged) {
-      e.newPassword = "Enter a new password to save changes.";
+      e.newPassword = t("patientProfile:security.errors.newPasswordRequiredToSave");
       return e;
     }
 
     if (!form.currentPassword) {
-      e.currentPassword = "Current password is required to change your password.";
+      e.currentPassword = t("patientProfile:security.errors.currentPasswordRequired");
     }
 
-    if (!form.newPassword) e.newPassword = "New password is required.";
-    else if (form.newPassword.length < 8) e.newPassword = "Password must be at least 8 characters.";
-    if (form.newPassword !== form.confirmPassword) e.confirmPassword = "Passwords do not match.";
+    if (!form.newPassword) e.newPassword = t("patientProfile:security.errors.newPasswordRequired");
+    else if (form.newPassword.length < 8) e.newPassword = t("patientProfile:security.errors.newPasswordTooShort");
+    if (form.newPassword !== form.confirmPassword) e.confirmPassword = t("patientProfile:security.errors.passwordsMismatch");
 
     return e;
   };
@@ -603,9 +606,9 @@ function SecurityTab({ user, onSave }: { user: User | null; onSave: (payload: { 
       setErrors({});
       setForm({ currentPassword: "", newPassword: "", confirmPassword: "" });
       setEditing(false);
-      showSuccess("Password updated successfully.");
+      showSuccess(t("patientProfile:security.toast.saveSuccess"));
     } catch (error) {
-      showError(error instanceof Error ? error.message : "Unable to save security settings.");
+      showError(error instanceof Error ? error.message : t("patientProfile:security.toast.saveError"));
     } finally {
       setIsSaving(false);
     }
@@ -622,20 +625,20 @@ function SecurityTab({ user, onSave }: { user: User | null; onSave: (payload: { 
     return (
       <div className="space-y-6">
         <div className="flex items-center justify-between">
-          <p className="text-sm text-fg-muted">View your email and change your password.</p>
+          <p className="text-sm text-fg-muted">{t("patientProfile:security.view.description")}</p>
           <button
             onClick={() => setEditing(true)}
             className="group flex items-center gap-2 bg-primary text-white border-2 border-primary text-base px-4 py-1.5 rounded-xl cursor-pointer transition-all duration-300 ease-in-out hover:border-primary hover:-translate-y-0.5 hover:bg-white hover:text-primary hover:shadow-md whitespace-nowrap"
           >
             <Edit className="w-3.5 h-3.5" />
-            Edit Security
+            {t("patientProfile:security.view.editButton")}
           </button>
         </div>
 
         <div className="space-y-5">
-          <InfoRow label="Email Address" value={email} icon={Mail} />
+          <InfoRow label={t("patientProfile:security.view.emailLabel")} value={email} icon={Mail} />
           <div>
-            <p className="text-xs font-medium text-fg-muted uppercase tracking-wider mb-1">Password</p>
+            <p className="text-xs font-medium text-fg-muted uppercase tracking-wider mb-1">{t("patientProfile:security.view.passwordLabel")}</p>
             <div className="flex items-center gap-2">
               <Lock className="w-4 h-4 text-fg-muted" />
               <p className="text-sm text-fg tracking-widest">••••••••••</p>
@@ -650,42 +653,42 @@ function SecurityTab({ user, onSave }: { user: User | null; onSave: (payload: { 
   return (
     <div className="space-y-6">
       <div className="flex items-center justify-between">
-        <p className="text-sm text-fg-muted">Change your password below.</p>
-        <span className="text-xs text-primary bg-primary/5 px-2.5 py-1 rounded-full">Editing</span>
+        <p className="text-sm text-fg-muted">{t("patientProfile:security.edit.description")}</p>
+        <span className="text-xs text-primary bg-primary/5 px-2.5 py-1 rounded-full">{t("patientProfile:security.edit.editingBadge")}</span>
       </div>
       <div>
-        <label className="block text-sm font-medium text-fg mb-1.5">Email Address</label>
+        <label className="block text-sm font-medium text-fg mb-1.5">{t("patientProfile:security.edit.emailLabel")}</label>
         <div className="relative">
-          <Mail className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-fg-muted" />
+          <Mail className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-fg-muted rtl:left-auto rtl:right-3" />
           <input
             type="email"
             value={email}
             readOnly
             disabled
-            className="w-full pl-9 pr-4 py-3 bg-muted/40 border border-border rounded-xl text-sm text-fg-muted cursor-not-allowed"
+            className="w-full pl-9 pr-4 py-3 bg-muted/40 border border-border rounded-xl text-sm text-fg-muted cursor-not-allowed rtl:pl-4 rtl:pr-9"
           />
         </div>
-        <p className="text-xs text-fg-muted mt-1.5">Your email address cannot be changed.</p>
+        <p className="text-xs text-fg-muted mt-1.5">{t("patientProfile:security.edit.emailHint")}</p>
       </div>
 
       <div className="flex items-center gap-3">
         <div className="flex-1 h-px bg-border" />
-        <span className="text-xs text-fg-muted px-2">Change Password</span>
+        <span className="text-xs text-fg-muted px-2">{t("patientProfile:security.edit.divider")}</span>
         <div className="flex-1 h-px bg-border" />
       </div>
 
       <div>
-        <label className="block text-sm font-medium text-fg mb-1.5">Current Password</label>
+        <label className="block text-sm font-medium text-fg mb-1.5">{t("patientProfile:security.edit.currentPassword")}</label>
         <div className="relative">
-          <Lock className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-fg-muted" />
+          <Lock className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-fg-muted rtl:left-auto rtl:right-3" />
           <input
             type={show.current ? "text" : "password"}
             value={form.currentPassword}
             onChange={(e) => { setForm({ ...form, currentPassword: e.target.value }); setErrors({ ...errors, currentPassword: "" }); }}
-            placeholder="Enter current password"
-            className={`w-full pl-9 pr-10 py-3 bg-input-background border rounded-xl focus:outline-none focus:ring-2 focus:ring-primary transition-colors text-sm ${errors.currentPassword ? "border-red-400 focus:ring-red-300" : "border-border"}`}
+            placeholder={t("patientProfile:security.edit.currentPasswordPlaceholder")}
+            className={`w-full pl-9 pr-10 py-3 bg-input-background border rounded-xl focus:outline-none focus:ring-2 focus:ring-primary transition-colors text-sm rtl:pl-10 rtl:pr-9 ${errors.currentPassword ? "border-red-400 focus:ring-red-300" : "border-border"}`}
           />
-          <button type="button" onClick={() => setShow({ ...show, current: !show.current })} className="absolute right-3 top-1/2 -translate-y-1/2 text-fg-muted hover:text-fg">
+          <button type="button" onClick={() => setShow({ ...show, current: !show.current })} className="absolute right-3 top-1/2 -translate-y-1/2 text-fg-muted hover:text-fg rtl:right-auto rtl:left-3">
             {show.current ? <EyeOff className="w-4 h-4" /> : <Eye className="w-4 h-4" />}
           </button>
         </div>
@@ -693,17 +696,17 @@ function SecurityTab({ user, onSave }: { user: User | null; onSave: (payload: { 
       </div>
 
       <div>
-        <label className="block text-sm font-medium text-fg mb-1.5">New Password</label>
+        <label className="block text-sm font-medium text-fg mb-1.5">{t("patientProfile:security.edit.newPassword")}</label>
         <div className="relative">
-          <Lock className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-fg-muted" />
+          <Lock className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-fg-muted rtl:left-auto rtl:right-3" />
           <input
             type={show.newPw ? "text" : "password"}
             value={form.newPassword}
             onChange={(e) => { setForm({ ...form, newPassword: e.target.value }); setErrors({ ...errors, newPassword: "" }); }}
-            placeholder="Enter new password"
-            className={`w-full pl-9 pr-10 py-3 bg-input-background border rounded-xl focus:outline-none focus:ring-2 focus:ring-primary transition-colors text-sm ${errors.newPassword ? "border-red-400 focus:ring-red-300" : "border-border"}`}
+            placeholder={t("patientProfile:security.edit.newPasswordPlaceholder")}
+            className={`w-full pl-9 pr-10 py-3 bg-input-background border rounded-xl focus:outline-none focus:ring-2 focus:ring-primary transition-colors text-sm rtl:pl-10 rtl:pr-9 ${errors.newPassword ? "border-red-400 focus:ring-red-300" : "border-border"}`}
           />
-          <button type="button" onClick={() => setShow({ ...show, newPw: !show.newPw })} className="absolute right-3 top-1/2 -translate-y-1/2 text-fg-muted hover:text-fg">
+          <button type="button" onClick={() => setShow({ ...show, newPw: !show.newPw })} className="absolute right-3 top-1/2 -translate-y-1/2 text-fg-muted hover:text-fg rtl:right-auto rtl:left-3">
             {show.newPw ? <EyeOff className="w-4 h-4" /> : <Eye className="w-4 h-4" />}
           </button>
         </div>
@@ -714,30 +717,30 @@ function SecurityTab({ user, onSave }: { user: User | null; onSave: (payload: { 
                 <div key={i} className={`h-1 flex-1 rounded-full transition-colors ${i <= strength ? strengthColor[strength] : "bg-border"}`} />
               ))}
             </div>
-            <p className={`text-xs ${strengthText[strength]}`}>{strengthLabel[strength]}</p>
+            <p className={`text-xs ${strengthText[strength]}`}>{t(`patientProfile:security.strength.${strengthLabelKeys[strength]}`)}</p>
           </div>
         )}
         <FieldError msg={errors.newPassword} />
       </div>
 
       <div>
-        <label className="block text-sm font-medium text-fg mb-1.5">Confirm New Password</label>
+        <label className="block text-sm font-medium text-fg mb-1.5">{t("patientProfile:security.edit.confirmPassword")}</label>
         <div className="relative">
-          <Lock className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-fg-muted" />
+          <Lock className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-fg-muted rtl:left-auto rtl:right-3" />
           <input
             type={show.confirm ? "text" : "password"}
             value={form.confirmPassword}
             onChange={(e) => { setForm({ ...form, confirmPassword: e.target.value }); setErrors({ ...errors, confirmPassword: "" }); }}
-            placeholder="Repeat new password"
-            className={`w-full pl-9 pr-10 py-3 bg-input-background border rounded-xl focus:outline-none focus:ring-2 focus:ring-primary transition-colors text-sm ${errors.confirmPassword ? "border-red-400 focus:ring-red-300" : "border-border"}`}
+            placeholder={t("patientProfile:security.edit.confirmPasswordPlaceholder")}
+            className={`w-full pl-9 pr-10 py-3 bg-input-background border rounded-xl focus:outline-none focus:ring-2 focus:ring-primary transition-colors text-sm rtl:pl-10 rtl:pr-9 ${errors.confirmPassword ? "border-red-400 focus:ring-red-300" : "border-border"}`}
           />
-          <button type="button" onClick={() => setShow({ ...show, confirm: !show.confirm })} className="absolute right-3 top-1/2 -translate-y-1/2 text-fg-muted hover:text-fg">
+          <button type="button" onClick={() => setShow({ ...show, confirm: !show.confirm })} className="absolute right-3 top-1/2 -translate-y-1/2 text-fg-muted hover:text-fg rtl:right-auto rtl:left-3">
             {show.confirm ? <EyeOff className="w-4 h-4" /> : <Eye className="w-4 h-4" />}
           </button>
         </div>
         {form.confirmPassword && form.newPassword && form.confirmPassword === form.newPassword && (
           <p className="flex items-center gap-1 text-xs text-emerald-600 mt-1">
-            <CheckCircle2 className="w-3.5 h-3.5" /> Passwords match
+            <CheckCircle2 className="w-3.5 h-3.5" /> {t("patientProfile:security.edit.passwordsMatch")}
           </p>
         )}
         <FieldError msg={errors.confirmPassword} />
@@ -750,13 +753,13 @@ function SecurityTab({ user, onSave }: { user: User | null; onSave: (payload: { 
           className="group flex items-center gap-2 bg-primary text-white border-2 border-primary text-base px-3 py-1 rounded-xl cursor-pointer transition-all duration-300 ease-in-out hover:border-primary hover:-translate-y-0.5 hover:bg-white hover:text-primary hover:shadow-md whitespace-nowrap disabled:opacity-60 disabled:cursor-not-allowed disabled:hover:translate-y-0"
         >
           <Save className="w-4 h-4" />
-          Save Changes
+          {t("patientProfile:security.actions.save")}
         </button>
         <button
           onClick={handleCancel}
           className="group flex items-center gap-2 bg-white text-fg border-2 border-fg/10 text-base px-3 py-1 rounded-xl cursor-pointer transition-all duration-300 ease-in-out hover:border-fg-muted hover:-translate-y-0.5 hover:bg-fg-muted hover:text-white hover:shadow-md whitespace-nowrap"
         >
-          Cancel
+          {t("patientProfile:security.actions.cancel")}
         </button>
       </div>
     </div>
@@ -765,6 +768,8 @@ function SecurityTab({ user, onSave }: { user: User | null; onSave: (payload: { 
 
 // ─── Main Page ──────────────────────────────────────────────────
 export function PatientProfile() {
+  const { t, i18n } = useTranslation(["patientProfile"]);
+  const dateLocale = i18n.language === "ar" ? "ar-EG" : "en-US";
   const { user, updateProfile } = useAuth();
   const [profile, setProfile] = useState<PatientProfileApi | null>(null);
   const [isProfileLoading, setIsProfileLoading] = useState(true);
@@ -784,7 +789,7 @@ export function PatientProfile() {
         }
       })
       .catch((error: unknown) => {
-        showError(error instanceof Error ? error.message : "Unable to load patient profile.");
+        showError(error instanceof Error ? error.message : t("patientProfile:personal.toast.loadError"));
       })
       .finally(() => setIsProfileLoading(false));
   }, [user?.id]);
@@ -852,16 +857,16 @@ export function PatientProfile() {
 
   const getStatusLabel = (status: string) => {
     switch (status) {
-      case "active": return "Active";
-      case "under_treatment": return "Under Treatment";
-      case "resolved": return "Resolved";
+      case "active": return t("patientProfile:medicalHistory.status.active");
+      case "under_treatment": return t("patientProfile:medicalHistory.status.under_treatment");
+      case "resolved": return t("patientProfile:medicalHistory.status.resolved");
       default: return status;
     }
   };
 
   const tabs: { id: Tab; label: string; icon: React.ElementType }[] = [
-    { id: "personal", label: "Personal Information", icon: UserIcon },
-    { id: "security", label: "Account & Security", icon: Lock },
+    { id: "personal", label: t("patientProfile:tabs.personal"), icon: UserIcon },
+    { id: "security", label: t("patientProfile:tabs.security"), icon: Lock },
   ];
 
   return (
@@ -877,8 +882,8 @@ export function PatientProfile() {
             )}
           </div>
           <div>
-            <h1 className="text-xl font-bold text-fg/90">{user?.name ?? "Patient"}</h1>
-            <p className="text-fg/70 text-sm mt-0.5">Patient · MedWasla</p>
+            <h1 className="text-xl font-bold text-fg/90">{user?.name ?? t("patientProfile:header.defaultName")}</h1>
+            <p className="text-fg/70 text-sm mt-0.5">{t("patientProfile:header.roleLabel")}</p>
           </div>
         </div>
       </div>
@@ -933,17 +938,17 @@ export function PatientProfile() {
           <div className="flex items-center justify-between mb-5">
             <div className="flex items-center gap-2">
               <Activity className="w-5 h-5 text-primary" />
-              <h2 className="font-bold text-fg">Medical History</h2>
+              <h2 className="font-bold text-fg">{t("patientProfile:medicalHistory.title")}</h2>
             </div>
             <span className="flex items-center gap-1.5 px-3 py-1 bg-primary/10 border border-primary rounded-lg text-xs text-primary font-medium">
               <ShieldCheck className="w-3.5 h-3.5" />
-              Read-only for patients
+              {t("patientProfile:medicalHistory.readOnlyBadge")}
             </span>
           </div>
 
           <div className="flex items-start gap-3 p-3 bg-amber-50 border border-amber-100 rounded-xl mb-5 text-sm text-amber-800">
             <AlertCircle className="w-4 h-4 text-amber-500 flex-shrink-0 mt-0.5" />
-            <p>Your medical history can only be updated by your doctor or administrator for accuracy and security.</p>
+            <p>{t("patientProfile:medicalHistory.notice")}</p>
           </div>
 
           {user?.diseaseHistory && user.diseaseHistory.length > 0 ? (
@@ -959,8 +964,8 @@ export function PatientProfile() {
                   <div className="space-y-1.5 text-sm text-fg-muted">
                     <span className="flex items-center gap-2">
                       <Calendar className="w-3.5 h-3.5" />
-                      Diagnosed:{" "}
-                      {new Date(record.diagnosedDate).toLocaleDateString("en-US", {
+                      {t("patientProfile:medicalHistory.diagnosed")}:{" "}
+                      {new Date(record.diagnosedDate).toLocaleDateString(dateLocale, {
                         year: "numeric",
                         month: "long",
                         day: "numeric",
@@ -968,7 +973,7 @@ export function PatientProfile() {
                     </span>
                     <span className="flex items-center gap-2">
                       <UserIcon className="w-3.5 h-3.5" />
-                      Treated by: {record.treatedBy}
+                      {t("patientProfile:medicalHistory.treatedBy")}: {record.treatedBy}
                     </span>
                     {record.notes && (
                       <span className="flex items-start gap-2">
@@ -983,8 +988,8 @@ export function PatientProfile() {
           ) : (
             <div className="text-center py-10 bg-muted/20 rounded-xl">
               <Activity className="w-10 h-10 text-fg-muted/50 mx-auto mb-2" />
-              <p className="text-fg-muted text-sm">No medical history recorded yet.</p>
-              <p className="text-xs text-fg-muted mt-1">Your doctor will add records during consultations.</p>
+              <p className="text-fg-muted text-sm">{t("patientProfile:medicalHistory.empty.title")}</p>
+              <p className="text-xs text-fg-muted mt-1">{t("patientProfile:medicalHistory.empty.subtitle")}</p>
             </div>
           )}
         </div>

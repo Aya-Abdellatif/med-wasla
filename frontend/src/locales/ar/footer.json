@@ -1,0 +1,31 @@
+{
+  "tagline": "نربط المرضى بأفضل المتخصصين في الرعاية الصحية والعيادات والممرضين بسلاسة. صحتك أولويتنا.",
+  "sections": {
+    "company": "ميد وصلة",
+    "support": "الدعم",
+    "contact": "تواصل معنا"
+  },
+  "links": {
+    "about": "من نحن",
+    "services": "خدماتنا",
+    "doctors": "دليل الأطباء",
+    "nurses": "دليل الممرضين",
+    "careers": "الوظائف",
+    "helpCenter": "مركز المساعدة",
+    "bookAppointment": "حجز موعد",
+    "emergency": "دعم الطوارئ",
+    "terms": "شروط الخدمة",
+    "privacy": "سياسة الخصوصية",
+    "termsOfUse": "شروط الاستخدام"
+  },
+  "contact": {
+    "phone": "+20 123 456 7890",
+    "email": "support@medwasla.com",
+    "location": "الإسكندرية، مصر"
+  },
+  "actions": {
+    "book": "حجز موعد",
+    "dashboard": "الذهاب للوحة التحكم"
+  },
+  "copyright": "© {{year}} ميد وصلة. جميع الحقوق محفوظة."
+}

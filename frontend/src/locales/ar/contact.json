@@ -1,0 +1,79 @@
+{
+    "success": {
+      "title": "تم إرسال الرسالة!",
+      "description": "شكرًا لتواصلك معنا. سنرد عليك في أقرب وقت ممكن.",
+      "responseTime": "الوقت المتوقع للرد: 24-48 ساعة"
+    },
+    "hero": {
+      "title": "تواصل معنا",
+      "subtitle": "هل لديك أسئلة أو تحتاج إلى مساعدة؟ فريقنا هنا لمساعدتك. تواصل معنا وسنرد خلال 24-48 ساعة."
+    },
+    "form": {
+      "title": "أرسل لنا رسالة",
+      "fullName": "الاسم الكامل *",
+      "fullNamePlaceholder": "أحمد محمد",
+      "email": "البريد الإلكتروني *",
+      "emailPlaceholder": "ahmed@example.com",
+      "phone": "رقم الهاتف",
+      "phonePlaceholder": "+20 123 456 7890",
+      "subject": "الموضوع *",
+      "subjectPlaceholder": "اختر موضوعًا",
+      "message": "الرسالة *",
+      "messagePlaceholder": "أخبرنا كيف يمكننا مساعدتك...",
+      "submit": "إرسال الرسالة"
+    },
+    "departments": {
+      "generalInquiry": "استفسار عام",
+      "appointmentScheduling": "جدولة المواعيد",
+      "medicalRecords": "السجلات الطبية",
+      "billingInsurance": "الفواتير والتأمين",
+      "emergency": "طوارئ",
+      "feedbackComplaints": "الملاحظات والشكاوى"
+    },
+    "info": {
+      "address": {
+        "title": "العنوان",
+        "line1": "123 شارع الرعاية الصحية",
+        "line2": "الحي الطبي",
+        "line3": "نيويورك، NY 10001"
+      },
+      "email": {
+        "title": "البريد الإلكتروني",
+        "primary": "medwasla@healthcareplus.com",
+        "secondary": "medwaslasupport@healthcareplus.com"
+      },
+      "support": {
+        "title": "رقم الدعم",
+        "number": "+1 (234) 567-891",
+        "availability": "متاح على مدار الساعة طوال أيام الأسبوع"
+      },
+      "hours": {
+        "title": "ساعات العمل",
+        "weekdays": "الإثنين - الجمعة: 8 صباحًا - 8 مساءً",
+        "weekend": "السبت - الأحد: 9 صباحًا - 5 مساءً",
+        "emergency": "الطوارئ: على مدار الساعة"
+      }
+    },
+    "faqSection": {
+      "title": "الأسئلة الشائعة",
+      "subtitle": "إجابات سريعة على الأسئلة الشائعة"
+    },
+    "faqs": {
+      "manageOnline": {
+        "question": "هل يمكنني إدارة مواعيدي عبر الإنترنت؟",
+        "answer": "نعم. يمكنك حجز مواعيدك وعرضها وإدارتها مباشرة من خلال منصة ميدوصلة."
+      },
+      "insurance": {
+        "question": "هل تقبلون التأمين الصحي؟",
+        "answer": "نعم، نقبل معظم خطط التأمين الرئيسية. يرجى التواصل مع قسم الفواتير لدينا أو التحقق من شركة التأمين الخاصة بك."
+      },
+      "scheduleAppointment": {
+        "question": "كيف يمكنني حجز موعد؟",
+        "answer": "يمكنك حجز موعد من خلال نظام الحجز الإلكتروني، أو عبر الهاتف، أو بزيارة منشأتنا."
+      },
+      "telemedicine": {
+        "question": "هل تقدمون خدمات الطب عن بُعد؟",
+        "answer": "نعم، نقدم استشارات طب عن بُعد لبعض الحالات الطبية."
+      }
+    }
+  }

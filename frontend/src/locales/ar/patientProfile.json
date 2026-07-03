@@ -1,0 +1,153 @@
+{
+    "header": {
+      "roleLabel": "مريض · ميدوصلة",
+      "defaultName": "مريض"
+    },
+    "tabs": {
+      "personal": "المعلومات الشخصية",
+      "security": "الحساب والأمان"
+    },
+    "personal": {
+      "loading": "جارٍ تحميل الملف الشخصي...",
+      "notSet": "غير محدد",
+      "view": {
+        "description": "بياناتك الشخصية كما هي مسجلة في ميدوصلة.",
+        "editButton": "تعديل الملف الشخصي"
+      },
+      "edit": {
+        "description": "قم بتحديث بياناتك الشخصية أدناه.",
+        "editingBadge": "قيد التعديل"
+      },
+      "fields": {
+        "fullName": "الاسم الكامل",
+        "fullNamePlaceholder": "مثال: أحمد محمد",
+        "phone": "رقم الهاتف",
+        "phonePlaceholder": "1123456789",
+        "dob": "تاريخ الميلاد",
+        "governorate": "المحافظة",
+        "governoratePlaceholder": "اختر المحافظة",
+        "governorateSearchPlaceholder": "ابحث عن محافظة...",
+        "governorateNoResults": "لا توجد نتائج",
+        "address": "تفاصيل العنوان",
+        "addressOptional": "(اختياري)",
+        "addressPlaceholder": "الشارع، المبنى، الشقة..."
+      },
+      "errors": {
+        "nameRequired": "الاسم الكامل مطلوب.",
+        "nameTooShort": "يجب أن يتكون الاسم من 3 أحرف على الأقل.",
+        "phoneRequired": "رقم الهاتف مطلوب.",
+        "phoneInvalid": "أدخل رقم هاتف صحيح.",
+        "dobRequired": "تاريخ الميلاد مطلوب.",
+        "governorateRequired": "المحافظة مطلوبة."
+      },
+      "photo": {
+        "editButton": "تعديل",
+        "uploadOption": "رفع صورة",
+        "removeOption": "إزالة الصورة",
+        "showOption": "عرض الصورة",
+        "previewAlt": "معاينة الصورة الشخصية",
+        "previewClose": "إغلاق معاينة الصورة",
+        "invalidType": "يرجى اختيار ملف صورة (JPEG أو PNG أو WebP).",
+        "tooLarge": "يجب أن يكون حجم الصورة أقل من 5 ميجابايت."
+      },
+      "actions": {
+        "save": "حفظ التغييرات",
+        "saving": "جارٍ الحفظ...",
+        "cancel": "إلغاء"
+      },
+      "toast": {
+        "saveSuccess": "تم حفظ المعلومات الشخصية بنجاح.",
+        "saveError": "تعذر حفظ الملف الشخصي.",
+        "loadError": "تعذر تحميل ملف المريض."
+      }
+    },
+    "security": {
+      "view": {
+        "description": "اطّلع على بريدك الإلكتروني وغيّر كلمة المرور الخاصة بك.",
+        "editButton": "تعديل الأمان",
+        "emailLabel": "البريد الإلكتروني",
+        "passwordLabel": "كلمة المرور"
+      },
+      "edit": {
+        "description": "غيّر كلمة المرور الخاصة بك أدناه.",
+        "editingBadge": "قيد التعديل",
+        "emailLabel": "البريد الإلكتروني",
+        "emailHint": "لا يمكن تغيير بريدك الإلكتروني.",
+        "divider": "تغيير كلمة المرور",
+        "currentPassword": "كلمة المرور الحالية",
+        "currentPasswordPlaceholder": "أدخل كلمة المرور الحالية",
+        "newPassword": "كلمة المرور الجديدة",
+        "newPasswordPlaceholder": "أدخل كلمة المرور الجديدة",
+        "confirmPassword": "تأكيد كلمة المرور الجديدة",
+        "confirmPasswordPlaceholder": "أعد كتابة كلمة المرور الجديدة",
+        "passwordsMatch": "كلمتا المرور متطابقتان"
+      },
+      "strength": {
+        "empty": "يجب أن تتكون كلمة المرور من 8 أحرف على الأقل",
+        "weak": "كلمة مرور ضعيفة",
+        "fair": "كلمة مرور مقبولة",
+        "good": "كلمة مرور جيدة",
+        "strong": "كلمة مرور قوية"
+      },
+      "errors": {
+        "newPasswordRequiredToSave": "أدخل كلمة مرور جديدة لحفظ التغييرات.",
+        "currentPasswordRequired": "كلمة المرور الحالية مطلوبة لتغيير كلمة المرور.",
+        "newPasswordRequired": "كلمة المرور الجديدة مطلوبة.",
+        "newPasswordTooShort": "يجب أن تتكون كلمة المرور من 8 أحرف على الأقل.",
+        "passwordsMismatch": "كلمتا المرور غير متطابقتين."
+      },
+      "actions": {
+        "save": "حفظ التغييرات",
+        "cancel": "إلغاء"
+      },
+      "toast": {
+        "saveSuccess": "تم تحديث كلمة المرور بنجاح.",
+        "saveError": "تعذر حفظ إعدادات الأمان."
+      }
+    },
+    "medicalHistory": {
+      "title": "التاريخ المرضي",
+      "readOnlyBadge": "للقراءة فقط للمرضى",
+      "notice": "لا يمكن تحديث تاريخك المرضي إلا من قِبل طبيبك أو الإدارة لضمان الدقة والأمان.",
+      "diagnosed": "تاريخ التشخيص",
+      "treatedBy": "المعالج",
+      "empty": {
+        "title": "لا يوجد تاريخ مرضي مسجل حتى الآن.",
+        "subtitle": "سيقوم طبيبك بإضافة السجلات أثناء الاستشارات."
+      },
+      "status": {
+        "active": "نشط",
+        "under_treatment": "تحت العلاج",
+        "resolved": "تم الشفاء"
+      }
+    },
+    "governorates": {
+      "Cairo": "القاهرة",
+      "Giza": "الجيزة",
+      "Alexandria": "الإسكندرية",
+      "Dakahlia": "الدقهلية",
+      "Red Sea": "البحر الأحمر",
+      "Beheira": "البحيرة",
+      "Fayoum": "الفيوم",
+      "Gharbia": "الغربية",
+      "Ismailia": "الإسماعيلية",
+      "Menofia": "المنوفية",
+      "Minya": "المنيا",
+      "Qaliubiya": "القليوبية",
+      "New Valley": "الوادي الجديد",
+      "Suez": "السويس",
+      "Aswan": "أسوان",
+      "Assiut": "أسيوط",
+      "Beni Suef": "بني سويف",
+      "Port Said": "بورسعيد",
+      "Damietta": "دمياط",
+      "Sharqia": "الشرقية",
+      "South Sinai": "جنوب سيناء",
+      "Kafr El Sheikh": "كفر الشيخ",
+      "Matruh": "مطروح",
+      "Luxor": "الأقصر",
+      "Qena": "قنا",
+      "North Sinai": "شمال سيناء",
+      "Sohag": "سوهاج"
+    }
+  }

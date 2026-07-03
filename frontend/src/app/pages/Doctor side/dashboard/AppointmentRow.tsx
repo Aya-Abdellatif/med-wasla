@@ -1,3 +1,4 @@
+import { useTranslation } from "react-i18next";
 import { Clock, Home, UserX } from "lucide-react";
 import type { Appointment } from "./dashboardTypes";
 import {
@@ -32,6 +33,8 @@ export function AppointmentRow({
   onGoToHomeService,
   isUpdating = false,
 }: AppointmentRowProps) {
+  const { t, i18n } = useTranslation("dashboard");
+
   const isHomeVisit = isHomeVisitAppointment(appointment);
   const isClinic = isClinicAppointment(appointment);
   const routeToHomeTab =
@@ -49,6 +52,10 @@ export function AppointmentRow({
     onCancel &&
     (appointment.backendStatus === "confirmed" ||
       (isHomeVisit && appointment.backendStatus === "pending"));
+  const canFinalize =
+    appointment.scheduledAtMs === undefined ||
+    appointment.scheduledAtMs <= new Date().setHours(0, 0, 0, 0);
+
   const showComplete =
     !routeToHomeTab &&
     isClinic &&
@@ -60,15 +67,20 @@ export function AppointmentRow({
     appointment.backendStatus === "confirmed" &&
     onNoShow;
 
-  const statusLabel =
-    appointment.status === "no_show" ? "No Show" : appointment.status;
+  const statusLabel = t(`appointment.statusLabels.${appointment.status}`, {
+    defaultValue: appointment.status,
+  });
+
+  const finalizeDisabledTitle = canFinalize
+    ? undefined
+    : t("appointment.availableAfterScheduledTime");
 
   return (
     <div
       className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between p-4 rounded-lg border transition-colors hover:bg-gray-50"
       style={{ borderColor: "#e5e7eb" }}
     >
-      <div className="flex items-center space-x-4">
+      <div className="flex items-center gap-4">
         <Avatar name={appointment.patientName} size="md" />
         <div>
           <h3 className="font-semibold" style={{ color: DASHBOARD_THEME.text }}>
@@ -85,15 +97,15 @@ export function AppointmentRow({
             className="text-sm font-medium hidden sm:block"
             style={{ color: DASHBOARD_THEME.text }}
           >
-            {formatDateLabel(appointment.date)}
+            {formatDateLabel(appointment.date, i18n.language)}
           </p>
         )}
-        <div className="flex items-center space-x-2" style={{ color: DASHBOARD_THEME.muted }}>
+        <div className="flex items-center gap-2" style={{ color: DASHBOARD_THEME.muted }}>
           <Clock className="w-4 h-4" />
           <span className="text-sm">{appointment.time}</span>
         </div>
         <span
-          className="px-3 py-1 text-sm rounded-full font-medium capitalize"
+          className="px-3 py-1 text-sm rounded-full font-medium"
           style={getStatusBadgeStyle(appointment.status)}
         >
           {statusLabel}
@@ -107,7 +119,7 @@ export function AppointmentRow({
             style={{ backgroundColor: DASHBOARD_THEME.primary }}
           >
             <Home className="w-4 h-4" />
-            Go to Home Service
+            {t("appointment.goToHomeService")}
           </button>
         )}
         {showConfirm && (
@@ -118,7 +130,7 @@ export function AppointmentRow({
             className="px-3 py-1.5 text-sm rounded-lg font-medium text-white disabled:opacity-50"
             style={{ backgroundColor: DASHBOARD_THEME.primary }}
           >
-            Confirm
+            {t("appointment.confirm")}
           </button>
         )}
         {showCancel && (
@@ -129,30 +141,32 @@ export function AppointmentRow({
             className="px-3 py-1.5 text-sm rounded-lg font-medium text-white disabled:opacity-50"
             style={{ backgroundColor: DASHBOARD_THEME.danger }}
           >
-            Cancel
+            {t("appointment.cancel")}
           </button>
         )}
         {showComplete && (
           <button
             type="button"
-            disabled={isUpdating}
+            disabled={isUpdating || !canFinalize}
+            title={finalizeDisabledTitle}
             onClick={() => onComplete(appointment.id)}
             className="px-3 py-1.5 text-sm rounded-lg font-medium text-white disabled:opacity-50"
             style={{ backgroundColor: DASHBOARD_THEME.success }}
           >
-            Mark Complete
+            {t("appointment.markComplete")}
           </button>
         )}
         {showNoShow && (
           <button
             type="button"
-            disabled={isUpdating}
+            disabled={isUpdating || !canFinalize}
+            title={finalizeDisabledTitle}
             onClick={() => onNoShow(appointment.id)}
             className="flex items-center gap-1.5 px-3 py-1.5 text-sm rounded-lg font-medium text-white disabled:opacity-50"
             style={{ backgroundColor: "#d97706" }}
           >
             <UserX className="w-4 h-4" />
-            No Show
+            {t("appointment.noShow")}
           </button>
         )}
       </div>

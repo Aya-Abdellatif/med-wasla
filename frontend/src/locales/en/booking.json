@@ -1,0 +1,133 @@
+{
+  "typeModal": {
+    "title": "Choose Service Type",
+    "note": "Select the type of healthcare service you need. You can browse available specialists after choosing.",
+    "doctor": {
+      "title": "Doctor Appointment",
+      "description": "Book a clinic visit or consultation with a licensed doctor.",
+      "f1": "Clinic & home visits",
+      "f2": "Multiple specialties",
+      "f3": "Verified professionals",
+      "cta": "Choose Doctor"
+    },
+    "nurse": {
+      "title": "Nursing Home Service",
+      "description": "Request a licensed nurse for home care and specialized nursing.",
+      "f1": "Home visits",
+      "f2": "Specialized care",
+      "f3": "Flexible scheduling",
+      "cta": "Choose Nurse"
+    },
+    "footnoteLabel": "Note:",
+    "footnoteText": "After selecting a service type, you'll be directed to choose your preferred doctor or nurse. You can then book directly from their profile."
+  },
+  "modal": {
+    "bookAppointment": "Book Appointment",
+    "requestHomeService": "Request Home Service",
+    "openSchedulingTitle": "Open Scheduling",
+    "openSchedulingDesc": "Choose any date and time that suits you. Your request will be sent to the specialist for approval.",
+    "availability": "Availability",
+    "noSchedule": "No schedule published yet",
+    "visitType": "Visit Type",
+    "clinicVisit": "Clinic Visit",
+    "homeVisit": "Home Visit",
+    "address": "Address",
+    "addressPlaceholder": "Enter your full address",
+    "date": "Date",
+    "time": "Time",
+    "reason": "Reason for Visit",
+    "reasonPlaceholder": "Briefly describe your symptoms or reason",
+    "providerDetails": "Provider Details",
+    "fee": "Consultation Fee",
+    "submit": "Confirm Booking",
+    "submitting": "Booking...",
+    "selectDate": "Select a date",
+    "selectTime": "Select a time",
+    "loadingTimes": "Loading times...",
+    "noSlots": "No available slots",
+    "validation": {
+      "dateRequired": "Date is required",
+      "dateUnavailable": "Specialist is not available on this day",
+      "timeRequired": "Time is required",
+      "addressRequired": "Address is required for home visits"
+    },
+    "successHome": "Home visit booked successfully! Check My Appointments to track it.",
+    "successClinic": "Appointment booked successfully! Check My Appointments to track it.",
+    "bookFailed": "Failed to book appointment",
+    "preferredTime": "Preferred Time",
+    "availableTime": "Available Time",
+    "selectDateFirst": "Select a date first",
+    "workingHours": "Working hours: {{start}} - {{end}}",
+    "name": "Name:",
+    "specialty": "Specialty:",
+    "location": "Location:",
+    "homeVisitsAvailable": "Home visits:",
+    "available": "Available",
+    "cancel": "Cancel",
+    "fillRequiredFields": "Please fill in all required fields",
+    "signInAsPatient": "Please sign in as a patient to book an appointment",
+    "missingSpecialist": "Unable to book: specialist information is missing",
+    "alreadyBooked": "You already booked an appointment with this doctor on this day.",
+    "loadSlotsFailed": "Failed to load available times",
+    "listSeparator": ", "
+  },
+  "slots": {
+    "notAvailableDay": "Not available this day",
+    "allBooked": "All slots booked",
+    "noSlots": "No available slots"
+  },
+  "reschedule": {
+    "title": "Reschedule Appointment",
+    "successTitle": "Appointment Rescheduled!",
+    "successDesc": "Your appointment has been successfully rescheduled.",
+    "newDate": "New Date",
+    "newTime": "New Time",
+    "preferredTime": "Preferred Time",
+    "current": "Current: {{date}} at {{time}}",
+    "homeVisitNotice": "Home visit rescheduling requires specialist approval.",
+    "confirm": "Confirm Reschedule",
+    "selectDateFirst": "Select a date first"
+  },
+  "cancel": {
+    "title": "Cancel Appointment?",
+    "description": "Are you sure you want to cancel this appointment? This action cannot be undone.",
+    "keep": "Keep It",
+    "confirm": "Yes, Cancel"
+  },
+  "details": {
+    "title": "Appointment Details",
+    "date": "Date",
+    "time": "Time",
+    "visitType": "Visit Type",
+    "fee": "Consultation Fee",
+    "reason": "Reason for Visit",
+    "reminders": "Reminders",
+    "queue": {
+      "title": "Live Queue Status",
+      "position": "Your position: #{{position}}",
+      "ahead": "{{count}} patients ahead of you",
+      "estimated": "Estimated wait: ~{{minutes}} min",
+      "next": "You're next!",
+      "notAvailable": "Queue information not available"
+    }
+  },
+  "review": {
+    "addTitle": "Add Review",
+    "viewTitle": "Your Review",
+    "rateExperience": "Rate your experience",
+    "placeholder": "Share your experience (optional)",
+    "submit": "Submit Review",
+    "submitting": "Submitting...",
+    "noComment": "No written comment",
+    "reviewedOn": "Reviewed on {{date}}"
+  },
+  "days": {
+    "Monday": "Monday",
+    "Tuesday": "Tuesday",
+    "Wednesday": "Wednesday",
+    "Thursday": "Thursday",
+    "Friday": "Friday",
+    "Saturday": "Saturday",
+    "Sunday": "Sunday"
+  }
+}

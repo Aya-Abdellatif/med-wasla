@@ -150,8 +150,14 @@ export const registerUser = async (data: RegisterData): Promise<{ resent: boolea
         clinicAddress,
         bio,
         consultationFee,
-        certifications: certifications?.map((cert) => ({
-          ...cert,
+        certifications: certifications?.map((cert, index) => ({
+          title: cert.title,
+          issuedBy: cert.issuedBy,
+          certificateUrl: cert.certificateUrl,
+          issuedAt: cert.issuedAt,
+          isRegistrationCert:
+            cert.isRegistrationCert ??
+            (specialistType === "doctor" && index === 0),
           status: "pending" as const,
         })),
         verificationStatus: "pending",

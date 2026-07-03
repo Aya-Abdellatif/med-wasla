@@ -1,0 +1,157 @@
+{
+  "tabs": {
+    "overview": "Overview",
+    "schedule": "Schedule",
+    "requests": "Home Service Requests"
+  },
+  "stats": {
+    "todaysAppointments": "Today's Appointments",
+    "completedToday": "Completed Today",
+    "totalPatients": "Total Patients",
+    "pendingRequests": "Pending Requests"
+  },
+  "overview": {
+    "pendingHomeVisits": "Pending Home Visit Requests",
+    "todaySchedule": "Today's Schedule",
+    "emptySchedule": "No appointments scheduled for this day.",
+    "emptyRequests": "No pending home visit requests.",
+    "cancelAll": "Cancel All",
+    "cancelAllHomeRequests": "Cancel All Home Requests",
+    "cancelling": "Cancelling...",
+    "loadingAppointments": "Loading appointments...",
+    "viewAll": "View All"
+  },
+  "schedule": {
+    "appointments": "Appointments",
+    "pendingHomeVisits": "Pending Home Visits",
+    "upcoming": "Upcoming",
+    "completed": "Completed",
+    "noShow": "No Show",
+    "missedHomeVisits": "Missed Home Visits",
+    "empty": "No appointments for this day.",
+    "cancelAllHome": "Cancel All Home",
+    "emptyUpcoming": "No upcoming appointments for this day.",
+    "emptyCompleted": "No completed appointments for this day.",
+    "emptyNoShow": "No no-show appointments for this day.",
+    "missedHomeVisitsDescription": "Home visits that passed without confirmation or completion."
+  },
+  "requests": {
+    "title": "Home Service Requests",
+    "needsResponse": "Needs your response",
+    "recent": "Recent",
+    "accept": "Accept",
+    "reject": "Reject",
+    "empty": "No home service requests.",
+    "emptyDescription": "Requests appear here when patients book a home visit with you.",
+    "noPendingRightNow": "No pending home visits right now.",
+    "status": {
+      "completed": "Completed",
+      "overdue": "Overdue",
+      "rejected": "Rejected",
+      "accepted": "Accepted",
+      "pending": "Pending"
+    },
+    "groups": {
+      "acceptedTitle": "Accepted visits",
+      "acceptedDescription": "Confirmed home visits you accepted.",
+      "completedTitle": "Completed visits",
+      "completedDescription": "Finished home visits.",
+      "declinedTitle": "Declined visits",
+      "declinedDescription": "Requests you rejected or that were cancelled.",
+      "missedTitle": "Missed home visits",
+      "missedDescription": "These requests expired before you responded."
+    }
+  },
+  "appointment": {
+    "confirm": "Confirm",
+    "cancel": "Cancel",
+    "markComplete": "Mark as Complete",
+    "noShow": "No Show",
+    "goToHomeService": "Go to Home Service",
+    "availableAfterScheduledTime": "Available after the scheduled appointment time",
+    "statusLabels": {
+      "pending": "Pending",
+      "scheduled": "Scheduled",
+      "completed": "Completed",
+      "cancelled": "Cancelled",
+      "overdue": "Overdue",
+      "no_show": "No Show"
+    }
+  },
+  "profile": {
+    "cancel": "Cancel",
+    "selectSpecialty": "Select medical specialty",
+    "uploadPhotoTitle": "Upload profile photo",
+    "uploadingPhoto": "Uploading photo...",
+    "changePhotoHint": "Click the upload icon to change your photo",
+    "noPhotoHint": "No photo yet — upload one or your initial will be shown",
+    "pendingReviewTitle": "Pending admin review",
+    "pendingItems": {
+      "bio": "Bio update submitted",
+      "location": "Location update submitted",
+      "specialty": "Specialty update submitted"
+    },
+    "roleSubtitle": {
+      "doctor": "{{specialty}} Specialist",
+      "generalFallback": "General",
+      "nurse": "Home Care Nurse",
+      "patient": "Patient"
+    },
+    "fields": {
+      "location": "Location"
+    },
+    "slots": {
+      "duplicateDay": "This day already has a slot. Each weekday can only be added once.",
+      "savedHint": "Saved immediately and shown on your public doctor/nurse card.",
+      "addSlot": "Add Slot",
+      "added": "(added)",
+      "remove": "Remove",
+      "empty": "No availability slots yet",
+      "saving": "Saving availability...",
+      "save": "Save Availability"
+    },
+    "cert": {
+      "titlePlaceholder": "Certificate title",
+      "issuedByPlaceholder": "Issued by",
+      "urlPlaceholder": "Certificate URL",
+      "saveCertificate": "Save Certificate",
+      "saveChanges": "Save changes",
+      "graduationBadge": "Graduation certificate",
+      "issuedBy": "Issued by {{issuer}}",
+      "issueDate": "Issue Date: {{date}}",
+      "lockedNotice": "Verified by admin — cannot be edited or deleted",
+      "statusRejected": "Rejected",
+      "statusVerified": "Verified",
+      "statusPending": "Pending Verification",
+      "editTitle": "Edit certificate",
+      "deleteTitle": "Delete certificate",
+      "empty": "No certificates uploaded yet"
+    }
+  },
+  "missed": {
+    "title": "Missed appointments",
+    "description": "These passed without confirmation or completion. No action is required."
+  },
+  "toast": {
+    "allCancelled": "All appointments for this day cancelled.",
+    "markedComplete": "Appointment marked as completed.",
+    "markedNoShow": "Appointment marked as no show.",
+    "bulkCancelFailed": "Failed to cancel appointments",
+    "completeFailed": "Failed to complete appointment",
+    "requestUpdateFailed": "Failed to update home visit request",
+    "loadFailed": "Failed to load appointments",
+    "homeVisitAccepted": "Home visit accepted!",
+    "homeVisitDeclined": "Home visit declined.",
+    "updateHomeVisitFailed": "Failed to update home visit request",
+    "appointmentCancelled": "Appointment cancelled.",
+    "cancelAppointmentFailed": "Failed to cancel appointment",
+    "homeVisitsCancelled": "{{count}} home visit request(s) cancelled.",
+    "cancelHomeVisitsFailed": "Failed to cancel home visit requests",
+    "dayAppointmentsCancelled": "All appointments for this day cancelled.",
+    "cancelAppointmentsFailed": "Failed to cancel appointments",
+    "appointmentCompleted": "Appointment marked as completed.",
+    "completeAppointmentFailed": "Failed to complete appointment",
+    "appointmentNoShow": "Appointment marked as no show.",
+    "noShowFailed": "Failed to mark appointment as no show"
+  }
+}

@@ -1,0 +1,157 @@
+{
+  "tabs": {
+    "overview": "نظرة عامة",
+    "schedule": "الجدول",
+    "requests": "طلبات الخدمة المنزلية"
+  },
+  "stats": {
+    "todaysAppointments": "مواعيد اليوم",
+    "completedToday": "المكتملة اليوم",
+    "totalPatients": "إجمالي المرضى",
+    "pendingRequests": "الطلبات المعلقة"
+  },
+  "overview": {
+    "pendingHomeVisits": "طلبات الزيارات المنزلية المعلقة",
+    "todaySchedule": "جدول اليوم",
+    "emptySchedule": "لا توجد مواعيد مجدولة لهذا اليوم.",
+    "emptyRequests": "لا توجد طلبات زيارات منزلية معلقة.",
+    "cancelAll": "إلغاء الكل",
+    "cancelAllHomeRequests": "إلغاء جميع طلبات الزيارات المنزلية",
+    "cancelling": "جارٍ الإلغاء...",
+    "loadingAppointments": "جارٍ تحميل المواعيد...",
+    "viewAll": "عرض الكل"
+  },
+  "schedule": {
+    "appointments": "المواعيد",
+    "pendingHomeVisits": "الزيارات المنزلية المعلقة",
+    "upcoming": "القادمة",
+    "completed": "المكتملة",
+    "noShow": "عدم حضور",
+    "missedHomeVisits": "الزيارات المنزلية الفائتة",
+    "empty": "لا توجد مواعيد لهذا اليوم.",
+    "cancelAllHome": "إلغاء جميع الزيارات المنزلية",
+    "emptyUpcoming": "لا توجد مواعيد قادمة لهذا اليوم.",
+    "emptyCompleted": "لا توجد مواعيد مكتملة لهذا اليوم.",
+    "emptyNoShow": "لا توجد حالات عدم حضور لهذا اليوم.",
+    "missedHomeVisitsDescription": "زيارات منزلية انتهت دون تأكيد أو إتمام."
+  },
+  "requests": {
+    "title": "طلبات الخدمة المنزلية",
+    "needsResponse": "تتطلب ردك",
+    "recent": "الأحدث",
+    "accept": "قبول",
+    "reject": "رفض",
+    "empty": "لا توجد طلبات خدمة منزلية.",
+    "emptyDescription": "تظهر الطلبات هنا عند حجز المرضى لزيارة منزلية معك.",
+    "noPendingRightNow": "لا توجد زيارات منزلية معلقة حاليًا.",
+    "status": {
+      "completed": "مكتملة",
+      "overdue": "فائتة",
+      "rejected": "مرفوضة",
+      "accepted": "مقبولة",
+      "pending": "معلقة"
+    },
+    "groups": {
+      "acceptedTitle": "الزيارات المقبولة",
+      "acceptedDescription": "الزيارات المنزلية المؤكدة التي قبلتها.",
+      "completedTitle": "الزيارات المكتملة",
+      "completedDescription": "الزيارات المنزلية المنتهية.",
+      "declinedTitle": "الزيارات المرفوضة",
+      "declinedDescription": "الطلبات التي رفضتها أو تم إلغاؤها.",
+      "missedTitle": "الزيارات المنزلية الفائتة",
+      "missedDescription": "انتهت صلاحية هذه الطلبات قبل أن تستجيب لها."
+    }
+  },
+  "appointment": {
+    "confirm": "تأكيد",
+    "cancel": "إلغاء",
+    "markComplete": "وضع علامة كمكتمل",
+    "noShow": "عدم حضور",
+    "goToHomeService": "الانتقال إلى الخدمة المنزلية",
+    "availableAfterScheduledTime": "متاح بعد موعد الحضور المحدد",
+    "statusLabels": {
+      "pending": "معلق",
+      "scheduled": "مجدول",
+      "completed": "مكتمل",
+      "cancelled": "ملغى",
+      "overdue": "فائت",
+      "no_show": "عدم حضور"
+    }
+  },
+  "profile": {
+    "cancel": "إلغاء",
+    "selectSpecialty": "اختر التخصص الطبي",
+    "uploadPhotoTitle": "رفع صورة الملف الشخصي",
+    "uploadingPhoto": "جارٍ رفع الصورة...",
+    "changePhotoHint": "اضغط على أيقونة الرفع لتغيير صورتك",
+    "noPhotoHint": "لا توجد صورة بعد — قم برفع واحدة أو سيتم عرض الحرف الأول من اسمك",
+    "pendingReviewTitle": "قيد مراجعة المسؤول",
+    "pendingItems": {
+      "bio": "تم إرسال تحديث النبذة",
+      "location": "تم إرسال تحديث الموقع",
+      "specialty": "تم إرسال تحديث التخصص"
+    },
+    "roleSubtitle": {
+      "doctor": "أخصائي {{specialty}}",
+      "generalFallback": "عام",
+      "nurse": "ممرض/ة رعاية منزلية",
+      "patient": "مريض"
+    },
+    "fields": {
+      "location": "الموقع"
+    },
+    "slots": {
+      "duplicateDay": "يوجد بالفعل موعد لهذا اليوم. يمكن إضافة كل يوم من أيام الأسبوع مرة واحدة فقط.",
+      "savedHint": "يتم الحفظ فورًا ويظهر في بطاقتك العامة كطبيب/ممرض.",
+      "addSlot": "إضافة موعد",
+      "added": "(تمت الإضافة)",
+      "remove": "إزالة",
+      "empty": "لا توجد مواعيد متاحة بعد",
+      "saving": "جارٍ حفظ أوقات التوفر...",
+      "save": "حفظ أوقات التوفر"
+    },
+    "cert": {
+      "titlePlaceholder": "عنوان الشهادة",
+      "issuedByPlaceholder": "الجهة المُصدِرة",
+      "urlPlaceholder": "رابط الشهادة",
+      "saveCertificate": "حفظ الشهادة",
+      "saveChanges": "حفظ التغييرات",
+      "graduationBadge": "شهادة تخرج",
+      "issuedBy": "صادرة عن {{issuer}}",
+      "issueDate": "تاريخ الإصدار: {{date}}",
+      "lockedNotice": "تم التحقق منها من قبل المسؤول — لا يمكن تعديلها أو حذفها",
+      "statusRejected": "مرفوضة",
+      "statusVerified": "موثّقة",
+      "statusPending": "قيد التحقق",
+      "editTitle": "تعديل الشهادة",
+      "deleteTitle": "حذف الشهادة",
+      "empty": "لا توجد شهادات مرفوعة بعد"
+    }
+  },
+  "missed": {
+    "title": "المواعيد الفائتة",
+    "description": "المواعيد التي لم تُستكمل أو تم تسجيلها كعدم حضور."
+  },
+  "toast": {
+    "allCancelled": "تم إلغاء جميع مواعيد هذا اليوم.",
+    "markedComplete": "تم وضع علامة على الموعد كمكتمل.",
+    "markedNoShow": "تم وضع علامة على الموعد كعدم حضور.",
+    "bulkCancelFailed": "فشل في إلغاء المواعيد",
+    "completeFailed": "فشل في إكمال الموعد",
+    "requestUpdateFailed": "فشل في تحديث طلب الزيارة المنزلية",
+    "loadFailed": "فشل تحميل المواعيد",
+    "homeVisitAccepted": "تم قبول الزيارة المنزلية!",
+    "homeVisitDeclined": "تم رفض الزيارة المنزلية.",
+    "updateHomeVisitFailed": "فشل تحديث طلب الزيارة المنزلية",
+    "appointmentCancelled": "تم إلغاء الموعد.",
+    "cancelAppointmentFailed": "فشل إلغاء الموعد",
+    "homeVisitsCancelled": "تم إلغاء {{count}} طلب زيارة منزلية.",
+    "cancelHomeVisitsFailed": "فشل إلغاء طلبات الزيارة المنزلية",
+    "dayAppointmentsCancelled": "تم إلغاء جميع مواعيد هذا اليوم.",
+    "cancelAppointmentsFailed": "فشل إلغاء المواعيد",
+    "appointmentCompleted": "تم وضع علامة على الموعد كمكتمل.",
+    "completeAppointmentFailed": "فشل إكمال الموعد",
+    "appointmentNoShow": "تم وضع علامة على الموعد كعدم حضور.",
+    "noShowFailed": "فشل في تسجيل عدم حضور الموعد"
+  }
+}

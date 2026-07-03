@@ -1,0 +1,73 @@
+{
+  "filters": {
+    "all": "الكل"
+  },
+  "sort": {
+    "highestRated": "الأعلى تقييمًا",
+    "newest": "الأحدث",
+    "mostReviewed": "الأكثر تقييمًا",
+    "shortestWait": "أقصر وقت انتظار",
+    "feeLowHigh": "الرسوم: من الأقل إلى الأعلى",
+    "feeHighLow": "الرسوم: من الأعلى إلى الأقل"
+  },
+  "weekdays": {
+    "sunday": "الأحد",
+    "monday": "الإثنين",
+    "tuesday": "الثلاثاء",
+    "wednesday": "الأربعاء",
+    "thursday": "الخميس",
+    "friday": "الجمعة",
+    "saturday": "السبت"
+  },
+  "governorates": {
+    "cairo": "القاهرة",
+    "giza": "الجيزة",
+    "alexandria": "الإسكندرية",
+    "qaliubiya": "القليوبية",
+    "portSaid": "بورسعيد",
+    "suez": "السويس",
+    "luxor": "الأقصر",
+    "aswan": "أسوان",
+    "assiut": "أسيوط",
+    "beheira": "البحيرة",
+    "beniSuef": "بني سويف",
+    "dakahlia": "الدقهلية",
+    "damietta": "دمياط",
+    "fayoum": "الفيوم",
+    "gharbia": "الغربية",
+    "ismailia": "الإسماعيلية",
+    "kafrElSheikh": "كفر الشيخ",
+    "matruh": "مطروح",
+    "minya": "المنيا",
+    "menofia": "المنوفية",
+    "newValley": "الوادي الجديد",
+    "northSinai": "شمال سيناء",
+    "qena": "قنا",
+    "redSea": "البحر الأحمر",
+    "sharqia": "الشرقية",
+    "sohag": "سوهاج",
+    "southSinai": "جنوب سيناء"
+  },
+  "specializations": {
+    "cardiology": "أمراض القلب",
+    "orthopedics": "جراحة العظام",
+    "dermatology": "الأمراض الجلدية",
+    "pediatrics": "طب الأطفال",
+    "neurology": "طب الأعصاب",
+    "psychiatry": "الطب النفسي",
+    "gynecology": "أمراض النساء والتوليد",
+    "ent": "الأنف والأذن والحنجرة",
+    "ophthalmology": "طب العيون",
+    "generalPractice": "الطب العام",
+    "urology": "جراحة المسالك البولية",
+    "oncology": "الأورام"
+  },
+  "nurseExpertise": {
+    "homeCare": "الرعاية المنزلية",
+    "pediatric": "رعاية الأطفال",
+    "geriatric": "رعاية كبار السن",
+    "woundCare": "العناية بالجروح",
+    "ivTherapy": "العلاج الوريدي",
+    "postOpCare": "رعاية ما بعد الجراحة"
+  }
+}

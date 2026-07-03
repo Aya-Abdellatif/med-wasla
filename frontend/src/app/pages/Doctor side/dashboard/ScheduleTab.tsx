@@ -1,7 +1,8 @@
 import { useRef } from "react";
 import { Calendar } from "lucide-react";
+import { useTranslation } from "react-i18next";
 import type { Appointment } from "./dashboardTypes";
-import { DASHBOARD_THEME, formatDateLabel } from "./dashboardUtils";
+import { DASHBOARD_THEME } from "./dashboardUtils";
 import { AppointmentRow } from "./AppointmentRow";
 import { MissedAppointmentsPanel } from "./MissedAppointmentsPanel";
 
@@ -41,6 +42,7 @@ export function ScheduleTab({
   onGoToHomeService,
   updatingAppointmentId,
 }: ScheduleTabProps) {
+  const { t } = useTranslation("dashboard");
   const dateInputRef = useRef<HTMLInputElement>(null);
 
   const cancellablePending = pendingAppointments.filter(
@@ -56,7 +58,7 @@ export function ScheduleTab({
     <div className="bg-white rounded-xl p-6" style={{ boxShadow: "0 1px 3px rgba(0,0,0,0.1)" }}>
       <div className="flex flex-wrap items-center justify-between gap-4 mb-6">
         <h2 className="text-xl font-bold" style={{ color: DASHBOARD_THEME.text }}>
-          Appointments
+          {t("schedule.appointments")}
         </h2>
         <label
           className="flex items-center gap-2 px-3 py-2 border rounded-lg bg-gray-50 cursor-pointer transition-colors"
@@ -78,17 +80,13 @@ export function ScheduleTab({
         </label>
       </div>
 
-      <p className="text-sm mb-6" style={{ color: DASHBOARD_THEME.muted }}>
-        {formatDateLabel(selectedDate)}
-      </p>
-
       <div className="space-y-8">
-        {pendingAppointments.length > 0 && (
+        {offersHomeService && pendingAppointments.length > 0 && (
           <div>
             <div className="flex flex-wrap items-center justify-between gap-3 mb-4">
               <h3 className="text-lg font-semibold" style={{ color: DASHBOARD_THEME.text }}>
-                Pending Home Visits
-                <span className="ml-2 text-sm font-normal" style={{ color: DASHBOARD_THEME.muted }}>
+                {t("schedule.pendingHomeVisits")}
+                <span className="ms-2 text-sm font-normal" style={{ color: DASHBOARD_THEME.muted }}>
                   ({pendingAppointments.length})
                 </span>
               </h3>
@@ -100,7 +98,7 @@ export function ScheduleTab({
                   className="px-3 py-1.5 text-sm font-medium rounded-lg text-white disabled:opacity-50"
                   style={{ backgroundColor: DASHBOARD_THEME.danger }}
                 >
-                  {isBulkHome ? "Cancelling..." : "Cancel All Home"}
+                  {isBulkHome ? t("overview.cancelling") : t("schedule.cancelAllHome")}
                 </button>
               )}
             </div>
@@ -125,8 +123,8 @@ export function ScheduleTab({
         <div>
           <div className="flex flex-wrap items-center justify-between gap-3 mb-4">
             <h3 className="text-lg font-semibold" style={{ color: DASHBOARD_THEME.text }}>
-              Upcoming
-              <span className="ml-2 text-sm font-normal" style={{ color: DASHBOARD_THEME.muted }}>
+              {t("schedule.upcoming")}
+              <span className="ms-2 text-sm font-normal" style={{ color: DASHBOARD_THEME.muted }}>
                 ({filteredUpcoming.length})
               </span>
             </h3>
@@ -138,7 +136,7 @@ export function ScheduleTab({
                 className="px-3 py-1.5 text-sm font-medium rounded-lg text-white disabled:opacity-50"
                 style={{ backgroundColor: DASHBOARD_THEME.danger }}
               >
-                {isBulkUpcoming ? "Cancelling..." : "Cancel All"}
+                {isBulkUpcoming ? t("overview.cancelling") : t("overview.cancelAll")}
               </button>
             )}
           </div>
@@ -161,7 +159,7 @@ export function ScheduleTab({
                 className="text-sm py-4 text-center rounded-lg"
                 style={{ color: DASHBOARD_THEME.muted, backgroundColor: "#f9fafb" }}
               >
-                No upcoming appointments for this day.
+                {t("schedule.emptyUpcoming")}
               </p>
             )}
           </div>
@@ -169,8 +167,8 @@ export function ScheduleTab({
 
         <div>
           <h3 className="text-lg font-semibold mb-4" style={{ color: DASHBOARD_THEME.text }}>
-            Completed
-            <span className="ml-2 text-sm font-normal" style={{ color: DASHBOARD_THEME.muted }}>
+            {t("schedule.completed")}
+            <span className="ms-2 text-sm font-normal" style={{ color: DASHBOARD_THEME.muted }}>
               ({filteredCompleted.length})
             </span>
           </h3>
@@ -184,7 +182,7 @@ export function ScheduleTab({
                 className="text-sm py-4 text-center rounded-lg"
                 style={{ color: DASHBOARD_THEME.muted, backgroundColor: "#f9fafb" }}
               >
-                No completed appointments for this day.
+                {t("schedule.emptyCompleted")}
               </p>
             )}
           </div>
@@ -192,8 +190,8 @@ export function ScheduleTab({
 
         <div>
           <h3 className="text-lg font-semibold mb-4" style={{ color: DASHBOARD_THEME.text }}>
-            No Show
-            <span className="ml-2 text-sm font-normal" style={{ color: DASHBOARD_THEME.muted }}>
+            {t("schedule.noShow")}
+            <span className="ms-2 text-sm font-normal" style={{ color: DASHBOARD_THEME.muted }}>
               ({filteredNoShow.length})
             </span>
           </h3>
@@ -207,16 +205,17 @@ export function ScheduleTab({
                 className="text-sm py-4 text-center rounded-lg"
                 style={{ color: DASHBOARD_THEME.muted, backgroundColor: "#f9fafb" }}
               >
-                No no-show appointments for this day.
+                {t("schedule.emptyNoShow")}
               </p>
             )}
           </div>
         </div>
 
+        {offersHomeService && (
         <MissedAppointmentsPanel
           count={overdueAppointments.length}
-          title="Missed Home Visits"
-          description="Home visits that passed without confirmation or completion."
+          title={t("schedule.missedHomeVisits")}
+          description={t("schedule.missedHomeVisitsDescription")}
         >
           {overdueAppointments.map((appointment) => (
             <AppointmentRow
@@ -227,6 +226,7 @@ export function ScheduleTab({
             />
           ))}
         </MissedAppointmentsPanel>
+        )}
       </div>
     </div>
   );

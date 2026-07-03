@@ -1,34 +1,36 @@
 const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
 
+export type PasswordRuleId = "length" | "upper" | "lower" | "number";
+
 export type PasswordRule = {
-  id: string;
-  label: string;
+  id: PasswordRuleId;
+  labelKey: string;
   test: (password: string) => boolean;
 };
 
 export const PASSWORD_RULES: PasswordRule[] = [
-  { id: "length", label: "At least 8 characters", test: (p) => p.length >= 8 },
-  { id: "upper", label: "One uppercase letter", test: (p) => /[A-Z]/.test(p) },
-  { id: "lower", label: "One lowercase letter", test: (p) => /[a-z]/.test(p) },
-  { id: "number", label: "One number", test: (p) => /[0-9]/.test(p) },
+  { id: "length", labelKey: "password.rules.length", test: (p) => p.length >= 8 },
+  { id: "upper", labelKey: "password.rules.upper", test: (p) => /[A-Z]/.test(p) },
+  { id: "lower", labelKey: "password.rules.lower", test: (p) => /[a-z]/.test(p) },
+  { id: "number", labelKey: "password.rules.number", test: (p) => /[0-9]/.test(p) },
 ];
 
 export function validateEmail(value: string): string | undefined {
   const email = value.trim();
 
-  if (!email) return "Email is required";
-  if (!emailRegex.test(email)) return "Enter a valid email address";
+  if (!email) return "email.required";
+  if (!emailRegex.test(email)) return "email.invalid";
 
   return undefined;
 }
 
 export function validatePassword(value: string): string | undefined {
-  if (!value) return "Password is required";
+  if (!value) return "password.required";
 
   const failedRules = PASSWORD_RULES.filter((rule) => !rule.test(value));
   if (failedRules.length === 0) return undefined;
 
-  return "Password is not strong enough";
+  return "password.weak";
 }
 
 export function mapRegisterErrorMessage(message: string): {
@@ -38,7 +40,7 @@ export function mapRegisterErrorMessage(message: string): {
   const lower = message.toLowerCase();
 
   if (lower.includes("email") && (lower.includes("registered") || lower.includes("exist"))) {
-    return { field: "email", text: "This email is already in use" };
+    return { field: "email", text: "register.emailInUse" };
   }
 
   if (lower.includes("license")) {

@@ -1,0 +1,80 @@
+{
+  "brand": {
+    "logoAlt": "MedWasla Logo",
+    "med": "Med",
+    "wasla": "Wasla"
+  },
+  "loading": "Loading...",
+  "returnHome": "Return to Home",
+  "getStarted": "Get started",
+  "notSet": "Not set",
+  "currency": {
+    "egp": "EGP"
+  },
+  "roles": {
+    "doctor": "Doctor",
+    "nurse": "Nurse",
+    "patient": "Patient",
+    "admin": "Admin"
+  },
+  "titles": {
+    "dr": "DR. {{name}}",
+    "drShort": "Dr. {{name}}"
+  },
+  "actions": {
+    "cancel": "Cancel",
+    "save": "Save",
+    "edit": "Edit",
+    "continue": "Continue",
+    "done": "Done",
+    "close": "Close",
+    "clear": "Clear",
+    "bookAppointment": "Book Appointment",
+    "viewDetails": "View Details",
+    "bookNow": "Book Now",
+    "goToDashboard": "Go to Dashboard",
+    "contactUs": "Contact Us",
+    "login": "Login",
+    "logout": "Logout",
+    "signUp": "Sign Up",
+    "yes": "Yes",
+    "no": "No",
+    "confirm": "Confirm",
+    "submit": "Submit",
+    "back": "Back",
+    "next": "Next",
+    "previous": "Previous",
+    "search": "Search",
+    "filter": "Filter",
+    "all": "All",
+    "viewAll": "View All",
+    "learnMore": "Learn more",
+    "dismiss": "Dismiss notification"
+  },
+  "status": {
+    "upcoming": "Upcoming",
+    "pending": "Pending",
+    "completed": "Completed",
+    "cancelled": "Cancelled",
+    "overdue": "Overdue",
+    "noShow": "No Show",
+    "active": "Active",
+    "underTreatment": "Under Treatment",
+    "resolved": "Resolved",
+    "verified": "Verified",
+    "rejected": "Rejected"
+  },
+  "visitType": {
+    "clinic": "Clinic Visit",
+    "home": "Home Visit"
+  },
+  "empty": {
+    "noResults": "No results found",
+    "noData": "No data available"
+  },
+  "verification": {
+    "approved": "Your account has been verified. You can now access all features.",
+    "pending": "Your account is pending verification. Some features may be limited until approval.",
+    "rejected": "Your verification was rejected. Please contact support or update your documents."
+  }
+}
