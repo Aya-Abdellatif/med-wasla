@@ -1,11 +1,14 @@
+import { useTranslation } from "react-i18next";
 import type { Message } from "../../../types/chat.types";
 
 function ChatSources({ message }: { message: Message }) {
+  const { t } = useTranslation("chatbot");
+
   if (!message.sources?.length) return null;
 
   return (
     <div className="border-t p-2 text-xs bg-gray-50">
-      <p className="font-bold mb-1">Sources</p>
+      <p className="font-bold mb-1">{t("sources.title")}</p>
 
       {message.sources.map((s, i) => (
         <div key={i} className="text-gray-600">
@@ -15,7 +18,7 @@ function ChatSources({ message }: { message: Message }) {
 
       {message.confidence !== undefined && (
         <p className="mt-1 text-gray-400">
-          Confidence: {Math.round(message.confidence * 100)}%
+          {t("sources.confidence", { percent: Math.round(message.confidence * 100) })}
         </p>
       )}
     </div>
