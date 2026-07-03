@@ -19,6 +19,7 @@ import {
     UserX,
     CalendarPlus,
     SlidersHorizontal,
+    CalendarDays
 } from "lucide-react";
 
 import { ImageWithFallback } from "../../figma/ImageWithFallback";
@@ -35,6 +36,7 @@ import { fetchMyAppointments, cancelAppointment, rescheduleAppointment } from ".
 import { createReview } from "../../../services/reviewsApi";
 import { useAuth } from "../../context/useAuth";
 import { showError, showSuccess } from "../../../utils/toast";
+import { handleBookClick } from "../../../utils/bookingAccess";
 
 const statusIconMap: Record<AppointmentStatus, React.ElementType> = {
     upcoming: Clock,
@@ -53,6 +55,9 @@ const statusStyleMap: Record<AppointmentStatus, { color: string; bgColor: string
     overdue: { color: "text-slate-700", bgColor: "bg-slate-100 border border-slate-200" },
     no_show: { color: "text-amber-800", bgColor: "bg-amber-50 border border-amber-200" },
 };
+
+
+
 
 // ─── Appointment Card ──────────────────────────────────────────
 function AppointmentCard({
@@ -218,6 +223,12 @@ function EmptyState({ filterStatus }: { filterStatus: string }) {
     const { t } = useTranslation(["patientAppointments"]);
     const statusLabel = filterStatus !== "all" ? t(`patientAppointments:status.${filterStatus}`) : "";
 
+    const [isAppointmentModalOpen, setIsAppointmentModalOpen] = useState(false);
+    const { user } = useAuth();
+    const navigate = useNavigate();
+    const openBooking = () => setIsAppointmentModalOpen(true);
+    const onBookClick = () => handleBookClick(user, navigate, openBooking);
+
     return (
         <div className="flex flex-col items-center justify-center py-20 text-center">
             <div className="w-20 h-20 bg-primary/10 rounded-full flex items-center justify-center mb-5">
@@ -235,10 +246,20 @@ function EmptyState({ filterStatus }: { filterStatus: string }) {
             </p>
 
             {filterStatus === "all" && (
-                <button className="flex items-center gap-2 bg-primary text-white px-6 py-3 rounded-xl hover:bg-primary/90 transition-colors font-medium">
-                    <CalendarPlus className="w-5 h-5" />
-                    {t("patientAppointments:empty.bookButton")}
+                <button
+                    onClick={onBookClick}
+                    className="flex items-center gap-2 bg-primary hover:bg-transparent text-white hover:text-primary font-bold px-6 py-3 rounded-xl transition-all duration-300 hover:-translate-y-0.5 border-2 border-primary cursor-pointer"
+                >
+                    <CalendarDays className="h-5 w-5 stroke-white group-hover:stroke-primary transition-colors duration-300" />
+                    {t("home:hero.bookAppointment")}
                 </button>
+            )}
+
+            {user?.role === "patient" && (
+                <AppointmentTypeModal
+                    isOpen={isAppointmentModalOpen}
+                    onClose={() => setIsAppointmentModalOpen(false)}
+                />
             )}
         </div>
     );
