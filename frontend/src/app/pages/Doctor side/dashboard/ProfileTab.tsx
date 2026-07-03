@@ -1,4 +1,4 @@
-import { useRef } from "react";
+import { useRef, useState } from "react";
 import {
   Edit,
   Save,
@@ -11,7 +11,9 @@ import {
   Clock as ClockIcon,
   Plus,
   Trash2,
+  Lock,
 } from "lucide-react";
+import { showWarning } from "../../../../utils/toast";
 import type { User, AvailableSlot } from "../../../context/AuthContext";
 import { MEDICAL_SPECIALIZATIONS } from "../../../../constants/medicalSpecializations";
 import { getFirstName } from "../../../../utils/displayName";
@@ -42,6 +44,8 @@ interface ProfileTabProps {
   onRemoveSlot: (index: number) => void;
   onPhotoUpload: (e: React.ChangeEvent<HTMLInputElement>) => Promise<void>;
   onAddCertificate: () => void;
+  onUpdateCertificate: (certId: string, cert: NewCertificateForm) => Promise<void>;
+  onDeleteCertificate: (certId: string) => Promise<void>;
 }
 
 export function ProfileTab({
@@ -64,10 +68,18 @@ export function ProfileTab({
   onRemoveSlot,
   onPhotoUpload,
   onAddCertificate,
+  onUpdateCertificate,
+  onDeleteCertificate,
   availableSlots,
   onAvailableSlotsChange,
   isSavingSlots,
 }: ProfileTabProps) {
+  const [editingCertId, setEditingCertId] = useState<string | null>(null);
+  const [editingCert, setEditingCert] = useState<NewCertificateForm>({
+    title: "",
+    issuedBy: "",
+    certificateUrl: "",
+  });
   const photoInputRef = useRef<HTMLInputElement>(null);
   const firstName = getFirstName(user?.name);
 
@@ -82,11 +94,37 @@ export function ProfileTab({
   };
 
   const updateSlot = (index: number, field: keyof AvailableSlot, value: string) => {
+    if (field === "day") {
+      const isDuplicate = availableSlots.some(
+        (slot, slotIndex) => slotIndex !== index && slot.day === value,
+      );
+      if (isDuplicate) {
+        showWarning("This day already has a slot. Each weekday can only be added once.");
+        return;
+      }
+    }
+
     onAvailableSlotsChange(
       availableSlots.map((slot, slotIndex) =>
         slotIndex === index ? { ...slot, [field]: value } : slot,
       ),
     );
+  };
+
+  const startEditingCert = (certId: string) => {
+    const cert = user?.certificates?.find((item) => item.id === certId);
+    if (!cert || cert.locked) return;
+    setEditingCertId(certId);
+    setEditingCert({
+      title: cert.name,
+      issuedBy: cert.issuer,
+      certificateUrl: cert.fileUrl ?? "",
+    });
+  };
+
+  const cancelEditingCert = () => {
+    setEditingCertId(null);
+    setEditingCert({ title: "", issuedBy: "", certificateUrl: "" });
   };
 
   const pending = user?.pendingProfileUpdates;
@@ -351,11 +389,17 @@ export function ProfileTab({
                       onChange={(e) => updateSlot(index, "day", e.target.value)}
                       className="px-3 py-2 border rounded-lg text-sm"
                     >
-                      {WEEK_DAYS.map((day) => (
-                        <option key={day} value={day}>
-                          {day}
-                        </option>
-                      ))}
+                      {WEEK_DAYS.map((day) => {
+                        const dayTaken = availableSlots.some(
+                          (slot, slotIndex) => slotIndex !== index && slot.day === day,
+                        );
+                        return (
+                          <option key={day} value={day} disabled={dayTaken}>
+                            {day}
+                            {dayTaken ? " (added)" : ""}
+                          </option>
+                        );
+                      })}
                     </select>
                     <input
                       type="time"
@@ -461,7 +505,58 @@ export function ProfileTab({
                           : "#fffbeb",
                     }}
                   >
-                    <div className="flex items-start justify-between">
+                    {editingCertId === cert.id ? (
+                      <div className="space-y-3">
+                        <input
+                          placeholder="Certificate title"
+                          value={editingCert.title}
+                          onChange={(e) =>
+                            setEditingCert({ ...editingCert, title: e.target.value })
+                          }
+                          className="w-full px-3 py-2 border rounded-lg text-sm"
+                        />
+                        <input
+                          placeholder="Issued by"
+                          value={editingCert.issuedBy}
+                          onChange={(e) =>
+                            setEditingCert({ ...editingCert, issuedBy: e.target.value })
+                          }
+                          className="w-full px-3 py-2 border rounded-lg text-sm"
+                        />
+                        <input
+                          placeholder="Certificate URL"
+                          value={editingCert.certificateUrl}
+                          onChange={(e) =>
+                            setEditingCert({
+                              ...editingCert,
+                              certificateUrl: e.target.value,
+                            })
+                          }
+                          className="w-full px-3 py-2 border rounded-lg text-sm"
+                        />
+                        <div className="flex gap-2">
+                          <button
+                            type="button"
+                            onClick={() => {
+                              void onUpdateCertificate(cert.id, editingCert).then(() =>
+                                cancelEditingCert(),
+                              );
+                            }}
+                            className="px-4 py-2 bg-teal-500 text-white rounded-lg text-sm font-semibold hover:bg-teal-600"
+                          >
+                            Save changes
+                          </button>
+                          <button
+                            type="button"
+                            onClick={cancelEditingCert}
+                            className="px-4 py-2 border rounded-lg text-sm text-gray-700 hover:bg-gray-50"
+                          >
+                            Cancel
+                          </button>
+                        </div>
+                      </div>
+                    ) : (
+                    <div className="flex items-start justify-between gap-3">
                       <div className="flex items-start space-x-3 flex-1">
                         <div
                           className="w-10 h-10 rounded-lg flex items-center justify-center shrink-0"
@@ -474,8 +569,19 @@ export function ProfileTab({
                           )}
                         </div>
                         <div className="flex-1">
-                          <h4 className="font-semibold" style={{ color: "#111827" }}>{cert.name}</h4>
-                          <p className="text-sm mt-1" style={{ color: "#6b7280" }}>Issued by {cert.issuer}</p>
+                          <div className="flex flex-wrap items-center gap-2">
+                            <h4 className="font-semibold" style={{ color: "#111827" }}>
+                              {cert.name}
+                            </h4>
+                            {cert.isRegistrationCert && (
+                              <span className="px-2 py-0.5 text-xs rounded-full bg-sky-100 text-sky-800 font-medium">
+                                Graduation certificate
+                              </span>
+                            )}
+                          </div>
+                          <p className="text-sm mt-1" style={{ color: "#6b7280" }}>
+                            Issued by {cert.issuer}
+                          </p>
                           <p className="text-sm" style={{ color: "#6b7280" }}>
                             Issue Date:{" "}
                             {new Date(cert.issueDate).toLocaleDateString("en-US", {
@@ -484,23 +590,54 @@ export function ProfileTab({
                               day: "numeric",
                             })}
                           </p>
+                          {cert.locked && (
+                            <p className="mt-2 flex items-center gap-1.5 text-xs text-emerald-800">
+                              <Lock className="w-3.5 h-3.5" />
+                              Verified by admin — cannot be edited or deleted
+                            </p>
+                          )}
                         </div>
                       </div>
-                      <span
-                        className="px-3 py-1 text-xs rounded-full font-medium shrink-0"
-                        style={
-                          cert.verified
-                            ? { backgroundColor: "#dcfce7", color: "#15803d" }
-                            : { backgroundColor: "#fef3c7", color: "#b45309" }
-                        }
-                      >
-                        {cert.status === "rejected"
-                          ? "Rejected"
-                          : cert.verified
-                          ? "Verified"
-                          : "Pending Verification"}
-                      </span>
+                      <div className="flex flex-col items-end gap-2 shrink-0">
+                        <span
+                          className="px-3 py-1 text-xs rounded-full font-medium"
+                          style={
+                            cert.verified
+                              ? { backgroundColor: "#dcfce7", color: "#15803d" }
+                              : { backgroundColor: "#fef3c7", color: "#b45309" }
+                          }
+                        >
+                          {cert.status === "rejected"
+                            ? "Rejected"
+                            : cert.verified
+                            ? "Verified"
+                            : "Pending Verification"}
+                        </span>
+                        {!cert.locked && (
+                          <div className="flex gap-1">
+                            <button
+                              type="button"
+                              onClick={() => startEditingCert(cert.id)}
+                              title="Edit certificate"
+                              aria-label="Edit certificate"
+                              className="p-2 border rounded-lg text-gray-700 hover:bg-white hover:border-teal-300 transition-colors"
+                            >
+                              <Edit className="w-4 h-4" />
+                            </button>
+                            <button
+                              type="button"
+                              onClick={() => void onDeleteCertificate(cert.id)}
+                              title="Delete certificate"
+                              aria-label="Delete certificate"
+                              className="p-2 border border-rose-200 rounded-lg text-rose-600 hover:bg-rose-50 transition-colors"
+                            >
+                              <Trash2 className="w-4 h-4" />
+                            </button>
+                          </div>
+                        )}
+                      </div>
                     </div>
+                    )}
                   </div>
                 ))
               ) : (

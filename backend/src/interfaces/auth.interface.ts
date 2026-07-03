@@ -23,6 +23,7 @@ export interface RegisterData {
     issuedBy: string;
     certificateUrl: string;
     issuedAt?: string | Date;
+    isRegistrationCert?: boolean;
   }>;
 }
 

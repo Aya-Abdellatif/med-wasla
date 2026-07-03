@@ -10,6 +10,8 @@ export interface Certificate {
   fileUrl?: string;
   verified: boolean;
   status?: VerificationStatus;
+  isRegistrationCert?: boolean;
+  locked?: boolean;
 }
 
 export interface DiseaseRecord {
