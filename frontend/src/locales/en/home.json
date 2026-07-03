@@ -1,96 +1,95 @@
 {
-    "hero": {
-      "badge": "Trusted Healthcare Platform",
-      "titleLine1": "Your Health,",
-      "titleHighlight": "Our Priority",
-      "description": "Experience world-class healthcare by connecting with expert doctors and nurses. We're committed to your well-being every step of the way.",
-      "bookAppointment": "Book Appointment",
-      "goToDashboard": "Go to Dashboard",
-      "ourServices": "Our Services",
-      "support": {
-        "title": "24/7 Support",
-        "subtitle": "Always Available"
-      }
-    },
-    "stats": {
-      "patientsServed": "Patients Served",
-      "expertDoctors": "Expert Doctors",
-      "yearsExperience": "Years Experience",
-      "successRate": "Success Rate"
-    },
-    "services": {
-      "title": "Our Medical Services",
-      "subtitle": "Comprehensive healthcare solutions tailored to meet your needs with excellence and compassion.",
-      "learnMore": "Learn more",
-      "viewAll": "View All Services",
-      "items": {
-        "cardiology": {
-          "title": "Cardiology",
-          "desc": "Connect with top cardiologists for comprehensive heart care using state-of-the-art technology."
-        },
-        "emergencyCare": {
-          "title": "Emergency Care",
-          "desc": "24/7 access to emergency medical professionals with rapid response and advanced support."
-        },
-        "primaryCare": {
-          "title": "Primary Care",
-          "desc": "Book trusted general practitioners for health checkups and preventive care for all ages."
-        },
-        "pediatrics": {
-          "title": "Pediatrics",
-          "desc": "Find specialized pediatric doctors in a child-friendly, caring environment."
-        }
-      }
-    },
-    "why": {
-      "title": "Why Choose",
-      "titleHighlight": "MedWasla?",
-      "description": "We bridge the gap between patients and healthcare professionals — making quality medical care accessible, fast, and personal.",
-      "learnMoreAboutUs": "Learn More About Us",
-      "reasons": {
-        "expertNetwork": {
-          "title": "Expert Medical Network",
-          "desc": "Access to board-certified doctors and nurses with years of specialized experience."
-        },
-        "instantMatching": {
-          "title": "Instant Matching",
-          "desc": "Our platform connects you to the right medical professional within minutes."
-        },
-        "patientCentered": {
-          "title": "Patient-Centered",
-          "desc": "Personalized care tailored to your needs, all managed through one easy platform."
-        },
-        "availability247": {
-          "title": "24/7 Availability",
-          "desc": "Round-the-clock access to healthcare professionals whenever you need them most."
-        }
-      }
-    },
-    "reviews": {
-      "title": "What Our Patients Say",
-      "subtitle": "Don't just take our word for it — hear from some of our satisfied patients.",
-      "items": {
-        "review1": {
-          "text": "MedWasla connected me with an amazing cardiologist within hours. The process was seamless and the doctor was exceptional.",
-          "name": "Mai Islam",
-          "role": "Patient"
-        },
-        "review2": {
-          "text": "Finding a specialist used to take weeks. Through MedWasla I had an appointment the same day. Truly outstanding service.",
-          "name": "Hazem Fahmy",
-          "role": "Patient"
-        },
-        "review3": {
-          "text": "I've used MedWasla for my whole family. The nurses they connected us with were professional, caring, and highly skilled.",
-          "name": "Hend Mohamed",
-          "role": "Patient"
-        }
-      }
-    },
-    "cta": {
-      "title": "Ready to Take Control of Your Health?",
-      "descriptionBooking": "Book an appointment with our expert doctors today and experience healthcare excellence.",
-      "descriptionDashboard": "Manage your schedule, appointments, and profile from your professional dashboard.",
-      "contactUs": "Contact Us"
+  "hero": {
+    "badge": "Trusted Healthcare Platform",
+    "titleLine1": "Your Health,",
+    "titleHighlight": "Our Priority",
+    "description": "Experience world-class healthcare by connecting with expert doctors and nurses. We're committed to your well-being every step of the way.",
+    "bookAppointment": "Book Appointment",
+    "goToDashboard": "Go to Dashboard",
+    "ourServices": "Our Services",
+    "support": {
+      "title": "24/7 Support",
+      "subtitle": "Always Available"
     }
+  },
+  "stats": {
+    "patientsServed": "Patients Served",
+    "expertDoctors": "Expert Doctors",
+    "yearsExperience": "Years Experience",
+    "successRate": "Success Rate"
+  },
+  "services": {
+    "title": "Our Medical Services",
+    "subtitle": "Comprehensive healthcare solutions tailored to meet your needs with excellence and compassion.",
+    "viewAll": "View All Services",
+    "items": {
+      "doctorBooking": {
+        "title": "Book a Doctor",
+        "desc": "Book appointments with trusted doctors across 10+ medical specialties at your convenience."
+      },
+      "homeNursing": {
+        "title": "Home Nursing Services",
+        "desc": "Receive professional nursing care at home, including injections, wound care, elderly care, and post-treatment support."
+      },
+      "aiAssistant": {
+        "title": "AI Medical Assistant",
+        "desc": "Get instant answers to general medical questions and assistance with using MedWasla anytime."
+      },
+      "appointmentReminders": {
+        "title": "Appointment Reminders",
+        "desc": "Stay on top of your healthcare with timely reminders so you never miss an upcoming appointment."
+      }
+    }
+  },
+  "why": {
+    "title": "Why Choose",
+    "titleHighlight": "MedWasla?",
+    "description": "We bridge the gap between patients and healthcare professionals — making quality medical care accessible, fast, and personal.",
+    "learnMoreAboutUs": "Learn More About Us",
+    "reasons": {
+      "expertNetwork": {
+        "title": "Expert Medical Network",
+        "desc": "Access to board-certified doctors and nurses with years of specialized experience."
+      },
+      "instantMatching": {
+        "title": "Instant Matching",
+        "desc": "Our platform connects you to the right medical professional within minutes."
+      },
+      "patientCentered": {
+        "title": "Patient-Centered",
+        "desc": "Personalized care tailored to your needs, all managed through one easy platform."
+      },
+      "availability247": {
+        "title": "24/7 Availability",
+        "desc": "Round-the-clock access to healthcare professionals whenever you need them most."
+      }
+    }
+  },
+  "reviews": {
+    "title": "What Our Patients Say",
+    "subtitle": "Don't just take our word for it — hear from some of our satisfied patients.",
+    "items": {
+      "review1": {
+        "text": "MedWasla connected me with an amazing cardiologist within hours. The process was seamless and the doctor was exceptional.",
+        "name": "Mai Islam",
+        "role": "Patient"
+      },
+      "review2": {
+        "text": "Finding a specialist used to take weeks. Through MedWasla I had an appointment the same day. Truly outstanding service.",
+        "name": "Hazem Fahmy",
+        "role": "Patient"
+      },
+      "review3": {
+        "text": "I've used MedWasla for my whole family. The nurses they connected us with were professional, caring, and highly skilled.",
+        "name": "Hend Mohamed",
+        "role": "Patient"
+      }
+    }
+  },
+  "cta": {
+    "title": "Ready to Take Control of Your Health?",
+    "descriptionBooking": "Book an appointment with our expert doctors today and experience healthcare excellence.",
+    "descriptionDashboard": "Manage your schedule, appointments, and profile from your professional dashboard.",
+    "contactUs": "Contact Us"
   }
+}

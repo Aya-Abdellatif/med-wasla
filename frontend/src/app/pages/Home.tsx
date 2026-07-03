@@ -9,10 +9,12 @@ import {
   isSpecialistAccount,
 } from "../../utils/bookingAccess";
 import {
+  Stethoscope,
+  Bot,
+  Bell,
   Heart,
   Zap,
-  Shield,
-  Baby,
+  HeartPulse,
   CheckCircle,
   Star,
   ArrowRight,
@@ -89,10 +91,10 @@ export function Stat({ target, suffix = "", label }: StatProps) {
 }
 
 const services = [
-  { icon: Heart, key: "cardiology" },
-  { icon: Zap, key: "emergencyCare" },
-  { icon: Shield, key: "primaryCare" },
-  { icon: Baby, key: "pediatrics" },
+  { icon: Stethoscope, key: "doctorBooking" },
+  { icon: HeartPulse, key: "homeNursing" },
+  { icon: Bot, key: "aiAssistant" },
+  { icon: Bell, key: "appointmentReminders" },
 ] as const;
 
 const reasons = [
@@ -137,7 +139,9 @@ function Home() {
           </span>
           <h1 className="text-5xl font-black text-fg leading-tight">
             {t("home:hero.titleLine1")} <br />
-            <span className="text-primary">{t("home:hero.titleHighlight")}</span>
+            <span className="text-primary">
+              {t("home:hero.titleHighlight")}
+            </span>
           </h1>
           <p className="text-fg-muted text-lg leading-relaxed max-w-lg">
             {t("home:hero.description")}
@@ -165,7 +169,8 @@ function Home() {
               onClick={() => navigate("/services")}
               className="flex items-center gap-2 text-fg font-semibold px-6 py-3 rounded-xl border-2 border-border hover:border-primary hover:text-primary hover:-translate-y-0.5 transition-all duration-300 cursor-pointer"
             >
-              {t("home:hero.ourServices")} <ArrowRight className="h-4 w-4 rtl:rotate-180" />
+              {t("home:hero.ourServices")}{" "}
+              <ArrowRight className="h-4 w-4 rtl:rotate-180" />
             </button>
           </div>
         </div>
@@ -184,8 +189,12 @@ function Home() {
                 <Phone className="h-5 w-5 text-primary" />
               </div>
               <div>
-                <p className="text-sm font-bold text-fg">{t("home:hero.support.title")}</p>
-                <p className="text-xs text-fg-muted">{t("home:hero.support.subtitle")}</p>
+                <p className="text-sm font-bold text-fg">
+                  {t("home:hero.support.title")}
+                </p>
+                <p className="text-xs text-fg-muted">
+                  {t("home:hero.support.subtitle")}
+                </p>
               </div>
             </div>
           </div>
@@ -194,9 +203,17 @@ function Home() {
 
       <section className="bg-white border-y border-border py-16">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 grid grid-cols-2 lg:grid-cols-4 gap-10">
-          <Stat target={5000} suffix="+" label={t("home:stats.patientsServed")} />
+          <Stat
+            target={5000}
+            suffix="+"
+            label={t("home:stats.patientsServed")}
+          />
           <Stat target={200} suffix="+" label={t("home:stats.expertDoctors")} />
-          <Stat target={25} suffix="+" label={t("home:stats.yearsExperience")} />
+          <Stat
+            target={25}
+            suffix="+"
+            label={t("home:stats.yearsExperience")}
+          />
           <Stat target={95} suffix="%" label={t("home:stats.successRate")} />
         </div>
       </section>
@@ -214,7 +231,7 @@ function Home() {
           {services.map(({ icon: Icon, key }) => (
             <div
               key={key}
-              className="group border border-border rounded-2xl p-6 hover:border-primary hover:shadow-md transition-all duration-300 flex flex-col gap-4 bg-white"
+              className="group border border-border rounded-2xl p-6 hover:border-primary hover:shadow-md hover:scale-[1.02] transition-all duration-300 hover:-translate-y-2 flex flex-col gap-4 bg-white"
             >
               <div className="h-12 w-12 rounded-xl bg-primary/10 flex items-center justify-center group-hover:bg-primary transition-colors duration-300">
                 <Icon className="h-6 w-6 text-primary group-hover:text-white transition-colors duration-300" />
@@ -225,12 +242,6 @@ function Home() {
               <p className="text-sm text-fg-muted leading-relaxed flex-1">
                 {t(`home:services.items.${key}.desc`)}
               </p>
-              <a
-                onClick={() => navigate("/services")}
-                className="flex items-center gap-1 text-sm font-semibold text-primary hover:gap-2 transition-all duration-200 cursor-pointer"
-              >
-                {t("home:services.learnMore")} <ArrowRight className="h-4 w-4 rtl:rotate-180" />
-              </a>
             </div>
           ))}
         </div>
@@ -258,7 +269,9 @@ function Home() {
           <div className="flex-1 flex flex-col gap-6">
             <h2 className="text-4xl font-black text-fg">
               {t("home:why.title")}{" "}
-              <span className="text-primary">{t("home:why.titleHighlight")}</span>
+              <span className="text-primary">
+                {t("home:why.titleHighlight")}
+              </span>
             </h2>
             <p className="text-fg-muted">{t("home:why.description")}</p>
             <div className="grid grid-cols-1 sm:grid-cols-2 gap-5">
@@ -268,7 +281,7 @@ function Home() {
                     <Icon className="h-4 w-4 text-primary" />
                   </div>
                   <div>
-                    <p className="text-md font-semibold text-[#1F2937] mt-1">
+                    <p className="text-md font-semibold text-[#1F2937] ">
                       {t(`home:why.reasons.${key}.title`)}
                     </p>
                     <p className="text-xs text-fg-muted mt-0.5 leading-relaxed">
@@ -282,7 +295,8 @@ function Home() {
               onClick={() => navigate("/about")}
               className="self-start flex items-center gap-2 font-bold text-primary hover:gap-3 transition-all duration-200 cursor-pointer"
             >
-              {t("home:why.learnMoreAboutUs")} <ArrowRight className="h-4 w-4 rtl:rotate-180" />
+              {t("home:why.learnMoreAboutUs")}{" "}
+              <ArrowRight className="h-4 w-4 rtl:rotate-180" />
             </a>
           </div>
         </div>
@@ -299,7 +313,10 @@ function Home() {
           <div className="bg-white border border-border rounded-2xl p-8 flex flex-col gap-5 shadow-sm">
             <div className="flex gap-1">
               {Array.from({ length: active.rating }).map((_, i) => (
-                <Star key={i} className="h-5 w-5 text-yellow-400 fill-yellow-400" />
+                <Star
+                  key={i}
+                  className="h-5 w-5 text-yellow-400 fill-yellow-400"
+                />
               ))}
             </div>
             <p className="text-fg leading-relaxed text-lg">
@@ -353,7 +370,9 @@ function Home() {
 
       <section className="bg-primary py-20">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 text-center flex flex-col items-center gap-6">
-          <h2 className="text-4xl font-bold text-white">{t("home:cta.title")}</h2>
+          <h2 className="text-4xl font-bold text-white">
+            {t("home:cta.title")}
+          </h2>
           <p className="text-white/80 max-w-lg text-lg">
             {showBooking
               ? t("home:cta.descriptionBooking")
