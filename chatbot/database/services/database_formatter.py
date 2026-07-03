@@ -55,7 +55,7 @@ def format_specialists(specialists):
     for i, doc in enumerate(specialists, start=1):
 
         text += (
-            f"{i}. Doctor/Nurse\n"
+            f"{i}. Specialist Record\n"
             f"- Name: {doc.get('name', 'Unknown')}\n"
             f"- Type: {doc.get('specialistType', 'Unknown')}\n"
             f"- Specialization: {doc.get('specialization', 'N/A')}\n"
