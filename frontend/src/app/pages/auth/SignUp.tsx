@@ -160,11 +160,9 @@ export default function SignUp() {
       errors.specialization = t("validation.specializationRequired");
     }
 
-<<<<<<< localization
     if (!form.licenseNumber.trim()) {
       errors.licenseNumber = t("validation.licenseRequired");
     }
-=======
   if (isDoctor) {
     if (!form.certTitle.trim()) {
       errors.certTitle = "Graduation certificate title is required";
@@ -186,7 +184,6 @@ export default function SignUp() {
       if (!form.certUrl.trim()) errors.certUrl = "Certificate URL is required";
     }
   }
->>>>>>> main
 
     if (isNurse && !form.serviceArea.trim()) {
       errors.serviceArea = t("validation.serviceAreaRequired");
