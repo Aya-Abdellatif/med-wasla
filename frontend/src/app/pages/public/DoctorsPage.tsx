@@ -13,7 +13,7 @@ import {
 import { useEffect, useState, useRef } from "react";
 import { useTranslation } from "react-i18next";
 import { BookingModal } from "../../components/booking/BookingModal";
-import { MEDICAL_SPECIALIZATIONS } from "../../../constants/medicalSpecializations";
+import { specialtyToKey, MEDICAL_SPECIALIZATIONS } from "../../../constants/medicalSpecializations";
 import {
   fetchApprovedSpecialists,
   type SpecialistCard,
@@ -22,6 +22,8 @@ import {
 import { showError } from "../../../utils/toast";
 import { useAuth } from "../../context/useAuth";
 import { canBookAppointments, handleBookClick } from "../../../utils/bookingAccess";
+
+
 
 const SORT_OPTIONS = [
   { key: "highestRated", sortBy: "rating", sortOrder: "desc" as const },
@@ -164,23 +166,32 @@ export function Doctors() {
           </div>
 
           <div className="flex items-center justify-center gap-3 flex-wrap">
-            {specialties.map((specialty) => (
-              <button
-                key={specialty}
-                onClick={() => {
-                  setSelectedSpecialty(specialty);
-                  setPage(1);
-                  setLoading(true);
-                }}
-                className={`px-6 py-2.5 rounded-lg transition-all ${
-                  selectedSpecialty === specialty
-                    ? "bg-primary text-white shadow-md"
-                    : "bg-muted text-foreground hover:bg-muted/80"
-                }`}
-              >
-                {specialty === "All" ? t("doctors:specialties.all") : specialty}
-              </button>
-            ))}
+            {specialties.map((specialty) => {
+              const key = specialtyToKey(specialty);
+              const label =
+                specialty === "All"
+                  ? t("doctors:specialties.all")
+                  : key
+                    ? t(`constants:specializations.${key}`)
+                    : specialty; // fallback if a new specialty isn't in the map yet
+
+              return (
+                <button
+                  key={specialty}
+                  onClick={() => {
+                    setSelectedSpecialty(specialty);
+                    setPage(1);
+                    setLoading(true);
+                  }}
+                  className={`px-6 py-2.5 rounded-lg transition-all ${selectedSpecialty === specialty
+                      ? "bg-primary text-white shadow-md"
+                      : "bg-muted text-foreground hover:bg-muted/80"
+                    }`}
+                >
+                  {label}
+                </button>
+              );
+            })}
           </div>
         </div>
       </section>
@@ -298,11 +309,10 @@ export function Doctors() {
                     <button
                       key={p}
                       onClick={() => setPage(p)}
-                      className={`px-4 py-2 rounded-lg ${
-                        p === page
+                      className={`px-4 py-2 rounded-lg ${p === page
                           ? "bg-primary text-white"
                           : "bg-white border border-border hover:bg-muted"
-                      }`}
+                        }`}
                     >
                       {p}
                     </button>

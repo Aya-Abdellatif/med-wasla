@@ -12,7 +12,7 @@ import { useEffect, useState, useRef } from "react";
 import { useTranslation } from "react-i18next";
 import { BookingModal } from "../../components/booking/BookingModal";
 import { Link, useNavigate } from "react-router";
-import { NURSE_EXPERTISE_AREAS } from "../../../constants/medicalSpecializations";
+import { expertiseToKey, NURSE_EXPERTISE_AREAS } from "../../../constants/medicalSpecializations";
 import {
   fetchApprovedSpecialists,
   type SpecialistCard,
@@ -164,23 +164,32 @@ export function Nurses() {
           </div>
 
           <div className="flex items-center justify-center gap-3 flex-wrap">
-            {expertiseAreas.map((area) => (
-              <button
-                key={area}
-                onClick={() => {
-                  setSelectedExpertise(area);
-                  setPage(1);
-                  setLoading(true);
-                }}
-                className={`px-6 py-2.5 rounded-lg transition-all ${
-                  selectedExpertise === area
-                    ? "bg-primary text-white shadow-md"
-                    : "bg-muted text-foreground hover:bg-muted/80"
-                }`}
-              >
-                {area === "All" ? t("nurses:expertise.all") : area}
-              </button>
-            ))}
+            {expertiseAreas.map((area) => {
+              const key = expertiseToKey(area);
+              const label =
+                area === "All"
+                  ? t("nurses:expertise.all")
+                  : key
+                    ? t(`constants:nurseExpertise.${key}`)
+                    : area; // fallback if a new area isn't in the map yet
+
+              return (
+                <button
+                  key={area}
+                  onClick={() => {
+                    setSelectedExpertise(area);
+                    setPage(1);
+                    setLoading(true);
+                  }}
+                  className={`px-6 py-2.5 rounded-lg transition-all ${selectedExpertise === area
+                      ? "bg-primary text-white shadow-md"
+                      : "bg-muted text-foreground hover:bg-muted/80"
+                    }`}
+                >
+                  {label}
+                </button>
+              );
+            })}
           </div>
         </div>
       </section>
@@ -301,11 +310,10 @@ export function Nurses() {
                     <button
                       key={p}
                       onClick={() => setPage(p)}
-                      className={`px-4 py-2 rounded-lg ${
-                        p === page
+                      className={`px-4 py-2 rounded-lg ${p === page
                           ? "bg-primary text-white"
                           : "bg-white border border-border hover:bg-muted"
-                      }`}
+                        }`}
                     >
                       {p}
                     </button>
