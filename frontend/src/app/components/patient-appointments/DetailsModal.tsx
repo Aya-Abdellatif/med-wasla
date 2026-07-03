@@ -91,7 +91,7 @@ export function DetailsModal({ appointment, onClose }: { appointment: Appointmen
             <div className="bg-white rounded-2xl shadow-2xl max-w-lg w-full max-h-[90vh] overflow-y-auto">
                 {/* Header */}
                 <div className="sticky top-0 bg-white border-b border-border px-6 py-4 flex items-center justify-between rounded-t-2xl">
-                    <h3 className="text-lg font-bold text-foreground">Appointment Details</h3>
+                    <h3 className="text-lg font-bold text-fg">Appointment Details</h3>
                     <button onClick={onClose} className="w-8 h-8 flex items-center justify-center rounded-full hover:bg-muted transition-colors">
                         <X className="w-4 h-4" />
                     </button>
@@ -106,11 +106,11 @@ export function DetailsModal({ appointment, onClose }: { appointment: Appointmen
                             className="w-16 h-16 rounded-full object-cover ring-2 ring-primary/20"
                         />
                         <div className="flex-1">
-                            <h4 className="font-bold text-foreground">{appointment.doctor.name}</h4>
+                            <h4 className="font-bold text-fg">{appointment.doctor.name}</h4>
                             <p className="text-primary text-sm">{appointment.doctor.specialty}</p>
                             <div className="flex items-center gap-1 mt-1">
                                 <Star className="w-3.5 h-3.5 fill-amber-400 text-amber-400" />
-                                <span className="text-sm text-muted-foreground">{appointment.doctor.rating}</span>
+                                <span className="text-sm text-fg-muted">{appointment.doctor.rating}</span>
                             </div>
                         </div>
                         <span className={`flex items-center gap-1.5 px-3 py-1.5 rounded-full text-xs font-medium ${status.bgColor} ${status.color}`}>
@@ -126,8 +126,8 @@ export function DetailsModal({ appointment, onClose }: { appointment: Appointmen
                                 <Calendar className="w-4 h-4 text-primary" />
                             </div>
                             <div>
-                                <p className="text-xs text-muted-foreground">Date</p>
-                                <p className="text-sm font-medium text-foreground">{formatDate(appointment.date)}</p>
+                                <p className="text-xs text-fg-muted">Date</p>
+                                <p className="text-sm font-medium text-fg">{formatDate(appointment.date)}</p>
                             </div>
                         </div>
                         <div className="flex items-center gap-3 p-3 bg-muted/30 rounded-xl">
@@ -135,8 +135,8 @@ export function DetailsModal({ appointment, onClose }: { appointment: Appointmen
                                 <Clock className="w-4 h-4 text-primary" />
                             </div>
                             <div>
-                                <p className="text-xs text-muted-foreground">Time</p>
-                                <p className="text-sm font-medium text-foreground">{appointment.time}</p>
+                                <p className="text-xs text-fg-muted">Time</p>
+                                <p className="text-sm font-medium text-fg">{appointment.time}</p>
                             </div>
                         </div>
                     </div>
@@ -147,8 +147,8 @@ export function DetailsModal({ appointment, onClose }: { appointment: Appointmen
                             {appointment.type === "clinic" ? <Stethoscope className="w-4 h-4 text-primary" /> : <HomeIcon className="w-4 h-4 text-primary" />}
                         </div>
                         <div>
-                            <p className="text-xs text-muted-foreground">Appointment Type</p>
-                            <p className="text-sm font-medium text-foreground">{appointment.type === "clinic" ? "Clinic Visit" : "Home Visit"}</p>
+                            <p className="text-xs text-fg-muted">Appointment Type</p>
+                            <p className="text-sm font-medium text-fg">{appointment.type === "clinic" ? "Clinic Visit" : "Home Visit"}</p>
                         </div>
                     </div>
 
@@ -159,8 +159,8 @@ export function DetailsModal({ appointment, onClose }: { appointment: Appointmen
                                 <MapPin className="w-4 h-4 text-primary" />
                             </div>
                             <div>
-                                <p className="text-xs text-muted-foreground">Location / Address</p>
-                                <p className="text-sm font-medium text-foreground">{appointment.address}</p>
+                                <p className="text-xs text-fg-muted">Location / Address</p>
+                                <p className="text-sm font-medium text-fg">{appointment.address}</p>
                             </div>
                         </div>
                     )}
@@ -170,10 +170,10 @@ export function DetailsModal({ appointment, onClose }: { appointment: Appointmen
                             <div className="flex items-center justify-between">
                                 <div className="flex items-center gap-2">
                                     <Users className="w-4 h-4 text-primary" />
-                                    <h5 className="font-bold text-sm text-foreground">Clinic Queue Status</h5>
+                                    <h5 className="font-bold text-sm text-fg">Clinic Queue Status</h5>
                                 </div>
                                 {loadingQueue && !queueData ? (
-                                    <Loader2 className="w-3.5 h-3.5 animate-spin text-muted-foreground" />
+                                    <Loader2 className="w-3.5 h-3.5 animate-spin text-fg-muted" />
                                 ) : (queueData?.isActive && isToday) ? (
                                     <span className="flex items-center gap-1 text-xs text-emerald-600 font-medium">
                                         <span className="w-1.5 h-1.5 rounded-full bg-emerald-500 animate-pulse" />
@@ -196,11 +196,11 @@ export function DetailsModal({ appointment, onClose }: { appointment: Appointmen
                                     {!isToday ? (
                                         <div className="text-sm space-y-2">
                                             {queueData.userEntry ? (
-                                                <p className="text-foreground">
+                                                <p className="text-fg">
                                                     You are booked at position <span className="font-bold text-primary">{queueData.userEntry.queueNumber}</span> in the queue for this day.
                                                 </p>
                                             ) : (
-                                                <p className="text-muted-foreground">Queue position loaded.</p>
+                                                <p className="text-fg-muted">Queue position loaded.</p>
                                             )}
                                             <p className="text-xs text-slate-500 bg-slate-100 border border-slate-200 p-2.5 rounded-lg">
                                                 ℹ️ Live queue tracking (with your live position and chairs visual) will start on the day of your appointment.
@@ -218,13 +218,13 @@ export function DetailsModal({ appointment, onClose }: { appointment: Appointmen
                                                         ) : queueData.waitingAhead === 0 ? (
                                                             <p className="text-primary font-semibold animate-pulse">👉 You are next in line! Please proceed to the doctor's room.</p>
                                                         ) : (
-                                                            <p className="text-muted-foreground">
-                                                                You are at position <span className="font-bold text-foreground">{queueData.waitingAhead + 1}</span> in the waiting line. 
+                                                            <p className="text-fg-muted">
+                                                                You are at position <span className="font-bold text-fg">{queueData.waitingAhead + 1}</span> in the waiting line. 
                                                                 There are <span className="font-bold text-primary">{queueData.waitingAhead}</span> patient(s) ahead of you.
                                                             </p>
                                                         )
                                                     ) : (
-                                                        <p className="text-muted-foreground">You are not in the queue for today.</p>
+                                                        <p className="text-fg-muted">You are not in the queue for today.</p>
                                                     )
                                                 ) : (
                                                     <p className="text-amber-700 font-medium bg-amber-50 border border-amber-100 p-2 rounded-lg text-xs">
@@ -243,14 +243,14 @@ export function DetailsModal({ appointment, onClose }: { appointment: Appointmen
                                                             <span className="text-[10px] font-bold text-primary mt-1">Doctor's Room</span>
                                                         </div>
 
-                                                        <span className="text-muted-foreground text-xs shrink-0 font-mono">←</span>
+                                                        <span className="text-fg-muted text-xs shrink-0 font-mono">←</span>
 
                                                         {(() => {
                                                             const activeEntries = queueData.entries.filter(e => e.status === "waiting" || e.status === "in_progress");
                                                             const selfIdx = activeEntries.findIndex(e => e.isSelf);
                                                             
                                                             if (activeEntries.length === 0) {
-                                                                return <p className="text-xs text-muted-foreground py-2">No patients waiting</p>;
+                                                                return <p className="text-xs text-fg-muted py-2">No patients waiting</p>;
                                                             }
 
                                                             let entriesToShow = activeEntries;
@@ -274,14 +274,14 @@ export function DetailsModal({ appointment, onClose }: { appointment: Appointmen
                                                             return (
                                                                 <>
                                                                     {showLeadingEllipsis && (
-                                                                        <span className="text-muted-foreground text-xs px-1 shrink-0">...</span>
+                                                                        <span className="text-fg-muted text-xs px-1 shrink-0">...</span>
                                                                     )}
 
                                                                     {entriesToShow.map((entry) => {
                                                                         const isUser = entry.isSelf;
                                                                         const isInProgress = entry.status === "in_progress";
                                                                         
-                                                                        let bgClass = "bg-muted text-muted-foreground border-slate-200";
+                                                                        let bgClass = "bg-muted text-fg-muted border-slate-200";
                                                                         let label: string;
                                                                         let labelText = "";
                                                                         
@@ -307,7 +307,7 @@ export function DetailsModal({ appointment, onClose }: { appointment: Appointmen
                                                                                 <div className={`w-9 h-9 rounded-full border flex items-center justify-center font-medium transition-all text-xs ${bgClass}`}>
                                                                                     {label === "You" ? "You" : label === "Current" ? <Armchair className="w-4 h-4" /> : label}
                                                                                 </div>
-                                                                                <span className={`text-[9px] font-semibold ${isUser ? "text-primary font-bold" : "text-muted-foreground"}`}>
+                                                                                <span className={`text-[9px] font-semibold ${isUser ? "text-primary font-bold" : "text-fg-muted"}`}>
                                                                                     {isInProgress ? "Current" : isUser ? `Position ${labelText}` : "Waiting"}
                                                                                 </span>
                                                                             </div>
@@ -315,7 +315,7 @@ export function DetailsModal({ appointment, onClose }: { appointment: Appointmen
                                                                     })}
 
                                                                     {showTrailingEllipsis && (
-                                                                        <span className="text-muted-foreground text-xs px-1 shrink-0">...</span>
+                                                                        <span className="text-fg-muted text-xs px-1 shrink-0">...</span>
                                                                     )}
                                                                 </>
                                                             );
@@ -327,15 +327,15 @@ export function DetailsModal({ appointment, onClose }: { appointment: Appointmen
                                     )}
                                 </div>
                             ) : (
-                                <p className="text-xs text-muted-foreground">Unable to load queue status.</p>
+                                <p className="text-xs text-fg-muted">Unable to load queue status.</p>
                             )}
                         </div>
                     )}
 
                     {/* Reason */}
                     <div>
-                        <p className="text-xs font-medium text-muted-foreground uppercase tracking-wider mb-2">Reason for Visit</p>
-                        <p className="text-sm text-foreground bg-muted/30 p-3 rounded-xl">{appointment.reason}</p>
+                        <p className="text-xs font-medium text-fg-muted uppercase tracking-wider mb-2">Reason for Visit</p>
+                        <p className="text-sm text-fg bg-muted/30 p-3 rounded-xl">{appointment.reason}</p>
                     </div>
 
                     {/* Reminders */}
@@ -343,11 +343,11 @@ export function DetailsModal({ appointment, onClose }: { appointment: Appointmen
                         <div>
                             <div className="flex items-center gap-2 mb-2">
                                 <Bell className="w-4 h-4 text-amber-500" />
-                                <p className="text-xs font-medium text-muted-foreground uppercase tracking-wider">Reminders</p>
+                                <p className="text-xs font-medium text-fg-muted uppercase tracking-wider">Reminders</p>
                             </div>
                             <ul className="space-y-2">
                                 {appointment.reminders.map((r, i) => (
-                                    <li key={i} className="flex items-center gap-2 text-sm text-foreground bg-amber-50 border border-amber-100 p-2.5 rounded-lg">
+                                    <li key={i} className="flex items-center gap-2 text-sm text-fg bg-amber-50 border border-amber-100 p-2.5 rounded-lg">
                                         <div className="w-1.5 h-1.5 rounded-full bg-amber-400 shrink-0" />
                                         {r}
                                     </li>
@@ -358,8 +358,8 @@ export function DetailsModal({ appointment, onClose }: { appointment: Appointmen
 
                     {/* Fee */}
                     <div className="flex items-center justify-between p-3 bg-linear-to-r from-primary/5 to-secondary/5 rounded-xl border border-primary/10">
-                        <span className="text-sm text-muted-foreground">Consultation Fee</span>
-                        <span className="font-bold text-foreground">{appointment.fee} EGP</span>
+                        <span className="text-sm text-fg-muted">Consultation Fee</span>
+                        <span className="font-bold text-fg">{appointment.fee} EGP</span>
                     </div>
                 </div>
             </div>

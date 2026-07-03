@@ -14,6 +14,7 @@ import {
   Home,
 } from "lucide-react";
 import { useEffect, useState } from "react";
+import { useTranslation } from "react-i18next";
 import { BookingModal } from "../../components/booking/BookingModal";
 import {
   fetchSpecialistProfile,
@@ -24,12 +25,13 @@ import { useAuth } from "../../context/useAuth";
 import { canBookAppointments, handleBookClick } from "../../../utils/bookingAccess";
 
 export function DoctorProfile() {
+  const { t } = useTranslation("public");
   const { id } = useParams<{ id: string }>();
 
   if (!id) {
     return (
       <div className="min-h-screen bg-muted/30 flex items-center justify-center">
-        <p className="text-lg text-muted-foreground">Invalid doctor profile.</p>
+        <p className="text-lg text-fg-muted">{t("profile.invalidDoctor")}</p>
       </div>
     );
   }
@@ -38,6 +40,7 @@ export function DoctorProfile() {
 }
 
 function DoctorProfileView({ id }: { id: string }) {
+  const { t } = useTranslation(["public", "common"]);
   const navigate = useNavigate();
   const { user } = useAuth();
   const showBooking = canBookAppointments(user);
@@ -52,7 +55,7 @@ function DoctorProfileView({ id }: { id: string }) {
   const [error, setError] = useState<string | null>(null);
   const REVIEWS_PER_PAGE = 3;
   const pageContainer = "max-w-7xl mx-auto px-8 sm:px-14 lg:px-24 xl:px-32 2xl:px-40";
-  const sectionHeading = "text-2xl md:text-3xl font-bold text-foreground tracking-tight";
+  const sectionHeading = "text-2xl md:text-3xl font-bold text-fg tracking-tight";
 
   useEffect(() => {
     let cancelled = false;
@@ -71,7 +74,7 @@ function DoctorProfileView({ id }: { id: string }) {
       .catch((err) => {
         if (cancelled) return;
         setDoctor(null);
-        setError(err instanceof Error ? err.message : "Failed to load doctor profile");
+        setError(err instanceof Error ? err.message : t("profile.loadDoctorFailed"));
       })
       .finally(() => {
         if (!cancelled) setLoading(false);
@@ -92,7 +95,7 @@ function DoctorProfileView({ id }: { id: string }) {
   if (loading) {
     return (
       <div className="min-h-screen bg-muted/30 flex items-center justify-center">
-        <p className="text-lg text-muted-foreground">Loading doctor profile...</p>
+        <p className="text-lg text-fg-muted">{t("profile.loadingDoctor")}</p>
       </div>
     );
   }
@@ -104,16 +107,16 @@ function DoctorProfileView({ id }: { id: string }) {
           <div className="mx-auto mb-6 flex h-20 w-20 items-center justify-center rounded-full bg-primary/10 text-primary">
             <AlertCircle className="h-10 w-10" />
           </div>
-          <h2 className="text-3xl font-bold text-foreground mb-3">Doctor Not Found</h2>
-          <p className="text-base leading-7 text-muted-foreground mb-8">
-            {error ?? "Please return to the doctors page and choose another profile."}
+          <h2 className="text-3xl font-bold text-fg mb-3">{t("profile.doctorNotFound")}</h2>
+          <p className="text-base leading-7 text-fg-muted mb-8">
+            {error ?? t("profile.doctorNotFoundDesc")}
           </p>
           <button
             onClick={() => navigate("/doctors")}
             className="inline-flex items-center justify-center gap-2 rounded-full bg-primary px-7 py-3 text-sm font-semibold text-white shadow-xl shadow-primary/20 transition-all duration-200 hover:bg-primary/90"
           >
-            <ArrowLeft className="h-4 w-4" />
-            Back to Doctors
+            <ArrowLeft className="h-4 w-4 rtl:rotate-180" />
+            {t("profile.backToDoctors")}
           </button>
         </div>
       </div>
@@ -129,10 +132,10 @@ function DoctorProfileView({ id }: { id: string }) {
             <div className="md:col-span-1">
               <div className="relative rounded-2xl overflow-hidden shadow-xl">
                 <img src={doctor.image} alt={doctor.name} className="w-full aspect-square object-cover" />
-                <div className="absolute top-4 right-4 bg-white px-3 py-1.5 rounded-full shadow-lg flex items-center space-x-1">
+                <div className="absolute top-4 end-4 bg-white px-3 py-1.5 rounded-full shadow-lg flex items-center gap-1">
                   <Star className="w-4 h-4 text-yellow-400 fill-current" />
-                  <span className="font-semibold text-foreground">{reviewStats.averageRating || doctor.rating}</span>
-                  <span className="text-sm text-muted-foreground">({reviewStats.totalReviews || doctor.reviews})</span>
+                  <span className="font-semibold text-fg">{reviewStats.averageRating || doctor.rating}</span>
+                  <span className="text-sm text-fg-muted">({reviewStats.totalReviews || doctor.reviews})</span>
                 </div>
               </div>
             </div>
@@ -140,8 +143,8 @@ function DoctorProfileView({ id }: { id: string }) {
             <div className="md:col-span-4">
               <div className="flex items-start justify-between mb-4 gap-4 flex-wrap">
                 <div>
-                  <h1 className="text-4xl font-bold text-foreground mb-2">{doctor.name}</h1>
-                  <span className="inline-flex items-center space-x-2 px-4 py-2 bg-primary/10 text-primary rounded-full font-medium">
+                  <h1 className="text-4xl font-bold text-fg mb-2">{doctor.name}</h1>
+                  <span className="inline-flex items-center gap-2 px-4 py-2 bg-primary/10 text-primary rounded-full font-medium">
                     <Award className="w-4 h-4" />
                     <span>{doctor.specialty}</span>
                   </span>
@@ -149,65 +152,65 @@ function DoctorProfileView({ id }: { id: string }) {
                 {showBooking && (
                   <button
                     onClick={onBookClick}
-                    className="w-full md:w-auto px-8 py-4 bg-primary text-white rounded-lg hover:bg-primary/90 transition-colors font-medium text-lg"
-                  >
-                    Book Appointment
+                    className="group flex items-center gap-2 bg-primary text-white border-2 border-primary font-bold px-8 py-3 rounded-xl hover:bg-transparent hover:text-primary hover:border-primary hover:-translate-y-0.5 transition-all duration-300 cursor-pointer"
+                    >
+                    {t("common:actions.bookAppointment")}
                   </button>
                 )}
               </div>
-              <p className="text-lg text-muted-foreground mb-6">{doctor.description}</p>
+              <p className="text-lg text-fg-muted mb-6">{doctor.description}</p>
             </div>
 
             <div className="md:col-span-5 md:row-start-2 md:col-start-1">
               <div className="grid md:grid-cols-3 gap-4 mb-6">
-                <div className="flex items-center space-x-3 p-4 bg-muted/50 rounded-lg">
+                <div className="flex items-center gap-3 p-4 bg-muted/50 rounded-lg">
                   <Award className="w-5 h-5 text-primary shrink-0" />
                   <div>
-                    <p className="text-sm text-muted-foreground">Experience</p>
-                    <p className="font-semibold text-foreground">{doctor.experience}</p>
+                    <p className="text-sm text-fg-muted">{t("profile.fields.experience")}</p>
+                    <p className="font-semibold text-fg">{doctor.experience}</p>
                   </div>
                 </div>
-                <div className="flex items-center space-x-3 p-4 bg-muted/50 rounded-lg">
+                <div className="flex items-center gap-3 p-4 bg-muted/50 rounded-lg">
                   <MapPin className="w-5 h-5 text-primary shrink-0" />
                   <div>
-                    <p className="text-sm text-muted-foreground">Location</p>
-                    <p className="font-semibold text-foreground">{doctor.location}</p>
+                    <p className="text-sm text-fg-muted">{t("profile.fields.location")}</p>
+                    <p className="font-semibold text-fg">{doctor.location}</p>
                   </div>
                 </div>
-                <div className="flex items-center space-x-3 p-4 bg-muted/50 rounded-lg">
+                <div className="flex items-center gap-3 p-4 bg-muted/50 rounded-lg">
                   <DollarSign className="w-5 h-5 text-primary shrink-0" />
                   <div>
-                    <p className="text-sm text-muted-foreground">Consultation Fee</p>
-                    <p className="font-semibold text-foreground">{doctor.consultationFee} EGP</p>
+                    <p className="text-sm text-fg-muted">{t("profile.fields.consultationFee")}</p>
+                    <p className="font-semibold text-fg">{doctor.consultationFee} {t("common:currency.egp")}</p>
                   </div>
                 </div>
-                <div className="flex items-center space-x-3 p-4 bg-muted/50 rounded-lg">
+                <div className="flex items-center gap-3 p-4 bg-muted/50 rounded-lg">
                   <GraduationCap className="w-5 h-5 text-primary shrink-0" />
                   <div>
-                    <p className="text-sm text-muted-foreground">Education</p>
-                    <p className="font-semibold text-foreground">{doctor.education}</p>
+                    <p className="text-sm text-fg-muted">{t("profile.fields.education")}</p>
+                    <p className="font-semibold text-fg">{doctor.education}</p>
                   </div>
                 </div>
-                <div className="flex items-center space-x-3 p-4 bg-muted/50 rounded-lg">
+                <div className="flex items-center gap-3 p-4 bg-muted/50 rounded-lg">
                   <Clock className="w-5 h-5 text-primary shrink-0" />
                   <div>
-                    <p className="text-sm text-muted-foreground">Availability</p>
-                    <p className="font-semibold text-foreground">{doctor.availability}</p>
+                    <p className="text-sm text-fg-muted">{t("profile.fields.availability")}</p>
+                    <p className="font-semibold text-fg">{doctor.availability}</p>
                   </div>
                 </div>
-                <div className="flex items-center space-x-3 p-4 bg-muted/50 rounded-lg">
+                <div className="flex items-center gap-3 p-4 bg-muted/50 rounded-lg">
                   <Watch className="w-5 h-5 text-primary shrink-0" />
                   <div>
-                    <p className="text-sm text-muted-foreground">Average Wait Time</p>
-                    <p className="font-semibold text-foreground">{doctor.avgWaitTime}</p>
+                    <p className="text-sm text-fg-muted">{t("profile.fields.avgWaitTime")}</p>
+                    <p className="font-semibold text-fg">{doctor.avgWaitTime}</p>
                   </div>
                 </div>
                 {doctor.homeVisit && (
-                  <div className="flex items-center space-x-3 p-4 bg-teal-50 rounded-lg border border-teal-100">
+                  <div className="flex items-center gap-3 p-4 bg-teal-50 rounded-lg border border-teal-100">
                     <Home className="w-5 h-5 text-teal-600 shrink-0" />
                     <div>
-                      <p className="text-sm text-teal-700">Home Visits</p>
-                      <p className="font-semibold text-teal-900">Available on request</p>
+                      <p className="text-sm text-teal-700">{t("profile.fields.homeVisits")}</p>
+                      <p className="font-semibold text-teal-900">{t("profile.homeVisitAvailable")}</p>
                     </div>
                   </div>
                 )}
@@ -220,10 +223,10 @@ function DoctorProfileView({ id }: { id: string }) {
       <section className="py-12">
         <div className={`${pageContainer} space-y-16`}>
           <div>
-            <div className="text-left mb-8">
-              <h2 className={`${sectionHeading} mb-2`}>Certifications</h2>
-              <p className="text-muted-foreground">
-                Professional credentials and qualifications earned by {doctor.name}.
+          <div className="text-start mb-8">
+          <h2 className={`${sectionHeading} mb-2`}>{t("profile.sections.certifications")}</h2>
+              <p className="text-fg-muted">
+                {t("profile.sections.certificationsDesc", { name: doctor.name })}
               </p>
             </div>
             {doctor.certifications.length > 0 ? (
@@ -236,22 +239,22 @@ function DoctorProfileView({ id }: { id: string }) {
                     <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-full bg-primary/10">
                       <Award className="w-5 h-5 text-primary" />
                     </div>
-                    <span className="font-medium text-foreground">{item}</span>
+                    <span className="font-medium text-fg">{item}</span>
                   </div>
                 ))}
               </div>
             ) : (
               <div className="bg-white border border-border rounded-2xl p-8 text-center shadow-sm">
-                <p className="text-fg-muted">No certifications listed yet.</p>
+                <p className="text-fg-muted">{t("profile.sections.noCertifications")}</p>
               </div>
             )}
           </div>
 
           <div>
-            <div className="text-left mb-8">
-              <h2 className={`${sectionHeading} mb-2`}>Patient Reviews</h2>
-              <p className="text-muted-foreground">
-                Hear what our patients have to say about their experiences with {doctor.name}.
+          <div className="text-start mb-8">
+          <h2 className={`${sectionHeading} mb-2`}>{t("profile.sections.reviews")}</h2>
+              <p className="text-fg-muted">
+                {t("profile.sections.reviewsDesc", { name: doctor.name })}
               </p>
             </div>
             {hasReviews ? (
@@ -277,7 +280,7 @@ function DoctorProfileView({ id }: { id: string }) {
                 </div>
                 <div className="flex items-center justify-center gap-4 mt-8">
                   <button onClick={prev} className="h-9 w-9 rounded-full border-2 border-border hover:border-primary hover:text-primary flex items-center justify-center transition-all duration-200 cursor-pointer">
-                    <ChevronLeft className="h-5 w-5" />
+                    <ChevronLeft className="h-5 w-5 rtl:rotate-180" />
                   </button>
                   {Array.from({ length: totalPages }).map((_, i) => (
                     <button
@@ -290,13 +293,13 @@ function DoctorProfileView({ id }: { id: string }) {
                     />
                   ))}
                   <button onClick={next} className="h-9 w-9 rounded-full border-2 border-border hover:border-primary hover:text-primary flex items-center justify-center transition-all duration-200 cursor-pointer">
-                    <ChevronRight className="h-5 w-5" />
+                    <ChevronRight className="h-5 w-5 rtl:rotate-180" />
                   </button>
                 </div>
               </>
             ) : (
               <div className="bg-white border border-border rounded-2xl p-8 text-center shadow-sm">
-                <p className="text-fg">No reviews available at the moment.</p>
+                <p className="text-fg">{t("profile.sections.noReviews")}</p>
               </div>
             )}
           </div>

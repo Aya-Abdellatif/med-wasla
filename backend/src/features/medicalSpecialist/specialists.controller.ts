@@ -7,6 +7,8 @@ import {
   getSpecialistProfileService,
   updateSpecialistProfileService,
   addSpecialistCertificateService,
+  updateSpecialistCertificateService,
+  deleteSpecialistCertificateService,
   updateAvailabilityService,
   updateFeesService,
   type GetAllSpecialistsQuery,
@@ -40,10 +42,14 @@ function isUnauthorizedMessage(message: string): boolean {
 
 function getAuthErrorStatus(message: string, fallback = 500): number {
   if (isUnauthorizedMessage(message)) return 401;
-  if (message === "Specialist profile not found") return 404;
+  if (message === "Specialist profile not found" || message === "Certificate not found") {
+    return 404;
+  }
   if (
     message === "User ID is required" ||
     message === "No profile changes to submit" ||
+    message === "Each weekday can only have one availability slot" ||
+    message === "This verified graduation certificate cannot be edited or deleted" ||
     message.includes("must be") ||
     message.includes("Each slot")
   ) {
@@ -211,6 +217,45 @@ export const addCertificate = async (
     const result = await addSpecialistCertificateService(
       getUserId(req),
       req.body as AddCertificateBody,
+    );
+
+    res.status(200).json({
+      success: true,
+      data: result,
+    });
+  } catch (error: unknown) {
+    sendError(res, error);
+  }
+};
+
+export const updateCertificate = async (
+  req: Request,
+  res: Response,
+): Promise<void> => {
+  try {
+    const result = await updateSpecialistCertificateService(
+      getUserId(req),
+      req.params.certId as string,
+      req.body as AddCertificateBody,
+    );
+
+    res.status(200).json({
+      success: true,
+      data: result,
+    });
+  } catch (error: unknown) {
+    sendError(res, error);
+  }
+};
+
+export const deleteCertificate = async (
+  req: Request,
+  res: Response,
+): Promise<void> => {
+  try {
+    const result = await deleteSpecialistCertificateService(
+      getUserId(req),
+      req.params.certId as string,
     );
 
     res.status(200).json({

@@ -316,6 +316,24 @@ function RequestCard({
 
 
 
+function sortByScheduledTimeDesc(a: HomeServiceRequest, b: HomeServiceRequest) {
+  return (b.scheduledAtMs ?? 0) - (a.scheduledAtMs ?? 0);
+}
+
+function groupRecentRequests(requests: HomeServiceRequest[]) {
+  const accepted = requests
+    .filter((r) => r.backendStatus === "confirmed")
+    .sort(sortByScheduledTimeDesc);
+  const completed = requests
+    .filter((r) => r.backendStatus === "completed")
+    .sort(sortByScheduledTimeDesc);
+  const declined = requests
+    .filter((r) => r.backendStatus === "cancelled" || r.status === "rejected")
+    .sort(sortByScheduledTimeDesc);
+
+  return { accepted, completed, declined };
+}
+
 export function RequestsTab({
 
   requests,
@@ -337,6 +355,8 @@ export function RequestsTab({
     (r) => r.backendStatus !== "pending" && r.backendStatus !== "overdue",
 
   );
+
+  const { accepted, completed, declined } = groupRecentRequests(otherRequests);
 
 
 
@@ -462,21 +482,50 @@ export function RequestsTab({
 
               </h3>
 
-              {otherRequests.map((request) => (
+              <MissedAppointmentsPanel
+                count={accepted.length}
+                title="Accepted visits"
+                description="Confirmed home visits you accepted."
+              >
+                {accepted.map((request) => (
+                  <RequestCard
+                    key={request.id}
+                    request={request}
+                    showActions={false}
+                    onRequestAction={onRequestAction}
+                  />
+                ))}
+              </MissedAppointmentsPanel>
 
-                <RequestCard
+              <MissedAppointmentsPanel
+                count={completed.length}
+                title="Completed visits"
+                description="Finished home visits."
+              >
+                {completed.map((request) => (
+                  <RequestCard
+                    key={request.id}
+                    request={request}
+                    showActions={false}
+                    onRequestAction={onRequestAction}
+                  />
+                ))}
+              </MissedAppointmentsPanel>
 
-                  key={request.id}
-
-                  request={request}
-
-                  showActions={false}
-
-                  onRequestAction={onRequestAction}
-
-                />
-
-              ))}
+              <MissedAppointmentsPanel
+                count={declined.length}
+                title="Declined visits"
+                description="Requests you rejected or that were cancelled."
+              >
+                {declined.map((request) => (
+                  <RequestCard
+                    key={request.id}
+                    request={request}
+                    showActions={false}
+                    onRequestAction={onRequestAction}
+                  />
+                ))}
+              </MissedAppointmentsPanel>
 
             </div>
 

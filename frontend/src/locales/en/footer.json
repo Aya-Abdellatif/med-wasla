@@ -1,0 +1,31 @@
+{
+  "tagline": "Connecting patients with top-tier healthcare professionals, clinics, and nurses seamlessly. Your health, our priority.",
+  "sections": {
+    "company": "MedWasla",
+    "support": "Support",
+    "contact": "Contact Us"
+  },
+  "links": {
+    "about": "About Us",
+    "services": "Our Services",
+    "doctors": "Doctors Directory",
+    "nurses": "Nurses Directory",
+    "careers": "Careers",
+    "helpCenter": "Help Center",
+    "bookAppointment": "Book an Appointment",
+    "emergency": "Emergency Support",
+    "terms": "Terms of Service",
+    "privacy": "Privacy Policy",
+    "termsOfUse": "Terms of Use"
+  },
+  "contact": {
+    "phone": "+20 123 456 7890",
+    "email": "support@medwasla.com",
+    "location": "Alexandria, Egypt"
+  },
+  "actions": {
+    "book": "Book Appointment",
+    "dashboard": "Go to Dashboard"
+  },
+  "copyright": "© {{year}} MedWasla. All rights reserved."
+}

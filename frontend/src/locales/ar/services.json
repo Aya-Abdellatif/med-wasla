@@ -1,0 +1,97 @@
+{
+  "hero": {
+    "patientTitle": "خدماتنا الصحية",
+    "patientSubtitle": "اكتشف حلول رعاية صحية ذكية مصممة لربط المرضى بالأطباء والممرضين والإرشاد الطبي المدعوم بالذكاء الاصطناعي.",
+    "providerTitle": "مركز وميزات مقدمي الرعاية",
+    "providerSubtitle": "أدر ممارستك الطبية، واضبط جدول المواعيد، وتابع طلبات المرضى بسهولة."
+  },
+  "features": {
+    "access247": {
+      "title": "وصول على مدار الساعة",
+      "description": "الوصول إلى الخدمات الصحية في أي وقت ومن أي مكان."
+    },
+    "qualifiedDoctors": {
+      "title": "أطباء مؤهلون",
+      "description": "احجز مع أطباء ذوي خبرة في تخصصات متعددة."
+    },
+    "aiAssistance": {
+      "title": "مساعدة بالذكاء الاصطناعي",
+      "description": "إرشاد ذكي للمرضى ومقدمي الرعاية الصحية في أي وقت."
+    },
+    "trustedCare": {
+      "title": "رعاية موثوقة",
+      "description": "كل متخصص في الرعاية الصحية هنا موثّق لضمان رعاية آمنة وموثوقة وعالية الجودة."
+    }
+  },
+  "patient": {
+    "doctorReservation": {
+      "title": "حجز الطبيب",
+      "description": "احجز مواعيد مع متخصصين في الرعاية الصحية بناءً على التخصص والتوفر واحتياجات المريض.",
+      "features": {
+        "specialistSearch": "البحث عن التخصص",
+        "onlineBooking": "الحجز الإلكتروني",
+        "appointmentReminders": "تذكيرات المواعيد",
+        "homeVisitScheduling": "جدولة الزيارات المنزلية"
+      }
+    },
+    "nursingCare": {
+      "title": "الرعاية التمريضية",
+      "description": "جدول خدمات تمريضية احترافية في المنزل للمتابعة والمراقبة والحقن والدعم الطبي.",
+      "features": {
+        "homeNursingServices": "خدمات تمريض منزلية",
+        "medicationInjectionSupport": "دعم الأدوية والحقن",
+        "patientMonitoring": "مراقبة المريض",
+        "flexibleNurseScheduling": "جدولة مرنة للممرضين"
+      }
+    },
+    "aiMedicalAssistant": {
+      "title": "المساعد الطبي بالذكاء الاصطناعي",
+      "description": "صف أعراضك ودع روبوت المحادثة يرشدك إلى التخصص الطبي الأنسب.",
+      "features": {
+        "symptomAnalysis": "تحليل الأعراض",
+        "specialtyRecommendation": "توصية التخصص",
+        "assistance247": "مساعدة على مدار الساعة",
+        "smartHealthcareGuidance": "إرشاد صحي ذكي"
+      }
+    }
+  },
+  "provider": {
+    "clinicSchedule": {
+      "title": "إدارة العيادة والجدول",
+      "description": "أدر جدولك الأسبوعي، وحدد ساعات عملك، واسمح للمرضى بحجز المواعيد مباشرة مع تنسيق تلقائي للمواعيد.",
+      "features": {
+        "customWorkingHours": "ساعات عمل مخصصة",
+        "automatedBookingManagement": "إدارة الحجز التلقائية",
+        "realTimeAppointmentReminders": "تذكيرات مواعيد فورية",
+        "patientMedicalHistoryAccess": "الوصول إلى السجل الطبي للمريض"
+      }
+    },
+    "homeVisitRequests": {
+      "title": "طلبات الزيارة المنزلية والتمريض",
+      "description": "استقبل وأدر طلبات الزيارات المنزلية والرعاية من المرضى في منطقتك، ونسّق مع طاقم التمريض بسهولة.",
+      "features": {
+        "homeVisitRequestManagement": "إدارة طلبات الزيارة المنزلية",
+        "geographicServiceAreaSetup": "تحديد مناطق الخدمة الجغرافية",
+        "directPatientCommunication": "تواصل مباشر مع المريض",
+        "digitalPrescriptionIssuance": "إصدار الوصفات الرقمية"
+      }
+    },
+    "aiMedicalAssistant": {
+      "title": "المساعد الطبي بالذكاء الاصطناعي",
+      "description": "استخدم دعم الذكاء الاصطناعي للمرجع السريري السريع وأسئلة استقبال المرضى والإرشاد التخصصي أثناء إدارة ممارستك.",
+      "features": {
+        "clinicalReferenceSupport": "دعم المرجع السريري",
+        "patientIntakeGuidance": "إرشاد استقبال المريض",
+        "assistance247": "مساعدة على مدار الساعة",
+        "smartPracticeSupport": "دعم ذكي للممارسة"
+      }
+    }
+  },
+  "cta": {
+    "startChatbot": "ابدأ المحادثة",
+    "goToDashboard": "الذهاب إلى لوحة التحكم",
+    "goToDoctors": "الذهاب إلى الأطباء",
+    "goToNurses": "الذهاب إلى الممرضين",
+    "goToHomeServices": "الذهاب إلى الخدمات المنزلية"
+  }
+}

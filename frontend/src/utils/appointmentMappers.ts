@@ -140,6 +140,7 @@ export function mapApiAppointmentsForSpecialist(
         patientAvatar: patient?.photoUrl,
         date: formatDate(appt.date),
         time: formatTime(appt.date),
+        scheduledAtMs: new Date(appt.date).getTime(),
         type: appt.type === "home" ? "Home Visit" : "Clinic Visit",
         visitType: appt.type,
         status: resolveDashboardStatus(appt.status, appt.date, appt.type),
@@ -162,7 +163,6 @@ function mapHomeServiceRequestStatus(
 export function mapHomeServiceRequests(appointments: unknown[]): HomeServiceRequest[] {
   return (appointments as ApiAppointment[])
     .filter((appt) => appt.type === "home")
-    .sort((a, b) => new Date(b.date).getTime() - new Date(a.date).getTime())
     .map((appt) => {
       const patient =
         typeof appt.patientId === "object" ? appt.patientId : undefined;
@@ -178,6 +178,7 @@ export function mapHomeServiceRequests(appointments: unknown[]): HomeServiceRequ
           day: "numeric",
         }),
         requestedTime: formatTime(appt.date),
+        scheduledAtMs: new Date(appt.date).getTime(),
         status: mapHomeServiceRequestStatus(appt.status),
         phone: patient?.phone ?? "—",
         backendStatus: appt.status,

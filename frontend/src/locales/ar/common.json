@@ -1,0 +1,80 @@
+{
+  "brand": {
+    "logoAlt": "شعار ميد وصلة",
+    "med": "Med",
+    "wasla": "Wasla"
+  },
+  "loading": "جاري التحميل...",
+  "returnHome": "العودة للرئيسية",
+  "getStarted": "ابدأ الآن",
+  "notSet": "غير محدد",
+  "currency": {
+    "egp": "جنيه"
+  },
+  "roles": {
+    "doctor": "طبيب",
+    "nurse": "ممرض/ة",
+    "patient": "مريض",
+    "admin": "مسؤول"
+  },
+  "titles": {
+    "dr": "د. {{name}}",
+    "drShort": "د. {{name}}"
+  },
+  "actions": {
+    "cancel": "إلغاء",
+    "save": "حفظ",
+    "edit": "تعديل",
+    "continue": "متابعة",
+    "done": "تم",
+    "close": "إغلاق",
+    "clear": "مسح",
+    "bookAppointment": "حجز موعد",
+    "viewDetails": "عرض التفاصيل",
+    "bookNow": "احجز الآن",
+    "goToDashboard": "الذهاب للوحة التحكم",
+    "contactUs": "تواصل معنا",
+    "login": "تسجيل الدخول",
+    "logout": "تسجيل الخروج",
+    "signUp": "إنشاء حساب",
+    "yes": "نعم",
+    "no": "لا",
+    "confirm": "تأكيد",
+    "submit": "إرسال",
+    "back": "رجوع",
+    "next": "التالي",
+    "previous": "السابق",
+    "search": "بحث",
+    "filter": "تصفية",
+    "all": "الكل",
+    "viewAll": "عرض الكل",
+    "learnMore": "اعرف المزيد",
+    "dismiss": "إغلاق الإشعار"
+  },
+  "status": {
+    "upcoming": "قادم",
+    "pending": "قيد الانتظار",
+    "completed": "مكتمل",
+    "cancelled": "ملغى",
+    "overdue": "متأخر",
+    "noShow": "لم يحضر",
+    "active": "نشط",
+    "underTreatment": "تحت العلاج",
+    "resolved": "تم الحل",
+    "verified": "موثق",
+    "rejected": "مرفوض"
+  },
+  "visitType": {
+    "clinic": "زيارة عيادة",
+    "home": "زيارة منزلية"
+  },
+  "empty": {
+    "noResults": "لا توجد نتائج",
+    "noData": "لا توجد بيانات"
+  },
+  "verification": {
+    "approved": "تم التحقق من حسابك. يمكنك الآن الوصول إلى جميع الميزات.",
+    "pending": "حسابك قيد المراجعة. قد تكون بعض الميزات محدودة حتى الموافقة.",
+    "rejected": "تم رفض التحقق من حسابك. يرجى التواصل مع الدعم أو تحديث مستنداتك."
+  }
+}

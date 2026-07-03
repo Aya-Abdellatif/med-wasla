@@ -27,6 +27,8 @@ export interface ICertification {
   issuedAt?: Date;
   certificateUrl: string;
   status?: VerificationStatus;
+  isRegistrationCert?: boolean;
+  isNewAddition?: boolean;
   createdAt?: Date;
   updatedAt?: Date;
 }
@@ -81,6 +83,8 @@ const certificationSchema = new Schema<ICertification>(
       enum: verificationStatuses,
       default: "pending",
     },
+    isRegistrationCert: { type: Boolean, default: false },
+    isNewAddition: { type: Boolean, default: false },
   },
   { _id: true, timestamps: true },
 );
@@ -212,6 +216,13 @@ medicalSpecialistSchema.virtual("isVerified").get(function (
 ) {
   return this.verificationStatus === "approved";
 });
+
+export function findCertificationById(
+  certifications: ICertification[] | undefined,
+  certId: string,
+) {
+  return (certifications as Types.DocumentArray<ICertification> | undefined)?.id(certId);
+}
 
 const MedicalSpecialist = mongoose.model<IMedicalSpecialist>(
   "MedicalSpecialist",

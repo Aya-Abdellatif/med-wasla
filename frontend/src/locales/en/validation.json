@@ -1,0 +1,61 @@
+{
+  "email": {
+    "required": "Email is required",
+    "invalid": "Enter a valid email address"
+  },
+  "password": {
+    "required": "Password is required",
+    "weak": "Password is not strong enough",
+    "minLength": "Password must be at least 8 characters",
+    "rules": {
+      "length": "At least 8 characters",
+      "upper": "One uppercase letter",
+      "lower": "One lowercase letter",
+      "number": "One number"
+    },
+    "strength": {
+      "weak": "Weak",
+      "fair": "Fair",
+      "good": "Good",
+      "strong": "Strong"
+    },
+    "match": "Passwords match",
+    "mismatch": "Passwords do not match"
+  },
+  "signUp": {
+    "firstNameRequired": "First name is required",
+    "lastNameRequired": "Last name is required",
+    "phoneRequired": "Phone number is required",
+    "phoneInvalid": "Enter a valid phone number",
+    "dobRequired": "Date of birth is required",
+    "confirmPasswordRequired": "Please confirm your password",
+    "specializationRequired": "Please select a medical specialty",
+    "licenseRequired": "License number is required",
+    "serviceAreaRequired": "Enter at least one service area",
+    "certTitleRequired": "Certificate title is required",
+    "certIssuerRequired": "Issuer is required",
+    "certUrlRequired": "Certificate URL is required",
+    "fixField_one": "Please fix the highlighted field",
+    "fixField_other": "Please fix {{count}} highlighted fields"
+  },
+  "register": {
+    "emailInUse": "This email is already in use"
+  },
+  "signIn": {
+    "credentialsRequired": "Please enter your email and password"
+  },
+  "forgotPassword": {
+    "emailRequired": "Please enter your email address"
+  },
+  "resetPassword": {
+    "otpRequired": "Please enter the OTP code"
+  },
+  "verifyOtp": {
+    "fieldsRequired": "Please enter your email and verification code",
+    "emailRequired": "Enter your email to resend the code"
+  },
+  "patient": {
+    "imageType": "Please select an image file (JPEG, PNG, or WebP).",
+    "imageSize": "Image must be smaller than 5MB."
+  }
+}

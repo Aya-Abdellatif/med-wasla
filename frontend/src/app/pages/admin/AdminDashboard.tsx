@@ -5,6 +5,7 @@ import { useAuth } from "../../context/useAuth";
 import {
   fetchAdminSpecialists,
   updateSpecialistVerification,
+  updateCertificateVerification,
   type AdminSpecialist,
 } from "../../../services/adminApi";
 import { showError, showInfo, showSuccess } from "../../../utils/toast";
@@ -42,6 +43,7 @@ function AdminDashboardView() {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState("");
   const [actioningId, setActioningId] = useState<string | null>(null);
+  const [actioningCertKey, setActioningCertKey] = useState<string | null>(null);
   const [activeTab, setActiveTab] = useState<FilterTab>("all");
 
   const refreshSpecialists = useCallback(async (notify = false) => {
@@ -88,20 +90,34 @@ function AdminDashboardView() {
     try {
       await updateSpecialistVerification(id, action);
       showSuccess(`Specialist ${action === "approve" ? "approved" : "rejected"} successfully!`);
-
-      setSpecialists((prev) =>
-        prev.map((s) =>
-          s._id === id
-            ? { ...s, verificationStatus: action === "approve" ? "approved" : "rejected" }
-            : s,
-        ),
-      );
+      await refreshSpecialists();
     } catch (err) {
       showError(err instanceof Error ? err.message : `Failed to ${action} specialist`);
     } finally {
       setActioningId(null);
     }
   };
+
+  const handleCertificateAction = async (
+    specialistId: string,
+    certId: string,
+    action: "approve" | "reject",
+  ) => {
+    const key = `${specialistId}:${certId}`;
+    setActioningCertKey(key);
+    try {
+      await updateCertificateVerification(specialistId, certId, action);
+      showSuccess(`Certificate ${action === "approve" ? "approved" : "rejected"} successfully!`);
+      await refreshSpecialists();
+    } catch (err) {
+      showError(err instanceof Error ? err.message : `Failed to ${action} certificate`);
+    } finally {
+      setActioningCertKey(null);
+    }
+  };
+
+  const hasPendingCertificates = (specialist: AdminSpecialist) =>
+    specialist.certifications?.some((cert) => cert.status === "pending") ?? false;
 
   const handleLogout = () => {
     logout();
@@ -378,27 +394,36 @@ function AdminDashboardView() {
 
                   <div className="mt-8">
                     {specialist.verificationStatus === "pending" ? (
-                      <div className="flex gap-4">
-                        <button
-                          onClick={() => handleAction(specialist._id, "approve")}
-                          disabled={actioningId !== null}
-                          className="flex-1 flex items-center justify-center gap-2 bg-emerald-600 text-white font-bold py-3 px-4 rounded-2xl hover:bg-emerald-700 transition-colors shadow-md shadow-emerald-100 disabled:opacity-50 cursor-pointer"
-                        >
-                          <Check className="w-4 h-4" />
-                          <span>{actioningId === specialist._id ? "Processing..." : "Approve"}</span>
-                        </button>
-                        <button
-                          onClick={() => handleAction(specialist._id, "reject")}
-                          disabled={actioningId !== null}
-                          className="flex-1 flex items-center justify-center gap-2 bg-rose-600 text-white font-bold py-3 px-4 rounded-2xl hover:bg-rose-700 transition-colors shadow-md shadow-rose-100 disabled:opacity-50 cursor-pointer"
-                        >
-                          <X className="w-4 h-4" />
-                          <span>{actioningId === specialist._id ? "Processing..." : "Reject"}</span>
-                        </button>
+                      <div className="space-y-3">
+                        {hasPendingCertificates(specialist) && (
+                          <p className="text-xs font-medium text-amber-700 bg-amber-50 border border-amber-100 rounded-xl px-3 py-2">
+                            This specialist has certificate updates waiting for your review.
+                          </p>
+                        )}
+                        <div className="flex gap-4">
+                          <button
+                            onClick={() => handleAction(specialist._id, "approve")}
+                            disabled={actioningId !== null}
+                            className="flex-1 flex items-center justify-center gap-2 bg-emerald-600 text-white font-bold py-3 px-4 rounded-2xl hover:bg-emerald-700 transition-colors shadow-md shadow-emerald-100 disabled:opacity-50 cursor-pointer"
+                          >
+                            <Check className="w-4 h-4" />
+                            <span>{actioningId === specialist._id ? "Processing..." : "Approve All"}</span>
+                          </button>
+                          <button
+                            onClick={() => handleAction(specialist._id, "reject")}
+                            disabled={actioningId !== null}
+                            className="flex-1 flex items-center justify-center gap-2 bg-rose-600 text-white font-bold py-3 px-4 rounded-2xl hover:bg-rose-700 transition-colors shadow-md shadow-rose-100 disabled:opacity-50 cursor-pointer"
+                          >
+                            <X className="w-4 h-4" />
+                            <span>{actioningId === specialist._id ? "Processing..." : "Reject All"}</span>
+                          </button>
+                        </div>
                       </div>
                     ) : (
                       <div className="text-center p-3 bg-slate-100 rounded-2xl text-xs font-semibold text-slate-500 border border-slate-200">
-                        Decision finalized. Profile updates will reset status to pending.
+                        {hasPendingCertificates(specialist)
+                          ? "Review pending certificates on the right."
+                          : "Decision finalized. Profile updates will reset status to pending."}
                       </div>
                     )}
                   </div>
@@ -416,16 +441,18 @@ function AdminDashboardView() {
 
                   <div className="grid grid-cols-1 md:grid-cols-2 gap-4 flex-1">
                     {specialist.certifications && specialist.certifications.length > 0 ? (
-                      specialist.certifications
-                        .filter((cert) =>
-                          specialist.pendingProfileUpdates
-                            ? cert.status === "pending"
-                            : true,
-                        )
-                        .map(cert => (
+                      specialist.certifications.map((cert) => {
+                        const certActionKey = `${specialist._id}:${cert._id}`;
+                        const isPendingCert = cert.status === "pending";
+
+                        return (
                         <div
                           key={cert._id}
-                          className="p-5 border border-slate-200 rounded-2xl flex flex-col justify-between hover:border-teal-200 hover:bg-teal-50/20 transition-all"
+                          className={`p-5 border rounded-2xl flex flex-col justify-between transition-all ${
+                            isPendingCert
+                              ? "border-amber-300 bg-amber-50/40 hover:border-amber-400"
+                              : "border-slate-200 hover:border-teal-200 hover:bg-teal-50/20"
+                          }`}
                         >
                           <div>
                             <div className="flex items-start justify-between gap-2">
@@ -445,9 +472,14 @@ function AdminDashboardView() {
                                 Date: {new Date(cert.issuedAt).toLocaleDateString()}
                               </p>
                             )}
+                            {isPendingCert && (
+                              <p className="text-xs text-amber-700 font-medium mt-2">
+                                Awaiting admin review
+                              </p>
+                            )}
                           </div>
 
-                          <div className="mt-4 pt-3 border-t border-slate-100 flex items-center justify-between">
+                          <div className="mt-4 pt-3 border-t border-slate-100 flex items-center justify-between gap-2">
                             <a
                               href={cert.certificateUrl}
                               target="_blank"
@@ -457,9 +489,42 @@ function AdminDashboardView() {
                               <span>View Document</span>
                               <ExternalLink className="w-3 h-3" />
                             </a>
+
+                            {isPendingCert && (
+                              <div className="flex items-center gap-1.5">
+                                <button
+                                  type="button"
+                                  title="Approve certificate"
+                                  aria-label="Approve certificate"
+                                  disabled={actioningCertKey !== null}
+                                  onClick={() =>
+                                    handleCertificateAction(specialist._id, cert._id, "approve")
+                                  }
+                                  className="p-2 rounded-lg bg-emerald-600 text-white hover:bg-emerald-700 disabled:opacity-50 cursor-pointer"
+                                >
+                                  {actioningCertKey === certActionKey ? (
+                                    <RefreshCw className="w-4 h-4 animate-spin" />
+                                  ) : (
+                                    <Check className="w-4 h-4" />
+                                  )}
+                                </button>
+                                <button
+                                  type="button"
+                                  title="Reject certificate"
+                                  aria-label="Reject certificate"
+                                  disabled={actioningCertKey !== null}
+                                  onClick={() =>
+                                    handleCertificateAction(specialist._id, cert._id, "reject")
+                                  }
+                                  className="p-2 rounded-lg bg-rose-600 text-white hover:bg-rose-700 disabled:opacity-50 cursor-pointer"
+                                >
+                                  <X className="w-4 h-4" />
+                                </button>
+                              </div>
+                            )}
                           </div>
                         </div>
-                      ))
+                      )})
                     ) : (
                       <div className="col-span-full flex flex-col items-center justify-center py-12 bg-slate-50 rounded-2xl border border-dashed border-slate-200">
                         <FileText className="w-10 h-10 text-slate-300 mb-2" />

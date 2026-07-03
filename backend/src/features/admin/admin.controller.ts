@@ -103,4 +103,80 @@ export class AdminController {
       });
     }
   }
+
+  /**
+   * PATCH /api/admin/specialists/:id/certificates/:certId/approve
+   */
+  static async approveCertificate(req: Request, res: Response): Promise<void> {
+    const id = getSpecialistId(req, res);
+    if (!id) return;
+
+    const certId = Array.isArray(req.params.certId)
+      ? req.params.certId[0]
+      : req.params.certId;
+
+    if (!certId) {
+      res.status(400).json({ success: false, message: "Certificate id is required" });
+      return;
+    }
+
+    try {
+      const specialist = await AdminService.approveCertificate(id, certId);
+      res.status(200).json({
+        success: true,
+        message: "Certificate approved successfully",
+        data: specialist,
+      });
+    } catch (error: unknown) {
+      const message = getErrorMessage(error);
+      const statusCode =
+        message === "Medical specialist not found" || message === "Certificate not found"
+          ? 404
+          : message === "Certificate is not pending review"
+            ? 400
+            : 500;
+      res.status(statusCode).json({
+        success: false,
+        message: message || "Failed to approve certificate",
+      });
+    }
+  }
+
+  /**
+   * PATCH /api/admin/specialists/:id/certificates/:certId/reject
+   */
+  static async rejectCertificate(req: Request, res: Response): Promise<void> {
+    const id = getSpecialistId(req, res);
+    if (!id) return;
+
+    const certId = Array.isArray(req.params.certId)
+      ? req.params.certId[0]
+      : req.params.certId;
+
+    if (!certId) {
+      res.status(400).json({ success: false, message: "Certificate id is required" });
+      return;
+    }
+
+    try {
+      const specialist = await AdminService.rejectCertificate(id, certId);
+      res.status(200).json({
+        success: true,
+        message: "Certificate rejected successfully",
+        data: specialist,
+      });
+    } catch (error: unknown) {
+      const message = getErrorMessage(error);
+      const statusCode =
+        message === "Medical specialist not found" || message === "Certificate not found"
+          ? 404
+          : message === "Certificate is not pending review"
+            ? 400
+            : 500;
+      res.status(statusCode).json({
+        success: false,
+        message: message || "Failed to reject certificate",
+      });
+    }
+  }
 }

@@ -44,6 +44,7 @@ interface SpecialistProfile {
     issuedAt?: string;
     certificateUrl: string;
     status: "pending" | "approved" | "rejected";
+    isRegistrationCert?: boolean;
   }>;
   userId?: {
     name: string;
@@ -65,6 +66,8 @@ function mapCertificates(
     fileUrl: cert.certificateUrl,
     verified: cert.status === "approved",
     status: cert.status,
+    isRegistrationCert: cert.isRegistrationCert ?? false,
+    locked: Boolean(cert.isRegistrationCert && cert.status === "approved"),
   }));
 }
 

@@ -1,0 +1,66 @@
+{
+    "status": {
+      "upcoming": "قادم",
+      "pending": "قيد الانتظار",
+      "completed": "مكتمل",
+      "cancelled": "ملغى",
+      "overdue": "متأخر",
+      "no_show": "لم يحضر"
+    },
+    "visitType": {
+      "clinic": "زيارة عيادة",
+      "home": "زيارة منزلية",
+      "all": "جميع الأنواع"
+    },
+    "card": {
+      "bookAgain": "احجز مرة أخرى",
+      "viewDetails": "عرض التفاصيل",
+      "viewProfile": "عرض الملف الشخصي",
+      "reschedule": "إعادة الجدولة",
+      "cancel": "إلغاء",
+      "addReview": "إضافة تقييم",
+      "viewReview": "عرض التقييم"
+    },
+    "empty": {
+      "titleAll": "لا توجد مواعيد",
+      "titleFiltered": "لا توجد مواعيد {{status}}",
+      "descriptionAll": "ليس لديك أي مواعيد بعد. احجز موعدًا مع أحد مختصينا اليوم.",
+      "descriptionFiltered": "ليس لديك مواعيد {{status}} تطابق عوامل التصفية الخاصة بك.",
+      "bookButton": "حجز موعد"
+    },
+    "summary": {
+      "upcoming": "قادم",
+      "pending": "قيد الانتظار",
+      "noShow": "لم يحضر",
+      "overdue": "متأخر",
+      "completed": "مكتمل",
+      "cancelled": "ملغى"
+    },
+    "search": {
+      "placeholder": "ابحث بالطبيب أو التخصص أو السبب...",
+      "filtersButton": "الفلاتر",
+      "statusLabel": "الحالة:",
+      "typeLabel": "النوع:",
+      "allStatus": "كل الحالات",
+      "clear": "مسح"
+    },
+    "results": {
+      "showing": "عرض <bold>{{filtered}}</bold> من {{total}} موعدًا",
+      "clearAllFilters": "مسح كل الفلاتر"
+    },
+    "loading": "جارٍ تحميل المواعيد...",
+    "cta": {
+      "title": "هل تحتاج إلى موعد آخر؟",
+      "description": "تصفح مختصينا واحجز موعدًا جديدًا خلال دقائق.",
+      "bookNow": "احجز الآن"
+    },
+    "toast": {
+      "loadError": "فشل تحميل المواعيد",
+      "reviewSuccess": "تم إرسال التقييم بنجاح",
+      "reviewError": "فشل إرسال التقييم",
+      "cancelSuccess": "تم إلغاء الموعد",
+      "cancelError": "فشل إلغاء الموعد",
+      "rescheduleSuccess": "تمت إعادة جدولة الموعد",
+      "rescheduleError": "فشلت إعادة جدولة الموعد"
+    }
+  }

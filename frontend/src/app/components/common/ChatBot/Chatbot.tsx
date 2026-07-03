@@ -1,6 +1,7 @@
 import { X, Bot } from "lucide-react";
 
 import { useState, useRef, useEffect } from "react";
+import { useTranslation } from "react-i18next";
 import { useChatBot } from "../../../context/useChatBot";
 import { sendMessageToAI } from "../../../Services/chatbot.service";
 
@@ -11,24 +12,27 @@ import ChatHistory from "./ChatHistory";
 import type { Chat } from "../../../types/chat.types";
 
 function ChatBot() {
+  const { t } = useTranslation("chatbot");
   const { isOpen, openChatBot, closeChatBot } = useChatBot();
 
   // ---------------- FIRST CHAT ----------------
-  const firstChat: Chat = {
+  const makeWelcomeChat = (title: string): Chat => ({
     id: crypto.randomUUID(),
-    title: "Chat 1",
+    title,
     messages: [
       {
         sender: "ai",
-        text: "Hi! I am WaslaBot. How can I help you today?",
+        text: t("welcome"),
       },
     ],
-  };
+  });
 
   const [message, setMessage] = useState("");
-  const [chats, setChats] = useState<Chat[]>([firstChat]);
+  const [chats, setChats] = useState<Chat[]>(() => [
+    makeWelcomeChat(t("chatTitle", { number: 1 })),
+  ]);
   const [selectedChatId, setSelectedChatId] = useState<string | null>(
-    firstChat.id
+    chats[0].id
   );
 
   const [showHistory, setShowHistory] = useState(false);
@@ -37,47 +41,34 @@ function ChatBot() {
   const messagesEndRef = useRef<HTMLDivElement>(null); // handle auto scroll
 
   const currentChat = chats.find((c) => c.id === selectedChatId);
- 
-  useEffect(() => { // handle auto scroll
-  messagesEndRef.current?.scrollIntoView({ behavior: "smooth" });
-}, [currentChat?.messages]);
 
-  // ---------------- CREATE FIRST CHAT ----------------
-// new chat
- const createNewChat = () => {
-  const newChat: Chat = {
-    id: crypto.randomUUID(),
-    title: `Chat ${chats.length + 1}`,
-    messages: [
-      {
-        sender: "ai",
-        text: "Hi! I am WaslaBot. How can I help you today?",
-      },
-    ],
+  useEffect(() => { // handle auto scroll
+    messagesEndRef.current?.scrollIntoView({ behavior: "smooth" });
+  }, [currentChat?.messages]);
+
+  // ---------------- CREATE NEW CHAT ----------------
+  const createNewChat = () => {
+    const newChat = makeWelcomeChat(t("chatTitle", { number: chats.length + 1 }));
+
+    setChats((prev) => [newChat, ...prev]);
+    setSelectedChatId(newChat.id);
   };
 
-  setChats((prev) => [newChat, ...prev]);
-  setSelectedChatId(newChat.id);
-};
+  //React's new ESLint plugin says:
+  //Don't use an effect just to initialize state. Initialize the state directly.
+  //React's new ESLint plugin says:
+  //Don't call a function inside useEffect if that function immediately calls setState().
+  //This isn't a TypeScript error.
+  //It's a React recommendation.
 
-
-
-
-//React's new ESLint plugin says:
-//Don't use an effect just to initialize state. Initialize the state directly.
-//React's new ESLint plugin says:
-//Don't call a function inside useEffect if that function immediately calls setState().
-//This isn't a TypeScript error.
-//It's a React recommendation.
-
-// ---------------- DYNAMIC WORD-MATCHING & MARKDOWN RENDER ENGINE ----------------
-interface Source {
+  // ---------------- DYNAMIC WORD-MATCHING & MARKDOWN RENDER ENGINE ----------------
+  interface Source {
     title?: string;
     name?: string;
     url?: string;
     link?: string;
-}
-const renderEnhancedText = (text: string,  sources: (string | Source)[] = []) => {
+  }
+  const renderEnhancedText = (text: string, sources: (string | Source)[] = []) => {
     if (!text) return null;
 
     // 1. Split text into individual lines to respect '\n' structural newlines explicitly
@@ -91,13 +82,12 @@ const renderEnhancedText = (text: string,  sources: (string | Source)[] = []) =>
 
       // Identify if the current line represents an isolated list question starting with a hyphen '-' or an explicit number layout
       const isListItem = trimmedLine.startsWith("-") || /^\d+\./.test(trimmedLine);
-      
+
       // Clean list item formatting layout styling classes
-      const lineClass = `block leading-relaxed mb-1 text-sm text-gray-800 ${
-        isListItem 
-          ? "pl-4 mb-2.5 font-medium border-l-2 border-teal-500/30 bg-slate-50/50 py-1 rounded-r" 
+      const lineClass = `block leading-relaxed mb-1 text-sm text-gray-800 ${isListItem
+          ? "ps-4 mb-2.5 font-medium border-s-2 border-teal-500/30 bg-slate-50/50 py-1 rounded-e"
           : "mb-1.5"
-      }`;
+        }`;
 
       // Extract raw titles safely from your sources context array
       const sourceTitles = sources
@@ -162,7 +152,7 @@ const renderEnhancedText = (text: string,  sources: (string | Source)[] = []) =>
             if (matchedSource) {
               // Extract original key label for string sanitation lookup
               const rawLabel = typeof matchedSource === "string" ? matchedSource : matchedSource.title || part;
-              
+
               // Clean up prefixes (like "Overview-") for clean NHS condition slugs
               const cleanSlug = rawLabel
                 .replace(/^overview-/i, "")
@@ -173,36 +163,35 @@ const renderEnhancedText = (text: string,  sources: (string | Source)[] = []) =>
               let linkUrl: string;
 
               if (typeof matchedSource === "string") {
-                  linkUrl = `https://www.nhs.uk/conditions/${cleanSlug}`;
+                linkUrl = `https://www.nhs.uk/conditions/${cleanSlug}`;
               } else {
-                  linkUrl =
-                      matchedSource.url ||
-                      matchedSource.link ||
-                      `https://www.nhs.uk/conditions/${cleanSlug}`;
+                linkUrl =
+                  matchedSource.url ||
+                  matchedSource.link ||
+                  `https://www.nhs.uk/conditions/${cleanSlug}`;
               }
 
-                            return (
-                              <a
-                                key={idx}
-                                href={linkUrl}
-                                target="_blank"
-                                rel="noopener noreferrer"
-                                className="inline-flex items-center px-1.5 py-0.5 mx-0.5 rounded text-xs font-semibold bg-teal-50 text-teal-600 hover:bg-teal-100 hover:underline transition-colors decoration-dotted"
-                                title={`Read verified NHS medical content for: ${rawLabel}`}
-                              >
-                                {part} ↗
-                              </a>
-                            );
-                          }
+              return (
 
-                          return part;
-                        })}
-                      </span>
-                    );
-                  });
-                };
+                <a
+                  key={idx}
+                  href={linkUrl}
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  className="inline-flex items-center px-1.5 py-0.5 mx-0.5 rounded text-xs font-semibold bg-teal-50 text-teal-600 hover:bg-teal-100 hover:underline transition-colors decoration-dotted"
+                  title={t("sources.linkTitle", { label: rawLabel })}
+                >
+                  {part} ↗
+                </a>
+              );
+            }
 
-  
+            return part;
+          })}
+        </span>
+      );
+    });
+  };
 
   // ---------------- SEND MESSAGE ----------------
   const handleSend = async () => {
@@ -210,6 +199,9 @@ const renderEnhancedText = (text: string,  sources: (string | Source)[] = []) =>
 
     const userMessage = message;
     setMessage("");
+
+    const welcomeText = t("welcome");
+    const thinkingText = t("thinking");
 
     setChats((prev) =>
       prev.map((chat) => {
@@ -219,7 +211,7 @@ const renderEnhancedText = (text: string,  sources: (string | Source)[] = []) =>
         const isOnlyWelcome =
           messages.length === 1 &&
           messages[0].sender === "ai" &&
-          messages[0].text.includes("Hi! I am WaslaBot");
+          messages[0].text === welcomeText;
 
         if (isOnlyWelcome) {
           messages = [];
@@ -230,7 +222,7 @@ const renderEnhancedText = (text: string,  sources: (string | Source)[] = []) =>
           messages: [
             ...messages,
             { sender: "user", text: userMessage },
-            { sender: "ai", text: "Thinking..." },
+            { sender: "ai", text: thinkingText },
           ],
         };
       })
@@ -246,7 +238,7 @@ const renderEnhancedText = (text: string,  sources: (string | Source)[] = []) =>
         response?.answer ||
         response?.message?.answer ||
         response?.response?.answer ||
-        "No text returned from server.";
+        t("noText");
 
       const sources =
         response?.sources ||
@@ -261,7 +253,7 @@ const renderEnhancedText = (text: string,  sources: (string | Source)[] = []) =>
           const messages = [...chat.messages];
           const lastThinkingIndex = messages
             .map((m) => m.text)
-            .lastIndexOf("Thinking...");
+            .lastIndexOf(thinkingText);
 
           if (lastThinkingIndex !== -1) {
             messages[lastThinkingIndex] = {
@@ -283,12 +275,12 @@ const renderEnhancedText = (text: string,  sources: (string | Source)[] = []) =>
           const messages = [...chat.messages];
           const lastThinkingIndex = messages
             .map((m) => m.text)
-            .lastIndexOf("Thinking...");
+            .lastIndexOf(thinkingText);
 
           if (lastThinkingIndex !== -1) {
             messages[lastThinkingIndex] = {
               sender: "ai",
-              text: "Something went wrong. Please check your backend connection.",
+              text: t("error"),
             };
           }
 
@@ -300,20 +292,22 @@ const renderEnhancedText = (text: string,  sources: (string | Source)[] = []) =>
     }
   };
 
+  const thinkingText = t("thinking");
+
   return (
     <>
       {/* floating button */}
       {/* Only show the button when the chat is NOT open */}
       {!isOpen && (
-        <div className="fixed bottom-6 right-6 z-50">
+        <div className="fixed bottom-6 end-6 z-50">
           <span className="absolute inset-0 rounded-full bg-primary opacity-30 animate-ping" />
           <span className="absolute inset-0 scale-110 rounded-full bg-primary opacity-20 animate-pulse" />
-      <button
-        onClick={openChatBot}
-        className="relative h-14 w-14 rounded-full bg-primary hover:bg-fg text-white shadow-lg transition-all duration-300 hover:scale-110 flex items-center justify-center cursor-pointer"
-        >
-        <Bot className="h-7 w-7" />
-      </button>
+          <button
+            onClick={openChatBot}
+            className="relative h-14 w-14 rounded-full bg-primary hover:bg-fg text-white shadow-lg transition-all duration-300 hover:scale-110 flex items-center justify-center cursor-pointer"
+          >
+            <Bot className="h-7 w-7" />
+          </button>
         </div>
       )}
 
@@ -330,8 +324,8 @@ const renderEnhancedText = (text: string,  sources: (string | Source)[] = []) =>
         className={
           // Change 'top-0' to 'top-20' (adjust 20 if your navbar is a different height)
           // Change 'h-full' to 'h-[calc(100vh-5rem)]' (adjust 5rem to match top-20)
-          "fixed top-20 right-0 h-[calc(100vh-5rem)] w-md bg-white shadow-2xl z-50 flex flex-col transition-transform duration-300 ease-in-out " +
-          (isOpen ? "translate-x-0" : "translate-x-full")
+          "fixed top-20 end-0 h-[calc(100vh-5rem)] w-[28rem] bg-white shadow-2xl z-50 flex flex-col transition-transform duration-300 ease-in-out " +
+          (isOpen ? "translate-x-0" : "translate-x-full rtl:-translate-x-full")
         }
       >
         {/* header */}
@@ -343,8 +337,8 @@ const renderEnhancedText = (text: string,  sources: (string | Source)[] = []) =>
               <Bot className="h-5 w-5" />
             </div>
             <div>
-              <p className="font-bold text-sm">WaslaBot</p>
-              <p className="text-xs text-white/70">Always here to help</p>
+              <p className="font-bold text-sm">{t("header.title")}</p>
+              <p className="text-xs text-white/70">{t("header.subtitle")}</p>
             </div>
           </div>
 
@@ -366,9 +360,8 @@ const renderEnhancedText = (text: string,  sources: (string | Source)[] = []) =>
         <div className="flex flex-1 overflow-hidden">
           {/* history */}
           <div
-            className={`h-full border-r border-gray-100 bg-white transition-all duration-300 overflow-hidden ${
-              showHistory ? "w-32" : "w-0"
-            }`}
+            className={`h-full border-e border-gray-100 bg-white transition-all duration-300 overflow-hidden ${showHistory ? "w-32" : "w-0"
+              }`}
           >
             {showHistory && (
               <ChatHistory
@@ -383,36 +376,35 @@ const renderEnhancedText = (text: string,  sources: (string | Source)[] = []) =>
 
           {/* chat */}
           <div className="flex-1 flex flex-col bg-slate-50">
-            
-          <div className="flex-1 overflow-y-auto p-4 space-y-4">
-            {currentChat?.messages.map((msg, i) => {
-              const isAI = msg.sender === "ai";
-              const isThinking = msg.text === "Thinking...";
 
-              return (
-                <div key={i} className={`flex ${isAI ? "justify-start" : "justify-end"}`}>
-                  <div
-                    className={`max-w-[85%] rounded-2xl px-4 py-3 shadow-sm ${
-                      isAI
-                        ? "bg-white text-gray-800 rounded-tl-none border border-gray-100"
-                        : "bg-primary text-white rounded-tr-none"
-                    }`}
-                  >
-                    {isAI && !isThinking ? (
-                      renderEnhancedText(msg.text, msg.sources)
-                    ) : (
-                      <p className="text-sm whitespace-pre-wrap leading-relaxed">
-                        {msg.text}
-                      </p>
-                    )}
+            <div className="flex-1 overflow-y-auto p-4 space-y-4">
+              {currentChat?.messages.map((msg, i) => {
+                const isAI = msg.sender === "ai";
+                const isThinking = msg.text === thinkingText;
+
+                return (
+                  <div key={i} className={`flex ${isAI ? "justify-start" : "justify-end"}`}>
+                    <div
+                      className={`max-w-[85%] rounded-2xl px-4 py-3 shadow-sm ${isAI
+                          ? "bg-white text-gray-800 rounded-ss-none border border-gray-100"
+                          : "bg-primary text-white rounded-ee-none"
+                        }`}
+                    >
+                      {isAI && !isThinking ? (
+                        renderEnhancedText(msg.text, msg.sources)
+                      ) : (
+                        <p className="text-sm whitespace-pre-wrap leading-relaxed">
+                          {msg.text}
+                        </p>
+                      )}
+                    </div>
                   </div>
-                </div>
-              );
-            })}
-            
-            {/* Add this line below to act as the scroll target */}
-            <div ref={messagesEndRef} />
-          </div>
+                );
+              })}
+
+              {/* Add this line below to act as the scroll target */}
+              <div ref={messagesEndRef} />
+            </div>
 
             <ChatInput
               message={message}

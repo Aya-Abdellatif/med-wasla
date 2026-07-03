@@ -76,6 +76,7 @@ export function OverviewTab({
         })}
       </div>
 
+      {offersHomeService && (
       <div className="bg-white rounded-xl p-6" style={{ boxShadow: "0 1px 3px rgba(0,0,0,0.1)" }}>
         <div className="flex flex-wrap items-center justify-between gap-3 mb-6">
           <h2 className="text-xl font-bold" style={{ color: DASHBOARD_THEME.text }}>
@@ -119,6 +120,7 @@ export function OverviewTab({
           )}
         </div>
       </div>
+      )}
 
       <div className="bg-white rounded-xl p-6" style={{ boxShadow: "0 1px 3px rgba(0,0,0,0.1)" }}>
         <div className="flex flex-wrap items-center justify-between gap-3 mb-6">

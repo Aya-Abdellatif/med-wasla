@@ -3,7 +3,6 @@ import {
   useEffect,
   useRef,
   useLayoutEffect,
-  useCallback,
 } from "react";
 import {
   LogOut,
@@ -27,8 +26,32 @@ import Logo from "../../../assets/logo.png";
 import LanguageSwitch from "../../Layouts/LanguageSwitch";
 import { useTranslation } from "react-i18next";
 
+type NavLink = { nameKey: string; path: string };
+
+function getUnderlineStyle(
+  container: HTMLDivElement | null,
+  links: Record<string, HTMLElement | null>,
+  activeKey: string | null,
+): { left: number; width: number } {
+  if (!activeKey || !container) {
+    return { left: 0, width: 0 };
+  }
+
+  const el = links[activeKey];
+  if (!el) {
+    return { left: 0, width: 0 };
+  }
+
+  const elRect = el.getBoundingClientRect();
+  const containerRect = container.getBoundingClientRect();
+  return {
+    left: elRect.left - containerRect.left,
+    width: elRect.width,
+  };
+}
+
 function Navbar() {
-  const { i18n } = useTranslation();
+  const { t, i18n } = useTranslation(["nav", "common", "toast"]);
   const [isOpen, setIsOpen] = useState(false);
   const [isProfileOpen, setIsProfileOpen] = useState(false);
   const [underlineStyle, setUnderlineStyle] = useState({ left: 0, width: 0 });
@@ -45,78 +68,69 @@ function Navbar() {
   const navUserName = isDoctor
     ? getShortName(displayName)
     : getShortName(user?.name);
-  const doctorLinks = [
-    { name: "Home", path: "/" },
-    { name: "Services", path: "/services" },
-    { name: "About", path: "/about" },
-    { name: "Contact", path: "/contact" },
-    { name: "Dashboard", path: "/dashboard" },
+  const doctorLinks: NavLink[] = [
+    { nameKey: "nav:links.home", path: "/" },
+    { nameKey: "nav:links.services", path: "/services" },
+    { nameKey: "nav:links.about", path: "/about" },
+    { nameKey: "nav:links.contact", path: "/contact" },
+    { nameKey: "nav:links.dashboard", path: "/dashboard" },
   ];
-  const patientLinks = [
-    { name: "Home", path: "/" },
-    { name: "Services", path: "/services" },
-    { name: "Doctors", path: "/doctors" },
-    { name: "Nurses", path: "/nurses" },
-    { name: "About", path: "/about" },
-    { name: "Contact Us", path: "/contact" },
+  const patientLinks: NavLink[] = [
+    { nameKey: "nav:links.home", path: "/" },
+    { nameKey: "nav:links.services", path: "/services" },
+    { nameKey: "nav:links.doctors", path: "/doctors" },
+    { nameKey: "nav:links.nurses", path: "/nurses" },
+    { nameKey: "nav:links.about", path: "/about" },
+    { nameKey: "nav:links.contactUs", path: "/contact" },
   ];
   const baseLinks = isDoctor ? doctorLinks : patientLinks;
 
-  const navLinks = isAuthenticated
+  const navLinks: NavLink[] = isAuthenticated
     ? [
         ...baseLinks,
-        { name: "Profile", path: "/profile" },
-        { name: "Appointments", path: "/appointments" },
+        { nameKey: "nav:links.profile", path: "/profile" },
+        { nameKey: "nav:links.appointments", path: "/appointments" },
       ]
     : baseLinks;
 
   const desktopNavLinks = navLinks.filter(
-    (link) => link.name !== "Profile" && link.name !== "Appointments",
+    (link) =>
+      link.nameKey !== "nav:links.profile" &&
+      link.nameKey !== "nav:links.appointments",
   );
 
   const active =
-    navLinks.find((link) => link.path === location.pathname)?.name ?? null;
+    navLinks.find((link) => link.path === location.pathname)?.nameKey ?? null;
 
   const desktopActive =
-    desktopNavLinks.find((link) => link.path === location.pathname)?.name ??
+    desktopNavLinks.find((link) => link.path === location.pathname)?.nameKey ??
     null;
 
   const containerRef = useRef<HTMLDivElement | null>(null);
   const linksRef = useRef<Record<string, HTMLElement | null>>({});
   const profileRef = useRef<HTMLDivElement | null>(null);
 
-  const updateUnderline = useCallback(() => {
-    const container = containerRef.current;
-
-    if (!desktopActive || !container) {
-      setUnderlineStyle({ left: 0, width: 0 });
-      return;
-    }
-
-    const el = linksRef.current[desktopActive];
-    if (el) {
-      const elRect = el.getBoundingClientRect();
-      const containerRect = container.getBoundingClientRect();
-      setUnderlineStyle({
-        left: elRect.left - containerRect.left,
-        width: elRect.width,
-      });
-    }
+  useLayoutEffect(() => {
+    setUnderlineStyle(
+      getUnderlineStyle(containerRef.current, linksRef.current, desktopActive),
+    );
   }, [desktopActive]);
 
-  useLayoutEffect(() => {
-    updateUnderline();
-  }, [updateUnderline]);
   useEffect(() => {
-    const handleLanguageChange = () => {
-      requestAnimationFrame(() => updateUnderline());
+    const updateUnderline = () => {
+      setUnderlineStyle(
+        getUnderlineStyle(containerRef.current, linksRef.current, desktopActive),
+      );
     };
+
+    const handleLanguageChange = () => {
+      requestAnimationFrame(updateUnderline);
+    };
+
     i18n.on("languageChanged", handleLanguageChange);
-    return () => i18n.off("languageChanged", handleLanguageChange);
-  }, [i18n, updateUnderline]);
-  useEffect(() => {
+
     if (typeof document !== "undefined" && "fonts" in document) {
-      document.fonts.ready.then(() => updateUnderline());
+      document.fonts.ready.then(updateUnderline);
     }
 
     window.addEventListener("resize", updateUnderline);
@@ -124,15 +138,16 @@ function Navbar() {
     const container = containerRef.current;
     let resizeObserver: ResizeObserver | undefined;
     if (container && typeof ResizeObserver !== "undefined") {
-      resizeObserver = new ResizeObserver(() => updateUnderline());
+      resizeObserver = new ResizeObserver(updateUnderline);
       resizeObserver.observe(container);
     }
 
     return () => {
+      i18n.off("languageChanged", handleLanguageChange);
       window.removeEventListener("resize", updateUnderline);
       resizeObserver?.disconnect();
     };
-  }, [updateUnderline]);
+  }, [desktopActive, i18n]);
 
   useEffect(() => {
     if (!isProfileOpen) return;
@@ -155,7 +170,7 @@ function Navbar() {
     const name = user?.name;
     const role = user?.role;
     logout();
-    showInfo("Logged out successfully", { userName: name, userRole: role });
+    showInfo(t("toast:auth.loggedOut"), { userName: name, userRole: role });
     navigate("/");
   };
 
@@ -170,7 +185,7 @@ function Navbar() {
             >
               <img
                 src={Logo}
-                alt="Logo"
+                alt={t("common:brand.logoAlt")}
                 width={80}
                 height={68}
                 className="w-20 h-17 -mr-4 transition-transform duration-300"
@@ -196,20 +211,20 @@ function Navbar() {
                   }}
                 />
               )}
-              {desktopNavLinks.map(({ name, path }) => (
+              {desktopNavLinks.map(({ nameKey, path }) => (
                 <Link
-                  key={name}
+                  key={nameKey}
                   to={path}
                   ref={(el) => {
-                    linksRef.current[name] = el;
+                    linksRef.current[nameKey] = el;
                   }}
                   className={`px-3 py-2 text-lg font-semibold tracking-wide transition-all duration-300 ease-in-out ${
-                    desktopActive === name
+                    desktopActive === nameKey
                       ? "text-primary"
                       : "text-fg-muted hover:text-fg hover:scale-[1.02]"
                   }`}
                 >
-                  {name}
+                  {t(nameKey)}
                 </Link>
               ))}
             </div>
@@ -233,13 +248,13 @@ function Navbar() {
                   </button>
 
                   {isProfileOpen && (
-                    <div className="absolute right-0 top-full mt-2 w-52 bg-white rounded-xl shadow-xl border border-border p-2 space-y-1 z-50">
+                    <div className="absolute end-0 top-full mt-2 w-52 bg-white rounded-xl shadow-xl border border-border p-2 space-y-1 z-50">
                       <Link
                         to="/profile"
                         onClick={() => setIsProfileOpen(false)}
                         className="flex items-center gap-2 text-base font-semibold px-3 py-2 rounded-lg text-fg-muted hover:text-fg hover:bg-muted transition-all duration-200"
                       >
-                        View Profile
+                        {t("nav:menu.viewProfile")}
                       </Link>
                       {!isDoctor && (
                         <Link
@@ -247,7 +262,7 @@ function Navbar() {
                           onClick={() => setIsProfileOpen(false)}
                           className="flex items-center gap-2 text-base font-semibold px-3 py-2 rounded-lg text-fg-muted hover:text-fg hover:bg-muted transition-all duration-200"
                         >
-                          View Appointments
+                          {t("nav:menu.viewAppointments")}
                         </Link>
                       )}
                     </div>
@@ -261,7 +276,7 @@ function Navbar() {
                   className="group flex items-center gap-2 bg-transparent text-primary border-2 border-primary font-bold text-base px-4 py-2 rounded-xl cursor-pointer transition-all duration-300 ease-in-out hover:border-primary hover:-translate-y-0.5 hover:bg-primary hover:text-white hover:shadow-md whitespace-nowrap"
                 >
                   <LogOut className="h-5 w-5" strokeWidth={2.5} />
-                  Logout
+                  {t("nav:actions.logout")}
                 </button>
               ) : (
                 <>
@@ -270,24 +285,24 @@ function Navbar() {
                     className="group flex items-center gap-2 bg-transparent text-primary border-2 border-primary font-bold text-base px-4 py-2 rounded-xl cursor-pointer transition-all duration-300 ease-in-out hover:border-primary hover:-translate-y-0.5 hover:bg-primary hover:text-white hover:shadow-md whitespace-nowrap"
                   >
                     <LogIn className="h-5 w-5" strokeWidth={2.5} />
-                    Login
+                    {t("nav:actions.login")}
                   </Link>
                   <Link
                     to="/role"
                     className="group flex items-center gap-2 bg-primary text-white border-2 border-primary font-bold text-base px-4 py-2 rounded-xl cursor-pointer transition-all duration-300 ease-in-out hover:border-primary hover:-translate-y-0.5 hover:bg-transparent hover:text-primary hover:shadow-md whitespace-nowrap"
                   >
                     <UserPlus className="h-5 w-5" strokeWidth={2.5} />
-                    Sign Up
+                    {t("nav:actions.signUp")}
                   </Link>
                 </>
               )}
             </div>
 
-            <div className="lg:hidden ml-auto relative">
+            <div className="lg:hidden ms-auto relative">
               <button
                 onClick={() => setIsOpen(!isOpen)}
                 className="text-primary cursor-pointer transition-colors duration-300 hover:text-primary/80"
-                aria-label="Toggle menu"
+                aria-label={t("nav:aria.toggleMenu")}
               >
                 {isOpen ? (
                   <svg
@@ -321,19 +336,19 @@ function Navbar() {
               </button>
 
               {isOpen && (
-                <div className="absolute right-0 top-12 w-72 max-w-[calc(100vw-2rem)] bg-white rounded-xl shadow-xl border border-border p-4 space-y-2 z-50">
-                  {navLinks.map(({ name, path }) => (
+                <div className="absolute end-0 top-12 w-72 max-w-[calc(100vw-2rem)] bg-white rounded-xl shadow-xl border border-border p-4 space-y-2 z-50">
+                  {navLinks.map(({ nameKey, path }) => (
                     <Link
-                      key={name}
+                      key={nameKey}
                       to={path}
                       onClick={() => setIsOpen(false)}
                       className={`block text-base font-semibold px-4 py-2.5 rounded-lg transition-all duration-300 ease-in-out ${
-                        active === name
+                        active === nameKey
                           ? "text-primary bg-primary/10"
                           : "text-fg-muted hover:text-fg hover:bg-muted"
                       }`}
                     >
-                      {name}
+                      {t(nameKey)}
                     </Link>
                   ))}
                   <div className="pt-3 pb-1">
@@ -356,7 +371,7 @@ function Navbar() {
                         className="group flex items-center justify-center gap-2 w-full bg-transparent text-primary border-2 border-primary font-bold text-base px-4 py-2 rounded-xl cursor-pointer transition-all duration-300 ease-in-out hover:border-primary hover:-translate-y-0.5 hover:bg-primary hover:text-white hover:shadow-md whitespace-nowrap"
                       >
                         <LogOut className="h-5 w-5" strokeWidth={2.5} />
-                        Logout
+                        {t("nav:actions.logout")}
                       </button>
                     ) : (
                       <>
@@ -366,7 +381,7 @@ function Navbar() {
                           className="group flex items-center justify-center gap-2 w-full bg-transparent text-primary border-2 border-primary font-bold text-base px-4 py-2 rounded-xl cursor-pointer transition-all duration-300 ease-in-out hover:border-primary hover:-translate-y-0.5 hover:bg-primary hover:text-white hover:shadow-md whitespace-nowrap"
                         >
                           <LogIn className="h-5 w-5" strokeWidth={2.5} />
-                          Login
+                          {t("nav:actions.login")}
                         </Link>
                         <Link
                           to="/role"
@@ -374,7 +389,7 @@ function Navbar() {
                           className="group flex items-center justify-center gap-2 w-full bg-primary text-white border-2 border-primary font-bold text-base px-4 py-2 rounded-xl cursor-pointer transition-all duration-300 ease-in-out hover:border-primary hover:-translate-y-0.5 hover:bg-transparent hover:text-primary hover:shadow-md whitespace-nowrap"
                         >
                           <UserPlus className="h-5 w-5" strokeWidth={2.5} />
-                          Sign Up
+                          {t("nav:actions.signUp")}
                         </Link>
                       </>
                     )}
@@ -391,7 +406,7 @@ function Navbar() {
                           className="h-5 w-5 text-brand-teal group-hover:text-primary transition-colors duration-300"
                           strokeWidth={2.5}
                         />
-                        Book Appointment
+                        {t("nav:actions.bookAppointment")}
                       </button>
                     )}
                   </div>

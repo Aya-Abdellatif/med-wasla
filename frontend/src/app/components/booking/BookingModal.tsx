@@ -1,5 +1,6 @@
 import { useState, useEffect, useMemo, useCallback, useRef } from "react";
 import { useNavigate } from "react-router";
+import { useTranslation } from "react-i18next";
 import { X, Calendar, Clock, MapPin, AlertCircle, Loader2, Home, Stethoscope } from "lucide-react";
 import { showSuccess, showWarning, showError } from "../../../utils/toast";
 import { bookAppointment, fetchAvailableSlots } from "../../../services/appointmentsApi";
@@ -50,6 +51,7 @@ function isWorkingDay(dateStr: string, availableSlots: AvailableSlot[]) {
 }
 
 export function BookingModal({ isOpen, onClose, provider, serviceType }: BookingModalProps) {
+  const { t } = useTranslation("booking");
   const navigate = useNavigate();
   const { user } = useAuth();
   const [formData, setFormData] = useState(initialFormData);
@@ -69,6 +71,11 @@ export function BookingModal({ isOpen, onClose, provider, serviceType }: Booking
   const doctorOffersHome = serviceType === "doctor" && provider?.homeVisit === true;
   const requiresAddress = isNurseBooking || visitType === "home";
   const isHomeVisit = isNurseBooking || visitType === "home";
+
+  const translateDay = useCallback(
+    (day: string) => t(`days.${day}`, { defaultValue: day }),
+    [t],
+  );
 
   const specialistSlots = useMemo(
     () => provider?.availableSlots ?? [],
@@ -126,7 +133,7 @@ export function BookingModal({ isOpen, onClose, provider, serviceType }: Booking
         if (cancelled) return;
         setAvailableTimes([]);
         setWorkingHours(null);
-        showError(err instanceof Error ? err.message : "Failed to load available times");
+        showError(err instanceof Error ? err.message : t("modal.loadSlotsFailed"));
       })
       .finally(() => {
         if (!cancelled) setLoadingSlots(false);
@@ -135,23 +142,23 @@ export function BookingModal({ isOpen, onClose, provider, serviceType }: Booking
     return () => {
       cancelled = true;
     };
-  }, [isHomeVisit, isOpen, provider?.id, formData.date, specialistSlots]);
+  }, [isHomeVisit, isOpen, provider?.id, formData.date, specialistSlots, t]);
 
   const validateForm = () => {
     const newErrors: Record<string, string> = {};
 
     if (!formData.date) {
-      newErrors.date = "Date is required";
+      newErrors.date = t("modal.validation.dateRequired");
     } else if (!isHomeVisit && !isWorkingDay(formData.date, specialistSlots)) {
-      newErrors.date = "Specialist is not available on this day";
+      newErrors.date = t("modal.validation.dateUnavailable");
     } else if (!isHomeVisit && !loadingSlots && availableTimes.length === 0) {
       newErrors.date = describeEmptySlotsMessage(formData.date, workingHours);
     }
 
-    if (!formData.time) newErrors.time = "Time is required";
+    if (!formData.time) newErrors.time = t("modal.validation.timeRequired");
 
     if (requiresAddress && !formData.address.trim()) {
-      newErrors.address = "Address is required for home visits";
+      newErrors.address = t("modal.validation.addressRequired");
     }
 
     setErrors(newErrors);
@@ -162,18 +169,18 @@ export function BookingModal({ isOpen, onClose, provider, serviceType }: Booking
     e.preventDefault();
 
     if (!validateForm()) {
-      showWarning("Please fill in all required fields");
+      showWarning(t("modal.fillRequiredFields"));
       return;
     }
 
     if (!user || user.role !== "patient") {
-      showWarning("Please sign in as a patient to book an appointment");
+      showWarning(t("modal.signInAsPatient"));
       navigate("/");
       return;
     }
 
     if (!provider?.id) {
-      showError("Unable to book: specialist information is missing");
+      showError(t("modal.missingSpecialist"));
       return;
     }
 
@@ -192,13 +199,13 @@ export function BookingModal({ isOpen, onClose, provider, serviceType }: Booking
       });
 
       showSuccess(
-        `${bookingType === "home" ? "Home visit" : "Appointment"} booked successfully! Check My Appointments to track it.`,
+        bookingType === "home" ? t("modal.successHome") : t("modal.successClinic"),
       );
       handleClose();
     } catch (err) {
-      const message = err instanceof Error ? err.message : "Failed to book appointment";
+      const message = err instanceof Error ? err.message : t("modal.bookFailed");
       if (message.toLowerCase().includes("already have an appointment")) {
-        showWarning("You already booked an appointment with this doctor on this day.");
+        showWarning(t("modal.alreadyBooked"));
       } else {
         showError(message);
       }
@@ -251,24 +258,22 @@ export function BookingModal({ isOpen, onClose, provider, serviceType }: Booking
 
   const workingDaysText =
     specialistSlots.length > 0
-      ? specialistSlots.map((slot) => `${slot.day} (${formatSlotLabel(slot.startTime)}-${formatSlotLabel(slot.endTime)})`).join(", ")
-      : "No schedule published yet";
+      ? specialistSlots
+          .map(
+            (slot) =>
+              `${translateDay(slot.day)} (${formatSlotLabel(slot.startTime)}-${formatSlotLabel(slot.endTime)})`,
+          )
+          .join(t("modal.listSeparator"))
+      : t("modal.noSchedule");
 
   return (
     <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/50">
       <div className="bg-white rounded-2xl shadow-2xl max-w-2xl w-full max-h-[90vh] overflow-y-auto">
         <div className="sticky top-0 z-10 bg-white border-b border-border px-6 py-4 flex items-center justify-between">
           <div>
-            <h2 className="text-2xl font-bold text-foreground">
-              {isNurseBooking ? "Request Home Service" : "Book Appointment"}
+            <h2 className="text-2xl font-bold text-fg">
+              {isNurseBooking ? t("modal.requestHomeService") : t("modal.bookAppointment")}
             </h2>
-            {/*{provider && (
-              <div className="mt-1 space-y-0.5">
-                <p className="text-sm text-muted-foreground">
-                  with {provider.name} &middot; {provider.specialty || provider.certification}
-                </p>
-              </div>
-            )}*/}
           </div>
           <button onClick={handleClose} className="p-2 hover:bg-muted rounded-lg transition-colors">
             <X className="w-5 h-5" />
@@ -278,19 +283,19 @@ export function BookingModal({ isOpen, onClose, provider, serviceType }: Booking
         <form onSubmit={handleSubmit} className="p-6 space-y-6">
           {isHomeVisit ? (
             <div className="rounded-lg border border-amber-200 bg-amber-50 p-4 text-sm text-amber-900">
-              <p className="font-medium mb-1">Open Scheduling</p>
-              <p className="text-amber-700">Choose any date and time that suits you. Your request will be sent to the specialist for approval.</p>
+              <p className="font-medium mb-1">{t("modal.openSchedulingTitle")}</p>
+              <p className="text-amber-700">{t("modal.openSchedulingDesc")}</p>
             </div>
           ) : (
-            <div className="rounded-lg border border-primary/20 bg-primary/5 p-4 text-sm text-foreground">
-              <p className="font-medium mb-1">Availability</p>
-              <p className="text-muted-foreground">{workingDaysText}</p>
+            <div className="rounded-lg border border-primary/20 bg-primary/5 p-4 text-sm text-fg">
+              <p className="font-medium mb-1">{t("modal.availability")}</p>
+              <p className="text-fg-muted">{workingDaysText}</p>
             </div>
           )}
 
           {doctorOffersHome && (
             <div>
-              <p className="block mb-2 font-medium text-foreground">Visit Type *</p>
+              <p className="block mb-2 font-medium text-fg">{t("modal.visitType")} *</p>
               <div className="grid grid-cols-2 gap-3">
                 <button
                   type="button"
@@ -302,7 +307,7 @@ export function BookingModal({ isOpen, onClose, provider, serviceType }: Booking
                   }`}
                 >
                   <Stethoscope className="w-4 h-4" />
-                  Clinic Visit
+                  {t("modal.clinicVisit")}
                 </button>
                 <button
                   type="button"
@@ -314,7 +319,7 @@ export function BookingModal({ isOpen, onClose, provider, serviceType }: Booking
                   }`}
                 >
                   <Home className="w-4 h-4" />
-                  Home Visit
+                  {t("modal.homeVisit")}
                 </button>
               </div>
             </div>
@@ -322,18 +327,18 @@ export function BookingModal({ isOpen, onClose, provider, serviceType }: Booking
 
           {requiresAddress && (
             <div>
-              <label htmlFor="address" className="block mb-2 font-medium text-foreground">
-                Home Address *
+              <label htmlFor="address" className="block mb-2 font-medium text-fg">
+                {t("modal.address")} *
               </label>
               <div className="relative">
-                <MapPin className="absolute left-4 top-4 w-5 h-5 text-muted-foreground" />
+                <MapPin className="absolute start-4 top-4 w-5 h-5 text-fg-muted" />
                 <textarea
                   id="address"
                   value={formData.address}
                   onChange={(e) => handleChange("address", e.target.value)}
-                  placeholder="Enter your complete address"
+                  placeholder={t("modal.addressPlaceholder")}
                   rows={3}
-                  className={`w-full pl-12 pr-4 py-3 border rounded-lg focus:outline-none focus:ring-2 transition-colors resize-none ${
+                  className={`w-full ps-12 pe-4 py-3 border rounded-lg focus:outline-none focus:ring-2 transition-colors resize-none ${
                     errors.address
                       ? "border-red-500 focus:ring-red-500"
                       : "border-border focus:ring-primary"
@@ -341,7 +346,7 @@ export function BookingModal({ isOpen, onClose, provider, serviceType }: Booking
                 />
               </div>
               {errors.address && (
-                <div className="flex items-center space-x-2 mt-2 text-red-500 text-sm">
+                <div className="flex items-center gap-2 mt-2 text-red-500 text-sm">
                   <AlertCircle className="w-4 h-4" />
                   <span>{errors.address}</span>
                 </div>
@@ -351,12 +356,12 @@ export function BookingModal({ isOpen, onClose, provider, serviceType }: Booking
 
           <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
             <div>
-              <label htmlFor="date" className="block mb-2 font-medium text-foreground">
-                Date *
+              <label htmlFor="date" className="block mb-2 font-medium text-fg">
+                {t("modal.date")} *
               </label>
               <div className="relative">
                 <Calendar
-                  className="absolute left-4 top-1/2 -translate-y-1/2 w-5 h-5 text-muted-foreground cursor-pointer"
+                  className="absolute start-4 top-1/2 -translate-y-1/2 w-5 h-5 text-fg-muted cursor-pointer"
                   onClick={() => dateInputRef.current?.showPicker()}
                 />
                 <input
@@ -366,7 +371,7 @@ export function BookingModal({ isOpen, onClose, provider, serviceType }: Booking
                   value={formData.date}
                   onChange={(e) => handleDateChange(e.target.value)}
                   min={minBookableDate}
-                  className={`w-full pl-12 pr-4 py-3 border rounded-lg focus:outline-none focus:ring-2 transition-colors [&::-webkit-calendar-picker-indicator]:hidden ${
+                  className={`w-full ps-12 pe-4 py-3 border rounded-lg focus:outline-none focus:ring-2 transition-colors [&::-webkit-calendar-picker-indicator]:hidden ${
                     errors.date
                       ? "border-red-500 focus:ring-red-500"
                       : "border-border focus:ring-primary"
@@ -374,7 +379,7 @@ export function BookingModal({ isOpen, onClose, provider, serviceType }: Booking
                 />
               </div>
               {errors.date && (
-                <div className="flex items-center space-x-2 mt-2 text-red-500 text-sm">
+                <div className="flex items-center gap-2 mt-2 text-red-500 text-sm">
                   <AlertCircle className="w-4 h-4" />
                   <span>{errors.date}</span>
                 </div>
@@ -382,12 +387,12 @@ export function BookingModal({ isOpen, onClose, provider, serviceType }: Booking
             </div>
 
             <div>
-              <label htmlFor="time" className="block mb-2 font-medium text-foreground">
-                {isHomeVisit ? "Preferred Time *" : "Available Time *"}
+              <label htmlFor="time" className="block mb-2 font-medium text-fg">
+                {isHomeVisit ? t("modal.preferredTime") : t("modal.availableTime")} *
               </label>
               <div className="relative">
                 <Clock
-                  className={`absolute left-4 top-1/2 -translate-y-1/2 w-5 h-5 text-muted-foreground z-10 ${
+                  className={`absolute start-4 top-1/2 -translate-y-1/2 w-5 h-5 text-fg-muted z-10 ${
                     isHomeVisit ? "cursor-pointer" : ""
                   }`}
                   onClick={() => isHomeVisit && timeInputRef.current?.showPicker()}
@@ -400,7 +405,7 @@ export function BookingModal({ isOpen, onClose, provider, serviceType }: Booking
                     value={formData.time}
                     onChange={(e) => handleChange("time", e.target.value)}
                     disabled={!formData.date}
-                    className={`w-full pl-12 pr-4 py-3 border rounded-lg focus:outline-none focus:ring-2 transition-colors [&::-webkit-calendar-picker-indicator]:hidden ${
+                    className={`w-full ps-12 pe-4 py-3 border rounded-lg focus:outline-none focus:ring-2 transition-colors [&::-webkit-calendar-picker-indicator]:hidden ${
                       errors.time
                         ? "border-red-500 focus:ring-red-500"
                         : "border-border focus:ring-primary"
@@ -412,7 +417,7 @@ export function BookingModal({ isOpen, onClose, provider, serviceType }: Booking
                     value={formData.time}
                     onChange={(e) => handleChange("time", e.target.value)}
                     disabled={!formData.date || loadingSlots || availableTimes.length === 0}
-                    className={`w-full pl-12 pr-4 py-3 border rounded-lg focus:outline-none focus:ring-2 transition-colors appearance-none ${
+                    className={`w-full ps-12 pe-4 py-3 border rounded-lg focus:outline-none focus:ring-2 transition-colors appearance-none ${
                       errors.time
                         ? "border-red-500 focus:ring-red-500"
                         : "border-border focus:ring-primary"
@@ -420,12 +425,12 @@ export function BookingModal({ isOpen, onClose, provider, serviceType }: Booking
                   >
                     <option value="">
                       {loadingSlots
-                        ? "Loading times..."
+                        ? t("modal.loadingTimes")
                         : !formData.date
-                          ? "Select a date first"
+                          ? t("modal.selectDateFirst")
                           : availableTimes.length === 0
                             ? emptySlotsTimeLabel(formData.date, workingHours)
-                            : "Select a time"}
+                            : t("modal.selectTime")}
                     </option>
                     {availableTimes.map((slot) => (
                       <option key={slot} value={slot}>
@@ -436,12 +441,15 @@ export function BookingModal({ isOpen, onClose, provider, serviceType }: Booking
                 )}
               </div>
               {!isHomeVisit && workingHours && (
-                <p className="text-xs text-muted-foreground mt-2">
-                  Working hours: {formatSlotLabel(workingHours.start)} - {formatSlotLabel(workingHours.end)}
+                <p className="text-xs text-fg-muted mt-2">
+                  {t("modal.workingHours", {
+                    start: formatSlotLabel(workingHours.start),
+                    end: formatSlotLabel(workingHours.end),
+                  })}
                 </p>
               )}
               {errors.time && (
-                <div className="flex items-center space-x-2 mt-2 text-red-500 text-sm">
+                <div className="flex items-center gap-2 mt-2 text-red-500 text-sm">
                   <AlertCircle className="w-4 h-4" />
                   <span>{errors.time}</span>
                 </div>
@@ -450,14 +458,14 @@ export function BookingModal({ isOpen, onClose, provider, serviceType }: Booking
           </div>
 
           <div>
-            <label htmlFor="reason" className="block mb-2 font-medium text-foreground">
-              Reason for {requiresAddress ? "Visit" : "Appointment"}{" "}
+            <label htmlFor="reason" className="block mb-2 font-medium text-fg">
+              {t("modal.reason")}
             </label>
             <textarea
               id="reason"
               value={formData.reason}
               onChange={(e) => handleChange("reason", e.target.value)}
-              placeholder={`Describe the reason for your ${requiresAddress ? "home visit" : "appointment"}`}
+              placeholder={t("modal.reasonPlaceholder")}
               rows={4}
               className={`w-full px-4 py-3 border rounded-lg focus:outline-none focus:ring-2 transition-colors resize-none ${
                 errors.reason
@@ -466,7 +474,7 @@ export function BookingModal({ isOpen, onClose, provider, serviceType }: Booking
               }`}
             />
             {errors.reason && (
-              <div className="flex items-center space-x-2 mt-2 text-red-500 text-sm">
+              <div className="flex items-center gap-2 mt-2 text-red-500 text-sm">
                 <AlertCircle className="w-4 h-4" />
                 <span>{errors.reason}</span>
               </div>
@@ -475,38 +483,39 @@ export function BookingModal({ isOpen, onClose, provider, serviceType }: Booking
 
           {provider && (
             <div className="bg-muted/50 rounded-lg p-4 border border-border">
-              <h3 className="font-semibold text-foreground mb-2">
-                {isNurseBooking ? "Nurse" : "Doctor"} Details
+              <h3 className="font-semibold text-fg mb-2">
+                {t("modal.providerDetails")}
               </h3>
               <div className="space-y-1 text-sm">
-                <p className="text-foreground">
-                  <span className="font-medium">Name:</span> {provider.name}
+                <p className="text-fg">
+                  <span className="font-medium">{t("modal.name")}</span> {provider.name}
                 </p>
-                <p className="text-foreground">
-                  <span className="font-medium">Specialty:</span>{" "}
+                <p className="text-fg">
+                  <span className="font-medium">{t("modal.specialty")}</span>{" "}
                   {provider.specialty || provider.certification}
                 </p>
                 {provider.location && (
-                  <p className="text-foreground">
-                    <span className="font-medium">Location:</span> {provider.location}
+                  <p className="text-fg">
+                    <span className="font-medium">{t("modal.location")}</span> {provider.location}
                   </p>
                 )}
                 {doctorOffersHome && (
-                  <p className="text-foreground">
-                    <span className="font-medium">Home visits:</span> Available
+                  <p className="text-fg">
+                    <span className="font-medium">{t("modal.homeVisitsAvailable")}</span>{" "}
+                    {t("modal.available")}
                   </p>
                 )}
               </div>
             </div>
           )}
 
-          <div className="flex space-x-3 pt-4">
+          <div className="flex gap-3 pt-4">
             <button
               type="button"
               onClick={handleClose}
               className="flex-1 px-6 py-3 border border-border rounded-lg hover:bg-muted transition-colors font-medium"
             >
-              Cancel
+              {t("modal.cancel")}
             </button>
             <button
               type="submit"
@@ -516,10 +525,10 @@ export function BookingModal({ isOpen, onClose, provider, serviceType }: Booking
               {isSubmitting ? (
                 <>
                   <Loader2 className="w-4 h-4 animate-spin" />
-                  Booking...
+                  {t("modal.submitting")}
                 </>
               ) : (
-                requiresAddress ? "Book Home Visit" : "Book Appointment"
+                t("modal.submit")
               )}
             </button>
           </div>

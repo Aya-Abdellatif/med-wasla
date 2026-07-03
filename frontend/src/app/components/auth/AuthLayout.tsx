@@ -1,4 +1,5 @@
 import type { ReactNode } from "react";
+import { useTranslation } from "react-i18next";
 import Logo from "../../../assets/logo.png";
 
 interface AuthLayoutProps {
@@ -22,6 +23,7 @@ export default function AuthLayout({
   center = true,
   fitScreen = false,
 }: AuthLayoutProps) {
+  const { t } = useTranslation("common");
   const cardWidthClass = fitScreen
     ? "max-w-4xl"
     : wide
@@ -41,7 +43,7 @@ export default function AuthLayout({
         : "p-6 sm:p-8";
 
   const shellClass = fitScreen
-    ? "min-h-screen lg:h-screen lg:overflow-hidden bg-gradient-to-br from-teal-50 via-white to-slate-50 px-4 sm:px-6 py-4 flex flex-col justify-center overflow-y-auto"
+    ? "min-h-screen bg-gradient-to-br from-teal-50 via-white to-slate-50 px-4 sm:px-6 py-4 flex flex-col justify-center"
     : "min-h-screen bg-gradient-to-br from-teal-50 via-white to-slate-50 px-4 py-6 sm:py-8";
 
   const alignClass = center ? "flex items-center justify-center" : "";
@@ -54,14 +56,14 @@ export default function AuthLayout({
         >
           <img
             src={Logo}
-            alt="MedWasla Logo"
-            className={`${fitScreen ? "h-12 w-14" : "w-19 h-17"} -mr-6 transition-transform duration-300`}
+            alt={t("brand.logoAlt")}
+            className={`${fitScreen ? "h-12 w-14" : "w-19 h-17"} -me-6 transition-transform duration-300`}
           />
           <h1
             className={`${fitScreen ? "text-2xl" : "text-3xl"} font-semibold`}
           >
-            <span className="text-fg">Med</span>
-            <span className="text-primary">Wasla</span>
+            <span className="text-fg">{t("brand.med")}</span>
+            <span className="text-primary">{t("brand.wasla")}</span>
           </h1>
         </div>
 
@@ -83,7 +85,7 @@ export default function AuthLayout({
             )}
           </div>
           {fitScreen ? (
-            <div className="lg:max-h-[calc(85vh-160px)] lg:overflow-y-auto lg:pr-2 pr-0 overflow-y-visible">
+            <div className="max-h-[min(85dvh,calc(100vh-8rem))] overflow-y-auto overscroll-contain pr-1">
               {children}
             </div>
           ) : (

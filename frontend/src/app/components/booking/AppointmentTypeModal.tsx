@@ -1,5 +1,6 @@
 import { X, Stethoscope, Home, ArrowRight } from "lucide-react";
 import { useNavigate } from "react-router-dom";
+import { useTranslation } from "react-i18next";
 import { useAuth } from "../../context/useAuth";
 import { canBookAppointments } from "../../../utils/bookingAccess";
 
@@ -12,11 +13,11 @@ export function AppointmentTypeModal({
   isOpen,
   onClose,
 }: AppointmentTypeModalProps) {
+  const { t } = useTranslation("booking");
   const navigate = useNavigate();
   const { user } = useAuth();
 
   if (!isOpen) return null;
-
   if (!canBookAppointments(user)) return null;
 
   const handleChooseDoctor = () => {
@@ -35,11 +36,9 @@ export function AppointmentTypeModal({
         <div className="flex items-center justify-between p-6 border-b border-gray-200">
           <div>
             <h2 className="text-3xl font-bold text-gray-900">
-              Choose Service Type
+              {t("typeModal.title")}
             </h2>
-            <p className="text-gray-600 mt-1">
-              Select the type of healthcare service you need
-            </p>
+            <p className="text-gray-600 mt-1">{t("typeModal.note")}</p>
           </div>
           <button
             onClick={onClose}
@@ -60,25 +59,25 @@ export function AppointmentTypeModal({
               </div>
 
               <h3 className="text-2xl font-bold text-gray-900 mb-3">
-                Book Doctor Appointment
+                {t("typeModal.doctor.title")}
               </h3>
 
               <p className="text-gray-600 mb-6 leading-relaxed">
-                Schedule a consultation with our expert doctors at the clinic
+                {t("typeModal.doctor.description")}
               </p>
 
               <ul className="space-y-3 mb-8">
                 <li className="flex items-center gap-3 text-gray-700">
                   <span className="w-2 h-2 bg-primary rounded-full"></span>
-                  In-clinic consultations
+                  {t("typeModal.doctor.f1")}
                 </li>
                 <li className="flex items-center gap-3 text-gray-700">
                   <span className="w-2 h-2 bg-primary rounded-full"></span>
-                  Multiple specialties available
+                  {t("typeModal.doctor.f2")}
                 </li>
                 <li className="flex items-center gap-3 text-gray-700">
                   <span className="w-2 h-2 bg-primary rounded-full"></span>
-                  Advanced diagnostic facilities
+                  {t("typeModal.doctor.f3")}
                 </li>
               </ul>
 
@@ -86,7 +85,8 @@ export function AppointmentTypeModal({
                 onClick={handleChooseDoctor}
                 className="inline-flex items-center gap-2 text-primary font-semibold hover:gap-3 transition-all"
               >
-                Choose Doctor <ArrowRight className="w-4 h-4" />
+                {t("typeModal.doctor.cta")}{" "}
+                <ArrowRight className="w-4 h-4 rtl:rotate-180" />
               </button>
             </div>
 
@@ -99,25 +99,25 @@ export function AppointmentTypeModal({
               </div>
 
               <h3 className="text-2xl font-bold text-gray-900 mb-3">
-                Request Home Service
+                {t("typeModal.nurse.title")}
               </h3>
 
               <p className="text-gray-600 mb-6 leading-relaxed">
-                Get professional nursing care in the comfort of your home
+                {t("typeModal.nurse.description")}
               </p>
 
               <ul className="space-y-3 mb-8">
                 <li className="flex items-center gap-3 text-gray-700">
                   <span className="w-2 h-2 bg-primary rounded-full"></span>
-                  Home nursing services
+                  {t("typeModal.nurse.f1")}
                 </li>
                 <li className="flex items-center gap-3 text-gray-700">
                   <span className="w-2 h-2 bg-primary rounded-full"></span>
-                  Convenient and comfortable
+                  {t("typeModal.nurse.f2")}
                 </li>
                 <li className="flex items-center gap-3 text-gray-700">
                   <span className="w-2 h-2 bg-primary rounded-full"></span>
-                  Specialized care at home
+                  {t("typeModal.nurse.f3")}
                 </li>
               </ul>
 
@@ -125,17 +125,18 @@ export function AppointmentTypeModal({
                 onClick={handleChooseNurse}
                 className="inline-flex items-center gap-2 text-primary font-semibold hover:gap-3 transition-all"
               >
-                Choose Nurse <ArrowRight className="w-4 h-4" />
+                {t("typeModal.nurse.cta")}{" "}
+                <ArrowRight className="w-4 h-4 rtl:rotate-180" />
               </button>
             </div>
           </div>
 
-          <div className="bg-primary/5 border-l-4 border-primary p-6 rounded-lg">
+          <div className="bg-primary/5 border-s-4 border-primary p-6 rounded-lg">
             <p className="text-gray-800">
-              <span className="font-semibold text-primary">Note:</span> After
-              selecting a service type, you'll be directed to choose your
-              preferred <span className="font-semibold">doctor or nurse</span>.
-              You can then book directly from their profile.
+              <span className="font-semibold text-primary">
+                {t("typeModal.footnoteLabel")}
+              </span>{" "}
+              {t("typeModal.footnoteText")}
             </p>
           </div>
         </div>

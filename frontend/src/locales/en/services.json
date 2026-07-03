@@ -1,0 +1,97 @@
+{
+  "hero": {
+    "patientTitle": "Our Healthcare Services",
+    "patientSubtitle": "Discover smart healthcare solutions designed to connect patients with doctors, nurses, and AI-powered medical guidance.",
+    "providerTitle": "Provider Hub & Tools",
+    "providerSubtitle": "Manage your medical practice, configure scheduling, and handle patient requests with ease."
+  },
+  "features": {
+    "access247": {
+      "title": "24/7 Access",
+      "description": "Access healthcare services anytime from anywhere."
+    },
+    "qualifiedDoctors": {
+      "title": "Qualified Doctors",
+      "description": "Book with experienced doctors across multiple specialties."
+    },
+    "aiAssistance": {
+      "title": "AI Assistance",
+      "description": "Smart guidance for patients and healthcare providers, anytime."
+    },
+    "trustedCare": {
+      "title": "Trusted Care",
+      "description": "Every healthcare professional here is verified to ensure safe, reliable, and quality care."
+    }
+  },
+  "patient": {
+    "doctorReservation": {
+      "title": "Doctor Reservation",
+      "description": "Book appointments with qualified healthcare professionals based on specialty, availability, and patient needs.",
+      "features": {
+        "specialistSearch": "Specialist Search",
+        "onlineBooking": "Online Booking",
+        "appointmentReminders": "Appointment Reminders",
+        "homeVisitScheduling": "Home Visit Scheduling"
+      }
+    },
+    "nursingCare": {
+      "title": "Nursing Care",
+      "description": "Schedule professional nursing services at home for follow-up care, monitoring, injections, and medical support.",
+      "features": {
+        "homeNursingServices": "Home Nursing Services",
+        "medicationInjectionSupport": "Medication & Injection Support",
+        "patientMonitoring": "Patient Monitoring",
+        "flexibleNurseScheduling": "Flexible Nurse Scheduling"
+      }
+    },
+    "aiMedicalAssistant": {
+      "title": "AI Medical Assistant",
+      "description": "Describe your symptoms and let our chatbot guide you to the most suitable medical specialty.",
+      "features": {
+        "symptomAnalysis": "Symptom Analysis",
+        "specialtyRecommendation": "Specialty Recommendation",
+        "assistance247": "24/7 Assistance",
+        "smartHealthcareGuidance": "Smart Healthcare Guidance"
+      }
+    }
+  },
+  "provider": {
+    "clinicSchedule": {
+      "title": "Clinic & Schedule Management",
+      "description": "Manage your weekly schedule, define your working hours, and let patients book appointments directly with automated slot coordination.",
+      "features": {
+        "customWorkingHours": "Custom Working Hours",
+        "automatedBookingManagement": "Automated Booking Management",
+        "realTimeAppointmentReminders": "Real-time Appointment Reminders",
+        "patientMedicalHistoryAccess": "Patient Medical History Access"
+      }
+    },
+    "homeVisitRequests": {
+      "title": "Home Visit & Nursing Requests",
+      "description": "Receive and manage home visit and care requests from patients in your area, and coordinate with nursing staff easily.",
+      "features": {
+        "homeVisitRequestManagement": "Home Visit Request Management",
+        "geographicServiceAreaSetup": "Geographic Service Area Setup",
+        "directPatientCommunication": "Direct Patient Communication",
+        "digitalPrescriptionIssuance": "Digital Prescription Issuance"
+      }
+    },
+    "aiMedicalAssistant": {
+      "title": "AI Medical Assistant",
+      "description": "Use AI support for quick clinical reference, patient intake questions, and specialty guidance while you manage your practice.",
+      "features": {
+        "clinicalReferenceSupport": "Clinical Reference Support",
+        "patientIntakeGuidance": "Patient Intake Guidance",
+        "assistance247": "24/7 Assistance",
+        "smartPracticeSupport": "Smart Practice Support"
+      }
+    }
+  },
+  "cta": {
+    "startChatbot": "Start Chatbot",
+    "goToDashboard": "Go to Dashboard",
+    "goToDoctors": "Go to Doctors",
+    "goToNurses": "Go to Nurses",
+    "goToHomeServices": "Go to Home services"
+  }
+}

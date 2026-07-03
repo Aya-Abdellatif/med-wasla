@@ -1,0 +1,82 @@
+{
+  "tabs": {
+    "overview": "Overview",
+    "schedule": "Schedule",
+    "requests": "Home Service Requests"
+  },
+  "stats": {
+    "todayAppointments": "Today's Appointments",
+    "completedToday": "Completed Today",
+    "totalPatients": "Total Patients",
+    "pendingRequests": "Pending Requests"
+  },
+  "overview": {
+    "pendingHomeVisits": "Pending Home Visit Requests",
+    "todaySchedule": "Today's Schedule",
+    "emptySchedule": "No appointments scheduled for today.",
+    "emptyRequests": "No pending home visit requests.",
+    "cancelAll": "Cancel All"
+  },
+  "schedule": {
+    "appointments": "Appointments",
+    "pendingHomeVisits": "Pending Home Visits",
+    "upcoming": "Upcoming",
+    "completed": "Completed",
+    "noShow": "No Show",
+    "missedHomeVisits": "Missed Home Visits",
+    "empty": "No appointments for this day."
+  },
+  "requests": {
+    "title": "Home Service Requests",
+    "needsResponse": "Needs your response",
+    "recent": "Recent",
+    "accept": "Accept",
+    "reject": "Reject",
+    "empty": "No home service requests."
+  },
+  "appointment": {
+    "confirm": "Confirm",
+    "cancel": "Cancel",
+    "markComplete": "Mark Complete",
+    "noShow": "No Show",
+    "goToHomeService": "Go to Home Service"
+  },
+  "profile": {
+    "title": "Profile Information",
+    "edit": "Edit Profile",
+    "save": "Save Changes",
+    "saving": "Saving...",
+    "pendingReview": "Your profile changes are pending admin review.",
+    "availableSlots": "Available Slots",
+    "certificates": "Certificates & Credentials",
+    "uploadNew": "Upload New",
+    "fields": {
+      "name": "Full Name",
+      "email": "Email",
+      "phone": "Phone",
+      "specialty": "Specialty",
+      "experience": "Experience",
+      "education": "Education",
+      "bio": "Bio",
+      "consultationFee": "Consultation Fee",
+      "clinicAddress": "Clinic Address",
+      "availability": "Availability"
+    }
+  },
+  "missed": {
+    "title": "Missed Appointments",
+    "description": "Appointments that were not completed or marked as no-show."
+  },
+  "toast": {
+    "homeVisitAccepted": "Home visit accepted!",
+    "homeVisitDeclined": "Home visit declined.",
+    "appointmentCancelled": "Appointment cancelled.",
+    "allCancelled": "All appointments for this day cancelled.",
+    "markedComplete": "Appointment marked as completed.",
+    "markedNoShow": "Appointment marked as no show.",
+    "bulkCancelFailed": "Failed to cancel appointments",
+    "completeFailed": "Failed to complete appointment",
+    "noShowFailed": "Failed to mark appointment as no show",
+    "requestUpdateFailed": "Failed to update home visit request"
+  }
+}

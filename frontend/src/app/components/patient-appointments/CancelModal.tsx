@@ -13,13 +13,13 @@ export function CancelModal({ appointment, onClose, onConfirm }: { appointment: 
                 <div className="w-12 h-12 bg-red-100 rounded-full flex items-center justify-center mx-auto mb-4">
                     <XCircle className="w-6 h-6 text-red-600" />
                 </div>
-                <h3 className="text-lg font-bold text-foreground text-center mb-2">Cancel Appointment?</h3>
-                <p className="text-sm text-muted-foreground text-center mb-1">
+                <h3 className="text-lg font-bold text-fg text-center mb-2">Cancel Appointment?</h3>
+                <p className="text-sm text-fg-muted text-center mb-1">
                     You are about to cancel your appointment with
                 </p>
-                <p className="text-sm font-medium text-foreground text-center mb-5">{appointment.doctor.name} on {formatDate(appointment.date)}</p>
+                <p className="text-sm font-medium text-fg text-center mb-5">{appointment.doctor.name} on {formatDate(appointment.date)}</p>
                 <div className="flex gap-3">
-                    <button onClick={onClose} className="flex-1 border border-border text-foreground py-2.5 rounded-xl hover:bg-muted/50 transition-colors text-sm">
+                    <button onClick={onClose} className="flex-1 border border-border text-fg py-2.5 rounded-xl hover:bg-muted/50 transition-colors text-sm">
                         Keep It
                     </button>
                     <button onClick={onConfirm} className="flex-1 bg-red-500 text-white py-2.5 rounded-xl hover:bg-red-600 transition-colors text-sm">

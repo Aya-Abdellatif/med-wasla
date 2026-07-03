@@ -1,0 +1,26 @@
+{
+  "welcome": "Hi! I am WaslaBot. How can I help you today?",
+  "thinking": "Thinking...",
+  "error": "Something went wrong. Please try again.",
+  "noResponse": "No response received",
+  "noText": "No text returned from server",
+  "header": {
+    "title": "WaslaBot",
+    "subtitle": "Always here to help"
+  },
+  "chatTitle": "Chat {{number}}",
+  "input": {
+    "placeholder": "Type a message...",
+    "voiceUnsupported": "Voice input is not supported in your browser.",
+    "fileComingSoon": "File upload coming soon!"
+  },
+  "history": {
+    "title": "Chats",
+    "newChat": "+ New Chat"
+  },
+  "sources": {
+    "title": "Sources",
+    "confidence": "Confidence: {{percent}}%",
+    "linkTitle": "Read verified NHS medical content for: {{label}}"
+  }
+}
