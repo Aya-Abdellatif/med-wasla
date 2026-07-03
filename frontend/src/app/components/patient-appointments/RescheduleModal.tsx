@@ -97,8 +97,8 @@ export function RescheduleModal({
                     <div className="w-16 h-16 bg-blue-100 rounded-full flex items-center justify-center mx-auto mb-4">
                         <RefreshCw className="w-8 h-8 text-blue-600" />
                     </div>
-                    <h3 className="text-xl font-bold text-foreground mb-2">Appointment Rescheduled!</h3>
-                    <p className="text-muted-foreground mb-6">
+                    <h3 className="text-xl font-bold text-fg mb-2">Appointment Rescheduled!</h3>
+                    <p className="text-fg-muted mb-6">
                         Your appointment has been successfully rescheduled to {formatDate(date)} at {isHomeVisit ? time : formatSlotLabel(time)}.
                     </p>
                     <button onClick={onClose} className="bg-primary text-white px-6 py-2.5 rounded-xl hover:bg-primary/90 transition-colors">Done</button>
@@ -111,7 +111,7 @@ export function RescheduleModal({
         <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/50 p-4">
             <div className="bg-white rounded-2xl shadow-2xl p-6 max-w-md w-full">
                 <div className="flex items-center justify-between mb-5">
-                    <h3 className="text-lg font-bold text-foreground">Reschedule Appointment</h3>
+                    <h3 className="text-lg font-bold text-fg">Reschedule Appointment</h3>
                     <button onClick={onClose} className="w-8 h-8 flex items-center justify-center rounded-full hover:bg-muted transition-colors">
                         <X className="w-4 h-4" />
                     </button>
@@ -119,8 +119,8 @@ export function RescheduleModal({
                 <div className="flex items-center gap-3 p-3 bg-muted/30 rounded-xl mb-5">
                     <ImageWithFallback src={appointment.doctor.photo} alt={appointment.doctor.name} className="w-12 h-12 rounded-full object-cover" />
                     <div>
-                        <p className="font-semibold text-foreground">{appointment.doctor.name}</p>
-                        <p className="text-sm text-muted-foreground">Current: {formatDate(appointment.date)} at {appointment.time}</p>
+                        <p className="font-semibold text-fg">{appointment.doctor.name}</p>
+                        <p className="text-sm text-fg-muted">Current: {formatDate(appointment.date)} at {appointment.time}</p>
                     </div>
                 </div>
 
@@ -132,7 +132,7 @@ export function RescheduleModal({
 
                 <div className="space-y-4 mb-5">
                     <div>
-                        <label className="block text-sm text-foreground mb-1.5">New Date</label>
+                        <label className="block text-sm text-fg mb-1.5">New Date</label>
                         <input
                             type="date"
                             value={date}
@@ -157,7 +157,7 @@ export function RescheduleModal({
                         )}
                     </div>
                     <div>
-                        <label className="block text-sm text-foreground mb-1.5">
+                        <label className="block text-sm text-fg mb-1.5">
                           {isHomeVisit ? "Preferred Time" : "New Time"}
                         </label>
                         {isHomeVisit ? (

@@ -185,7 +185,7 @@ export function Doctors() {
                   }}
                   className={`px-6 py-2.5 rounded-lg transition-all ${selectedSpecialty === specialty
                       ? "bg-primary text-white shadow-md"
-                      : "bg-muted text-foreground hover:bg-muted/80"
+                      : "bg-muted text-fg hover:bg-muted/80"
                     }`}
                 >
                   {label}
@@ -200,7 +200,7 @@ export function Doctors() {
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
           {loading ? (
             <div className="text-center py-16">
-              <p className="text-lg text-muted-foreground">
+              <p className="text-lg text-fg-muted">
                 {t("doctors:state.loading")}
               </p>
             </div>
@@ -224,10 +224,10 @@ export function Doctors() {
                       />
                       <div className="absolute top-4 right-4 bg-white px-3 py-1.5 rounded-full shadow-lg flex items-center space-x-1 rtl:right-auto rtl:left-4 rtl:space-x-reverse">
                         <Star className="w-4 h-4 text-yellow-400 fill-current" />
-                        <span className="font-semibold text-foreground">
+                        <span className="font-semibold text-fg">
                           {doctor.rating}
                         </span>
-                        <span className="text-sm text-muted-foreground">
+                        <span className="text-sm text-fg-muted">
                           ({doctor.reviews})
                         </span>
                       </div>
@@ -235,38 +235,38 @@ export function Doctors() {
 
                     <div className="p-5 flex flex-col flex-1 min-h-100">
                       <div className="mb-4">
-                        <h3 className="text-xl font-bold text-foreground mb-2">
+                        <h3 className="text-xl font-bold text-fg mb-2">
                           {doctor.name}
                         </h3>
                         <span className="inline-block px-3 py-1 bg-primary/10 text-primary rounded-full text-sm font-medium">
                           {doctor.specialty}
                         </span>
                       </div>
-                      <p className="text-muted-foreground mb-4 line-clamp-3">
+                      <p className="text-fg-muted mb-4 line-clamp-3">
                         {doctor.description}
                       </p>
                       <div className="space-y-3 mb-6">
                         <div className="flex items-center space-x-3 text-sm rtl:space-x-reverse">
                           <GraduationCap className="w-5 h-5 text-primary shrink-0" />
-                          <span className="text-foreground">
+                          <span className="text-fg">
                             {doctor.education}
                           </span>
                         </div>
                         <div className="flex items-center space-x-3 text-sm rtl:space-x-reverse">
                           <Clock className="w-5 h-5 text-primary shrink-0" />
-                          <span className="text-foreground">
+                          <span className="text-fg">
                             {doctor.experience}
                           </span>
                         </div>
                         <div className="flex items-center space-x-3 text-sm rtl:space-x-reverse">
                           <MapPin className="w-5 h-5 text-primary shrink-0" />
-                          <span className="text-foreground">
+                          <span className="text-fg">
                             {doctor.location}
                           </span>
                         </div>
                         <div className="flex items-start space-x-3 text-sm rtl:space-x-reverse">
                           <CalendarDays className="w-5 h-5 text-primary shrink-0 mt-0.5" />
-                          <span className="text-foreground">
+                          <span className="text-fg">
                             {t("doctors:card.available")}: {doctor.availability}
                           </span>
                         </div>

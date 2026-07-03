@@ -101,7 +101,7 @@ function AppointmentCard({
                 <div className="flex-1 min-w-0">
                     <div className="flex items-start justify-between gap-2 mb-1">
                         <div>
-                            <h4 className="font-semibold text-foreground leading-tight">{appointment.doctor.name}</h4>
+                            <h4 className="font-semibold text-fg leading-tight">{appointment.doctor.name}</h4>
                             <p className="text-sm text-primary">{appointment.doctor.specialty}</p>
                         </div>
                         <span className={`flex items-center gap-1 px-2.5 py-1 rounded-full text-xs font-medium shrink-0 ${statusStyle.bgColor} ${statusStyle.color}`}>
@@ -110,7 +110,7 @@ function AppointmentCard({
                         </span>
                     </div>
 
-                    <div className="flex flex-wrap items-center gap-x-4 gap-y-1 mt-2 text-sm text-muted-foreground">
+                    <div className="flex flex-wrap items-center gap-x-4 gap-y-1 mt-2 text-sm text-fg-muted">
                         <span className="flex items-center gap-1.5">
                             <Calendar className="w-3.5 h-3.5" />
                             {formatDate(appointment.date)}
@@ -126,7 +126,7 @@ function AppointmentCard({
                     </div>
 
                     {appointment.address && (
-                        <p className="flex items-start gap-1.5 mt-1.5 text-xs text-muted-foreground">
+                        <p className="flex items-start gap-1.5 mt-1.5 text-xs text-fg-muted">
                             <MapPin className="w-3.5 h-3.5 mt-0.5 shrink-0" />
                             <span className="truncate">{appointment.address}</span>
                         </p>
@@ -223,12 +223,12 @@ function EmptyState({ filterStatus }: { filterStatus: string }) {
             <div className="w-20 h-20 bg-primary/10 rounded-full flex items-center justify-center mb-5">
                 <Calendar className="w-9 h-9 text-primary" />
             </div>
-            <h3 className="text-xl font-bold text-foreground mb-2">
+            <h3 className="text-xl font-bold text-fg mb-2">
                 {filterStatus === "all"
                     ? t("patientAppointments:empty.titleAll")
                     : t("patientAppointments:empty.titleFiltered", { status: statusLabel })}
             </h3>
-            <p className="text-muted-foreground mb-8 max-w-sm">
+            <p className="text-fg-muted mb-8 max-w-sm">
                 {filterStatus === "all"
                     ? t("patientAppointments:empty.descriptionAll")
                     : t("patientAppointments:empty.descriptionFiltered", { status: statusLabel })}
@@ -387,11 +387,11 @@ export function MyAppointments() {
                         >
                             <div className="flex items-center gap-2 mb-2">
                                 <div className={`w-2 h-2 rounded-full ${card.dot}`} />
-                                <span className={`text-xs font-medium ${statusFilter === card.filter ? card.color : "text-muted-foreground"}`}>
+                                <span className={`text-xs font-medium ${statusFilter === card.filter ? card.color : "text-fg-muted"}`}>
                                     {t(`patientAppointments:summary.${card.key}`)}
                                 </span>
                             </div>
-                            <p className={`text-2xl font-bold ${statusFilter === card.filter ? card.color : "text-foreground"}`}>{card.count}</p>
+                            <p className={`text-2xl font-bold ${statusFilter === card.filter ? card.color : "text-fg"}`}>{card.count}</p>
                         </button>
                     ))}
                 </div>
@@ -400,7 +400,7 @@ export function MyAppointments() {
                 <div className="bg-white rounded-2xl border border-border p-4">
                     <div className="flex gap-3">
                         <div className="flex-1 relative">
-                            <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground rtl:left-auto rtl:right-3" />
+                            <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-fg-muted rtl:left-auto rtl:right-3" />
                             <input
                                 type="text"
                                 value={search}
@@ -411,7 +411,7 @@ export function MyAppointments() {
                         </div>
                         <button
                             onClick={() => setShowFilters(!showFilters)}
-                            className={`flex items-center gap-2 px-4 py-2.5 rounded-xl border text-sm font-medium transition-colors ${showFilters ? "bg-primary text-white border-primary" : "border-border text-foreground hover:bg-muted/50"}`}
+                            className={`flex items-center gap-2 px-4 py-2.5 rounded-xl border text-sm font-medium transition-colors ${showFilters ? "bg-primary text-white border-primary" : "border-border text-fg hover:bg-muted/50"}`}
                         >
                             <SlidersHorizontal className="w-4 h-4" />
                             <span className="hidden sm:inline">{t("patientAppointments:search.filtersButton")}</span>
@@ -425,12 +425,12 @@ export function MyAppointments() {
                         <div className="flex flex-wrap gap-3 mt-4 pt-4 border-t border-border">
                             {/* Status filter */}
                             <div className="flex flex-wrap gap-2">
-                                <span className="text-xs text-muted-foreground self-center font-medium">{t("patientAppointments:search.statusLabel")}</span>
+                                <span className="text-xs text-fg-muted self-center font-medium">{t("patientAppointments:search.statusLabel")}</span>
                                 {statusFilterOptions.map((s) => (
                                     <button
                                         key={s}
                                         onClick={() => setStatusFilter(s)}
-                                        className={`px-3 py-1 rounded-lg text-xs font-medium transition-colors ${statusFilter === s ? "bg-primary text-white" : "bg-muted/50 text-muted-foreground hover:bg-muted"}`}
+                                        className={`px-3 py-1 rounded-lg text-xs font-medium transition-colors ${statusFilter === s ? "bg-primary text-white" : "bg-muted/50 text-fg-muted hover:bg-muted"}`}
                                     >
                                         {s === "all" ? t("patientAppointments:search.allStatus") : t(`patientAppointments:status.${s}`)}
                                     </button>
@@ -441,12 +441,12 @@ export function MyAppointments() {
 
                             {/* Type filter */}
                             <div className="flex flex-wrap gap-2">
-                                <span className="text-xs text-muted-foreground self-center font-medium">{t("patientAppointments:search.typeLabel")}</span>
+                                <span className="text-xs text-fg-muted self-center font-medium">{t("patientAppointments:search.typeLabel")}</span>
                                 {typeFilterOptions.map((ty) => (
                                     <button
                                         key={ty}
                                         onClick={() => setTypeFilter(ty)}
-                                        className={`flex items-center gap-1.5 px-3 py-1 rounded-lg text-xs font-medium transition-colors ${typeFilter === ty ? "bg-primary text-white" : "bg-muted/50 text-muted-foreground hover:bg-muted"}`}
+                                        className={`flex items-center gap-1.5 px-3 py-1 rounded-lg text-xs font-medium transition-colors ${typeFilter === ty ? "bg-primary text-white" : "bg-muted/50 text-fg-muted hover:bg-muted"}`}
                                     >
                                         {ty === "clinic" && <Stethoscope className="w-3 h-3" />}
                                         {ty === "home" && <HomeIcon className="w-3 h-3" />}
@@ -474,11 +474,11 @@ export function MyAppointments() {
 
                 {/* Results count */}
                 <div className="flex items-center justify-between">
-                    <p className="text-sm text-muted-foreground">
+                    <p className="text-sm text-fg-muted">
                         <Trans
                             i18nKey="patientAppointments:results.showing"
                             values={{ filtered: filtered.length, total: appointments.length }}
-                            components={{ bold: <span className="font-medium text-foreground" /> }}
+                            components={{ bold: <span className="font-medium text-fg" /> }}
                         />
                     </p>
                     {(search || statusFilter !== "all" || typeFilter !== "all") && (
@@ -494,7 +494,7 @@ export function MyAppointments() {
 
                 {/* Appointments list */}
                 {loading ? (
-                    <div className="py-20 text-center text-muted-foreground">{t("patientAppointments:loading")}</div>
+                    <div className="py-20 text-center text-fg-muted">{t("patientAppointments:loading")}</div>
                 ) : filtered.length === 0 ? (
                     <EmptyState filterStatus={statusFilter} />
                 ) : (
@@ -520,8 +520,8 @@ export function MyAppointments() {
                             <CalendarPlus className="w-6 h-6 text-primary" />
                         </div>
                         <div className="flex-1">
-                            <h4 className="font-semibold text-foreground">{t("patientAppointments:cta.title")}</h4>
-                            <p className="text-sm text-muted-foreground">{t("patientAppointments:cta.description")}</p>
+                            <h4 className="font-semibold text-fg">{t("patientAppointments:cta.title")}</h4>
+                            <p className="text-sm text-fg-muted">{t("patientAppointments:cta.description")}</p>
                         </div>
                         <button
                             onClick={() => setIsAppointmentModalOpen(true)}

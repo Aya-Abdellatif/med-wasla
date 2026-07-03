@@ -271,7 +271,7 @@ export function BookingModal({ isOpen, onClose, provider, serviceType }: Booking
       <div className="bg-white rounded-2xl shadow-2xl max-w-2xl w-full max-h-[90vh] overflow-y-auto">
         <div className="sticky top-0 z-10 bg-white border-b border-border px-6 py-4 flex items-center justify-between">
           <div>
-            <h2 className="text-2xl font-bold text-foreground">
+            <h2 className="text-2xl font-bold text-fg">
               {isNurseBooking ? t("modal.requestHomeService") : t("modal.bookAppointment")}
             </h2>
           </div>
@@ -287,15 +287,15 @@ export function BookingModal({ isOpen, onClose, provider, serviceType }: Booking
               <p className="text-amber-700">{t("modal.openSchedulingDesc")}</p>
             </div>
           ) : (
-            <div className="rounded-lg border border-primary/20 bg-primary/5 p-4 text-sm text-foreground">
+            <div className="rounded-lg border border-primary/20 bg-primary/5 p-4 text-sm text-fg">
               <p className="font-medium mb-1">{t("modal.availability")}</p>
-              <p className="text-muted-foreground">{workingDaysText}</p>
+              <p className="text-fg-muted">{workingDaysText}</p>
             </div>
           )}
 
           {doctorOffersHome && (
             <div>
-              <p className="block mb-2 font-medium text-foreground">{t("modal.visitType")} *</p>
+              <p className="block mb-2 font-medium text-fg">{t("modal.visitType")} *</p>
               <div className="grid grid-cols-2 gap-3">
                 <button
                   type="button"
@@ -327,11 +327,11 @@ export function BookingModal({ isOpen, onClose, provider, serviceType }: Booking
 
           {requiresAddress && (
             <div>
-              <label htmlFor="address" className="block mb-2 font-medium text-foreground">
+              <label htmlFor="address" className="block mb-2 font-medium text-fg">
                 {t("modal.address")} *
               </label>
               <div className="relative">
-                <MapPin className="absolute start-4 top-4 w-5 h-5 text-muted-foreground" />
+                <MapPin className="absolute start-4 top-4 w-5 h-5 text-fg-muted" />
                 <textarea
                   id="address"
                   value={formData.address}
@@ -356,12 +356,12 @@ export function BookingModal({ isOpen, onClose, provider, serviceType }: Booking
 
           <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
             <div>
-              <label htmlFor="date" className="block mb-2 font-medium text-foreground">
+              <label htmlFor="date" className="block mb-2 font-medium text-fg">
                 {t("modal.date")} *
               </label>
               <div className="relative">
                 <Calendar
-                  className="absolute start-4 top-1/2 -translate-y-1/2 w-5 h-5 text-muted-foreground cursor-pointer"
+                  className="absolute start-4 top-1/2 -translate-y-1/2 w-5 h-5 text-fg-muted cursor-pointer"
                   onClick={() => dateInputRef.current?.showPicker()}
                 />
                 <input
@@ -387,12 +387,12 @@ export function BookingModal({ isOpen, onClose, provider, serviceType }: Booking
             </div>
 
             <div>
-              <label htmlFor="time" className="block mb-2 font-medium text-foreground">
+              <label htmlFor="time" className="block mb-2 font-medium text-fg">
                 {isHomeVisit ? t("modal.preferredTime") : t("modal.availableTime")} *
               </label>
               <div className="relative">
                 <Clock
-                  className={`absolute start-4 top-1/2 -translate-y-1/2 w-5 h-5 text-muted-foreground z-10 ${
+                  className={`absolute start-4 top-1/2 -translate-y-1/2 w-5 h-5 text-fg-muted z-10 ${
                     isHomeVisit ? "cursor-pointer" : ""
                   }`}
                   onClick={() => isHomeVisit && timeInputRef.current?.showPicker()}
@@ -441,7 +441,7 @@ export function BookingModal({ isOpen, onClose, provider, serviceType }: Booking
                 )}
               </div>
               {!isHomeVisit && workingHours && (
-                <p className="text-xs text-muted-foreground mt-2">
+                <p className="text-xs text-fg-muted mt-2">
                   {t("modal.workingHours", {
                     start: formatSlotLabel(workingHours.start),
                     end: formatSlotLabel(workingHours.end),
@@ -458,7 +458,7 @@ export function BookingModal({ isOpen, onClose, provider, serviceType }: Booking
           </div>
 
           <div>
-            <label htmlFor="reason" className="block mb-2 font-medium text-foreground">
+            <label htmlFor="reason" className="block mb-2 font-medium text-fg">
               {t("modal.reason")}
             </label>
             <textarea
@@ -483,24 +483,24 @@ export function BookingModal({ isOpen, onClose, provider, serviceType }: Booking
 
           {provider && (
             <div className="bg-muted/50 rounded-lg p-4 border border-border">
-              <h3 className="font-semibold text-foreground mb-2">
+              <h3 className="font-semibold text-fg mb-2">
                 {t("modal.providerDetails")}
               </h3>
               <div className="space-y-1 text-sm">
-                <p className="text-foreground">
+                <p className="text-fg">
                   <span className="font-medium">{t("modal.name")}</span> {provider.name}
                 </p>
-                <p className="text-foreground">
+                <p className="text-fg">
                   <span className="font-medium">{t("modal.specialty")}</span>{" "}
                   {provider.specialty || provider.certification}
                 </p>
                 {provider.location && (
-                  <p className="text-foreground">
+                  <p className="text-fg">
                     <span className="font-medium">{t("modal.location")}</span> {provider.location}
                   </p>
                 )}
                 {doctorOffersHome && (
-                  <p className="text-foreground">
+                  <p className="text-fg">
                     <span className="font-medium">{t("modal.homeVisitsAvailable")}</span>{" "}
                     {t("modal.available")}
                   </p>

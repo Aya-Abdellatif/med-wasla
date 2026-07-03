@@ -54,7 +54,7 @@ function NurseProfileView({ id }: { id: string }) {
   const [error, setError] = useState<string | null>(null);
   const REVIEWS_PER_PAGE = 3;
   const pageContainer = "max-w-7xl mx-auto px-8 sm:px-14 lg:px-24 xl:px-32 2xl:px-40";
-  const sectionHeading = "text-2xl md:text-3xl font-bold text-foreground tracking-tight";
+  const sectionHeading = "text-2xl md:text-3xl font-bold text-fg tracking-tight";
 
   useEffect(() => {
     let cancelled = false;
@@ -106,7 +106,7 @@ function NurseProfileView({ id }: { id: string }) {
           <div className="mx-auto mb-6 flex h-20 w-20 items-center justify-center rounded-full bg-primary/10 text-primary">
             <AlertCircle className="h-10 w-10" />
           </div>
-          <h2 className="text-3xl font-bold text-foreground mb-3">{t("profile.nurseNotFound")}</h2>
+          <h2 className="text-3xl font-bold text-fg mb-3">{t("profile.nurseNotFound")}</h2>
           <p className="text-base leading-7 text-fg-muted mb-8">
             {error ?? t("profile.nurseNotFoundDesc")}
           </p>
@@ -133,7 +133,7 @@ function NurseProfileView({ id }: { id: string }) {
                 <img src={nurse.image} alt={nurse.name} className="w-full aspect-square object-cover" />
                 <div className="absolute top-4 end-4 bg-white px-3 py-1.5 rounded-full shadow-lg flex items-center gap-1">
                   <Star className="w-4 h-4 text-yellow-400 fill-current" />
-                  <span className="font-semibold text-foreground">{reviewStats.averageRating || nurse.rating}</span>
+                  <span className="font-semibold text-fg">{reviewStats.averageRating || nurse.rating}</span>
                   <span className="text-sm text-fg-muted">({reviewStats.totalReviews || nurse.reviews})</span>
                 </div>
               </div>
@@ -142,7 +142,7 @@ function NurseProfileView({ id }: { id: string }) {
             <div className="md:col-span-4">
               <div className="flex items-start justify-between mb-4 gap-4 flex-wrap">
                 <div>
-                  <h1 className="text-4xl font-bold text-foreground mb-2">{nurse.name}</h1>
+                  <h1 className="text-4xl font-bold text-fg mb-2">{nurse.name}</h1>
                   <span className="inline-flex items-center gap-2 px-4 py-2 bg-primary/10 text-primary rounded-full font-medium">
                     <Award className="w-4 h-4" />
                     <span>{nurse.specialty}</span>
@@ -166,14 +166,14 @@ function NurseProfileView({ id }: { id: string }) {
                   <Award className="w-5 h-5 text-primary shrink-0" />
                   <div>
                     <p className="text-sm text-fg-muted">{t("profile.fields.experience")}</p>
-                    <p className="font-semibold text-foreground">{nurse.experience}</p>
+                    <p className="font-semibold text-fg">{nurse.experience}</p>
                   </div>
                 </div>
                 <div className="row-span-2 flex items-start gap-3 p-4 bg-muted/50 rounded-lg">
                   <MapPin className="w-5 h-5 text-primary shrink-0" />
                   <div>
                     <p className="text-sm text-fg-muted">{t("profile.fields.serviceAreas")}</p>
-                    <ul className="mt-3 space-y-2 text-foreground ps-4">
+                    <ul className="mt-3 space-y-2 text-fg ps-4">
                       {nurse.serviceAreas.map((area) => (
                         <li key={area} className="list-disc ps-4 text-sm font-semibold marker:text-primary">
                           {area}
@@ -186,21 +186,21 @@ function NurseProfileView({ id }: { id: string }) {
                   <DollarSign className="w-5 h-5 text-primary shrink-0" />
                   <div>
                     <p className="text-sm text-fg-muted">{t("profile.fields.homeVisitFee")}</p>
-                    <p className="font-semibold text-foreground">{nurse.consultationFee} {t("common:currency.egp")}</p>
+                    <p className="font-semibold text-fg">{nurse.consultationFee} {t("common:currency.egp")}</p>
                   </div>
                 </div>
                 <div className="flex items-center gap-3 p-4 bg-muted/50 rounded-lg">
                   <GraduationCap className="w-5 h-5 text-primary shrink-0" />
                   <div>
                     <p className="text-sm text-fg-muted">{t("profile.fields.education")}</p>
-                    <p className="font-semibold text-foreground">{nurse.education}</p>
+                    <p className="font-semibold text-fg">{nurse.education}</p>
                   </div>
                 </div>
                 <div className="flex items-center gap-3 p-4 bg-muted/50 rounded-lg">
                   <Clock className="w-5 h-5 text-primary shrink-0" />
                   <div>
                     <p className="text-sm text-fg-muted">{t("profile.fields.availability")}</p>
-                    <p className="font-semibold text-foreground">{nurse.availability}</p>
+                    <p className="font-semibold text-fg">{nurse.availability}</p>
                   </div>
                 </div>
               </div>
@@ -228,7 +228,7 @@ function NurseProfileView({ id }: { id: string }) {
                     <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-full bg-primary/10">
                       <Heart className="w-5 h-5 text-primary" />
                     </div>
-                    <span className="font-medium text-foreground">{item}</span>
+                    <span className="font-medium text-fg">{item}</span>
                   </div>
                 ))}
               </div>

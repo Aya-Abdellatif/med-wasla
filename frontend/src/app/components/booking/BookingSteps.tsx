@@ -28,8 +28,8 @@ export function BookingTypeModal({ isOpen, onClose }: BookingTypeModalProps) {
         {/* Header */}
         <div className="border-b border-border px-6 py-4 flex items-center justify-between">
           <div>
-            <h2 className="text-2xl font-bold text-foreground">{t("typeModal.title")}</h2>
-            <p className="text-sm text-muted-foreground mt-1">{t("typeModal.note")}</p>
+            <h2 className="text-2xl font-bold text-fg">{t("typeModal.title")}</h2>
+            <p className="text-sm text-fg-muted mt-1">{t("typeModal.note")}</p>
           </div>
           <button
             onClick={onClose}
@@ -52,13 +52,13 @@ export function BookingTypeModal({ isOpen, onClose }: BookingTypeModalProps) {
                 <div className="w-16 h-16 bg-linear-to-br from-teal-500 to-blue-600 rounded-xl flex items-center justify-center mb-4">
                   <Stethoscope className="w-8 h-8 text-white" />
                 </div>
-                <h3 className="text-xl font-bold text-foreground mb-2">
+                <h3 className="text-xl font-bold text-fg mb-2">
                   {t("typeModal.doctor.title")}
                 </h3>
-                <p className="text-muted-foreground mb-4">
+                <p className="text-fg-muted mb-4">
                   {t("typeModal.doctor.description")}
                 </p>
-                <ul className="space-y-2 text-sm text-muted-foreground">
+                <ul className="space-y-2 text-sm text-fg-muted">
                   <li className="flex items-center gap-2">
                     <div className="w-1.5 h-1.5 rounded-full bg-primary" />
                     <span>{t("typeModal.doctor.f1")}</span>
@@ -89,13 +89,13 @@ export function BookingTypeModal({ isOpen, onClose }: BookingTypeModalProps) {
                 <div className="w-16 h-16 bg-linear-to-br from-pink-500 to-pink-600 rounded-xl flex items-center justify-center mb-4">
                   <Home className="w-8 h-8 text-white" />
                 </div>
-                <h3 className="text-xl font-bold text-foreground mb-2">
+                <h3 className="text-xl font-bold text-fg mb-2">
                   {t("typeModal.nurse.title")}
                 </h3>
-                <p className="text-muted-foreground mb-4">
+                <p className="text-fg-muted mb-4">
                   {t("typeModal.nurse.description")}
                 </p>
-                <ul className="space-y-2 text-sm text-muted-foreground">
+                <ul className="space-y-2 text-sm text-fg-muted">
                   <li className="flex items-center gap-2">
                     <div className="w-1.5 h-1.5 rounded-full bg-primary" />
                     <span>{t("typeModal.nurse.f1")}</span>

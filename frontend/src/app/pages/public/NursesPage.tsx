@@ -183,7 +183,7 @@ export function Nurses() {
                   }}
                   className={`px-6 py-2.5 rounded-lg transition-all ${selectedExpertise === area
                       ? "bg-primary text-white shadow-md"
-                      : "bg-muted text-foreground hover:bg-muted/80"
+                      : "bg-muted text-fg hover:bg-muted/80"
                     }`}
                 >
                   {label}
@@ -198,13 +198,13 @@ export function Nurses() {
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
           {loading ? (
             <div className="text-center py-16">
-              <p className="text-lg text-muted-foreground">
+              <p className="text-lg text-fg-muted">
                 {t("nurses:state.loading")}
               </p>
             </div>
           ) : nurses.length === 0 ? (
             <div className="text-center py-16">
-              <p className="text-lg text-muted-foreground">
+              <p className="text-lg text-fg-muted">
                 {t("nurses:state.empty")}
               </p>
             </div>
@@ -224,10 +224,10 @@ export function Nurses() {
                       />
                       <div className="absolute top-4 right-4 bg-white px-3 py-1.5 rounded-full shadow-lg flex items-center space-x-1 rtl:right-auto rtl:left-4 rtl:space-x-reverse">
                         <Star className="w-4 h-4 text-yellow-400 fill-current" />
-                        <span className="font-semibold text-foreground">
+                        <span className="font-semibold text-fg">
                           {(nurse.rating ?? 0).toFixed(1)}
                         </span>
-                        <span className="text-sm text-muted-foreground">
+                        <span className="text-sm text-fg-muted">
                           ({nurse.reviews})
                         </span>
                       </div>
@@ -235,7 +235,7 @@ export function Nurses() {
 
                     <div className="p-5 flex flex-col flex-1 min-h-87.5">
                       <div className="mb-4">
-                        <h3 className="text-xl font-bold text-foreground mb-2">
+                        <h3 className="text-xl font-bold text-fg mb-2">
                           {t("nurses:card.namePrefix", { name: nurse.name })}
                         </h3>
                         <span className="inline-block px-3 py-1 bg-primary/10 text-primary rounded-full text-sm font-medium">
@@ -243,7 +243,7 @@ export function Nurses() {
                         </span>
                       </div>
 
-                      <p className="text-muted-foreground mb-4 line-clamp-3">
+                      <p className="text-fg-muted mb-4 line-clamp-3">
                         {nurse.description}
                       </p>
 

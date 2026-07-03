@@ -40,13 +40,13 @@ export function ReviewModal({
           <div className="w-16 h-16 bg-emerald-100 rounded-full flex items-center justify-center mx-auto mb-4">
             <CheckCircle2 className="w-8 h-8 text-emerald-600" />
           </div>
-          <h3 className="text-xl font-bold text-foreground mb-2">Review Submitted!</h3>
+          <h3 className="text-xl font-bold text-fg mb-2">Review Submitted!</h3>
           <div className="flex justify-center gap-1 mb-3">
             {[1,2,3,4,5].map((s) => (
               <Star key={s} className={`w-5 h-5 ${s <= rating ? "fill-amber-400 text-amber-400" : "text-gray-200"}`} />
             ))}
           </div>
-          {comment && <p className="text-sm text-muted-foreground italic mb-5">"{comment}"</p>}
+          {comment && <p className="text-sm text-fg-muted italic mb-5">"{comment}"</p>}
           <button onClick={onClose} className="bg-primary text-white px-6 py-2.5 rounded-xl hover:bg-primary/90 transition-colors">Done</button>
         </div>
       </div>
@@ -57,7 +57,7 @@ export function ReviewModal({
     <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/50 p-4">
       <div className="bg-white rounded-2xl shadow-2xl p-6 max-w-md w-full">
         <div className="flex items-center justify-between mb-5">
-          <h3 className="text-lg font-bold text-foreground">Add Review</h3>
+          <h3 className="text-lg font-bold text-fg">Add Review</h3>
           <button onClick={onClose} className="w-8 h-8 flex items-center justify-center rounded-full hover:bg-muted transition-colors">
             <X className="w-4 h-4" />
           </button>
@@ -65,11 +65,11 @@ export function ReviewModal({
         <div className="flex items-center gap-3 p-3 bg-muted/30 rounded-xl mb-5">
           <ImageWithFallback src={appointment.doctor.photo} alt={appointment.doctor.name} className="w-12 h-12 rounded-full object-cover" />
           <div>
-            <p className="font-semibold text-foreground">{appointment.doctor.name}</p>
-            <p className="text-sm text-muted-foreground">{appointment.doctor.specialty}</p>
+            <p className="font-semibold text-fg">{appointment.doctor.name}</p>
+            <p className="text-sm text-fg-muted">{appointment.doctor.specialty}</p>
           </div>
         </div>
-        <p className="text-sm text-muted-foreground mb-2">Rate your experience</p>
+        <p className="text-sm text-fg-muted mb-2">Rate your experience</p>
         <div className="flex gap-1 mb-5">
           {[1, 2, 3, 4, 5].map((s) => (
             <button
