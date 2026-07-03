@@ -22,4 +22,7 @@ def get_user_context(user_query, user_id):
     if result["type"] == "reviews":
         return format_reviews(result["data"])
 
+    if result["type"] == "login_required":
+        return "The user is not logged in, so this information is not available. Tell them to log in to see this."
+
     return ""

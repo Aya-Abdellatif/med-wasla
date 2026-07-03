@@ -34,6 +34,12 @@ def handle_database_query(user_query: str, user_id: str):
     # -----------------------------
     if intent == "APPOINTMENTS":
 
+        if not user_id:
+            return {
+                "type": "login_required",
+                "data": None
+            }
+
         return {
             "type": "appointments",
             "data": get_patient_appointments(user_id)
@@ -55,6 +61,12 @@ def handle_database_query(user_query: str, user_id: str):
         }
 
     if intent == "REVIEWS":
+
+        if not user_id:
+            return {
+                "type": "login_required",
+                "data": None
+            }
 
         return {
             "type": "reviews",
