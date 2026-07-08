@@ -91,6 +91,30 @@ _AFFIRMATIVE_RE = re.compile(
     re.IGNORECASE,
 )
 
+# ANY offer-shaped question from the bot, regardless of which specific
+# verb it used. A small local model can invent endless offer phrasings
+# ("see more details", "send you", "notify you", "look that up for
+# you"...) and then hallucinate having fulfilled a completely fictional
+# one ("I've sent it to your inbox") when the user just says "yes".
+# Enumerating every verb is a losing battle, so any confirmed offer
+# that isn't one of the specific, known actions above still gets
+# intercepted here instead of reaching the LLM.
+#
+# Deliberately excludes bare "can i help" — "How can I help you today?"
+# is a generic greeting closer used throughout memory/chitchat.py, not
+# an offer to perform a specific action.
+_ANY_OFFER_RE = re.compile(
+    r"(would you like|do you want|shall i|can i help (you )?(with|by|find|send|update|notify|book|cancel|resched))",
+    re.IGNORECASE,
+)
+
+GENERIC_NO_ACTION_MESSAGE = (
+    "Just to be clear — I can only share information I already have. I "
+    "can't send messages, update your account, or perform any action on "
+    "your behalf. If there's a specific detail you'd like, just ask and "
+    "I'll answer directly."
+)
+
 
 def detect_offered_action(chat_id):
     """
@@ -129,6 +153,26 @@ def get_requested_action(user_query, chat_id):
         return offered
 
     return None
+
+
+def is_unrecognized_offer_confirmation(user_query, chat_id):
+    """
+    True if the bot's last message was ANY offer-shaped question, the
+    user gave a short affirmative reply, and the offer didn't match one
+    of the specific known actions (book/cancel/reschedule/password/
+    email/profile) — i.e. some other offer the model made up on its
+    own, which it cannot actually be trusted to follow through on.
+    """
+
+    last_bot_message = get_last_assistant_message(chat_id)
+
+    if not last_bot_message or not _ANY_OFFER_RE.search(last_bot_message):
+        return False
+
+    if not _AFFIRMATIVE_RE.match(user_query.strip()):
+        return False
+
+    return detect_offered_action(chat_id) is None
 
 
 def build_action_guard_message(action, logged_in):

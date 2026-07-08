@@ -10,7 +10,9 @@ from preprocessing.spell_checker import clean_query
 from preprocessing.sensitive_guard import is_sensitive_request, REFUSAL_MESSAGE
 from preprocessing.write_action_guard import (
     get_requested_action,
-    build_action_guard_message
+    build_action_guard_message,
+    is_unrecognized_offer_confirmation,
+    GENERIC_NO_ACTION_MESSAGE
 )
 
 from memory.memory import add_message, get_history
@@ -98,6 +100,22 @@ def predict(user_query, chat_id="default_session"):
         return {
             "answer": answer,
             "sources": ["Med-Wasla"],
+            "confidence": 1.0
+        }
+
+    # -------------------------
+    # any other made-up offer the LLM confirmed — e.g. "would you like
+    # to see more details?" -> "yes" -> model hallucinates having
+    # emailed/sent/notified something. Catch it even though we don't
+    # recognize the specific offer.
+    # -------------------------
+    if is_unrecognized_offer_confirmation(user_query, chat_id):
+
+        add_message(chat_id, "assistant", GENERIC_NO_ACTION_MESSAGE)
+
+        return {
+            "answer": GENERIC_NO_ACTION_MESSAGE,
+            "sources": [],
             "confidence": 1.0
         }
 
