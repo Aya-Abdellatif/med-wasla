@@ -324,7 +324,7 @@ def predict(user_query, chat_id="default_session"):
     # emailed/sent/notified something. Catch it even though we don't
     # recognize the specific offer.
     # -------------------------
-    if is_unrecognized_offer_confirmation(user_query, chat_id):
+    if is_unrecognized_offer_confirmation(processed_query, chat_id):
 
         add_message(chat_id, "assistant", GENERIC_NO_ACTION_MESSAGE)
 
