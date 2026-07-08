@@ -70,20 +70,17 @@ def format_specialists(specialists):
 
 def _format_slots(slots):
     """
-    Used by chatbot_engine (_build_info_answer / _handle_book_guidance)
-    for deterministic "available times" replies — list data the small
-    local LLM can't be trusted to enumerate completely.
-
-    One "- " bulleted line per day — matches the bullet style used
-    everywhere else in the pipeline, which the frontend already
-    highlights, and reads far better than a semicolon-separated run-on.
+    Used both for the compact SPECIALISTS listing context above and,
+    directly, by chatbot_engine._build_info_answer for the deterministic
+    "available times" reply (list data the small local LLM can't be
+    trusted to enumerate completely).
     """
 
     if not slots:
         return "No available time slots listed yet."
 
-    return "\n".join(
-        f"- {slot.get('day', '?')}: {slot.get('startTime', '?')}-{slot.get('endTime', '?')}"
+    return "; ".join(
+        f"{slot.get('day', '?')} {slot.get('startTime', '?')}-{slot.get('endTime', '?')}"
         for slot in slots
     )
 
