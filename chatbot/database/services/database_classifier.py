@@ -75,7 +75,14 @@ def classify_database_query(question: str):
     if any(word in question for word in appointment_keywords):
         return "APPOINTMENTS"
 
-    if any(word in question for word in specialist_keywords):
+    # A recognized specialization ("cardiology", "dermatolog...") on its
+    # own is a strong enough signal this is a specialist-directory
+    # question, even if the message doesn't say "doctor"/"specialist"
+    # (e.g. "the cardiology with the highest rate").
+    if (
+        any(word in question for word in specialist_keywords)
+        or extract_specialization(question) is not None
+    ):
         return "SPECIALISTS"
 
     if any(word in question for word in review_keywords):
