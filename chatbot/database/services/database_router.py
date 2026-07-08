@@ -17,7 +17,8 @@ from database.collections.appointment_queries import (
 from database.collections.specialist_queries import (
     get_specialists_by_specialization,
     get_approved_specialists,
-    count_approved_specialists
+    count_approved_specialists,
+    get_patient_specialists
 )
 
 from database.collections.review_queries import (
@@ -43,6 +44,19 @@ def handle_database_query(user_query: str, user_id: str):
         return {
             "type": "appointments",
             "data": get_patient_appointments(user_id)
+        }
+
+    if intent == "MY_SPECIALIST":
+
+        if not user_id:
+            return {
+                "type": "login_required",
+                "data": None
+            }
+
+        return {
+            "type": "specialists",
+            "data": get_patient_specialists(user_id)
         }
 
     if intent == "SPECIALISTS":

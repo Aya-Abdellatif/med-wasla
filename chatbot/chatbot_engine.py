@@ -7,13 +7,18 @@ from core.classifier import classify_question
 
 from preprocessing.gibberish import is_gibberish
 from preprocessing.spell_checker import clean_query
+from preprocessing.sensitive_guard import is_sensitive_request, REFUSAL_MESSAGE
 
 from memory.memory import add_message, get_history
 from memory.chitchat import get_chitchat_response
 from memory.session import get_user
 
 from core.retrieval import retrieve_documents
-from core.prompt_builder import build_combined_prompt, build_chitchat_prompt
+from core.prompt_builder import (
+    build_combined_prompt,
+    build_chitchat_prompt,
+    build_database_prompt
+)
 from core.ollama_client import generate_response
 
 from database.services.chatbot_service import get_user_context
@@ -57,6 +62,19 @@ def predict(user_query, chat_id="default_session"):
     # save user message
     # -------------------------
     add_message(chat_id, "user", user_query)
+
+    # -------------------------
+    # sensitive info guard — refuse before touching the database at all
+    # -------------------------
+    if is_sensitive_request(user_query):
+
+        add_message(chat_id, "assistant", REFUSAL_MESSAGE)
+
+        return {
+            "answer": REFUSAL_MESSAGE,
+            "sources": [],
+            "confidence": 1.0
+        }
 
     # -------------------------
     # routing
@@ -141,8 +159,7 @@ def predict(user_query, chat_id="default_session"):
 
         history = get_history(chat_id)
 
-        prompt = build_combined_prompt(
-            context_docs=[],
+        prompt = build_database_prompt(
             user_query=user_query,
             history_buffer=history,
             user_context=user_context

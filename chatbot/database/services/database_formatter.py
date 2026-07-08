@@ -32,6 +32,8 @@ def format_appointments(appointments):
 
         text += (
             f"{i}. Appointment\n"
+            f"- Doctor: {appt.get('specialistName') or 'Unknown'}\n"
+            f"- Specialization: {appt.get('specialization', 'N/A')}\n"
             f"- Type: {appt.get('type', 'unknown')}\n"
             f"- Status: {appt.get('status', 'unknown')}\n"
             f"- Date: {_safe_date(appt.get('date'))}\n"
@@ -81,6 +83,7 @@ def format_reviews(reviews):
 
         text += (
             f"{i}. Review\n"
+            f"- Doctor: {r.get('specialistName') or 'Unknown'}\n"
             f"- Rating: {r.get('rating', 0)}/5\n"
             f"- Comment: {r.get('comment', 'No comment')}\n\n"
         )
