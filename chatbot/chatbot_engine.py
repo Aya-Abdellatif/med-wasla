@@ -53,8 +53,15 @@ from config import SIMILARITY_THRESHOLD, ENABLE_DATABASE
 # and format it correctly every time — guarantees it always starts
 # with "- " (so the frontend highlights it like every other follow-up
 # question) and is never repeated once fulfilled.
+#
+# NOTE: deliberately avoid the words "profile"/"phone number"/
+# "address"/"photo" here — those are the exact trigger words
+# write_action_guard._OFFERED_ACTION_PATTERNS["profile"] looks for in
+# WaslaBot's own last message, so a "more details about X's profile?"
+# offer would make the guard mistake the user's next "yes" for
+# confirming a profile *update* instead of an info lookup.
 _OFFER_TEMPLATES = {
-    "more_details": "Would you like more details about {name}'s profile?",
+    "more_details": "Would you like more details about {name}?",
     "available_times": "Would you like to know {name}'s available appointment times?",
     "book": "Would you like the steps to book an appointment with {name}?",
 }
