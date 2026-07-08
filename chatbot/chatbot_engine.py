@@ -130,7 +130,7 @@ def _build_info_answer(offer_type, doc):
         if not slots:
             return f"{name} doesn't have any available appointment times listed yet."
 
-        return f"{name}'s available appointment times: {_format_slots(slots)}."
+        return f"{name}'s available appointment times:\n{_format_slots(slots)}"
 
     rating = doc.get("rating", 0)
     fee = doc.get("consultationFee", "N/A")
@@ -319,7 +319,7 @@ def _handle_book_guidance(user_query, chat_id):
         mark_offer_fulfilled(chat_id, name, "book")
 
         slots = mentioned.get("availableSlots") or []
-        slot_text = f" Available times: {_format_slots(slots)}." if slots else ""
+        slot_text = f"\n\nAvailable times:\n{_format_slots(slots)}" if slots else ""
 
         # The times were just given inline above — don't offer them
         # again as a separate next step.
