@@ -13,7 +13,7 @@ from memory.chitchat import get_chitchat_response
 from memory.session import get_user
 
 from core.retrieval import retrieve_documents
-from core.prompt_builder import build_combined_prompt
+from core.prompt_builder import build_combined_prompt, build_chitchat_prompt
 from core.ollama_client import generate_response
 
 from database.services.chatbot_service import get_user_context
@@ -68,7 +68,7 @@ def predict(user_query, chat_id="default_session"):
     print(f"Question Type: {question_type}")
 
     # -------------------------
-    # chitchat
+    # chitchat (predefined exact-match responses)
     # -------------------------
     chitchat_answer = get_chitchat_response(processed_query)
 
@@ -80,6 +80,44 @@ def predict(user_query, chat_id="default_session"):
             "answer": chitchat_answer,
             "sources": [],
             "confidence": 1.0
+        }
+
+    # -------------------------
+    # chitchat (classified as CHITCHAT but no exact-match phrase)
+    # -------------------------
+    if question_type == "CHITCHAT":
+
+        history = get_history(chat_id)
+
+        prompt = build_chitchat_prompt(processed_query, history)
+
+        try:
+            answer = generate_response(prompt)
+        except Exception as e:
+            print("Chitchat Error:", e)
+            answer = "Hello! How can I help you today?"
+
+        add_message(chat_id, "assistant", answer)
+
+        return {
+            "answer": answer,
+            "sources": [],
+            "confidence": 1.0
+        }
+
+    # -------------------------
+    # general / off-topic
+    # -------------------------
+    if question_type == "GENERAL":
+
+        answer = "It looks like your question is not related to Med-Wasla or health."
+
+        add_message(chat_id, "assistant", answer)
+
+        return {
+            "answer": answer,
+            "sources": [],
+            "confidence": 0.0
         }
 
     # =========================
