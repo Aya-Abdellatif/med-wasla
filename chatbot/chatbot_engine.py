@@ -10,6 +10,7 @@ from preprocessing.spell_checker import clean_query
 from preprocessing.sensitive_guard import is_sensitive_request, REFUSAL_MESSAGE
 from preprocessing.write_action_guard import (
     get_requested_action,
+    get_requested_info,
     build_action_guard_message,
     is_unrecognized_offer_confirmation,
     GENERIC_NO_ACTION_MESSAGE
@@ -17,7 +18,7 @@ from preprocessing.write_action_guard import (
 
 from memory.memory import add_message, get_history
 from memory.chitchat import get_chitchat_response
-from memory.session import get_user
+from memory.session import get_user, set_last_specialist_name, get_last_specialist_name
 
 from core.retrieval import retrieve_documents
 from core.prompt_builder import (
@@ -28,8 +29,89 @@ from core.prompt_builder import (
 from core.ollama_client import generate_response
 
 from database.services.chatbot_service import get_user_context
+from database.services.database_classifier import extract_specialization
+from database.services.database_formatter import format_specialist_detail, _safe_date
+from database.collections.specialist_queries import (
+    get_specialist_by_name,
+    get_specialists_by_specialization
+)
+from database.collections.appointment_queries import get_patient_upcoming_appointments
 
 from config import SIMILARITY_THRESHOLD, ENABLE_DATABASE
+
+
+def _handle_book_guidance(user_query, chat_id):
+    """
+    "Book an appointment" is never a dead end: if the user hasn't named
+    a specialty yet, ask for it; once we know it, show the top-rated
+    matches with real data and point at the actual Book Appointment
+    button, instead of an immediate "I can't do that".
+    """
+
+    specialization = (
+        extract_specialization(user_query)
+        or extract_specialization(get_history(chat_id))
+    )
+
+    if not specialization:
+        return (
+            "I can't book it myself, but I can help you find the right "
+            "specialist first. Which specialty are you looking for (e.g. "
+            "cardiology, dermatology, pediatrics)?"
+        )
+
+    matches = get_specialists_by_specialization(specialization)
+
+    if not matches:
+        return f"I couldn't find any approved {specialization} specialists right now."
+
+    top = matches[:3]
+    top_name = top[0].get("name", "the top specialist")
+    set_last_specialist_name(chat_id, top_name)
+
+    lines = "\n".join(
+        f"- **{doc.get('name', 'Unknown')}** — rating {doc.get('rating', 0)}, "
+        f"fee {doc.get('consultationFee', 'N/A')}"
+        for doc in top
+    )
+
+    return (
+        f"Here are the top-rated {specialization} specialists:\n{lines}\n\n"
+        "Once you've picked one, open their profile and use the **Book "
+        "Appointment** button to choose an available date and time.\n\n"
+        f"- Would you like to know {top_name}'s available appointment times?"
+    )
+
+
+def _handle_existing_appointment_guidance(action, chat_id):
+    """
+    Cancel/reschedule are about an appointment the user already has —
+    show them what's upcoming first so they know which one, then the
+    real steps, instead of a bare "I can't do that".
+    """
+
+    user_id = get_user(chat_id)
+
+    if not user_id:
+        return build_action_guard_message(action, logged_in=False)
+
+    upcoming = get_patient_upcoming_appointments(user_id)
+
+    if not upcoming:
+        verb = "cancel" if action == "cancel" else "reschedule"
+        return f"You don't have any upcoming appointments to {verb}."
+
+    lines = "\n".join(
+        f"- **{appt.get('specialistName') or 'Unknown'}** "
+        f"({appt.get('specialization', 'N/A')}) — {_safe_date(appt.get('date'))}, "
+        f"status {appt.get('status', 'unknown')}"
+        for appt in upcoming
+    )
+
+    return (
+        f"Here are your upcoming appointments:\n{lines}\n\n"
+        + build_action_guard_message(action, logged_in=True)
+    )
 
 
 def predict(user_query, chat_id="default_session"):
@@ -89,6 +171,30 @@ def predict(user_query, chat_id="default_session"):
     # -------------------------
     requested_action = get_requested_action(user_query, chat_id)
 
+    if requested_action == "book":
+
+        answer = _handle_book_guidance(user_query, chat_id)
+
+        add_message(chat_id, "assistant", answer)
+
+        return {
+            "answer": answer,
+            "sources": ["MongoDB"],
+            "confidence": 1.0
+        }
+
+    if requested_action in ("cancel", "reschedule"):
+
+        answer = _handle_existing_appointment_guidance(requested_action, chat_id)
+
+        add_message(chat_id, "assistant", answer)
+
+        return {
+            "answer": answer,
+            "sources": ["MongoDB"],
+            "confidence": 1.0
+        }
+
     if requested_action:
 
         user_id = get_user(chat_id)
@@ -100,6 +206,46 @@ def predict(user_query, chat_id="default_session"):
         return {
             "answer": answer,
             "sources": ["Med-Wasla"],
+            "confidence": 1.0
+        }
+
+    # -------------------------
+    # the user confirmed a "more details" / "available times" offer
+    # WaslaBot made about a specialist it already named — unlike the
+    # write actions above, this IS something we can actually fetch.
+    # -------------------------
+    requested_info = get_requested_info(user_query, chat_id)
+
+    if requested_info:
+
+        specialist_name = get_last_specialist_name(chat_id)
+        doc = get_specialist_by_name(specialist_name) if specialist_name else None
+
+        if not doc:
+            answer = (
+                "I don't have a specific specialist in mind anymore — "
+                "which doctor did you mean?"
+            )
+        else:
+            history = get_history(chat_id)
+
+            prompt = build_database_prompt(
+                user_query=user_query,
+                history_buffer=history,
+                user_context=format_specialist_detail(doc)
+            )
+
+            try:
+                answer = generate_response(prompt)
+            except Exception as e:
+                print("Info Offer Error:", e)
+                answer = "Sorry, I couldn't retrieve that information right now."
+
+        add_message(chat_id, "assistant", answer)
+
+        return {
+            "answer": answer,
+            "sources": ["MongoDB"],
             "confidence": 1.0
         }
 
@@ -191,7 +337,7 @@ def predict(user_query, chat_id="default_session"):
         user_id = get_user(chat_id)
 
         try:
-            user_context = get_user_context(processed_query, user_id)
+            user_context = get_user_context(processed_query, user_id, chat_id)
         except Exception as e:
             print("Database Error:", e)
 

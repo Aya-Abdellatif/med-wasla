@@ -68,6 +68,39 @@ def format_specialists(specialists):
     return text
 
 
+def _format_slots(slots):
+
+    if not slots:
+        return "No available time slots listed yet."
+
+    return "; ".join(
+        f"{slot.get('day', '?')} {slot.get('startTime', '?')}-{slot.get('endTime', '?')}"
+        for slot in slots
+    )
+
+
+def format_specialist_detail(doc):
+    """
+    Full detail for a single specialist — used when the user asks for
+    "more details" or "available times" about someone WaslaBot already
+    named, as opposed to the compact list format above.
+    """
+
+    if not doc:
+        return "No further details are available for this specialist."
+
+    return (
+        "SPECIALIST DETAILS:\n\n"
+        f"- Name: {doc.get('name', 'Unknown')}\n"
+        f"- Type: {doc.get('specialistType', 'Unknown')}\n"
+        f"- Specialization: {doc.get('specialization', 'N/A')}\n"
+        f"- Rating: {doc.get('rating', 0)}\n"
+        f"- Fee: {doc.get('consultationFee', 'N/A')}\n"
+        f"- Bio: {doc.get('bio') or 'N/A'}\n"
+        f"- Available appointment times: {_format_slots(doc.get('availableSlots'))}\n"
+    )
+
+
 # --------------------------------------------------
 # REVIEWS
 # --------------------------------------------------

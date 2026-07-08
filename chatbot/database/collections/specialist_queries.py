@@ -4,6 +4,8 @@ specialist_queries.py
 MongoDB queries related to medical specialists.
 """
 
+import re
+
 from bson import ObjectId
 
 from database.connection import get_database
@@ -56,6 +58,25 @@ def get_specialist_by_user_id(user_id):
         specialists.aggregate([
             {"$match": {"userId": ObjectId(user_id)}},
             *_ATTACH_NAME,
+        ])
+    )
+    return results[0] if results else None
+
+
+def get_specialist_by_name(name):
+    """
+    Case-insensitive exact match on the specialist's display name — used
+    to re-fetch full detail for a specialist WaslaBot already mentioned
+    by name earlier in the conversation.
+    """
+
+    if not name:
+        return None
+
+    results = list(
+        specialists.aggregate([
+            *_ATTACH_NAME,
+            {"$match": {"name": {"$regex": f"^{re.escape(name)}$", "$options": "i"}}},
         ])
     )
     return results[0] if results else None

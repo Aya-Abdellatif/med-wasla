@@ -4,9 +4,10 @@ from database.services.database_formatter import (
     format_reviews,
     format_specialists
 )
+from memory.session import set_last_specialist_name
 
 
-def get_user_context(user_query, user_id):
+def get_user_context(user_query, user_id, chat_id=None):
 
     result = handle_database_query(user_query, user_id)
 
@@ -17,6 +18,8 @@ def get_user_context(user_query, user_id):
         return format_appointments(result["data"])
 
     if result["type"] == "specialists":
+        if chat_id and result["data"]:
+            set_last_specialist_name(chat_id, result["data"][0].get("name"))
         return format_specialists(result["data"])
 
     if result["type"] == "reviews":

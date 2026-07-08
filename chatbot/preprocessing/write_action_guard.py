@@ -71,6 +71,20 @@ _OFFERED_ACTION_PATTERNS = {
     ),
 }
 
+# Phrases WaslaBot itself might use to offer read-only information it
+# CAN actually fetch — unlike the write actions above, a "yes" here
+# should trigger a real lookup, not a refusal.
+_INFO_OFFER_PATTERNS = {
+    "more_details": re.compile(
+        r"(would you like|do you want).{0,60}\b(more details|profile details|know more about)\b",
+        re.IGNORECASE,
+    ),
+    "available_times": re.compile(
+        r"(would you like|do you want).{0,60}\b(available|availability|time slots?|schedule)\b",
+        re.IGNORECASE,
+    ),
+}
+
 # A direct request/question about performing one of these actions.
 _DIRECT_ACTION_PATTERNS = {
     "book": re.compile(r"\bbook\b.{0,25}\b(appointment|visit|doctor|specialist|nurse)\b", re.IGNORECASE),
@@ -155,13 +169,47 @@ def get_requested_action(user_query, chat_id):
     return None
 
 
+def detect_offered_info(chat_id):
+    """
+    Returns the read-only info ("more_details"/"available_times")
+    WaslaBot's last message offered, or None. Unlike a write action,
+    confirming one of these should trigger a real lookup.
+    """
+
+    last_bot_message = get_last_assistant_message(chat_id)
+
+    if not last_bot_message:
+        return None
+
+    for info_type, pattern in _INFO_OFFER_PATTERNS.items():
+        if pattern.search(last_bot_message):
+            return info_type
+
+    return None
+
+
+def get_requested_info(user_query, chat_id):
+    """
+    Returns the read-only info ("more_details"/"available_times") the
+    user just confirmed wanting, or None.
+    """
+
+    offered = detect_offered_info(chat_id)
+
+    if offered and _AFFIRMATIVE_RE.match(user_query.strip()):
+        return offered
+
+    return None
+
+
 def is_unrecognized_offer_confirmation(user_query, chat_id):
     """
     True if the bot's last message was ANY offer-shaped question, the
     user gave a short affirmative reply, and the offer didn't match one
     of the specific known actions (book/cancel/reschedule/password/
-    email/profile) — i.e. some other offer the model made up on its
-    own, which it cannot actually be trusted to follow through on.
+    email/profile) or known info offers (more_details/available_times)
+    — i.e. some other offer the model made up on its own, which it
+    cannot actually be trusted to follow through on.
     """
 
     last_bot_message = get_last_assistant_message(chat_id)
@@ -172,7 +220,7 @@ def is_unrecognized_offer_confirmation(user_query, chat_id):
     if not _AFFIRMATIVE_RE.match(user_query.strip()):
         return False
 
-    return detect_offered_action(chat_id) is None
+    return detect_offered_action(chat_id) is None and detect_offered_info(chat_id) is None
 
 
 def build_action_guard_message(action, logged_in):
