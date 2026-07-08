@@ -41,7 +41,8 @@ from database.services.database_classifier import extract_specialization
 from database.services.database_formatter import _format_slots, _safe_date
 from database.collections.specialist_queries import (
     get_specialist_by_name,
-    get_specialists_by_specialization
+    get_specialists_by_specialization,
+    get_approved_specialists
 )
 from database.collections.appointment_queries import get_patient_upcoming_appointments
 
@@ -147,6 +148,31 @@ def _build_info_answer(offer_type, doc):
 _HOW_TO_BOOK_RE = re.compile(r"\bhow\b.{0,15}\bbook\b|\bsteps?\b.{0,15}\bbook\b", re.IGNORECASE)
 
 
+def _find_all_mentioned_specialists(query, specialists):
+    """
+    Returns every one of the given specialists the user named in their
+    message (matched loosely by first/last name), in the order they
+    appear in `specialists`, de-duplicated.
+    """
+
+    query_lower = query.lower()
+    found = []
+    seen_ids = set()
+
+    for doc in specialists:
+        name = doc.get("name") or ""
+        parts = [part for part in re.split(r"\s+", name.lower()) if len(part) > 2]
+
+        if any(part in query_lower for part in parts):
+            key = doc.get("_id", name)
+
+            if key not in seen_ids:
+                seen_ids.add(key)
+                found.append(doc)
+
+    return found
+
+
 def _find_mentioned_specialist(query, specialists):
     """
     Returns whichever of the given specialists the user named in their
@@ -155,16 +181,68 @@ def _find_mentioned_specialist(query, specialists):
     re-dumping the whole top-3 list the user is already past.
     """
 
-    query_lower = query.lower()
+    found = _find_all_mentioned_specialists(query, specialists)
 
-    for doc in specialists:
-        name = doc.get("name") or ""
-        parts = [part for part in re.split(r"\s+", name.lower()) if len(part) > 2]
+    return found[0] if found else None
 
-        if any(part in query_lower for part in parts):
-            return doc
 
-    return None
+_TOP_RATED_RE = re.compile(
+    r"\b(highest|top|best|number one|no\.?\s*1)\b.{0,20}\b(rate|rated|rating|doctors?|specialists?)\b",
+    re.IGNORECASE
+)
+
+
+def _build_top_rated_answer(specialists):
+    """
+    Answers "highest/top/best rated" questions from data[0] directly —
+    that list is already Mongo-sorted by rating desc, so this is always
+    correct, unlike trusting the LLM to re-identify the top entry from
+    formatted text (it has picked the wrong one before).
+    """
+
+    if not specialists:
+        return None
+
+    top = specialists[0]
+    name = _display_name(top.get("name") or "Unknown")
+    specialization = top.get("specialization") or "specialist"
+    rating = top.get("rating", 0)
+
+    return f"The highest-rated {specialization} specialist is **{name}**, with a rating of {rating} out of 5."
+
+
+_COMPARISON_RE = re.compile(
+    r"\b(higher|highest|better|compare|versus)\b|\bvs\b|\brate\b|\brating\b",
+    re.IGNORECASE
+)
+
+
+def _handle_rating_comparison(query):
+    """
+    "Who has the higher rate, dr X or dr Y?" needs real records looked
+    up by name — the normal SPECIALISTS routing only fires when a
+    specialization keyword is present, so without this a comparison
+    query reaches the LLM with no data at all, and it has been known to
+    just invent plausible-looking numbers instead of saying so.
+    """
+
+    if not _COMPARISON_RE.search(query):
+        return None
+
+    mentioned = _find_all_mentioned_specialists(query, get_approved_specialists())
+
+    if len(mentioned) < 2:
+        return None
+
+    sentences = " ".join(
+        f"{_display_name(doc.get('name') or 'Unknown')} has a rating of {doc.get('rating', 0)}."
+        for doc in mentioned
+    )
+
+    winner = max(mentioned, key=lambda doc: doc.get("rating", 0))
+    winner_name = _display_name(winner.get("name") or "Unknown")
+
+    return f"{sentences} **{winner_name}** has the higher rating."
 
 
 def _handle_book_guidance(user_query, chat_id):
@@ -408,6 +486,23 @@ def predict(user_query, chat_id="default_session"):
         }
 
     # -------------------------
+    # "who has the higher rate, dr X or dr Y?" — needs real records
+    # looked up by name; the small local model has fabricated ratings
+    # outright when this reached it with no data.
+    # -------------------------
+    comparison_answer = _handle_rating_comparison(processed_query)
+
+    if comparison_answer:
+
+        add_message(chat_id, "assistant", comparison_answer)
+
+        return {
+            "answer": comparison_answer,
+            "sources": ["MongoDB"],
+            "confidence": 1.0
+        }
+
+    # -------------------------
     # any other made-up offer the LLM confirmed — e.g. "would you like
     # to see more details?" -> "yes" -> model hallucinates having
     # emailed/sent/notified something. Catch it even though we don't
@@ -491,12 +586,15 @@ def predict(user_query, chat_id="default_session"):
     # =========================
     user_context = None
     context_specialist_name = None
+    context_specialists = None
 
     if ENABLE_DATABASE:
         user_id = get_user(chat_id)
 
         try:
-            user_context, context_specialist_name = get_user_context(processed_query, user_id, chat_id)
+            user_context, context_specialist_name, context_specialists = get_user_context(
+                processed_query, user_id, chat_id
+            )
         except Exception as e:
             print("Database Error:", e)
 
@@ -504,6 +602,22 @@ def predict(user_query, chat_id="default_session"):
     # DATABASE RESPONSE
     # =========================
     if question_type == "DATABASE":
+
+        # "highest/top/best rated" — answer from the already-sorted
+        # data directly instead of trusting the LLM to re-identify the
+        # top entry from formatted text (it has picked the wrong one).
+        if context_specialists and _TOP_RATED_RE.search(processed_query):
+
+            answer = _build_top_rated_answer(context_specialists)
+            answer = _finalize_specialist_answer(answer, chat_id, context_specialist_name)
+
+            add_message(chat_id, "assistant", answer)
+
+            return {
+                "answer": answer,
+                "sources": ["MongoDB"],
+                "confidence": 1.0
+            }
 
         history = get_history(chat_id)
 
