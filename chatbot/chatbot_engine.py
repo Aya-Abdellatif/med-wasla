@@ -211,6 +211,34 @@ def _build_top_rated_answer(specialists):
     return f"The highest-rated {specialization} specialist is **{name}**, with a rating of {rating} out of 5."
 
 
+_LIST_SPECIALISTS_RE = re.compile(
+    r"\blist\b|\bshow me\b|\branked?\b|\bsorted\b|\ball\b.{0,15}\b(doctors?|specialists?)\b",
+    re.IGNORECASE
+)
+
+
+def _build_specialist_list_answer(specialists):
+    """
+    "List the cardiologists from top to lowest" wants readable, scannable
+    output, not one run-on sentence — reuse the same "- " bullet format
+    used everywhere else in this pipeline (which the frontend already
+    highlights consistently), built from the already-sorted data
+    instead of asking the LLM to reproduce a ranked list faithfully.
+    """
+
+    if not specialists:
+        return None
+
+    specialization = specialists[0].get("specialization") or "matching"
+
+    lines = "\n".join(
+        f"- **{_display_name(doc.get('name') or 'Unknown')}** — rating {doc.get('rating', 0)}/5"
+        for doc in specialists
+    )
+
+    return f"Here are the {specialization} specialists, from highest to lowest rated:\n{lines}"
+
+
 _COMPARISON_RE = re.compile(
     r"\b(higher|highest|better|compare|versus)\b|\bvs\b|\brate\b|\brating\b",
     re.IGNORECASE
@@ -602,6 +630,23 @@ def predict(user_query, chat_id="default_session"):
     # DATABASE RESPONSE
     # =========================
     if question_type == "DATABASE":
+
+        # "list the cardiologists from top to lowest" — a readable
+        # bulleted ranking, not a single pick. Checked before the
+        # single-winner case below since "list ... top to lowest" would
+        # otherwise also look like a "top rated" question.
+        if context_specialists and _LIST_SPECIALISTS_RE.search(processed_query):
+
+            answer = _build_specialist_list_answer(context_specialists)
+            answer = _finalize_specialist_answer(answer, chat_id, context_specialist_name)
+
+            add_message(chat_id, "assistant", answer)
+
+            return {
+                "answer": answer,
+                "sources": ["MongoDB"],
+                "confidence": 1.0
+            }
 
         # "highest/top/best rated" — answer from the already-sorted
         # data directly instead of trusting the LLM to re-identify the
