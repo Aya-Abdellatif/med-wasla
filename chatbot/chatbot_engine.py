@@ -38,7 +38,7 @@ from core.ollama_client import generate_response
 
 from database.services.chatbot_service import get_user_context
 from database.services.database_classifier import extract_specialization
-from database.services.database_formatter import format_specialist_detail, _safe_date
+from database.services.database_formatter import _format_slots, _safe_date
 from database.collections.specialist_queries import (
     get_specialist_by_name,
     get_specialists_by_specialization
@@ -106,6 +106,42 @@ def _finalize_specialist_answer(answer, chat_id, specialist_name):
         return answer
 
     return _TRAILING_OFFER_LINE_RE.sub("", answer).rstrip() + _next_offer_line(chat_id, specialist_name)
+
+
+def _build_info_answer(offer_type, doc):
+    """
+    Builds the "more details" / "available times" answer directly from
+    the specialist record instead of asking the LLM to compose it.
+
+    The local model was leaking available-time data into "more
+    details" answers (both were drawn from the same full-detail blob)
+    and, separately, dropping slots when asked to list them back out —
+    the same faithfulness problem write_action_guard exists to guard
+    against elsewhere. Scoping the data AND building the sentence
+    ourselves avoids both.
+    """
+
+    name = _display_name(doc.get("name") or "This specialist")
+
+    if offer_type == "available_times":
+        slots = doc.get("availableSlots") or []
+
+        if not slots:
+            return f"{name} doesn't have any available appointment times listed yet."
+
+        return f"{name}'s available appointment times: {_format_slots(slots)}."
+
+    rating = doc.get("rating", 0)
+    fee = doc.get("consultationFee", "N/A")
+    specialization = doc.get("specialization", "N/A")
+    bio = doc.get("bio")
+
+    answer = f"{name} is a {specialization} specialist rated {rating}/5, with a consultation fee of {fee}."
+
+    if bio:
+        answer += f" {bio}"
+
+    return answer
 
 
 def _handle_book_guidance(user_query, chat_id):
@@ -300,19 +336,7 @@ def predict(user_query, chat_id="default_session"):
                 "which doctor did you mean?"
             )
         else:
-            history = get_history(chat_id)
-
-            prompt = build_database_prompt(
-                user_query=user_query,
-                history_buffer=history,
-                user_context=format_specialist_detail(doc)
-            )
-
-            try:
-                answer = generate_response(prompt)
-            except Exception as e:
-                print("Info Offer Error:", e)
-                answer = "Sorry, I couldn't retrieve that information right now."
+            answer = _build_info_answer(requested_info, doc)
 
             mark_offer_fulfilled(chat_id, specialist_name, requested_info)
             answer = _finalize_specialist_answer(answer, chat_id, specialist_name)
