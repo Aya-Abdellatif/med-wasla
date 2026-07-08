@@ -8,8 +8,8 @@ from core.classifier import classify_question
 from preprocessing.gibberish import is_gibberish
 from preprocessing.spell_checker import clean_query
 from preprocessing.sensitive_guard import is_sensitive_request, REFUSAL_MESSAGE
-from preprocessing.booking_guard import (
-    get_confirmed_action,
+from preprocessing.write_action_guard import (
+    get_requested_action,
     build_action_guard_message
 )
 
@@ -81,16 +81,17 @@ def predict(user_query, chat_id="default_session"):
         }
 
     # -------------------------
-    # appointment action guard — the chatbot cannot book, cancel, or
-    # reschedule appointments; never let the LLM pretend it just did
+    # write action guard — the chatbot has no write access to the
+    # database at all (no booking, cancelling, rescheduling, password/
+    # email/profile changes); never let the LLM pretend it did one
     # -------------------------
-    confirmed_action = get_confirmed_action(user_query, chat_id)
+    requested_action = get_requested_action(user_query, chat_id)
 
-    if confirmed_action:
+    if requested_action:
 
         user_id = get_user(chat_id)
 
-        answer = build_action_guard_message(confirmed_action, logged_in=bool(user_id))
+        answer = build_action_guard_message(requested_action, logged_in=bool(user_id))
 
         add_message(chat_id, "assistant", answer)
 
