@@ -1,5 +1,7 @@
 # -*- coding: utf-8 -*-
 
+import re
+
 from core.router import keyword_route
 
 from core.loader import initialize_model
@@ -18,7 +20,13 @@ from preprocessing.write_action_guard import (
 
 from memory.memory import add_message, get_history
 from memory.chitchat import get_chitchat_response
-from memory.session import get_user, set_last_specialist_name, get_last_specialist_name
+from memory.session import (
+    get_user,
+    set_last_specialist_name,
+    get_last_specialist_name,
+    mark_offer_fulfilled,
+    get_fulfilled_offers
+)
 
 from core.retrieval import retrieve_documents
 from core.prompt_builder import (
@@ -39,6 +47,59 @@ from database.collections.appointment_queries import get_patient_upcoming_appoin
 
 from config import SIMILARITY_THRESHOLD, ENABLE_DATABASE
 
+# The only three next-step offers WaslaBot can actually follow through
+# on (see prompt_builder.build_database_prompt rule 8). Rebuilding this
+# line ourselves — instead of trusting the small local model to phrase
+# and format it correctly every time — guarantees it always starts
+# with "- " (so the frontend highlights it like every other follow-up
+# question) and is never repeated once fulfilled.
+_OFFER_TEMPLATES = {
+    "more_details": "Would you like more details about {name}'s profile?",
+    "available_times": "Would you like to know {name}'s available appointment times?",
+    "book": "Would you like the steps to book an appointment with {name}?",
+}
+_OFFER_ORDER = ["more_details", "available_times", "book"]
+
+# Strips whatever offer-shaped line the LLM tried to end its answer
+# with (correctly "- "-prefixed or not), so it can be replaced with the
+# deterministic one below instead of ending up duplicated or malformed.
+_TRAILING_OFFER_LINE_RE = re.compile(
+    r"\n*[-•\s]*\b(would you like|do you want)\b[^\n]*\?\s*$",
+    re.IGNORECASE
+)
+
+
+def _display_name(name):
+    return name if re.match(r"^dr\.?\s", name, re.IGNORECASE) else f"Dr. {name}"
+
+
+def _next_offer_line(chat_id, specialist_name):
+
+    if not specialist_name:
+        return ""
+
+    fulfilled = get_fulfilled_offers(chat_id, specialist_name)
+
+    for offer_type in _OFFER_ORDER:
+        if offer_type not in fulfilled:
+            template = _OFFER_TEMPLATES[offer_type]
+            return f"\n\n- {template.format(name=_display_name(specialist_name))}"
+
+    return ""
+
+
+def _finalize_specialist_answer(answer, chat_id, specialist_name):
+    """
+    Drops any next-step question the LLM drafted and appends the
+    correct, deterministically-formatted one instead — see
+    _TRAILING_OFFER_LINE_RE / _next_offer_line above.
+    """
+
+    if not specialist_name:
+        return answer
+
+    return _TRAILING_OFFER_LINE_RE.sub("", answer).rstrip() + _next_offer_line(chat_id, specialist_name)
+
 
 def _handle_book_guidance(user_query, chat_id):
     """
@@ -55,7 +116,7 @@ def _handle_book_guidance(user_query, chat_id):
 
     if not specialization:
         return (
-            "I can't book it myself, but I can help you find the right "
+            "- I can't book it myself, but I can help you find the right "
             "specialist first. Which specialty are you looking for (e.g. "
             "cardiology, dermatology, pediatrics)?"
         )
@@ -75,12 +136,17 @@ def _handle_book_guidance(user_query, chat_id):
         for doc in top
     )
 
-    return (
+    # Giving these steps here IS fulfilling the "book" offer — never
+    # ask it again for this specialist in this conversation.
+    mark_offer_fulfilled(chat_id, top_name, "book")
+
+    answer = (
         f"Here are the top-rated {specialization} specialists:\n{lines}\n\n"
         "Once you've picked one, open their profile and use the **Book "
-        "Appointment** button to choose an available date and time.\n\n"
-        f"- Would you like to know {top_name}'s available appointment times?"
+        "Appointment** button to choose an available date and time."
     )
+
+    return answer + _next_offer_line(chat_id, top_name)
 
 
 def _handle_existing_appointment_guidance(action, chat_id):
@@ -169,11 +235,11 @@ def predict(user_query, chat_id="default_session"):
     # database at all (no booking, cancelling, rescheduling, password/
     # email/profile changes); never let the LLM pretend it did one
     # -------------------------
-    requested_action = get_requested_action(user_query, chat_id)
+    requested_action = get_requested_action(processed_query, chat_id)
 
     if requested_action == "book":
 
-        answer = _handle_book_guidance(user_query, chat_id)
+        answer = _handle_book_guidance(processed_query, chat_id)
 
         add_message(chat_id, "assistant", answer)
 
@@ -214,7 +280,7 @@ def predict(user_query, chat_id="default_session"):
     # WaslaBot made about a specialist it already named — unlike the
     # write actions above, this IS something we can actually fetch.
     # -------------------------
-    requested_info = get_requested_info(user_query, chat_id)
+    requested_info = get_requested_info(processed_query, chat_id)
 
     if requested_info:
 
@@ -240,6 +306,9 @@ def predict(user_query, chat_id="default_session"):
             except Exception as e:
                 print("Info Offer Error:", e)
                 answer = "Sorry, I couldn't retrieve that information right now."
+
+            mark_offer_fulfilled(chat_id, specialist_name, requested_info)
+            answer = _finalize_specialist_answer(answer, chat_id, specialist_name)
 
         add_message(chat_id, "assistant", answer)
 
@@ -332,12 +401,13 @@ def predict(user_query, chat_id="default_session"):
     # DATABASE CONTEXT (only if enabled)
     # =========================
     user_context = None
+    context_specialist_name = None
 
     if ENABLE_DATABASE:
         user_id = get_user(chat_id)
 
         try:
-            user_context = get_user_context(processed_query, user_id, chat_id)
+            user_context, context_specialist_name = get_user_context(processed_query, user_id, chat_id)
         except Exception as e:
             print("Database Error:", e)
 
@@ -356,6 +426,7 @@ def predict(user_query, chat_id="default_session"):
 
         try:
             answer = generate_response(prompt)
+            answer = _finalize_specialist_answer(answer, chat_id, context_specialist_name)
         except Exception as e:
             print("DB Error:", e)
             answer = "Sorry, I couldn't retrieve your account information."
