@@ -170,77 +170,6 @@ med-wasla/
 
 ---
 
-## Environment Variables
-
-### Backend (`backend/.env`)
-
-```env
-# Server
-PORT_NUMBER=5000
-NODE_ENV=development
-FRONTEND_URL=http://localhost:5173
-
-# Database
-DATABASE_CONNECTION_STRING=mongodb+srv://<user>:<password>@<cluster>.mongodb.net/medwasla
-
-# Authentication
-JWT_SECRET=your-secret-key
-JWT_EXPIRES_IN=7d
-
-# Email (Nodemailer)
-EMAIL_USER=your-email@gmail.com
-EMAIL_PASS=your-app-password
-
-# Cloudinary
-CLOUDINARY_CLOUD_NAME=your-cloud-name
-CLOUDINARY_API_KEY=your-api-key
-CLOUDINARY_API_SECRET=your-api-secret
-
-# Chatbot integration
-CHATBOT_SERVICE_URL=http://localhost:3000/chat
-INTERNAL_API_SECRET=shared-secret-with-chatbot
-
-# WhatsApp notifications (optional)
-WHATSAPP_TOKEN=your-whatsapp-token
-WHATSAPP_PHONE_NUMBER_ID=your-phone-number-id
-```
-
-> **Note:** Never commit `.env` files. They are excluded via `.gitignore`.
-
-### Chatbot (`chatbot/.env`)
-
-```env
-# Ollama
-OLLAMA_HOST=http://localhost:11434
-OLLAMA_MODEL=elixpo/llamamedicine
-
-# Embeddings / retrieval
-EMBEDDING_MODEL=multi-qa-MiniLM-L6-cos-v1
-TOP_K=3
-SIMILARITY_THRESHOLD=0.16
-
-# LLM generation
-TEMPERATURE=0.2
-MAX_TOKENS=256
-CONTEXT_SIZE=4096
-
-# Flask
-FLASK_HOST=0.0.0.0
-FLASK_PORT=3000
-FLASK_DEBUG=True
-
-# MongoDB (same database as the backend)
-MONGODB_URI=mongodb+srv://<user>:<password>@<cluster>.mongodb.net/medwasla
-DATABASE_NAME=medwasla
-ENABLE_DATABASE=True
-```
-
-### Frontend
-
-The API base URL is configured in `frontend/src/services/api.ts`. Update it when deploying to production.
-
----
-
 ## Getting Started
 
 ### 1. Clone the repository
@@ -284,24 +213,6 @@ python app.py
 ```
 
 Chatbot available at `http://localhost:3000`. The frontend calls it indirectly through the backend's `/api/ai/chat` route, so the backend must have `CHATBOT_SERVICE_URL`/`INTERNAL_API_SECRET` configured to reach it.
-
----
-
-## Database Seeding
-
-Populate the database with sample doctors, nurses, and patients:
-
-```bash
-cd backend
-
-# Development (uses tsx, no build required)
-npm run seed:dev
-
-# Production-style (builds first, then runs compiled seed)
-npm run seed
-```
-
-The seed script creates specialists across 12 medical specializations and 6 nurse categories, with sample availability slots and Egyptian governorate data.
 
 ---
 
