@@ -37,9 +37,10 @@ def predict(user_query, chat_id="default_session"):
     processed_query = clean_query(user_query)
 
     # -------------------------
-    # gibberish check
+    # gibberish check (on raw input — spell-correction can turn
+    # nonsense like "gvh" into a real word like "get" and hide it)
     # -------------------------
-    if is_gibberish(processed_query, chat_id):
+    if is_gibberish(user_query, chat_id):
 
         answer = "I couldn't understand your message. Could you rephrase it?"
 
