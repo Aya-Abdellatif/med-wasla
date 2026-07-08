@@ -4,6 +4,28 @@ import models
 from preprocessing.spell_checker import spell
 
 
+def _is_known_phrase_joined(word):
+    """
+    Catches casual, unspaced chitchat like "thankyou", "goodmorning", or
+    "howareyou" that spellchecker can't correct as one word, but is
+    really two or three known words joined together.
+    """
+
+    for i in range(2, len(word) - 1):
+
+        left, right = word[:i], word[i:]
+
+        if left in spell and right in spell:
+            return True
+
+        for j in range(2, len(right) - 1):
+
+            if left in spell and right[:j] in spell and right[j:] in spell:
+                return True
+
+    return False
+
+
 def is_gibberish(text, chat_id):
     """
     Returns True if the message appears to be gibberish.
@@ -71,11 +93,6 @@ def is_gibberish(text, chat_id):
 
         word = words[0]
 
-        vowels = sum(
-            c in "aeiou"
-            for c in word
-        )
-
         # One character
         if len(word) == 1:
             return True
@@ -83,6 +100,17 @@ def is_gibberish(text, chat_id):
         # Same character repeated (ee, eee, rrrr...)
         if len(set(word)) == 1:
             return True
+
+        # A real dictionary word (or casual joined phrase like
+        # "thankyou") is never gibberish, regardless of how few vowels
+        # it has (e.g. "thanks", "rhythm") — skip the heuristics below.
+        if word in spell or _is_known_phrase_joined(word):
+            return False
+
+        vowels = sum(
+            c in "aeiou"
+            for c in word
+        )
 
         # kb, df, xpt, jgd, wxyz...
         if 2 <= len(word) <= 4 and vowels == 0:
@@ -97,7 +125,7 @@ def is_gibberish(text, chat_id):
         # including medical terms and genuine typos, always have at
         # least one candidate. Restricted to len >= 5 so short real
         # words with few candidates (e.g. "ve") aren't misflagged.
-        if len(word) >= 5 and word not in spell and not spell.candidates(word):
+        if len(word) >= 5 and not spell.candidates(word):
             return True
 
     # --------------------------------------------------
