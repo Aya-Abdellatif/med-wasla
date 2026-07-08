@@ -8,6 +8,10 @@ from core.classifier import classify_question
 from preprocessing.gibberish import is_gibberish
 from preprocessing.spell_checker import clean_query
 from preprocessing.sensitive_guard import is_sensitive_request, REFUSAL_MESSAGE
+from preprocessing.booking_guard import (
+    get_confirmed_action,
+    build_action_guard_message
+)
 
 from memory.memory import add_message, get_history
 from memory.chitchat import get_chitchat_response
@@ -73,6 +77,26 @@ def predict(user_query, chat_id="default_session"):
         return {
             "answer": REFUSAL_MESSAGE,
             "sources": [],
+            "confidence": 1.0
+        }
+
+    # -------------------------
+    # appointment action guard — the chatbot cannot book, cancel, or
+    # reschedule appointments; never let the LLM pretend it just did
+    # -------------------------
+    confirmed_action = get_confirmed_action(user_query, chat_id)
+
+    if confirmed_action:
+
+        user_id = get_user(chat_id)
+
+        answer = build_action_guard_message(confirmed_action, logged_in=bool(user_id))
+
+        add_message(chat_id, "assistant", answer)
+
+        return {
+            "answer": answer,
+            "sources": ["Med-Wasla"],
             "confidence": 1.0
         }
 
