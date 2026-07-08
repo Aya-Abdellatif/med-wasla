@@ -32,6 +32,8 @@ def format_appointments(appointments):
 
         text += (
             f"{i}. Appointment\n"
+            f"- Doctor: {appt.get('specialistName') or 'Unknown'}\n"
+            f"- Specialization: {appt.get('specialization', 'N/A')}\n"
             f"- Type: {appt.get('type', 'unknown')}\n"
             f"- Status: {appt.get('status', 'unknown')}\n"
             f"- Date: {_safe_date(appt.get('date'))}\n"
@@ -55,7 +57,7 @@ def format_specialists(specialists):
     for i, doc in enumerate(specialists, start=1):
 
         text += (
-            f"{i}. Doctor/Nurse\n"
+            f"{i}. Specialist Record\n"
             f"- Name: {doc.get('name', 'Unknown')}\n"
             f"- Type: {doc.get('specialistType', 'Unknown')}\n"
             f"- Specialization: {doc.get('specialization', 'N/A')}\n"
@@ -64,6 +66,23 @@ def format_specialists(specialists):
         )
 
     return text
+
+
+def _format_slots(slots):
+    """
+    Used both for the compact SPECIALISTS listing context above and,
+    directly, by chatbot_engine._build_info_answer for the deterministic
+    "available times" reply (list data the small local LLM can't be
+    trusted to enumerate completely).
+    """
+
+    if not slots:
+        return "No available time slots listed yet."
+
+    return "; ".join(
+        f"{slot.get('day', '?')} {slot.get('startTime', '?')}-{slot.get('endTime', '?')}"
+        for slot in slots
+    )
 
 
 # --------------------------------------------------
@@ -81,6 +100,7 @@ def format_reviews(reviews):
 
         text += (
             f"{i}. Review\n"
+            f"- Doctor: {r.get('specialistName') or 'Unknown'}\n"
             f"- Rating: {r.get('rating', 0)}/5\n"
             f"- Comment: {r.get('comment', 'No comment')}\n\n"
         )

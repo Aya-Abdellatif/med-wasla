@@ -108,7 +108,7 @@ function ChatBot() {
                 return (
                   <strong
                     key={idx}
-                    className="font-bold text-gray-900 bg-yellow-50/40 px-0.5 rounded"
+                    className="font-bold text-gray-900"
                   >
                     {part.slice(2, -2)}
                   </strong>
@@ -143,7 +143,7 @@ function ChatBot() {
               return (
                 <strong
                   key={idx}
-                  className="font-bold text-gray-900 bg-yellow-50/40 px-0.5 rounded"
+                  className="font-bold text-gray-900"
                 >
                   {part.slice(2, -2)}
                 </strong>
