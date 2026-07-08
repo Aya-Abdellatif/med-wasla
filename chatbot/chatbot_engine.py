@@ -144,6 +144,9 @@ def _build_info_answer(offer_type, doc):
     return answer
 
 
+_HOW_TO_BOOK_RE = re.compile(r"\bhow\b.{0,15}\bbook\b|\bsteps?\b.{0,15}\bbook\b", re.IGNORECASE)
+
+
 def _handle_book_guidance(user_query, chat_id):
     """
     "Book an appointment" is never a dead end: if the user hasn't named
@@ -151,6 +154,19 @@ def _handle_book_guidance(user_query, chat_id):
     matches with real data and point at the actual Book Appointment
     button, instead of an immediate "I can't do that".
     """
+
+    # A generic "how/what are the steps to book" is a procedural
+    # question, not a request to search for a doctor — answer it
+    # directly instead of falling back to whatever specialty happened
+    # to be mentioned earlier in the conversation, which would just
+    # re-run the same doctor search (and give the identical answer)
+    # every single time this is asked.
+    if _HOW_TO_BOOK_RE.search(user_query):
+        return (
+            "To book an appointment: open the specialist's profile page and use "
+            "the **Book Appointment** button to pick an available date and time.\n\n"
+            "- Which specialty are you looking for? I can help you find a doctor to book with."
+        )
 
     specialization = (
         extract_specialization(user_query)
