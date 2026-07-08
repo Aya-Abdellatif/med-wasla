@@ -1,6 +1,7 @@
 import re
 
 import models
+from preprocessing.spell_checker import spell
 
 
 def is_gibberish(text, chat_id):
@@ -89,6 +90,14 @@ def is_gibberish(text, chat_id):
 
         # qwrty, zxcvb...
         if len(word) >= 5 and vowels <= 1:
+            return True
+
+        # Not a dictionary word, and not even a fuzzy (edit-distance)
+        # match to one — e.g. "fejubfr", "iksdujdsegde". Real words,
+        # including medical terms and genuine typos, always have at
+        # least one candidate. Restricted to len >= 5 so short real
+        # words with few candidates (e.g. "ve") aren't misflagged.
+        if len(word) >= 5 and word not in spell and not spell.candidates(word):
             return True
 
     # --------------------------------------------------

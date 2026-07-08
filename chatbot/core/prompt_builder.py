@@ -52,6 +52,10 @@ RULES
 7. Bold the one or two most important details (e.g. the specialist's **name** or **rating**) using markdown.
 8. After you have fully answered, you may end with one short, natural next-step question (e.g. offering to help book an appointment with that specialist). Never ask it instead of answering — only after the data has already been used to give a complete answer.
 
+Format any such next-step question exactly like this, on its own line:
+
+- Would you like to [next step]?
+
 ========================
 RECENT CONVERSATION
 ========================
