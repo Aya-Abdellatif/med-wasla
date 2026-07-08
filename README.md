@@ -12,8 +12,21 @@ The platform has three services:
 
 ---
 
+## Demo
+
+<!-- TODO: add screenshots and/or a demo video/GIF here -->
+<!-- Example:
+![Home page](docs/screenshots/home.png)
+![Booking flow](docs/screenshots/booking.png)
+
+[Watch the demo video](docs/demo.mp4)
+-->
+
+---
+
 ## Table of Contents
 
+- [Demo](#demo)
 - [Features](#features)
 - [Tech Stack](#tech-stack)
 - [Project Structure](#project-structure)
@@ -25,6 +38,7 @@ The platform has three services:
 - [Chatbot Service](#chatbot-service)
 - [User Roles](#user-roles)
 - [Testing](#testing)
+- [Deployment](#deployment)
 - [CI/CD](#cicd)
 - [License](#license)
 
@@ -430,6 +444,23 @@ npm test      # Vitest
 npm run lint  # ESLint
 npm run build # TypeScript compile + Vite production build
 ```
+
+---
+
+## Deployment
+
+<!-- TODO: fill in once deployed -->
+
+| Service | Live URL | Hosted on |
+|---------|----------|-----------|
+| Frontend | _TODO_ | Vercel |
+| Backend API | _TODO_ | Railway |
+| Chatbot | _TODO_ | Hugging Face |
+
+Notes:
+- The chatbot runs on Hugging Face, which is where Ollama + the FAISS/sentence-transformers retrieval stack actually run — not on the Node backend.
+- In production, set `FRONTEND_URL` (backend), `CHATBOT_SERVICE_URL`/`INTERNAL_API_SECRET` (backend → chatbot), and the frontend's API base URL (`frontend/src/services/api.ts`) to point at the deployed backend/chatbot addresses instead of `localhost`.
+- The local run instructions above still apply for development — deployment doesn't replace them.
 
 ---
 
