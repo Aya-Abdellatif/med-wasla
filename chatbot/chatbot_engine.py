@@ -147,6 +147,26 @@ def _build_info_answer(offer_type, doc):
 _HOW_TO_BOOK_RE = re.compile(r"\bhow\b.{0,15}\bbook\b|\bsteps?\b.{0,15}\bbook\b", re.IGNORECASE)
 
 
+def _find_mentioned_specialist(query, specialists):
+    """
+    Returns whichever of the given specialists the user named in their
+    message (matched loosely by first/last name), or None. Lets "book
+    with dr omar" resolve straight to that one doctor instead of
+    re-dumping the whole top-3 list the user is already past.
+    """
+
+    query_lower = query.lower()
+
+    for doc in specialists:
+        name = doc.get("name") or ""
+        parts = [part for part in re.split(r"\s+", name.lower()) if len(part) > 2]
+
+        if any(part in query_lower for part in parts):
+            return doc
+
+    return None
+
+
 def _handle_book_guidance(user_query, chat_id):
     """
     "Book an appointment" is never a dead end: if the user hasn't named
@@ -184,6 +204,28 @@ def _handle_book_guidance(user_query, chat_id):
 
     if not matches:
         return f"I couldn't find any approved {specialization} specialists right now."
+
+    mentioned = _find_mentioned_specialist(user_query, matches)
+
+    if mentioned:
+        name = mentioned.get("name", "the specialist")
+        set_last_specialist_name(chat_id, name)
+        mark_offer_fulfilled(chat_id, name, "book")
+
+        slots = mentioned.get("availableSlots") or []
+        slot_text = f" Available times: {_format_slots(slots)}." if slots else ""
+
+        # The times were just given inline above — don't offer them
+        # again as a separate next step.
+        if slots:
+            mark_offer_fulfilled(chat_id, name, "available_times")
+
+        answer = (
+            f"Great choice — open **{_display_name(name)}**'s profile and use the "
+            f"**Book Appointment** button to pick a date and time.{slot_text}"
+        )
+
+        return answer + _next_offer_line(chat_id, name)
 
     top = matches[:3]
     top_name = top[0].get("name", "the top specialist")
