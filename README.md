@@ -21,6 +21,9 @@ The platform has three services:
 
 [Watch the demo video](docs/demo.mp4)
 -->
+<img width="1910" height="872" alt="1home" src="https://github.com/user-attachments/assets/5729dff1-c74e-4ec4-8f8a-d90f77069db1" />
+<img width="1910" height="4207" alt="screencapture-med-wasla-vercel-app-services-2026-07-09-02_15_55" src="https://github.com/user-attachments/assets/6a2055ca-0e36-453b-8b8b-86631bcf5c81" />
+
 
 ---
 
