@@ -20,7 +20,12 @@ from preprocessing.write_action_guard import (
     GENERIC_NO_ACTION_MESSAGE
 )
 
-from memory.memory import add_message, get_history
+from memory.memory import (
+    add_message,
+    get_history,
+    get_symptom_summary
+)
+
 from memory.chitchat import get_chitchat_response
 
 from memory.session import (
@@ -55,6 +60,7 @@ from database.collections.specialist_queries import (
 from database.collections.appointment_queries import get_patient_upcoming_appointments
 
 from config import SIMILARITY_THRESHOLD, ENABLE_DATABASE
+
 
 # The only three next-step offers WaslaBot can actually follow through
 # on (see prompt_builder.build_database_prompt rule 8). Rebuilding this
@@ -569,45 +575,46 @@ def predict(user_query, chat_id="default_session"):
             "confidence": 1.0
         }
 
+
     # -------------------------
-    # routing
+    # Detect whether this looks like a reply to the previous assistant message
     # -------------------------
 
-    FOLLOW_UP_PATTERNS = {
-        "yes",
-        "no",
-        "yeah",
-        "nope",
-        "sure",
-        "okay",
-        "thanks",
-        "thank you",
-        "its my first time",
-        "it's my first time",
-        "my first time",
-        "first time",
-        "mild",
-        "severe"
-    }
+    from memory.session import is_waiting_for_reply
 
-    normalized = processed_query.lower().strip()
+    history = get_history(chat_id)
 
-    looks_like_followup = (
-        normalized in FOLLOW_UP_PATTERNS
-        or normalized.startswith("yes")
-        or normalized.startswith("no")
+    is_followup = (
+        is_waiting_for_reply(chat_id)
+        and len(processed_query.split()) <= 12
     )
 
-    if is_waiting_for_reply(chat_id) and looks_like_followup:
+    # -------------------------
+    # Routing
+    # -------------------------
+
+    if is_followup:
 
         question_type = get_last_question_type(chat_id)
+
+        if question_type is None:
+            question_type = keyword_route(processed_query)
+
+            if question_type is None:
+                question_type = classify_question(processed_query)
 
     else:
 
         question_type = keyword_route(processed_query)
 
         if question_type is None:
-            question_type = classify_question(processed_query)      
+            question_type = classify_question(processed_query)
+
+    print(f"Question Type: {question_type}")
+
+    if question_type != "GENERAL":
+        set_last_question_type(chat_id, question_type)
+        
     # -------------------------
     # chitchat (predefined exact-match responses)
     # -------------------------
@@ -728,11 +735,12 @@ def predict(user_query, chat_id="default_session"):
 
         history = get_history(chat_id)
 
-        prompt = build_database_prompt(
+        build_database_prompt(
             user_query=user_query,
             history_buffer=history,
+            symptom_summary=get_symptom_summary(chat_id),
             user_context=user_context
-        )
+            )
 
         try:
             answer = generate_response(prompt)
@@ -798,6 +806,7 @@ def predict(user_query, chat_id="default_session"):
         context_docs=filtered_docs,
         user_query=user_query,
         history_buffer=history,
+        symptom_summary=get_symptom_summary(chat_id),
         user_context=user_context
     )
 
