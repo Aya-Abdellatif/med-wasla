@@ -4,6 +4,8 @@ import re
 
 from core.router import keyword_route
 
+from models import chat_sessions
+
 from core.loader import initialize_model
 from core.classifier import classify_question
 
@@ -20,12 +22,18 @@ from preprocessing.write_action_guard import (
 
 from memory.memory import add_message, get_history
 from memory.chitchat import get_chitchat_response
+
 from memory.session import (
     get_user,
     set_last_specialist_name,
     get_last_specialist_name,
     mark_offer_fulfilled,
-    get_fulfilled_offers
+    get_fulfilled_offers,
+    set_last_question_type,
+    get_last_question_type,
+    set_waiting_for_reply,
+    is_waiting_for_reply,
+    assistant_is_waiting
 )
 
 from core.retrieval import retrieve_documents
@@ -410,8 +418,12 @@ def predict(user_query, chat_id="default_session"):
 
         answer = "I couldn't understand your message. Could you rephrase it?"
 
-        add_message(chat_id, "user", user_query)
+        # add_message(chat_id, "user", user_query)
+        
+        
         add_message(chat_id, "assistant", answer)
+        set_waiting_for_reply(chat_id, assistant_is_waiting(answer))
+
 
         return {
             "answer": answer,
@@ -430,6 +442,7 @@ def predict(user_query, chat_id="default_session"):
     if is_sensitive_request(user_query):
 
         add_message(chat_id, "assistant", REFUSAL_MESSAGE)
+        set_waiting_for_reply(chat_id,assistant_is_waiting(REFUSAL_MESSAGE))
 
         return {
             "answer": REFUSAL_MESSAGE,
@@ -449,6 +462,8 @@ def predict(user_query, chat_id="default_session"):
         answer = _handle_book_guidance(processed_query, chat_id)
 
         add_message(chat_id, "assistant", answer)
+        set_waiting_for_reply(chat_id, assistant_is_waiting(answer))
+
 
         return {
             "answer": answer,
@@ -461,6 +476,8 @@ def predict(user_query, chat_id="default_session"):
         answer = _handle_existing_appointment_guidance(requested_action, chat_id)
 
         add_message(chat_id, "assistant", answer)
+        set_waiting_for_reply(chat_id, assistant_is_waiting(answer))
+
 
         return {
             "answer": answer,
@@ -475,6 +492,8 @@ def predict(user_query, chat_id="default_session"):
         answer = build_action_guard_message(requested_action, logged_in=bool(user_id))
 
         add_message(chat_id, "assistant", answer)
+        set_waiting_for_reply(chat_id, assistant_is_waiting(answer))
+
 
         return {
             "answer": answer,
@@ -506,6 +525,8 @@ def predict(user_query, chat_id="default_session"):
             answer = _finalize_specialist_answer(answer, chat_id, specialist_name)
 
         add_message(chat_id, "assistant", answer)
+        set_waiting_for_reply(chat_id, assistant_is_waiting(answer))
+
 
         return {
             "answer": answer,
@@ -523,6 +544,7 @@ def predict(user_query, chat_id="default_session"):
     if comparison_answer:
 
         add_message(chat_id, "assistant", comparison_answer)
+        set_waiting_for_reply(chat_id, assistant_is_waiting(comparison_answer))
 
         return {
             "answer": comparison_answer,
@@ -539,6 +561,7 @@ def predict(user_query, chat_id="default_session"):
     if is_unrecognized_offer_confirmation(processed_query, chat_id):
 
         add_message(chat_id, "assistant", GENERIC_NO_ACTION_MESSAGE)
+        set_waiting_for_reply(chat_id,assistant_is_waiting(GENERIC_NO_ACTION_MESSAGE))
 
         return {
             "answer": GENERIC_NO_ACTION_MESSAGE,
@@ -549,13 +572,42 @@ def predict(user_query, chat_id="default_session"):
     # -------------------------
     # routing
     # -------------------------
-    question_type = keyword_route(processed_query)
 
-    if question_type is None:
-        question_type = classify_question(processed_query)
+    FOLLOW_UP_PATTERNS = {
+        "yes",
+        "no",
+        "yeah",
+        "nope",
+        "sure",
+        "okay",
+        "thanks",
+        "thank you",
+        "its my first time",
+        "it's my first time",
+        "my first time",
+        "first time",
+        "mild",
+        "severe"
+    }
 
-    print(f"Question Type: {question_type}")
+    normalized = processed_query.lower().strip()
 
+    looks_like_followup = (
+        normalized in FOLLOW_UP_PATTERNS
+        or normalized.startswith("yes")
+        or normalized.startswith("no")
+    )
+
+    if is_waiting_for_reply(chat_id) and looks_like_followup:
+
+        question_type = get_last_question_type(chat_id)
+
+    else:
+
+        question_type = keyword_route(processed_query)
+
+        if question_type is None:
+            question_type = classify_question(processed_query)      
     # -------------------------
     # chitchat (predefined exact-match responses)
     # -------------------------
@@ -564,6 +616,7 @@ def predict(user_query, chat_id="default_session"):
     if chitchat_answer:
 
         add_message(chat_id, "assistant", chitchat_answer)
+        set_waiting_for_reply(chat_id, assistant_is_waiting(chitchat_answer))
 
         return {
             "answer": chitchat_answer,
@@ -576,7 +629,8 @@ def predict(user_query, chat_id="default_session"):
     # -------------------------
     if question_type == "CHITCHAT":
 
-        history = get_history(chat_id)
+        history = chat_sessions.get(chat_id, [])
+        
 
         prompt = build_chitchat_prompt(processed_query, history)
 
@@ -587,6 +641,8 @@ def predict(user_query, chat_id="default_session"):
             answer = "Hello! How can I help you today?"
 
         add_message(chat_id, "assistant", answer)
+        set_waiting_for_reply(chat_id, assistant_is_waiting(answer))
+
 
         return {
             "answer": answer,
@@ -602,6 +658,8 @@ def predict(user_query, chat_id="default_session"):
         answer = "It looks like your question is not related to Med-Wasla or health."
 
         add_message(chat_id, "assistant", answer)
+        set_waiting_for_reply(chat_id, assistant_is_waiting(answer))
+
 
         return {
             "answer": answer,
@@ -641,6 +699,8 @@ def predict(user_query, chat_id="default_session"):
             answer = _finalize_specialist_answer(answer, chat_id, context_specialist_name)
 
             add_message(chat_id, "assistant", answer)
+            set_waiting_for_reply(chat_id, assistant_is_waiting(answer))
+
 
             return {
                 "answer": answer,
@@ -657,6 +717,8 @@ def predict(user_query, chat_id="default_session"):
             answer = _finalize_specialist_answer(answer, chat_id, context_specialist_name)
 
             add_message(chat_id, "assistant", answer)
+            set_waiting_for_reply(chat_id, assistant_is_waiting(answer))
+
 
             return {
                 "answer": answer,
@@ -679,7 +741,10 @@ def predict(user_query, chat_id="default_session"):
             print("DB Error:", e)
             answer = "Sorry, I couldn't retrieve your account information."
 
+        
         add_message(chat_id, "assistant", answer)
+        set_waiting_for_reply(chat_id, assistant_is_waiting(answer))
+
 
         return {
             "answer": answer,
@@ -700,6 +765,8 @@ def predict(user_query, chat_id="default_session"):
         answer = "It looks like your question is not related to Med-Wasla or health."
 
         add_message(chat_id, "assistant", answer)
+        set_waiting_for_reply(chat_id, assistant_is_waiting(answer))
+
 
         return {
             "answer": answer,
@@ -711,7 +778,10 @@ def predict(user_query, chat_id="default_session"):
 
         answer = "I couldn't find enough reliable information."
 
+        
         add_message(chat_id, "assistant", answer)
+        set_waiting_for_reply(chat_id, assistant_is_waiting(answer))
+
 
         return {
             "answer": answer,
@@ -737,8 +807,10 @@ def predict(user_query, chat_id="default_session"):
     except Exception as e:
         print("Ollama Error:", e)
         answer = "Sorry, I couldn't generate a response."
-
+    
     add_message(chat_id, "assistant", answer)
+    set_waiting_for_reply(chat_id, assistant_is_waiting(answer))
+
 
     return {
         "answer": answer,
