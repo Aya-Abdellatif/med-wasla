@@ -12,6 +12,7 @@ from core.classifier import classify_question
 from preprocessing.gibberish import is_gibberish
 from preprocessing.spell_checker import clean_query
 from preprocessing.sensitive_guard import is_sensitive_request, REFUSAL_MESSAGE
+
 from preprocessing.write_action_guard import (
     get_requested_action,
     get_requested_info,
@@ -38,7 +39,9 @@ from memory.session import (
     get_last_question_type,
     set_waiting_for_reply,
     is_waiting_for_reply,
-    assistant_is_waiting
+    assistant_is_waiting,
+    set_conversation_state,
+    get_conversation_state
 )
 
 from core.retrieval import retrieve_documents
@@ -611,6 +614,15 @@ def predict(user_query, chat_id="default_session"):
             question_type = classify_question(processed_query)
 
     print(f"Question Type: {question_type}")
+    
+    if question_type == "MEDICAL":
+        set_conversation_state(chat_id, "COLLECTING_SYMPTOMS")
+
+    elif question_type == "DATABASE":
+        set_conversation_state(chat_id, "DATABASE")
+
+    elif question_type == "CHITCHAT":
+        set_conversation_state(chat_id, "CHITCHAT")
 
     if question_type != "GENERAL":
         set_last_question_type(chat_id, question_type)
@@ -642,7 +654,14 @@ def predict(user_query, chat_id="default_session"):
         prompt = build_chitchat_prompt(processed_query, history)
 
         try:
+            print("\n" + "=" * 80)
+            print("FINAL PROMPT SENT TO LLM")
+            print("=" * 80)
+            print(prompt)
+            print("=" * 80 + "\n")
+
             answer = generate_response(prompt)
+        
         except Exception as e:
             print("Chitchat Error:", e)
             answer = "Hello! How can I help you today?"
@@ -735,12 +754,12 @@ def predict(user_query, chat_id="default_session"):
 
         history = get_history(chat_id)
 
-        build_database_prompt(
+        prompt = build_database_prompt(
             user_query=user_query,
             history_buffer=history,
             symptom_summary=get_symptom_summary(chat_id),
             user_context=user_context
-            )
+        )
 
         try:
             answer = generate_response(prompt)
@@ -763,9 +782,31 @@ def predict(user_query, chat_id="default_session"):
     # =========================
     # RAG RETRIEVAL (MEDICAL/WEBSITE)
     # =========================
+    
+    # Build retrieval query
+    retrieval_query = processed_query
+
+    if is_followup:
+        symptom_summary = get_symptom_summary(chat_id)
+
+        if symptom_summary:
+            retrieval_query = f"""
+    Current confirmed symptoms:
+    {symptom_summary}
+    Latest user reply:
+    {processed_query}
+    """
+        else:
+            retrieval_query = f"""
+    Conversation:
+    {history}
+    Latest user reply:
+    {processed_query}
+    """
+
     filtered_docs, confidence, sources = retrieve_documents(
         question_type,
-        processed_query
+        retrieval_query
     )
 
     if not filtered_docs:
@@ -782,8 +823,7 @@ def predict(user_query, chat_id="default_session"):
             "confidence": 0.0
         }
 
-    if confidence < SIMILARITY_THRESHOLD:
-
+    if confidence < SIMILARITY_THRESHOLD and not is_followup:
         answer = "I couldn't find enough reliable information."
 
         
@@ -807,6 +847,7 @@ def predict(user_query, chat_id="default_session"):
         user_query=user_query,
         history_buffer=history,
         symptom_summary=get_symptom_summary(chat_id),
+        conversation_state=get_conversation_state(chat_id),
         user_context=user_context
     )
 

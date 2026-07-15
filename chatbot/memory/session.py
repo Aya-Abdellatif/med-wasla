@@ -69,6 +69,18 @@ def get_fulfilled_offers(session_id: str, specialist_name: str):
 # Conversation State
 # ==========================================================
 
+def set_conversation_state(chat_id: str, state: str):
+    _conversation_state.setdefault(chat_id, {})
+    _conversation_state[chat_id]["conversation_state"] = state
+
+
+def get_conversation_state(chat_id: str):
+    return (
+        _conversation_state
+        .get(chat_id, {})
+        .get("conversation_state")
+    )
+
 def set_last_question_type(chat_id: str, question_type: str):
     _conversation_state.setdefault(chat_id, {})
     _conversation_state[chat_id]["last_question_type"] = question_type

@@ -112,6 +112,7 @@ def build_combined_prompt(
     user_query,
     history_buffer,
     symptom_summary,
+    conversation_state,
     user_context=None
 ):
     context_text = ""
@@ -411,6 +412,12 @@ def build_combined_prompt(
 
     You may recommend the appropriate specialist based on the user's symptoms.
 
+    ==================================================
+    CONVERSATION STATE
+    ==================================================
+
+    {conversation_state}
+    
     ==================================================
     RECENT CONVERSATION
     ==================================================
