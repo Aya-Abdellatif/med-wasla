@@ -123,6 +123,21 @@ def is_waiting_for_reply(chat_id: str):
         .get("waiting_for_reply", False)
     )
 
+def set_expected_answer(chat_id: str, field: str):
+    _conversation_state.setdefault(chat_id, {})
+    _conversation_state[chat_id]["expected_answer"] = field
+
+
+def get_expected_answer(chat_id: str):
+    return (
+        _conversation_state
+        .get(chat_id, {})
+        .get("expected_answer")
+    )
+
+def clear_expected_answer(chat_id: str):
+    if chat_id in _conversation_state:
+        _conversation_state[chat_id].pop("expected_answer", None)
 
 # ==========================================================
 # Assistant Reply Detection

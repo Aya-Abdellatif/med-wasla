@@ -24,7 +24,10 @@ from preprocessing.write_action_guard import (
 from memory.memory import (
     add_message,
     get_history,
-    get_symptom_summary
+    get_symptom_summary,
+    is_patient_ready,
+    update_patient_entities,
+    set_expected_answer
 )
 
 from memory.chitchat import get_chitchat_response
@@ -666,6 +669,14 @@ def predict(user_query, chat_id="default_session"):
             print("Chitchat Error:", e)
             answer = "Hello! How can I help you today?"
 
+        lower_answer = answer.lower()
+
+        if "scale of 1-10" in lower_answer or "scale from 1 to 10" in lower_answer:
+            set_expected_answer(chat_id, "pain_scale")
+
+        elif "how long" in lower_answer:
+            set_expected_answer(chat_id, "duration")
+
         add_message(chat_id, "assistant", answer)
         set_waiting_for_reply(chat_id, assistant_is_waiting(answer))
 
@@ -840,6 +851,8 @@ def predict(user_query, chat_id="default_session"):
     # =========================
     # FINAL PROMPT BUILD
     # =========================
+    ready = is_patient_ready(chat_id)
+
     history = get_history(chat_id)
 
     prompt = build_combined_prompt(
@@ -847,8 +860,8 @@ def predict(user_query, chat_id="default_session"):
         user_query=user_query,
         history_buffer=history,
         symptom_summary=get_symptom_summary(chat_id),
-        conversation_state=get_conversation_state(chat_id),
-        user_context=user_context
+        user_context=user_context,
+        patient_ready=ready
     )
 
     try:

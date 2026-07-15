@@ -8,8 +8,10 @@ import re
 
 from models import chat_sessions
 
-# Stores positive and negative symptoms for each conversation.
-chat_symptoms = {}
+from memory.session import (
+    get_expected_answer,
+    clear_expected_answer
+)
 
 # Stores structured clinical information for each conversation.
 patient_state = {}
@@ -52,6 +54,7 @@ def add_message(chat_id, role, text):
 
     if role == "user":
         update_symptoms(chat_id, text)
+        update_patient_entities(chat_id, text)
 
     limit_history(chat_id)
 
@@ -133,32 +136,48 @@ def update_symptoms(chat_id, text):
     Stores symptoms as present or denied.
     """
 
-    if chat_id not in chat_symptoms:
-        chat_symptoms[chat_id] = {
-            "present": set(),
-            "absent": set()
+    if chat_id not in patient_state:
+        patient_state[chat_id] = {
+            "symptoms_present": set(),
+            "symptoms_absent": set()
         }
     
     if chat_id not in patient_state:
 
         patient_state[chat_id] = {
 
-            "duration": None,
-            "pain_scale": None,
+            "chief_complaint": None,
 
             "symptoms_present": set(),
             "symptoms_absent": set(),
 
-            "emergency_symptom": False,
+            "duration": None,
+            "pain_scale": None,
+            "pain_location": None,
+            "pain_character": None,
+
+            "fever_temperature": None,
+
+            "medical_history": None,
+            "surgical_history": None,
+            "family_history": None,
+
+            "medications": None,
+            "allergies": None,
 
             "travel_history": None,
-            "medical_history": None,
-            "medications": None,
+            "smoking": None,
+            "pregnancy": None,
 
             "age": None,
-            "sex": None
-        }
+            "sex": None,
 
+            "red_flags": set(),
+
+            "asked_questions": set(),
+
+            "diagnosis_ready": False
+        }
     lower = text.lower()
 
     for symptom in COMMON_SYMPTOMS:
@@ -178,16 +197,10 @@ def update_symptoms(chat_id, text):
 
         if denied:
 
-            chat_symptoms[chat_id]["absent"].add(symptom)
-            chat_symptoms[chat_id]["present"].discard(symptom)
-
             patient_state[chat_id]["symptoms_absent"].add(symptom)
             patient_state[chat_id]["symptoms_present"].discard(symptom)
 
         else:
-
-            chat_symptoms[chat_id]["present"].add(symptom)
-            chat_symptoms[chat_id]["absent"].discard(symptom)
 
             patient_state[chat_id]["symptoms_present"].add(symptom)
             patient_state[chat_id]["symptoms_absent"].discard(symptom)
@@ -197,11 +210,11 @@ def get_symptom_summary(chat_id):
     Returns a formatted symptom summary.
     """
 
-    if chat_id not in chat_symptoms:
+    if chat_id not in patient_state:
         return "No symptoms identified yet."
 
-    present = sorted(chat_symptoms[chat_id]["present"])
-    absent = sorted(chat_symptoms[chat_id]["absent"])
+    present = sorted(patient_state[chat_id]["symptoms_present"])
+    absent = sorted(patient_state[chat_id]["symptoms_absent"])
 
     lines = []
 
@@ -227,5 +240,121 @@ def get_symptom_summary(chat_id):
 
     return "\n".join(lines)
 
-def clear_symptoms(chat_id):
-    chat_symptoms.pop(chat_id, None)
+
+def is_patient_ready(chat_id):
+
+    patient = patient_state[chat_id]
+
+    if len(patient["symptoms_present"]) == 0:
+        return False
+
+    if patient["duration"] is None:
+        return False
+
+    if patient["pain_scale"] is None:
+        return False
+
+    return True
+
+
+def clear_patient_state(chat_id):
+    patient_state.pop(chat_id, None)
+
+
+def update_patient_entities(chat_id, text):
+
+    lower = text.lower()
+
+    patient = patient_state[chat_id]
+
+    expected = get_expected_answer(chat_id)
+
+    # -------------------------
+    # Expected pain scale
+    # -------------------------
+
+    if expected == "pain_scale":
+        match = re.search(r"\b([1-9]|10)\b", lower)
+
+        if match:
+            patient["pain_scale"] = int(match.group(1))
+            clear_expected_answer(chat_id)
+            return
+        
+    # -------------------------
+    # Expected duration
+    # -------------------------
+
+    if expected == "duration":
+        match = re.search(
+            r"(\d+)\s*(day|days|week|weeks|month|months|hour|hours)",
+            lower
+        )
+
+        if match:
+            patient["duration"] = match.group(0)
+            clear_expected_answer(chat_id)
+            return
+        
+    # -------------------------
+    # Pain scale
+    # -------------------------
+    match = re.search(
+        r"\b([1-9]|10)\b",
+        lower
+    )
+
+    if (
+        ("pain" in lower or "scale" in lower or "severity" in lower)
+        and match
+    ):
+        patient["pain_scale"] = int(match.group(1))
+
+    # -------------------------
+    # Temperature
+    # -------------------------
+    match = re.search(
+        r"\b(3[5-9]|4[0-2])(\.\d)?\b",
+        lower
+    )
+
+    if match:
+        patient["temperature"] = match.group(0)
+
+    # -------------------------
+    # Age
+    # -------------------------
+    match = re.search(
+        r"(i am|i'm|age is)\s+(\d{1,3})",
+        lower
+    )
+
+    if match:
+        patient["age"] = int(match.group(2))
+
+    # -------------------------
+    # Pain location
+    # -------------------------
+    locations = [
+
+        "head",
+        "chest",
+        "abdomen",
+        "stomach",
+        "back",
+        "neck",
+        "throat",
+        "leg",
+        "arm",
+        "shoulder",
+        "eye",
+        "ear"
+
+    ]
+
+    for location in locations:
+
+        if location in lower:
+
+            patient["pain_location"] = location
+            break
