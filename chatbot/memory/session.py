@@ -18,6 +18,7 @@ _conversation_state = {}
 
 # Conversation phases
 COLLECTING_SYMPTOMS = "COLLECTING_SYMPTOMS"
+EMERGENCY = "EMERGENCY"
 ENOUGH_INFORMATION = "ENOUGH_INFORMATION"
 
 # ==========================================================

@@ -265,29 +265,22 @@ def build_combined_prompt(
 
     Immediately recommend urgent medical care BEFORE asking additional follow-up questions.
 
-    ==================================================
+  ==================================================
     FOLLOW-UP QUESTIONS
     ==================================================
 
-    When asking follow-up questions:
+    Do NOT ask any follow-up questions yourself.
 
-    - Ask ONLY questions directly relevant to the current symptoms.
-    - Each question must have a clear medical purpose.
-    - Ask at most TWO questions.
-    - Never ask the same question twice.
-    - Never ask about information already provided.
-    - Avoid generic questions unless necessary.
-    - Ask about common associated symptoms before asking about travel history or unusual exposures.
-    - Only ask about travel when clinically relevant.
+    Another component of the system will determine whether another question is needed.
 
-    If the user already provided enough information:
+    Only:
 
-    1. Briefly summarize what you know.
-    2. Explain the most likely possibilities.
-    3. Ask only the most useful remaining question(s).
+    - acknowledge the symptoms
+    - explain the most likely causes
+    - provide medical guidance
 
-    Never ask questions without first explaining your reasoning.
-
+    Do not end your response with a question.
+    
     ==================================================
     CONVERSATION MEMORY
     ==================================================

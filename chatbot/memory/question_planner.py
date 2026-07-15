@@ -36,6 +36,21 @@ FEMALE_FIELDS = [
     "pregnancy",
 ]
 
+# ==========================================================
+# Follow-up questions
+# ==========================================================
+
+FOLLOWUP_QUESTIONS = {
+    "duration": "How long have you had these symptoms?",
+    "age": "How old are you?",
+    "pain_location": "Where exactly is the pain located?",
+    "pain_scale": "On a scale of 1 to 10, how severe is the pain?",
+    "pain_character": "How would you describe the pain (sharp, dull, burning, throbbing, cramping)?",
+    "fever_temperature": "Have you measured your temperature? If so, what was it?",
+    "smoking": "Do you currently smoke?",
+    "pregnancy": "Is there any chance you could be pregnant?"
+}
+
 
 # ==========================================================
 # Utility
@@ -200,3 +215,20 @@ def get_next_missing_information(chat_id):
         "priority": "complete",
         "reason": "Enough information has been collected."
     }
+
+def get_followup_question(chat_id):
+    """
+    Returns the next follow-up question based on the planner.
+    """
+
+    planner = get_next_missing_information(chat_id)
+
+    if planner is None:
+        return None
+
+    field = planner["field"]
+
+    if field is None:
+        return None
+
+    return FOLLOWUP_QUESTIONS.get(field)

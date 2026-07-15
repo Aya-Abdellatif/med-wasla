@@ -1,6 +1,9 @@
 # -*- coding: utf-8 -*-
 
+from cmath import phase
 import re
+
+from typer import prompt
 
 from core.router import keyword_route
 
@@ -9,7 +12,10 @@ from models import chat_sessions
 from core.loader import initialize_model
 from core.classifier import classify_question
 
-from memory.question_planner import get_next_missing_information
+from memory.question_planner import (
+    get_next_missing_information,
+    get_followup_question
+)
 
 from preprocessing.gibberish import is_gibberish
 from preprocessing.spell_checker import clean_query
@@ -36,6 +42,7 @@ from memory.chitchat import get_chitchat_response
 
 from memory.session import (
     get_user,
+    set_expected_answer,
     set_last_specialist_name,
     get_last_specialist_name,
     mark_offer_fulfilled,
@@ -43,10 +50,14 @@ from memory.session import (
     set_last_question_type,
     get_last_question_type,
     set_waiting_for_reply,
-    # is_waiting_for_reply,
     assistant_is_waiting,
     set_conversation_state,
-    get_conversation_state
+    get_conversation_state,
+    set_phase,
+    get_phase,
+    COLLECTING_SYMPTOMS,
+    EMERGENCY,
+    ENOUGH_INFORMATION
 )
 
 from core.retrieval import retrieve_documents
@@ -626,10 +637,15 @@ def predict(user_query, chat_id="default_session"):
 
     elif question_type == "DATABASE":
         set_conversation_state(chat_id, "DATABASE")
+        set_phase(chat_id, None)
 
     elif question_type == "CHITCHAT":
         set_conversation_state(chat_id, "CHITCHAT")
+        set_phase(chat_id, None)
 
+    elif question_type == "GENERAL":
+        set_phase(chat_id, None)
+    
     if question_type != "GENERAL":
         set_last_question_type(chat_id, question_type)
         
@@ -668,6 +684,17 @@ def predict(user_query, chat_id="default_session"):
             print("=" * 80 + "\n")
 
             answer = generate_response(prompt)
+            followup = get_followup_question(chat_id)
+
+            if followup:
+
+                planner = get_next_missing_information(chat_id)
+
+                if planner:
+
+                    set_expected_answer(chat_id, planner["field"])
+
+                answer += f"\n\nCan you tell me:\n- {followup}"
         
         except Exception as e:
             print("Chitchat Error:", e)
@@ -856,44 +883,77 @@ def predict(user_query, chat_id="default_session"):
     # FINAL PROMPT BUILD
     # =========================
     
-    # Emergency detected
-    if planner and planner["priority"] == "emergency":
-        answer = (
-            "I'm concerned because you've reported symptoms that may require urgent medical attention.\n\n"
-            "Please seek emergency medical care immediately or go to the nearest emergency department. "
-            "If your symptoms become worse, call your local emergency services right away."
-        )
-        add_message(chat_id, "assistant", answer)
-        set_waiting_for_reply(chat_id, False)
-        return {
-            "answer": answer,
-            "sources": [],
-            "confidence": 1.0
-        }
-    
     planner = get_next_missing_information(chat_id)
+
+    if planner:
+        if planner["priority"] == "emergency":
+            set_phase(chat_id, EMERGENCY)
+
+        elif planner["priority"] == "complete":
+            set_phase(chat_id, ENOUGH_INFORMATION)
+
+        else:
+            set_phase(chat_id, COLLECTING_SYMPTOMS)
 
     conversation_state = get_conversation_state(chat_id)
 
-    prompt = build_combined_prompt(
-        context_docs=filtered_docs,
-        user_query=user_query,
-        history_buffer=history,
-        symptom_summary=get_symptom_summary(chat_id),
-        conversation_state=conversation_state,
-        planner=planner,
-        user_context=user_context
-    )
+
+    phase = get_phase(chat_id)
+
+    if phase == EMERGENCY:
+
+        prompt = f"""
+    You are WaslaBot.
+
+    The patient has already reported emergency warning signs earlier in the conversation.
+
+    Confirmed symptoms:
+    {get_symptom_summary(chat_id)}
+
+    Recent conversation:
+    {history}
+
+    Latest user message:
+    {user_query}
+
+    Instructions:
+
+    - Read ONLY the latest user message.
+    - Acknowledge what the user just said naturally.
+    - Do NOT repeat your previous response word-for-word.
+    - If the user answered one of your earlier questions, briefly acknowledge it.
+    - Continue recommending immediate emergency medical care.
+    - Do NOT ask any more follow-up questions.
+    - Do NOT discuss possible diagnoses.
+    - Keep the response under 5 short sentences.
+    - Sound calm, supportive, and human.
+    """
+
+    else:
+
+        prompt = build_combined_prompt(
+            context_docs=filtered_docs,
+            user_query=user_query,
+            history_buffer=history,
+            symptom_summary=get_symptom_summary(chat_id),
+            conversation_state=conversation_state,
+            planner=planner,
+            user_context=user_context
+        )
+
     try:
         answer = generate_response(prompt)
 
     except Exception as e:
         print("Ollama Error:", e)
         answer = "Sorry, I couldn't generate a response."
-    
-    add_message(chat_id, "assistant", answer)
-    set_waiting_for_reply(chat_id, assistant_is_waiting(answer))
 
+    add_message(chat_id, "assistant", answer)
+
+    if phase == EMERGENCY:
+        set_waiting_for_reply(chat_id, False)
+    else:
+        set_waiting_for_reply(chat_id, assistant_is_waiting(answer))
 
     return {
         "answer": answer,
