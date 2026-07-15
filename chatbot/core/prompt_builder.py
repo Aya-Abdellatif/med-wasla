@@ -113,6 +113,7 @@ def build_combined_prompt(
     history_buffer,
     symptom_summary,
     conversation_state,
+    planner,
     user_context=None
 ):
     context_text = ""
@@ -131,6 +132,23 @@ def build_combined_prompt(
     # Build the user account context section (from MongoDB), if any
     user_context_text = user_context if user_context else "No account information available."
 
+    
+    if planner:
+        planner_text = f"""
+    Planner Decision
+
+    Next Field:
+    {planner.get("field")}
+
+    Priority:
+    {planner.get("priority")}
+
+    Reason:
+    {planner.get("reason")}
+    """
+    else:
+        planner_text = "No planner decision."
+    
     # Build the prompt AFTER the loop
     prompt = f"""
     You are WaslaBot, the official AI medical assistant for the Med-Wasla platform.
@@ -418,6 +436,39 @@ def build_combined_prompt(
 
     {conversation_state}
     
+
+    ==================================================
+    CLINICAL PLANNER
+    ==================================================
+
+    {planner_text}
+
+    Rules:
+
+    If Next Field is not None:
+
+    - Do NOT diagnose yet.
+    - Do NOT recommend a specialist yet.
+    - Ask ONLY about the missing field.
+    - Ask ONE follow-up question.
+    - Do not ask for information already collected.
+
+    If Priority is emergency:
+
+    Immediately advise emergency medical care before asking anything else.
+
+    If Priority is complete:
+
+    Enough information has been collected.
+
+    Summarize the symptoms.
+
+    Discuss the most likely causes.
+
+    Recommend the appropriate specialist if appropriate.
+
+    Only ask another question if it will significantly change management.
+
     ==================================================
     RECENT CONVERSATION
     ==================================================

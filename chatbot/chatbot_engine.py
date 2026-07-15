@@ -9,6 +9,8 @@ from models import chat_sessions
 from core.loader import initialize_model
 from core.classifier import classify_question
 
+from memory.question_planner import get_next_missing_information
+
 from preprocessing.gibberish import is_gibberish
 from preprocessing.spell_checker import clean_query
 from preprocessing.sensitive_guard import is_sensitive_request, REFUSAL_MESSAGE
@@ -25,9 +27,9 @@ from memory.memory import (
     add_message,
     get_history,
     get_symptom_summary,
-    is_patient_ready,
-    update_patient_entities,
-    set_expected_answer
+    # is_patient_ready, will use later
+    # update_patient_entities,
+    # set_expected_answer
 )
 
 from memory.chitchat import get_chitchat_response
@@ -41,7 +43,7 @@ from memory.session import (
     set_last_question_type,
     get_last_question_type,
     set_waiting_for_reply,
-    is_waiting_for_reply,
+    # is_waiting_for_reply,
     assistant_is_waiting,
     set_conversation_state,
     get_conversation_state
@@ -66,6 +68,7 @@ from database.collections.specialist_queries import (
 from database.collections.appointment_queries import get_patient_upcoming_appointments
 
 from config import SIMILARITY_THRESHOLD, ENABLE_DATABASE
+
 
 
 # The only three next-step offers WaslaBot can actually follow through
@@ -651,11 +654,12 @@ def predict(user_query, chat_id="default_session"):
     # -------------------------
     if question_type == "CHITCHAT":
 
-        history = chat_sessions.get(chat_id, [])
-        
+        history = get_history(chat_id)
 
-        prompt = build_chitchat_prompt(processed_query, history)
-
+        prompt = build_chitchat_prompt(
+            processed_query,
+            history
+        )
         try:
             print("\n" + "=" * 80)
             print("FINAL PROMPT SENT TO LLM")
@@ -851,19 +855,35 @@ def predict(user_query, chat_id="default_session"):
     # =========================
     # FINAL PROMPT BUILD
     # =========================
-    ready = is_patient_ready(chat_id)
+    
+    # Emergency detected
+    if planner and planner["priority"] == "emergency":
+        answer = (
+            "I'm concerned because you've reported symptoms that may require urgent medical attention.\n\n"
+            "Please seek emergency medical care immediately or go to the nearest emergency department. "
+            "If your symptoms become worse, call your local emergency services right away."
+        )
+        add_message(chat_id, "assistant", answer)
+        set_waiting_for_reply(chat_id, False)
+        return {
+            "answer": answer,
+            "sources": [],
+            "confidence": 1.0
+        }
+    
+    planner = get_next_missing_information(chat_id)
 
-    history = get_history(chat_id)
+    conversation_state = get_conversation_state(chat_id)
 
     prompt = build_combined_prompt(
         context_docs=filtered_docs,
         user_query=user_query,
         history_buffer=history,
         symptom_summary=get_symptom_summary(chat_id),
-        user_context=user_context,
-        patient_ready=ready
+        conversation_state=conversation_state,
+        planner=planner,
+        user_context=user_context
     )
-
     try:
         answer = generate_response(prompt)
 
