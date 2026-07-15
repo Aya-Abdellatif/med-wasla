@@ -7,6 +7,8 @@ _sessions = {}
 
 # The name of the specialist most recently shown to the user
 _last_specialist = {}
+chat_symptoms = {}
+
 
 # Which offers have already been fulfilled for a specialist
 _fulfilled_offers = {}
@@ -14,6 +16,9 @@ _fulfilled_offers = {}
 # Conversation state (last detected intent + waiting for reply)
 _conversation_state = {}
 
+# Conversation phases
+COLLECTING_SYMPTOMS = "COLLECTING_SYMPTOMS"
+ENOUGH_INFORMATION = "ENOUGH_INFORMATION"
 
 # ==========================================================
 # User Session
@@ -79,6 +84,18 @@ def get_conversation_state(chat_id: str):
         _conversation_state
         .get(chat_id, {})
         .get("conversation_state")
+    )
+
+def set_phase(chat_id: str, phase: str):
+    _conversation_state.setdefault(chat_id, {})
+    _conversation_state[chat_id]["phase"] = phase
+
+
+def get_phase(chat_id: str):
+    return (
+        _conversation_state
+        .get(chat_id, {})
+        .get("phase")
     )
 
 def set_last_question_type(chat_id: str, question_type: str):

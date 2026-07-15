@@ -11,6 +11,9 @@ from models import chat_sessions
 # Stores positive and negative symptoms for each conversation.
 chat_symptoms = {}
 
+# Stores structured clinical information for each conversation.
+patient_state = {}
+
 def get_history(chat_id):
     """
     Returns recent conversation history formatted for LLM prompt.
@@ -135,6 +138,26 @@ def update_symptoms(chat_id, text):
             "present": set(),
             "absent": set()
         }
+    
+    if chat_id not in patient_state:
+
+        patient_state[chat_id] = {
+
+            "duration": None,
+            "pain_scale": None,
+
+            "symptoms_present": set(),
+            "symptoms_absent": set(),
+
+            "emergency_symptom": False,
+
+            "travel_history": None,
+            "medical_history": None,
+            "medications": None,
+
+            "age": None,
+            "sex": None
+        }
 
     lower = text.lower()
 
@@ -158,10 +181,16 @@ def update_symptoms(chat_id, text):
             chat_symptoms[chat_id]["absent"].add(symptom)
             chat_symptoms[chat_id]["present"].discard(symptom)
 
+            patient_state[chat_id]["symptoms_absent"].add(symptom)
+            patient_state[chat_id]["symptoms_present"].discard(symptom)
+
         else:
 
             chat_symptoms[chat_id]["present"].add(symptom)
             chat_symptoms[chat_id]["absent"].discard(symptom)
+
+            patient_state[chat_id]["symptoms_present"].add(symptom)
+            patient_state[chat_id]["symptoms_absent"].discard(symptom)
 
 def get_symptom_summary(chat_id):
     """
