@@ -40,15 +40,30 @@ FEMALE_FIELDS = [
 # Follow-up questions
 # ==========================================================
 
-FOLLOWUP_QUESTIONS = {
-    "duration": "How long have you had these symptoms?",
-    "age": "How old are you?",
-    "pain_location": "Where exactly is the pain located?",
-    "pain_scale": "On a scale of 1 to 10, how severe is the pain?",
-    "pain_character": "How would you describe the pain (sharp, dull, burning, throbbing, cramping)?",
-    "fever_temperature": "Have you measured your temperature? If so, what was it?",
-    "smoking": "Do you currently smoke?",
-    "pregnancy": "Is there any chance you could be pregnant?"
+FOLLOWUP_GUIDANCE = {
+    "duration":
+        "Ask naturally how long the symptoms have been present.",
+
+    "age":
+        "Ask naturally for the patient's age.",
+
+    "pain_location":
+        "Ask where the pain is located.",
+
+    "pain_scale":
+        "Ask how severe the pain is (1-10).",
+
+    "pain_character":
+        "Ask the patient to describe the pain (sharp, dull, burning, throbbing, cramping).",
+
+    "fever_temperature":
+        "Ask whether the patient measured their temperature and what it was.",
+
+    "smoking":
+        "Ask whether the patient currently smokes.",
+
+    "pregnancy":
+        "Ask whether there is any chance the patient could be pregnant."
 }
 
 
@@ -100,6 +115,8 @@ def get_next_missing_information(chat_id):
     # Basic information
     # ------------------------------------------------------
 
+    print(patient)
+    
     for field in BASE_FIELDS:
 
         if _missing(patient, field):
@@ -216,9 +233,9 @@ def get_next_missing_information(chat_id):
         "reason": "Enough information has been collected."
     }
 
-def get_followup_question(chat_id):
+def get_followup_guidance(chat_id):
     """
-    Returns the next follow-up question based on the planner.
+    Returns the next follow-up guidance based on the planner.
     """
 
     planner = get_next_missing_information(chat_id)
@@ -231,4 +248,4 @@ def get_followup_question(chat_id):
     if field is None:
         return None
 
-    return FOLLOWUP_QUESTIONS.get(field)
+    return FOLLOWUP_GUIDANCE.get(field)

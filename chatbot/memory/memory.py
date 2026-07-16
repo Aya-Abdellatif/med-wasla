@@ -4,13 +4,15 @@ memory.py
 Conversation memory management.
 """
 
+from email.mime import text
 import re
 
 from models import chat_sessions
 
 from memory.session import (
     get_expected_answer,
-    clear_expected_answer
+    clear_expected_answer,
+    set_expected_answer
 )
 
 # from memory.question_planner import get_next_missing_information
@@ -279,6 +281,9 @@ def is_patient_ready(chat_id):
 
     planner = get_next_missing_information(chat_id)
 
+    if planner and planner["field"]:
+        set_expected_answer(chat_id, planner["field"])
+
     return planner["priority"] == "complete"
 
 def clear_patient_state(chat_id):
@@ -297,6 +302,14 @@ def update_patient_entities(chat_id, text):
     patient = patient_state[chat_id]
 
     expected = get_expected_answer(chat_id)
+    
+    print("=" * 60)
+    print("USER:", text)
+    print("EXPECTED:", expected)
+    print("=" * 60)
+    print("EXPECTED:", expected)
+    print("CHAT ID:", chat_id)
+    print("=" * 60)
 
     # =====================================================
     # Handle expected answer first
@@ -358,9 +371,15 @@ def update_patient_entities(chat_id, text):
             value = re.search(r"\b(\d{1,3})\b", lower)
 
             if value:
-                patient["age"] = int(value.group(1))
-                clear_expected_answer(chat_id)
-                return
+                age = int(value.group(1))
+
+                if 0 < age <= 120:
+                    patient["age"] = age
+                    print("AGE SAVED:", age)
+                    patient["age"] = age
+
+                    clear_expected_answer(chat_id)
+                    return
 
     # =====================================================
     # General extraction
@@ -406,15 +425,16 @@ def update_patient_entities(chat_id, text):
     # -------------------------
     # Age
     # -------------------------
-
     match = re.search(
         r"(i am|i'm|my age is|age is)\s+(\d{1,3})",
         lower
     )
 
     if match:
-        if patient["age"] is None:
-            patient["age"] = int(match.group(2))
+        age = int(match.group(2))
+
+        if 0 < age <= 120:
+            patient["age"] = age
 
     # -------------------------
     # Sex

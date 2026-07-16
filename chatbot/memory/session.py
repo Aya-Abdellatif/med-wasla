@@ -125,11 +125,13 @@ def is_waiting_for_reply(chat_id: str):
     )
 
 def set_expected_answer(chat_id: str, field: str):
+    print("CHAT ID:", chat_id)
     _conversation_state.setdefault(chat_id, {})
     _conversation_state[chat_id]["expected_answer"] = field
 
 
 def get_expected_answer(chat_id: str):
+    print("CHAT ID:", chat_id)
     return (
         _conversation_state
         .get(chat_id, {})

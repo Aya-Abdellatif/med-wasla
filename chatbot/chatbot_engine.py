@@ -14,7 +14,7 @@ from core.classifier import classify_question
 
 from memory.question_planner import (
     get_next_missing_information,
-    get_followup_question
+    get_followup_guidance
 )
 
 from preprocessing.gibberish import is_gibberish
@@ -684,9 +684,14 @@ def predict(user_query, chat_id="default_session"):
             print("=" * 80 + "\n")
 
             answer = generate_response(prompt)
-            followup = get_followup_question(chat_id)
+            
+            planner = get_next_missing_information(chat_id)
+            if planner and planner["field"]:
+                set_expected_answer(chat_id, planner["field"])
+                
+            followup_guidance = get_followup_guidance(chat_id)
 
-            if followup:
+            if followup_guidance:
 
                 planner = get_next_missing_information(chat_id)
 
@@ -694,7 +699,7 @@ def predict(user_query, chat_id="default_session"):
 
                     set_expected_answer(chat_id, planner["field"])
 
-                answer += f"\n\nCan you tell me:\n- {followup}"
+                answer += f"\n\nCan you tell me:\n- {followup_guidance}"
         
         except Exception as e:
             print("Chitchat Error:", e)
@@ -806,6 +811,11 @@ def predict(user_query, chat_id="default_session"):
         try:
             answer = generate_response(prompt)
             answer = _finalize_specialist_answer(answer, chat_id, context_specialist_name)
+
+            planner = get_next_missing_information(chat_id)
+            if planner and planner["field"]:
+                set_expected_answer(chat_id, planner["field"])
+            
         except Exception as e:
             print("DB Error:", e)
             answer = "Sorry, I couldn't retrieve your account information."
@@ -885,7 +895,11 @@ def predict(user_query, chat_id="default_session"):
     
     planner = get_next_missing_information(chat_id)
 
+    followup_guidance = None
+
     if planner:
+        followup_guidance = get_followup_guidance(chat_id)
+
         if planner["priority"] == "emergency":
             set_phase(chat_id, EMERGENCY)
 
@@ -907,29 +921,46 @@ def predict(user_query, chat_id="default_session"):
 
     The patient has already reported emergency warning signs earlier in the conversation.
 
-    Confirmed symptoms:
-    {get_symptom_summary(chat_id)}
+    Your role now is to continue the conversation naturally.
+
+    Rules:
+
+    Your ONLY task is:
+
+    1. Briefly acknowledge the patient's latest reply.
+    2. Clearly explain that the reported symptoms require immediate emergency medical care.
+    3. Give 3–5 brief, practical first-aid or self-care recommendations that are safe to follow while waiting for medical care or traveling to the emergency department.
+    4. Examples include:
+    - Avoid strenuous physical activity.
+    - Sit upright if breathing is difficult.
+    - Stay with another person if possible.
+    - Do not drive yourself if symptoms are severe.
+    - Call emergency services if symptoms worsen.
+    5. Do NOT suggest home treatment instead of emergency care.
+    6. Do NOT discuss diagnoses in detail.
+    7. Do NOT ask further medical questions.
+    8. Keep the response under 8 sentences.
+
+    - First acknowledge the patient's latest reply in one short sentence.
+    - If they answered a previous question, briefly acknowledge the answer.
+    - Do NOT repeat the exact same wording as your previous response.
+    - Remind them that their symptoms may require immediate emergency medical care.
+    - Encourage them to go to the nearest emergency department or call local emergency services.
+    - Do NOT ask any more medical questions.
+    - Do NOT discuss diagnoses.
+    - Keep the reply under 5 sentences.
+    - Make each reply sound slightly different from the previous one.
 
     Recent conversation:
     {history}
 
     Latest user message:
     {user_query}
-
-    Instructions:
-
-    - Read ONLY the latest user message.
-    - Acknowledge what the user just said naturally.
-    - Do NOT repeat your previous response word-for-word.
-    - If the user answered one of your earlier questions, briefly acknowledge it.
-    - Continue recommending immediate emergency medical care.
-    - Do NOT ask any more follow-up questions.
-    - Do NOT discuss possible diagnoses.
-    - Keep the response under 5 short sentences.
-    - Sound calm, supportive, and human.
     """
 
     else:
+
+        followup_guidance = get_followup_guidance(chat_id)
 
         prompt = build_combined_prompt(
             context_docs=filtered_docs,
@@ -938,12 +969,17 @@ def predict(user_query, chat_id="default_session"):
             symptom_summary=get_symptom_summary(chat_id),
             conversation_state=conversation_state,
             planner=planner,
+            followup_guidance=followup_guidance,
             user_context=user_context
         )
 
     try:
         answer = generate_response(prompt)
 
+        planner = get_next_missing_information(chat_id)
+        if planner and planner["field"]:
+            set_expected_answer(chat_id, planner["field"])
+            
     except Exception as e:
         print("Ollama Error:", e)
         answer = "Sorry, I couldn't generate a response."
