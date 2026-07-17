@@ -62,7 +62,8 @@
       "features": {
         "customWorkingHours": "Custom Working Hours",
         "automatedBookingManagement": "Automated Booking Management",
-        "realTimeAppointmentReminders": "Real-time Appointment Reminders"
+        "realTimeAppointmentReminders": "Real-time Appointment Reminders",
+        "patientMedicalHistoryAccess": "Patient Medical History Access"
       }
     },
     "homeVisitRequests": {
