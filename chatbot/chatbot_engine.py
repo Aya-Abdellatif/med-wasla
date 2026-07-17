@@ -4,12 +4,17 @@ import re
 
 from core.router import keyword_route
 
+from models import chat_sessions
+
 from core.loader import initialize_model
 from core.classifier import classify_question
+
+from memory.question_planner import get_next_missing_information
 
 from preprocessing.gibberish import is_gibberish
 from preprocessing.spell_checker import clean_query
 from preprocessing.sensitive_guard import is_sensitive_request, REFUSAL_MESSAGE
+
 from preprocessing.write_action_guard import (
     get_requested_action,
     get_requested_info,
@@ -18,14 +23,30 @@ from preprocessing.write_action_guard import (
     GENERIC_NO_ACTION_MESSAGE
 )
 
-from memory.memory import add_message, get_history
+from memory.memory import (
+    add_message,
+    get_history,
+    get_symptom_summary,
+    # is_patient_ready, will use later
+    # update_patient_entities,
+    # set_expected_answer
+)
+
 from memory.chitchat import get_chitchat_response
+
 from memory.session import (
     get_user,
     set_last_specialist_name,
     get_last_specialist_name,
     mark_offer_fulfilled,
-    get_fulfilled_offers
+    get_fulfilled_offers,
+    set_last_question_type,
+    get_last_question_type,
+    set_waiting_for_reply,
+    # is_waiting_for_reply,
+    assistant_is_waiting,
+    set_conversation_state,
+    get_conversation_state
 )
 
 from core.retrieval import retrieve_documents
@@ -47,6 +68,8 @@ from database.collections.specialist_queries import (
 from database.collections.appointment_queries import get_patient_upcoming_appointments
 
 from config import SIMILARITY_THRESHOLD, ENABLE_DATABASE
+
+
 
 # The only three next-step offers WaslaBot can actually follow through
 # on (see prompt_builder.build_database_prompt rule 8). Rebuilding this
@@ -410,8 +433,12 @@ def predict(user_query, chat_id="default_session"):
 
         answer = "I couldn't understand your message. Could you rephrase it?"
 
-        add_message(chat_id, "user", user_query)
+        # add_message(chat_id, "user", user_query)
+        
+        
         add_message(chat_id, "assistant", answer)
+        set_waiting_for_reply(chat_id, assistant_is_waiting(answer))
+
 
         return {
             "answer": answer,
@@ -430,6 +457,7 @@ def predict(user_query, chat_id="default_session"):
     if is_sensitive_request(user_query):
 
         add_message(chat_id, "assistant", REFUSAL_MESSAGE)
+        set_waiting_for_reply(chat_id,assistant_is_waiting(REFUSAL_MESSAGE))
 
         return {
             "answer": REFUSAL_MESSAGE,
@@ -449,6 +477,8 @@ def predict(user_query, chat_id="default_session"):
         answer = _handle_book_guidance(processed_query, chat_id)
 
         add_message(chat_id, "assistant", answer)
+        set_waiting_for_reply(chat_id, assistant_is_waiting(answer))
+
 
         return {
             "answer": answer,
@@ -461,6 +491,8 @@ def predict(user_query, chat_id="default_session"):
         answer = _handle_existing_appointment_guidance(requested_action, chat_id)
 
         add_message(chat_id, "assistant", answer)
+        set_waiting_for_reply(chat_id, assistant_is_waiting(answer))
+
 
         return {
             "answer": answer,
@@ -475,6 +507,8 @@ def predict(user_query, chat_id="default_session"):
         answer = build_action_guard_message(requested_action, logged_in=bool(user_id))
 
         add_message(chat_id, "assistant", answer)
+        set_waiting_for_reply(chat_id, assistant_is_waiting(answer))
+
 
         return {
             "answer": answer,
@@ -506,6 +540,8 @@ def predict(user_query, chat_id="default_session"):
             answer = _finalize_specialist_answer(answer, chat_id, specialist_name)
 
         add_message(chat_id, "assistant", answer)
+        set_waiting_for_reply(chat_id, assistant_is_waiting(answer))
+
 
         return {
             "answer": answer,
@@ -523,6 +559,7 @@ def predict(user_query, chat_id="default_session"):
     if comparison_answer:
 
         add_message(chat_id, "assistant", comparison_answer)
+        set_waiting_for_reply(chat_id, assistant_is_waiting(comparison_answer))
 
         return {
             "answer": comparison_answer,
@@ -539,6 +576,7 @@ def predict(user_query, chat_id="default_session"):
     if is_unrecognized_offer_confirmation(processed_query, chat_id):
 
         add_message(chat_id, "assistant", GENERIC_NO_ACTION_MESSAGE)
+        set_waiting_for_reply(chat_id,assistant_is_waiting(GENERIC_NO_ACTION_MESSAGE))
 
         return {
             "answer": GENERIC_NO_ACTION_MESSAGE,
@@ -546,16 +584,55 @@ def predict(user_query, chat_id="default_session"):
             "confidence": 1.0
         }
 
-    # -------------------------
-    # routing
-    # -------------------------
-    question_type = keyword_route(processed_query)
 
-    if question_type is None:
-        question_type = classify_question(processed_query)
+    # -------------------------
+    # Detect whether this looks like a reply to the previous assistant message
+    # -------------------------
+
+    from memory.session import is_waiting_for_reply
+
+    history = get_history(chat_id)
+
+    is_followup = (
+        is_waiting_for_reply(chat_id)
+        and len(processed_query.split()) <= 12
+    )
+
+    # -------------------------
+    # Routing
+    # -------------------------
+
+    if is_followup:
+
+        question_type = get_last_question_type(chat_id)
+
+        if question_type is None:
+            question_type = keyword_route(processed_query)
+
+            if question_type is None:
+                question_type = classify_question(processed_query)
+
+    else:
+
+        question_type = keyword_route(processed_query)
+
+        if question_type is None:
+            question_type = classify_question(processed_query)
 
     print(f"Question Type: {question_type}")
+    
+    if question_type == "MEDICAL":
+        set_conversation_state(chat_id, "COLLECTING_SYMPTOMS")
 
+    elif question_type == "DATABASE":
+        set_conversation_state(chat_id, "DATABASE")
+
+    elif question_type == "CHITCHAT":
+        set_conversation_state(chat_id, "CHITCHAT")
+
+    if question_type != "GENERAL":
+        set_last_question_type(chat_id, question_type)
+        
     # -------------------------
     # chitchat (predefined exact-match responses)
     # -------------------------
@@ -564,6 +641,7 @@ def predict(user_query, chat_id="default_session"):
     if chitchat_answer:
 
         add_message(chat_id, "assistant", chitchat_answer)
+        set_waiting_for_reply(chat_id, assistant_is_waiting(chitchat_answer))
 
         return {
             "answer": chitchat_answer,
@@ -578,15 +656,34 @@ def predict(user_query, chat_id="default_session"):
 
         history = get_history(chat_id)
 
-        prompt = build_chitchat_prompt(processed_query, history)
-
+        prompt = build_chitchat_prompt(
+            processed_query,
+            history
+        )
         try:
+            print("\n" + "=" * 80)
+            print("FINAL PROMPT SENT TO LLM")
+            print("=" * 80)
+            print(prompt)
+            print("=" * 80 + "\n")
+
             answer = generate_response(prompt)
+        
         except Exception as e:
             print("Chitchat Error:", e)
             answer = "Hello! How can I help you today?"
 
+        lower_answer = answer.lower()
+
+        if "scale of 1-10" in lower_answer or "scale from 1 to 10" in lower_answer:
+            set_expected_answer(chat_id, "pain_scale")
+
+        elif "how long" in lower_answer:
+            set_expected_answer(chat_id, "duration")
+
         add_message(chat_id, "assistant", answer)
+        set_waiting_for_reply(chat_id, assistant_is_waiting(answer))
+
 
         return {
             "answer": answer,
@@ -602,6 +699,8 @@ def predict(user_query, chat_id="default_session"):
         answer = "It looks like your question is not related to Med-Wasla or health."
 
         add_message(chat_id, "assistant", answer)
+        set_waiting_for_reply(chat_id, assistant_is_waiting(answer))
+
 
         return {
             "answer": answer,
@@ -641,6 +740,8 @@ def predict(user_query, chat_id="default_session"):
             answer = _finalize_specialist_answer(answer, chat_id, context_specialist_name)
 
             add_message(chat_id, "assistant", answer)
+            set_waiting_for_reply(chat_id, assistant_is_waiting(answer))
+
 
             return {
                 "answer": answer,
@@ -657,6 +758,8 @@ def predict(user_query, chat_id="default_session"):
             answer = _finalize_specialist_answer(answer, chat_id, context_specialist_name)
 
             add_message(chat_id, "assistant", answer)
+            set_waiting_for_reply(chat_id, assistant_is_waiting(answer))
+
 
             return {
                 "answer": answer,
@@ -669,6 +772,7 @@ def predict(user_query, chat_id="default_session"):
         prompt = build_database_prompt(
             user_query=user_query,
             history_buffer=history,
+            symptom_summary=get_symptom_summary(chat_id),
             user_context=user_context
         )
 
@@ -679,7 +783,10 @@ def predict(user_query, chat_id="default_session"):
             print("DB Error:", e)
             answer = "Sorry, I couldn't retrieve your account information."
 
+        
         add_message(chat_id, "assistant", answer)
+        set_waiting_for_reply(chat_id, assistant_is_waiting(answer))
+
 
         return {
             "answer": answer,
@@ -690,9 +797,31 @@ def predict(user_query, chat_id="default_session"):
     # =========================
     # RAG RETRIEVAL (MEDICAL/WEBSITE)
     # =========================
+    
+    # Build retrieval query
+    retrieval_query = processed_query
+
+    if is_followup:
+        symptom_summary = get_symptom_summary(chat_id)
+
+        if symptom_summary:
+            retrieval_query = f"""
+    Current confirmed symptoms:
+    {symptom_summary}
+    Latest user reply:
+    {processed_query}
+    """
+        else:
+            retrieval_query = f"""
+    Conversation:
+    {history}
+    Latest user reply:
+    {processed_query}
+    """
+
     filtered_docs, confidence, sources = retrieve_documents(
         question_type,
-        processed_query
+        retrieval_query
     )
 
     if not filtered_docs:
@@ -700,6 +829,8 @@ def predict(user_query, chat_id="default_session"):
         answer = "It looks like your question is not related to Med-Wasla or health."
 
         add_message(chat_id, "assistant", answer)
+        set_waiting_for_reply(chat_id, assistant_is_waiting(answer))
+
 
         return {
             "answer": answer,
@@ -707,11 +838,13 @@ def predict(user_query, chat_id="default_session"):
             "confidence": 0.0
         }
 
-    if confidence < SIMILARITY_THRESHOLD:
-
+    if confidence < SIMILARITY_THRESHOLD and not is_followup:
         answer = "I couldn't find enough reliable information."
 
+        
         add_message(chat_id, "assistant", answer)
+        set_waiting_for_reply(chat_id, assistant_is_waiting(answer))
+
 
         return {
             "answer": answer,
@@ -722,23 +855,45 @@ def predict(user_query, chat_id="default_session"):
     # =========================
     # FINAL PROMPT BUILD
     # =========================
-    history = get_history(chat_id)
+    
+    # Emergency detected
+    if planner and planner["priority"] == "emergency":
+        answer = (
+            "I'm concerned because you've reported symptoms that may require urgent medical attention.\n\n"
+            "Please seek emergency medical care immediately or go to the nearest emergency department. "
+            "If your symptoms become worse, call your local emergency services right away."
+        )
+        add_message(chat_id, "assistant", answer)
+        set_waiting_for_reply(chat_id, False)
+        return {
+            "answer": answer,
+            "sources": [],
+            "confidence": 1.0
+        }
+    
+    planner = get_next_missing_information(chat_id)
+
+    conversation_state = get_conversation_state(chat_id)
 
     prompt = build_combined_prompt(
         context_docs=filtered_docs,
         user_query=user_query,
         history_buffer=history,
+        symptom_summary=get_symptom_summary(chat_id),
+        conversation_state=conversation_state,
+        planner=planner,
         user_context=user_context
     )
-
     try:
         answer = generate_response(prompt)
 
     except Exception as e:
         print("Ollama Error:", e)
         answer = "Sorry, I couldn't generate a response."
-
+    
     add_message(chat_id, "assistant", answer)
+    set_waiting_for_reply(chat_id, assistant_is_waiting(answer))
+
 
     return {
         "answer": answer,
