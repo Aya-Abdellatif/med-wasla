@@ -62,8 +62,7 @@
       "features": {
         "customWorkingHours": "ساعات عمل مخصصة",
         "automatedBookingManagement": "إدارة الحجز التلقائية",
-        "realTimeAppointmentReminders": "تذكيرات مواعيد فورية",
-        "patientMedicalHistoryAccess": "الوصول إلى السجل الطبي للمريض"
+        "realTimeAppointmentReminders": "تذكيرات مواعيد فورية"
       }
     },
     "homeVisitRequests": {
