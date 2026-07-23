@@ -59,9 +59,23 @@ def classify_database_query(question: str):
     ]
 
     specialist_keywords = [
-        "doctor", "specialist", "nurse",
-        "cardiologist", "dermatologist",
-        "neurologist", "physician"
+        "doctor",
+        "doctors",
+        "dr",
+        "dr.",
+        "drs",
+        "specialist",
+        "specialists",
+        "nurse",
+        "nurses",
+        "cardiologist",
+        "cardiologists",
+        "dermatologist",
+        "dermatologists",
+        "neurologist",
+        "neurologists",
+        "physician",
+        "physicians"
     ]
 
     review_keywords = [
@@ -79,13 +93,14 @@ def classify_database_query(question: str):
     # own is a strong enough signal this is a specialist-directory
     # question, even if the message doesn't say "doctor"/"specialist"
     # (e.g. "the cardiology with the highest rate").
+# Specialist queries have higher priority than review queries
     if (
-        any(word in question for word in specialist_keywords)
+        any(re.search(rf"\b{re.escape(word)}\b", question) for word in specialist_keywords)
         or extract_specialization(question) is not None
     ):
         return "SPECIALISTS"
 
-    if any(word in question for word in review_keywords):
+    if any(re.search(rf"\b{re.escape(word)}\b", question) for word in review_keywords):
         return "REVIEWS"
 
     return "UNKNOWN"

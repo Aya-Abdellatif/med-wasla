@@ -57,10 +57,14 @@ from memory.session import (
     get_conversation_state,
     set_phase,
     get_phase,
+    get_pending_offer,
+    clear_pending_offer,
     COLLECTING_SYMPTOMS,
     EMERGENCY,
     ENOUGH_INFORMATION
 )
+
+
 
 from core.retrieval import retrieve_documents
 from core.prompt_builder import (
@@ -535,7 +539,44 @@ def predict(user_query, chat_id="default_session"):
     # WaslaBot made about a specialist it already named — unlike the
     # write actions above, this IS something we can actually fetch.
     # -------------------------
+
+    print("Pending offer:", get_pending_offer(chat_id))
+
     requested_info = get_requested_info(processed_query, chat_id)
+
+    pending_offer = get_pending_offer(chat_id)
+
+    if (
+        pending_offer == "login_help"
+        and processed_query.lower() in {
+            "yes",
+            "yes please",
+            "sure",
+            "ok",
+            "okay",
+            "please",
+            "yeah",
+            "yep"
+        }
+    ):
+        answer = (
+            "To log in:\n\n"
+            "1. Open the Med-Wasla login page.\n"
+            "2. Enter your registered email and password.\n"
+            "3. Click **Log In**.\n\n"
+            "If you've forgotten your password, use the **Forgot Password** option on the login page."
+        )
+
+        clear_pending_offer(chat_id)
+
+        add_message(chat_id, "assistant", answer)
+        set_waiting_for_reply(chat_id, assistant_is_waiting(answer))
+
+        return {
+            "answer": answer,
+            "sources": ["Med-Wasla"],
+            "confidence": 1.0
+        }
 
     if requested_info:
 
@@ -607,30 +648,59 @@ def predict(user_query, chat_id="default_session"):
 
     history = get_history(chat_id)
 
+    FOLLOWUP_MAX_WORDS = 4
+
+    followup_starters = (
+        "what",
+        "who",
+        "where",
+        "when",
+        "why",
+        "how",
+        "which",
+        "show",
+        "list",
+        "find",
+        "give",
+        "tell",
+    )
+
     is_followup = (
         is_waiting_for_reply(chat_id)
-        and len(processed_query.split()) <= 12
+        and len(processed_query.split()) <= FOLLOWUP_MAX_WORDS
+        and "?" not in processed_query
+        and not processed_query.lower().startswith(followup_starters)
     )
 
     # -------------------------
     # Routing
     # -------------------------
 
-    if is_followup:
+    """
+    last_type = get_last_question_type(chat_id)
 
-        question_type = get_last_question_type(chat_id)
-
-        if question_type is None:
-            question_type = keyword_route(processed_query)
-
-            if question_type is None:
-                question_type = classify_question(processed_query)
+    if is_followup and last_type == "MEDICAL":
+        question_type = "MEDICAL"
 
     else:
-
         question_type = keyword_route(processed_query)
 
         if question_type is None:
+            question_type = classify_question(processed_query)
+
+    """
+    question_type = get_last_question_type(chat_id) 
+
+    if question_type is None: 
+        question_type = keyword_route(processed_query) 
+
+        if question_type is None: 
+            question_type = classify_question(processed_query) 
+
+    else: 
+        question_type = keyword_route(processed_query) 
+
+        if question_type is None: 
             question_type = classify_question(processed_query)
 
     print(f"Question Type: {question_type}")
@@ -725,6 +795,8 @@ def predict(user_query, chat_id="default_session"):
         set_waiting_for_reply(chat_id, assistant_is_waiting(answer))
 
 
+        set_last_question_type(chat_id, None)
+
         return {
             "answer": answer,
             "sources": [],
@@ -762,6 +834,14 @@ def predict(user_query, chat_id="default_session"):
             user_context, context_specialist_name, context_specialists = get_user_context(
                 processed_query, user_id, chat_id
             )
+            print("\n========== DATABASE CONTEXT ==========")
+            print("User ID:", user_id)
+            print("Context:")
+            print(user_context)
+            print("Specialist:", context_specialist_name)
+            print("Specialists:", context_specialists)
+            print("======================================\n")
+
         except Exception as e:
             print("Database Error:", e)
 
@@ -769,6 +849,38 @@ def predict(user_query, chat_id="default_session"):
     # DATABASE RESPONSE
     # =========================
     if question_type == "DATABASE":
+        print("ENTERED DATABASE BLOCK")
+
+        # DATABASE RESPONSE
+        if question_type == "DATABASE":
+
+            # Login required -> don't let the LLM hallucinate
+            if (
+                user_context
+                and "The user is not logged in" in user_context
+            ):
+
+                answer = (
+                    "Unfortunately, you need to be logged in to access your account "
+                    "and platform data. Please log in to view information about your "
+                    "doctors and their ratings.\n\n"
+                    "Would you like to know how to log in?"
+                )
+
+                add_message(chat_id, "assistant", answer)
+                set_waiting_for_reply(chat_id, assistant_is_waiting(answer))
+
+                print("RETURNING DATABASE RESPONSE")
+
+                return {
+                    "answer": answer,
+                    "sources": ["MongoDB"],
+                    "confidence": 1.0
+                }
+
+    # "list the cardiologists from top to lowest"
+    if context_specialists and _LIST_SPECIALISTS_RE.search(processed_query):
+
 
         # "list the cardiologists from top to lowest" — a readable
         # bulleted ranking, not a single pick. Checked before the
@@ -827,7 +939,11 @@ def predict(user_query, chat_id="default_session"):
             """
 
         except Exception as e:
+            # print("DB Error:", e)
+            import traceback
+            traceback.print_exc()
             print("DB Error:", e)
+
             answer = "Sorry, I couldn't retrieve your account information."
 
         

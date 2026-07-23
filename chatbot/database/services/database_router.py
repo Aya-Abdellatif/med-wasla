@@ -29,7 +29,8 @@ from database.collections.review_queries import (
 def handle_database_query(user_query: str, user_id: str):
 
     intent = classify_database_query(user_query)
-
+    print("DATABASE INTENT:", intent)
+    
     # -----------------------------
     # APPOINTMENTS
     # -----------------------------

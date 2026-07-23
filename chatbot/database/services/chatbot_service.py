@@ -28,6 +28,10 @@ def get_user_context(user_query, user_id, chat_id=None):
 
     result = handle_database_query(user_query, user_id)
 
+    print("\n========== DATABASE RESULT ==========")
+    print(result)
+    print("=====================================\n")
+
     if result is None:
         return "", None, None
 
