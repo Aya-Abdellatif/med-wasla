@@ -4,7 +4,7 @@ memory.py
 Conversation memory management.
 """
 
-from email.mime import text
+# from email.mime import text
 import re
 
 from models import chat_sessions
@@ -302,6 +302,39 @@ def update_patient_entities(chat_id, text):
     patient = patient_state[chat_id]
 
     expected = get_expected_answer(chat_id)
+
+    # ------------------------------------------------------
+    # Smoking (only if we were expecting a smoking answer)
+    # ------------------------------------------------------
+
+    if expected == "smoking":
+
+        if re.search(r"\b(yes|i smoke|smoker)\b", lower):
+            patient["smoking"] = True
+            clear_expected_answer(chat_id)
+            return
+
+        elif re.search(r"\b(no|don't smoke|do not smoke|never smoked|non smoker)\b", lower):
+            patient["smoking"] = False
+            clear_expected_answer(chat_id)
+            return
+
+
+    # ------------------------------------------------------
+    # Pregnancy (only if we were expecting a pregnancy answer)
+    # ------------------------------------------------------
+
+    if expected == "pregnancy":
+
+        if re.search(r"\b(yes|pregnant)\b", lower):
+            patient["pregnancy"] = True
+            clear_expected_answer(chat_id)
+            return
+
+        elif re.search(r"\b(no|not pregnant)\b", lower):
+            patient["pregnancy"] = False
+            clear_expected_answer(chat_id)
+            return
     
     print("=" * 60)
     print("USER:", text)
@@ -440,11 +473,11 @@ def update_patient_entities(chat_id, text):
     # Sex
     # -------------------------
 
-    if re.search(r"\bfemale\b", lower):
+    if re.search(r"\b(female|woman|girl)\b", lower):
         if patient["sex"] is None:
             patient["sex"] = "female"
 
-    elif re.search(r"\bmale\b", lower):
+    elif re.search(r"\b(male|man|boy)\b", lower):
         if patient["sex"] is None:
             patient["sex"] = "male"
 

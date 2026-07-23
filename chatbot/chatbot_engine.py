@@ -1,9 +1,9 @@
 # -*- coding: utf-8 -*-
 
-from cmath import phase
 import re
 
-from typer import prompt
+# from typer import prompt
+# from cmath import phase
 
 from core.router import keyword_route
 
@@ -39,6 +39,8 @@ from memory.memory import (
 )
 
 from memory.chitchat import get_chitchat_response
+
+from memory.memory import clear_expected_answer
 
 from memory.session import (
     get_user,
@@ -76,6 +78,7 @@ from database.collections.specialist_queries import (
     get_specialists_by_specialization,
     get_approved_specialists
 )
+
 from database.collections.appointment_queries import get_patient_upcoming_appointments
 
 from config import SIMILARITY_THRESHOLD, ENABLE_DATABASE
@@ -638,13 +641,16 @@ def predict(user_query, chat_id="default_session"):
     elif question_type == "DATABASE":
         set_conversation_state(chat_id, "DATABASE")
         set_phase(chat_id, None)
+        clear_expected_answer(chat_id)
 
     elif question_type == "CHITCHAT":
         set_conversation_state(chat_id, "CHITCHAT")
         set_phase(chat_id, None)
+        clear_expected_answer(chat_id)
 
     elif question_type == "GENERAL":
         set_phase(chat_id, None)
+        clear_expected_answer(chat_id)
     
     if question_type != "GENERAL":
         set_last_question_type(chat_id, question_type)
@@ -819,7 +825,7 @@ def predict(user_query, chat_id="default_session"):
             if planner and planner["field"]:
                 set_expected_answer(chat_id, planner["field"])
             """
-            
+
         except Exception as e:
             print("DB Error:", e)
             answer = "Sorry, I couldn't retrieve your account information."

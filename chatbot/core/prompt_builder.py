@@ -82,11 +82,6 @@ KNOWN SYMPTOMS
 
 {symptom_summary}
 
-==================================================
-KNOWN SYMPTOMS
-==================================================
-
-{symptom_summary}
 
 ========================
 ACCOUNT / PLATFORM DATA

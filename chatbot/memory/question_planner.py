@@ -99,6 +99,12 @@ def get_next_missing_information(chat_id):
     patient = patient_state[chat_id]
 
     symptoms = patient["symptoms_present"]
+    if not symptoms:
+        return {
+            "field": None,
+            "priority": "waiting_for_symptoms",
+            "reason": "No symptoms have been collected yet."
+        }
 
     # ------------------------------------------------------
     # Emergency case
@@ -159,7 +165,7 @@ def get_next_missing_information(chat_id):
     # Fever
     # ------------------------------------------------------
 
-    if "fever" in symptoms:
+    if any("fever" in symptom for symptom in symptoms):
 
         for field in FEVER_FIELDS:
 
@@ -225,6 +231,15 @@ def get_next_missing_information(chat_id):
     # Diagnosis can start
     # ------------------------------------------------------
 
+    patient["diagnosis_ready"] = (
+    planner := {
+        "field": None,
+        "priority": "complete",
+        "reason": "Enough information has been collected."
+    }
+)
+
+
     patient["diagnosis_ready"] = True
 
     return {
@@ -232,6 +247,7 @@ def get_next_missing_information(chat_id):
         "priority": "complete",
         "reason": "Enough information has been collected."
     }
+
 
 def get_followup_guidance(chat_id):
     """
