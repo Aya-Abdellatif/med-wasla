@@ -4,8 +4,11 @@ from database.services.database_formatter import (
     format_reviews,
     format_specialists
 )
-from memory.session import set_last_specialist_name
 
+from memory.session import (
+    set_last_specialist_name,
+    set_pending_offer,
+)
 
 def get_user_context(user_query, user_id, chat_id=None):
     """
@@ -44,8 +47,12 @@ def get_user_context(user_query, user_id, chat_id=None):
         return format_reviews(result["data"]), None, None
 
     if result["type"] == "login_required":
+
+        if chat_id:
+            set_pending_offer(chat_id, "login_help")
+
         return (
-            "The user is not logged in, so this information is not available. Tell them to log in to see this.",
+            "The user is not logged in, so this information is not available. Explain that they need to log in first, then ask exactly: 'Would you like to know how to log in?'",
             None,
             None
         )

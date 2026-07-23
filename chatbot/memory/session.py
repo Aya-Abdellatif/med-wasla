@@ -16,6 +16,9 @@ _fulfilled_offers = {}
 # Conversation state (last detected intent + waiting for reply)
 _conversation_state = {}
 
+# Pending assistant offer (login help, booking steps, etc.)
+_pending_offer = {}
+
 # Conversation phases
 COLLECTING_SYMPTOMS = "COLLECTING_SYMPTOMS"
 EMERGENCY = "EMERGENCY"
@@ -36,7 +39,17 @@ def get_user(session_id: str):
 def remove_user(session_id: str):
     _sessions.pop(session_id, None)
 
+def set_pending_offer(chat_id: str, offer: str):
+    _pending_offer[chat_id] = offer
 
+
+def get_pending_offer(chat_id: str):
+    return _pending_offer.get(chat_id)
+
+
+def clear_pending_offer(chat_id: str):
+    _pending_offer.pop(chat_id, None)
+    
 # ==========================================================
 # Last Specialist
 # ==========================================================
