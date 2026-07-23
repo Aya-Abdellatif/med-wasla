@@ -40,8 +40,6 @@ from memory.memory import (
 
 from memory.chitchat import get_chitchat_response
 
-from memory.session import get_expected_answer
-
 from memory.session import (
     get_user,
     set_expected_answer,
@@ -615,15 +613,7 @@ def predict(user_query, chat_id="default_session"):
     # Routing
     # -------------------------
 
-    expected = get_expected_answer(chat_id)
-
-    # If we are waiting for a medical answer (age, duration, pain scale, etc.),
-    # always keep the conversation in the medical pipeline.
-    if expected is not None:
-
-        question_type = "MEDICAL"
-
-    elif is_followup:
+    if is_followup:
 
         question_type = get_last_question_type(chat_id)
 
@@ -640,13 +630,8 @@ def predict(user_query, chat_id="default_session"):
         if question_type is None:
             question_type = classify_question(processed_query)
 
-
-    if expected is not None:
-        print(f"Question Type: MEDICAL (expected answer: {expected})")
-    else:
-        print(f"Question Type: {question_type}")
-
-
+    print(f"Question Type: {question_type}")
+    
     if question_type == "MEDICAL":
         set_conversation_state(chat_id, "COLLECTING_SYMPTOMS")
 
@@ -663,9 +648,6 @@ def predict(user_query, chat_id="default_session"):
     
     if question_type != "GENERAL":
         set_last_question_type(chat_id, question_type)
-
-
-
         
     # -------------------------
     # chitchat (predefined exact-match responses)
@@ -911,13 +893,6 @@ def predict(user_query, chat_id="default_session"):
     # FINAL PROMPT BUILD
     # =========================
     
-    from memory.memory import patient_state
-
-    print("=" * 80)
-    print("PATIENT STATE BEFORE PLANNER")
-    print(patient_state.get(chat_id))
-    print("=" * 80)
-
     planner = get_next_missing_information(chat_id)
 
     followup_guidance = None

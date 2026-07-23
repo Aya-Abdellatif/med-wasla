@@ -350,7 +350,7 @@ def update_patient_entities(chat_id, text):
         # Temperature
         # -------------------------
 
-        elif expected == "fever_temperature":
+        elif expected == "temperature":
 
             match = re.search(
                 r"\b(3[5-9]|4[0-2])(\.\d)?\b",
@@ -381,53 +381,6 @@ def update_patient_entities(chat_id, text):
                     clear_expected_answer(chat_id)
                     return
 
-        # -------------------------
-        # Pain Location
-        # -------------------------
-
-        elif expected == "pain_location":
-
-            locations = [
-
-                "head",
-                "chest",
-                "abdomen",
-                "stomach",
-                "back",
-                "lower back",
-                "upper back",
-                "neck",
-                "throat",
-                "leg",
-                "arm",
-                "shoulder",
-                "eye",
-                "ear",
-                "jaw",
-                "hip",
-                "knee",
-                "foot",
-                "ankle",
-                "hand",
-                "wrist",
-                "finger",
-                "all over",
-                "whole body",
-                "everywhere",
-                "all over",
-                "whole body",
-                "everywhere",
-                "left",
-                "right",
-                "both",
-                "both sides"
-            ]
-
-            for location in locations:
-                if location in lower:
-                    patient["pain_location"] = location
-                    clear_expected_answer(chat_id)
-                    return
     # =====================================================
     # General extraction
     # =====================================================
@@ -630,6 +583,7 @@ def update_patient_entities(chat_id, text):
 
 def get_patient_summary(chat_id):
 
+
     if chat_id not in patient_state:
         return "No patient information."
 
@@ -686,3 +640,6 @@ def get_patient_summary(chat_id):
         )
 
     return "\n".join(lines)
+
+
+

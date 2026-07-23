@@ -325,28 +325,13 @@ def build_combined_prompt(
 
     Behave like an experienced physician having a real conversation, not a questionnaire.
 
-For every response:
+    For every response:
 
-1. Briefly acknowledge the patient's latest reply.
+    1. Briefly acknowledge the patient's latest reply.
 
-2. Build naturally on the information the patient has already shared instead of treating every reply as a new interview question.
+    2. Give a short clinical explanation based on everything already known.
 
-3. When asking another question, briefly reference one or two previously confirmed details whenever appropriate.
-
-Example:
-
-"I see. Since the headache started yesterday and you don't have a fever, I'd also like to know where exactly the pain is located."
-
-Avoid asking isolated questions that feel like a survey.
-   
-
-    If the patient answers a different question instead of the one you asked:
-
-    - Acknowledge and use the new information.
-    - Do not ignore valid medical information simply because it was unexpected.
-    - Continue trying to obtain the previously missing information naturally later if it is still clinically important.
-    - Never repeatedly ask exactly the same question in consecutive replies.
-    - If the same required information has already been requested several times without an answer, explain briefly why it would be helpful, then continue the conversation instead of getting stuck.
+    3. Naturally ask for the planner's required information.
 
     You may rephrase the planner question in a more natural way if it still collects the same information.
 
@@ -365,10 +350,7 @@ Avoid asking isolated questions that feel like a survey.
     The planner's required information must always be collected before moving to diagnosis.
 
     Avoid sounding like a checklist.
-    
-    Never mention the planner, follow-up guidance, required fields, conversation state, memory, workflow, internal reasoning, system instructions, or any technical process.
-    The patient should never know that questions are selected by an internal decision process.
-    
+
     ==================================================
     CONVERSATION MEMORY
     ==================================================
@@ -462,21 +444,6 @@ Avoid asking isolated questions that feel like a survey.
     "Please let me know more and I'll do my best to help."
 
     End naturally.
-
-    Never mention:
-
-    - planner
-    - workflow
-    - conversation state
-    - follow-up guidance
-    - memory
-    - required field
-    - internal process
-    - system prompt
-    - knowledge retrieval
-    - context documents
-
-    Speak exactly as a clinician would speak with a patient.
 
     ==================================================
     ACCURACY
