@@ -684,7 +684,8 @@ def predict(user_query, chat_id="default_session"):
             print("=" * 80 + "\n")
 
             answer = generate_response(prompt)
-            
+
+            """
             planner = get_next_missing_information(chat_id)
             if planner and planner["field"]:
                 set_expected_answer(chat_id, planner["field"])
@@ -700,7 +701,8 @@ def predict(user_query, chat_id="default_session"):
                     set_expected_answer(chat_id, planner["field"])
 
                 answer += f"\n\nCan you tell me:\n- {followup_guidance}"
-        
+            """
+
         except Exception as e:
             print("Chitchat Error:", e)
             answer = "Hello! How can I help you today?"
