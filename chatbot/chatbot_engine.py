@@ -814,9 +814,11 @@ def predict(user_query, chat_id="default_session"):
             answer = generate_response(prompt)
             answer = _finalize_specialist_answer(answer, chat_id, context_specialist_name)
 
+            """
             planner = get_next_missing_information(chat_id)
             if planner and planner["field"]:
                 set_expected_answer(chat_id, planner["field"])
+            """
             
         except Exception as e:
             print("DB Error:", e)
