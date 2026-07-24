@@ -209,7 +209,13 @@ def update_symptoms(chat_id, text):
             # Workflow
             # =========================
 
-            "diagnosis_ready": False
+            "diagnosis_ready": False,
+
+            # Whether the possible-causes/differential explanation has
+            # already been given to the patient at least once. Used to
+            # stop the model from repeating the same explanation every
+            # single turn.
+            "causes_explained": False
         }
 
     lower = text.lower()
@@ -290,6 +296,23 @@ def clear_patient_state(chat_id):
     patient_state.pop(chat_id, None)
 
 
+def has_explained_causes(chat_id):
+    """
+    Returns True if the possible-causes/differential explanation has
+    already been given to this patient earlier in the conversation.
+    """
+    return patient_state.get(chat_id, {}).get("causes_explained", False)
+
+
+def mark_causes_explained(chat_id):
+    """
+    Marks that the possible-causes/differential explanation has now
+    been given, so future prompts know not to repeat it.
+    """
+    if chat_id in patient_state:
+        patient_state[chat_id]["causes_explained"] = True
+
+
 def _extract_number(text):
     match = re.search(r"\b([1-9]|10)\b", text)
     return int(match.group(1)) if match else None
@@ -305,8 +328,6 @@ def update_patient_entities(chat_id, text):
     
     print("=" * 60)
     print("USER:", text)
-    print("EXPECTED:", expected)
-    print("=" * 60)
     print("EXPECTED:", expected)
     print("CHAT ID:", chat_id)
     print("=" * 60)
@@ -376,7 +397,6 @@ def update_patient_entities(chat_id, text):
                 if 0 < age <= 120:
                     patient["age"] = age
                     print("AGE SAVED:", age)
-                    patient["age"] = age
 
                     clear_expected_answer(chat_id)
                     return
@@ -384,50 +404,30 @@ def update_patient_entities(chat_id, text):
         # -------------------------
         # Pain Location
         # -------------------------
+        # Free text — location descriptions vary too much for a fixed
+        # keyword list ("both sides", "left temple", "behind my eyes").
+        # Since we know this reply is specifically answering the
+        # pain-location question, trust it directly rather than trying
+        # to pattern-match it — UNLESS it clearly looks like a
+        # different topic (e.g. the user moved on to a database/
+        # website question), in which case the stale expectation is
+        # cleared instead of misfiling that text as a location.
 
         elif expected == "pain_location":
 
-            locations = [
+            from core.router import keyword_route
 
-                "head",
-                "chest",
-                "abdomen",
-                "stomach",
-                "back",
-                "lower back",
-                "upper back",
-                "neck",
-                "throat",
-                "leg",
-                "arm",
-                "shoulder",
-                "eye",
-                "ear",
-                "jaw",
-                "hip",
-                "knee",
-                "foot",
-                "ankle",
-                "hand",
-                "wrist",
-                "finger",
-                "all over",
-                "whole body",
-                "everywhere",
-                "all over",
-                "whole body",
-                "everywhere",
-                "left",
-                "right",
-                "both",
-                "both sides"
-            ]
+            if keyword_route(text) is not None:
+                clear_expected_answer(chat_id)
 
-            for location in locations:
-                if location in lower:
-                    patient["pain_location"] = location
+            else:
+                location_text = text.strip()
+
+                if location_text:
+                    patient["pain_location"] = location_text
                     clear_expected_answer(chat_id)
                     return
+
     # =====================================================
     # General extraction
     # =====================================================
@@ -522,7 +522,18 @@ def update_patient_entities(chat_id, text):
         "ankle",
         "hand",
         "wrist",
-        "finger"
+        "finger",
+        "both sides",
+        "one side",
+        "left side",
+        "right side",
+        "bilateral",
+        "temple",
+        "forehead",
+        "whole head",
+        "back of the head",
+        "behind my eyes",
+        "behind the eyes"
 
     ]
 

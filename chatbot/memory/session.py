@@ -125,13 +125,11 @@ def is_waiting_for_reply(chat_id: str):
     )
 
 def set_expected_answer(chat_id: str, field: str):
-    print("CHAT ID:", chat_id)
     _conversation_state.setdefault(chat_id, {})
     _conversation_state[chat_id]["expected_answer"] = field
 
 
 def get_expected_answer(chat_id: str):
-    print("CHAT ID:", chat_id)
     return (
         _conversation_state
         .get(chat_id, {})
@@ -141,6 +139,32 @@ def get_expected_answer(chat_id: str):
 def clear_expected_answer(chat_id: str):
     if chat_id in _conversation_state:
         _conversation_state[chat_id].pop("expected_answer", None)
+
+
+# ==========================================================
+# Pending Login Offer
+# ==========================================================
+# Tracks whether the bot just offered to explain how to log in
+# (shown to a logged-out user asking a database question), so a
+# short affirmative reply ("yes please") can be answered with the
+# actual login steps deterministically, without an LLM call.
+
+def set_pending_login_offer(chat_id: str):
+    _conversation_state.setdefault(chat_id, {})
+    _conversation_state[chat_id]["pending_login_offer"] = True
+
+
+def is_pending_login_offer(chat_id: str):
+    return (
+        _conversation_state
+        .get(chat_id, {})
+        .get("pending_login_offer", False)
+    )
+
+
+def clear_pending_login_offer(chat_id: str):
+    if chat_id in _conversation_state:
+        _conversation_state[chat_id].pop("pending_login_offer", None)
 
 # ==========================================================
 # Assistant Reply Detection

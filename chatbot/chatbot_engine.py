@@ -14,7 +14,8 @@ from core.classifier import classify_question
 
 from memory.question_planner import (
     get_next_missing_information,
-    get_followup_guidance
+    get_followup_guidance,
+    get_followup_question
 )
 
 from preprocessing.gibberish import is_gibberish
@@ -26,13 +27,16 @@ from preprocessing.write_action_guard import (
     get_requested_info,
     build_action_guard_message,
     is_unrecognized_offer_confirmation,
-    GENERIC_NO_ACTION_MESSAGE
+    GENERIC_NO_ACTION_MESSAGE,
+    _AFFIRMATIVE_RE
 )
 
 from memory.memory import (
     add_message,
     get_history,
     get_symptom_summary,
+    has_explained_causes,
+    mark_causes_explained,
     # is_patient_ready, will use later
     # update_patient_entities,
     # set_expected_answer
@@ -40,11 +44,13 @@ from memory.memory import (
 
 from memory.chitchat import get_chitchat_response
 
-from memory.session import get_expected_answer
-
 from memory.session import (
     get_user,
     set_expected_answer,
+    clear_expected_answer,
+    set_pending_login_offer,
+    is_pending_login_offer,
+    clear_pending_login_offer,
     set_last_specialist_name,
     get_last_specialist_name,
     mark_offer_fulfilled,
@@ -81,6 +87,76 @@ from database.collections.specialist_queries import (
 from database.collections.appointment_queries import get_patient_upcoming_appointments
 
 from config import SIMILARITY_THRESHOLD, ENABLE_DATABASE
+
+
+# Defense-in-depth: the CLINICAL PLANNER block in build_combined_prompt
+# is internal metadata the model should never echo (see prompt_builder.py).
+# The prompt instructs it not to, but a local LLM can still slip
+# occasionally — this strips any leaked "Planner Decision" style block
+# out of the final answer before it ever reaches the user.
+# Defense-in-depth: the CLINICAL PLANNER block in build_combined_prompt
+# is internal metadata the model should never echo (see prompt_builder.py).
+# The prompt instructs it not to, but a local LLM can still slip
+# occasionally — this strips any leaked "Planner Decision" style block,
+# or other meta-commentary about the internal question-planning
+# mechanism, out of the final answer before it ever reaches the user.
+_PLANNER_LEAK_PATTERNS = [
+    re.compile(
+        r"planner\s*decision.*?required\s*follow-?up\s*question\s*:?\s*.*?(?:\n\s*\n|\Z)",
+        re.IGNORECASE | re.DOTALL
+    ),
+    # e.g. "The system will automatically append the next required
+    # field: 'age'" (with or without the quoted field name after it)
+    re.compile(
+        r"(?:the\s+)?system\s+(?:will|automatically)\s+(?:automatically\s+)?append[^\n.]*(?:required\s+field[^\n.]*)?[.:]?\s*(?:[\"'][a-z_]+[\"'])?\.?",
+        re.IGNORECASE
+    ),
+    # e.g. "Please note that I'll ask only ONE additional clinically
+    # relevant question if necessary, but for now, let's focus on..."
+    re.compile(
+        r"please note that i'?ll ask[^\n.]*\.", re.IGNORECASE
+    ),
+    re.compile(
+        r"next\s+required\s+field\s*:?\s*(?:[\"'][a-z_]+[\"'])?\.?", re.IGNORECASE
+    ),
+]
+
+
+def _strip_leaked_planner_block(answer):
+    if not answer:
+        return answer
+
+    cleaned = answer
+
+    for pattern in _PLANNER_LEAK_PATTERNS:
+        cleaned = pattern.sub("", cleaned)
+
+    # Collapse leftover blank lines created by the removals above
+    cleaned = re.sub(r"\n\s*\n\s*\n+", "\n\n", cleaned)
+
+    return cleaned.strip()
+
+
+def _strip_trailing_questions(answer):
+    """
+    Removes any trailing sentence(s) that end in '?' from the model's
+    answer. Used right before appending the guaranteed follow-up
+    question, so that even if the model disobeys the "don't ask a
+    question yourself" instruction, the patient doesn't see two
+    competing questions (e.g. "How old are you? Could you tell me
+    your age?").
+    """
+    if not answer:
+        return answer
+
+    # Split into sentences on ., !, ? followed by whitespace, keeping
+    # the delimiter attached to each sentence.
+    sentences = re.split(r"(?<=[.!?])\s+", answer.strip())
+
+    while sentences and sentences[-1].strip().endswith("?"):
+        sentences.pop()
+
+    return " ".join(sentences).strip()
 
 
 
@@ -465,6 +541,33 @@ def predict(user_query, chat_id="default_session"):
     add_message(chat_id, "user", user_query)
 
     # -------------------------
+    # login-offer follow-up — deterministic, no LLM call
+    # -------------------------
+    if is_pending_login_offer(chat_id):
+
+        clear_pending_login_offer(chat_id)
+
+        if _AFFIRMATIVE_RE.match(user_query.strip()):
+
+            answer = (
+                "To log in:\n\n"
+                "1. Open the Med-Wasla login page.\n"
+                "2. Enter your registered email and password.\n"
+                "3. Click Log In.\n\n"
+                "If you've forgotten your password, use the Forgot "
+                "Password option on the login page."
+            )
+
+            add_message(chat_id, "assistant", answer)
+            set_waiting_for_reply(chat_id, False)
+
+            return {
+                "answer": answer,
+                "sources": [],
+                "confidence": 1.0
+            }
+
+    # -------------------------
     # sensitive info guard — refuse before touching the database at all
     # -------------------------
     if is_sensitive_request(user_query):
@@ -615,20 +718,12 @@ def predict(user_query, chat_id="default_session"):
     # Routing
     # -------------------------
 
-    expected = get_expected_answer(chat_id)
+    if is_followup:
 
-    # If we are waiting for a medical answer (age, duration, pain scale, etc.),
-    # always keep the conversation in the medical pipeline.
-    if expected is not None:
-
-        question_type = "MEDICAL"
-
-    elif is_followup:
-
-        question_type = get_last_question_type(chat_id)
+        question_type = keyword_route(processed_query)
 
         if question_type is None:
-            question_type = keyword_route(processed_query)
+            question_type = get_last_question_type(chat_id)
 
             if question_type is None:
                 question_type = classify_question(processed_query)
@@ -640,32 +735,27 @@ def predict(user_query, chat_id="default_session"):
         if question_type is None:
             question_type = classify_question(processed_query)
 
-
-    if expected is not None:
-        print(f"Question Type: MEDICAL (expected answer: {expected})")
-    else:
-        print(f"Question Type: {question_type}")
-
-
+    print(f"Question Type: {question_type}")
+    
     if question_type == "MEDICAL":
         set_conversation_state(chat_id, "COLLECTING_SYMPTOMS")
 
     elif question_type == "DATABASE":
         set_conversation_state(chat_id, "DATABASE")
         set_phase(chat_id, None)
+        clear_expected_answer(chat_id)
 
     elif question_type == "CHITCHAT":
         set_conversation_state(chat_id, "CHITCHAT")
         set_phase(chat_id, None)
+        clear_expected_answer(chat_id)
 
     elif question_type == "GENERAL":
         set_phase(chat_id, None)
+        clear_expected_answer(chat_id)
     
     if question_type != "GENERAL":
         set_last_question_type(chat_id, question_type)
-
-
-
         
     # -------------------------
     # chitchat (predefined exact-match responses)
@@ -702,22 +792,19 @@ def predict(user_query, chat_id="default_session"):
             print("=" * 80 + "\n")
 
             answer = generate_response(prompt)
-            
+            answer = _strip_leaked_planner_block(answer)
+
             planner = get_next_missing_information(chat_id)
+
             if planner and planner["field"]:
                 set_expected_answer(chat_id, planner["field"])
-                
-            followup_guidance = get_followup_guidance(chat_id)
 
             if followup_guidance:
+                question_text = get_followup_question(chat_id, planner)
 
-                planner = get_next_missing_information(chat_id)
-
-                if planner:
-
-                    set_expected_answer(chat_id, planner["field"])
-
-                answer += f"\n\nCan you tell me:\n- {followup_guidance}"
+                if question_text:
+                    answer = _strip_trailing_questions(answer)
+                    answer = f"{answer.rstrip()}\n\n{question_text}"
         
         except Exception as e:
             print("Chitchat Error:", e)
@@ -764,6 +851,7 @@ def predict(user_query, chat_id="default_session"):
     user_context = None
     context_specialist_name = None
     context_specialists = None
+    user_id = None
 
     if ENABLE_DATABASE:
         user_id = get_user(chat_id)
@@ -779,6 +867,26 @@ def predict(user_query, chat_id="default_session"):
     # DATABASE RESPONSE
     # =========================
     if question_type == "DATABASE":
+
+        if not user_id:
+
+            answer = (
+                "Unfortunately, you need to be logged in to access "
+                "your account and platform data. Please log in to "
+                "view this information.\n\n"
+                "Would you like to know how to log in?"
+            )
+
+            set_pending_login_offer(chat_id)
+
+            add_message(chat_id, "assistant", answer)
+            set_waiting_for_reply(chat_id, True)
+
+            return {
+                "answer": answer,
+                "sources": [],
+                "confidence": 1.0
+            }
 
         # "list the cardiologists from top to lowest" — a readable
         # bulleted ranking, not a single pick. Checked before the
@@ -828,12 +936,9 @@ def predict(user_query, chat_id="default_session"):
 
         try:
             answer = generate_response(prompt)
+            answer = _strip_leaked_planner_block(answer)
             answer = _finalize_specialist_answer(answer, chat_id, context_specialist_name)
 
-            planner = get_next_missing_information(chat_id)
-            if planner and planner["field"]:
-                set_expected_answer(chat_id, planner["field"])
-            
         except Exception as e:
             print("DB Error:", e)
             answer = "Sorry, I couldn't retrieve your account information."
@@ -911,19 +1016,12 @@ def predict(user_query, chat_id="default_session"):
     # FINAL PROMPT BUILD
     # =========================
     
-    from memory.memory import patient_state
-
-    print("=" * 80)
-    print("PATIENT STATE BEFORE PLANNER")
-    print(patient_state.get(chat_id))
-    print("=" * 80)
-
     planner = get_next_missing_information(chat_id)
 
     followup_guidance = None
 
     if planner:
-        followup_guidance = get_followup_guidance(chat_id)
+        followup_guidance = get_followup_guidance(chat_id, planner)
 
         if planner["priority"] == "emergency":
             set_phase(chat_id, EMERGENCY)
@@ -985,8 +1083,6 @@ def predict(user_query, chat_id="default_session"):
 
     else:
 
-        followup_guidance = get_followup_guidance(chat_id)
-
         prompt = build_combined_prompt(
             context_docs=filtered_docs,
             user_query=user_query,
@@ -995,16 +1091,26 @@ def predict(user_query, chat_id="default_session"):
             conversation_state=conversation_state,
             planner=planner,
             followup_guidance=followup_guidance,
+            causes_already_explained=has_explained_causes(chat_id),
             user_context=user_context
         )
 
     try:
         answer = generate_response(prompt)
+        answer = _strip_leaked_planner_block(answer)
 
-        planner = get_next_missing_information(chat_id)
-        if planner and planner["field"]:
+        if planner and planner["field"] and phase != EMERGENCY:
             set_expected_answer(chat_id, planner["field"])
-            
+
+            question_text = get_followup_question(chat_id, planner)
+
+            if question_text:
+                answer = _strip_trailing_questions(answer)
+                answer = f"{answer.rstrip()}\n\n{question_text}"
+
+        if phase != EMERGENCY:
+            mark_causes_explained(chat_id)
+
     except Exception as e:
         print("Ollama Error:", e)
         answer = "Sorry, I couldn't generate a response."

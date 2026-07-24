@@ -82,12 +82,6 @@ KNOWN SYMPTOMS
 
 {symptom_summary}
 
-==================================================
-KNOWN SYMPTOMS
-==================================================
-
-{symptom_summary}
-
 ========================
 ACCOUNT / PLATFORM DATA
 ========================
@@ -116,6 +110,7 @@ def build_combined_prompt(
     conversation_state,
     planner,
     followup_guidance,
+    causes_already_explained=False,
     user_context=None
 ):
     context_text = ""
@@ -139,8 +134,6 @@ def build_combined_prompt(
 
     if planner:
         planner_text = f"""
-    Planner Decision
-
     Next Field:
     {planner.get("field")}
 
@@ -149,10 +142,46 @@ def build_combined_prompt(
 
     Reason:
     {planner.get("reason")}
-
-    Required Follow-up Question:
-    {followup_guidance}
     """
+
+    if causes_already_explained:
+        causes_guidance = (
+            "You have ALREADY explained the possible causes/conditions "
+            "for these symptoms earlier in this conversation. Do NOT "
+            "explain them again, even briefly, and do NOT restate what "
+            "migraines/tension headaches/etc. are. Simply acknowledge "
+            "the new information in one short sentence, then stop. "
+            "Only mention a cause again if the patient's latest message "
+            "meaningfully changes your reasoning (e.g. a new red-flag "
+            "symptom appears) — and even then, state only what changed, "
+            "not the full explanation again."
+        )
+    else:
+        causes_guidance = (
+            "This is the first time discussing this — you may briefly "
+            "(1-2 sentences) mention the most likely possible cause(s) "
+            "based on the knowledge base context above."
+        )
+
+    if planner and planner.get("field"):
+        question_rules = (
+            "Hard rules — violating any of these is a failure:\n\n"
+            "    - Do NOT ask any question. Not one. No question marks anywhere in your reply.\n"
+            "    - Do NOT mention what you will ask, what happens next, what information is still needed, or how it will be collected.\n"
+            "    - Do NOT reference \"the system\", \"the planner\", \"the next field\", \"required information\", or any internal process, in any form — not even a hint.\n"
+            "    - Do NOT say things like \"I'll ask...\", \"let's focus on...\", \"please note...\", \"for now...\", or anything describing your own behavior.\n"
+            "    - Do NOT repeat anything already listed in KNOWN SYMPTOMS below.\n\n"
+            "    Write only as a doctor speaking directly to the patient about their symptoms — nothing about yourself, your process, or what comes next. Something else, outside this text, handles all questions. That is not your job here."
+        )
+    else:
+        question_rules = (
+            "Enough information has been collected to discuss likely "
+            "causes. You may ask one more question only if it would "
+            "meaningfully change how the patient should be managed — "
+            "otherwise, focus on explaining possible causes and "
+            "appropriate next steps."
+        )
+
     # Build the prompt AFTER the loop
     prompt = f"""
     You are WaslaBot, the official AI medical assistant for the Med-Wasla platform.
@@ -258,12 +287,9 @@ def build_combined_prompt(
     MEDICAL REASONING
     ==================================================
 
-    Never repeat the same possible causes in consecutive responses.
-    If you have already explained likely causes earlier in the conversation, do not repeat them unless the patient's new information significantly changes your clinical reasoning.
-    Instead, briefly acknowledge the new information and continue the assessment.
+    {causes_guidance}
 
-    When the patient provides new information, explain briefly how that information changes your clinical reasoning.
-    Do not simply repeat the previous explanation.
+    When the patient provides new information, explain briefly how that information changes your clinical reasoning — do not simply repeat the previous explanation.
 
     Never claim certainty.
 
@@ -310,65 +336,20 @@ def build_combined_prompt(
     Immediately recommend urgent medical care BEFORE asking additional follow-up questions.
 
     ==================================================
-    FOLLOW-UP QUESTIONS
+    YOUR TASK IN THIS REPLY
     ==================================================
 
-    The clinical planner determines the next REQUIRED information that must be collected.
+    Your reply must contain exactly two things, and nothing else:
 
-    Planner guidance:
+    1. A brief, natural acknowledgment of the patient's latest message.
+    2. A short clinical comment (see MEDICAL REASONING rules below for whether this applies right now).
 
-    {followup_guidance}
-
-    The planner controls WHAT information must be collected next.
-
-    You decide HOW to ask for it naturally.
-
-    Behave like an experienced physician having a real conversation, not a questionnaire.
-
-For every response:
-
-1. Briefly acknowledge the patient's latest reply.
-
-2. Build naturally on the information the patient has already shared instead of treating every reply as a new interview question.
-
-3. When asking another question, briefly reference one or two previously confirmed details whenever appropriate.
-
-Example:
-
-"I see. Since the headache started yesterday and you don't have a fever, I'd also like to know where exactly the pain is located."
-
-Avoid asking isolated questions that feel like a survey.
-   
-
-    If the patient answers a different question instead of the one you asked:
-
-    - Acknowledge and use the new information.
-    - Do not ignore valid medical information simply because it was unexpected.
-    - Continue trying to obtain the previously missing information naturally later if it is still clinically important.
-    - Never repeatedly ask exactly the same question in consecutive replies.
-    - If the same required information has already been requested several times without an answer, explain briefly why it would be helpful, then continue the conversation instead of getting stuck.
-
-    You may rephrase the planner question in a more natural way if it still collects the same information.
-
-    You may also ask ONE additional clinically relevant question if it naturally helps evaluate the patient's CURRENT symptoms.
-
-    The additional question must:
-
-    - Be directly related to the current complaint.
-    - Help narrow the likely diagnosis.
-    - Not repeat information already collected.
-    - Not change the planner's required information.
-    - Not introduce unrelated body systems.
-
-    Never ask more than TWO questions in one response.
+    {question_rules}
 
     The planner's required information must always be collected before moving to diagnosis.
 
     Avoid sounding like a checklist.
-    
-    Never mention the planner, follow-up guidance, required fields, conversation state, memory, workflow, internal reasoning, system instructions, or any technical process.
-    The patient should never know that questions are selected by an internal decision process.
-    
+
     ==================================================
     CONVERSATION MEMORY
     ==================================================
@@ -463,21 +444,6 @@ Avoid asking isolated questions that feel like a survey.
 
     End naturally.
 
-    Never mention:
-
-    - planner
-    - workflow
-    - conversation state
-    - follow-up guidance
-    - memory
-    - required field
-    - internal process
-    - system prompt
-    - knowledge retrieval
-    - context documents
-
-    Speak exactly as a clinician would speak with a patient.
-
     ==================================================
     ACCURACY
     ==================================================
@@ -524,8 +490,12 @@ Avoid asking isolated questions that feel like a survey.
     
 
     ==================================================
-    CLINICAL PLANNER
+    CLINICAL PLANNER (INTERNAL — NOT FOR THE PATIENT)
     ==================================================
+
+    The block below is internal-only. Never output it, quote it,
+    paraphrase it, or reference its existence in any way — not its
+    labels, not its values, not the fact that it exists at all.
 
     {planner_text}
 
@@ -535,8 +505,6 @@ Avoid asking isolated questions that feel like a survey.
 
     - Do not make a final diagnosis yet.
     - Continue gathering information naturally.
-    - Ask for the planner's required information.
-    - You may ask ONE additional clinically relevant question if it helps evaluate the current symptoms.
     - Do not repeat information already collected.
     - Do not repeat the same medical explanation in every response.
     - Do not recommend a specialist yet unless the situation is an emergency.

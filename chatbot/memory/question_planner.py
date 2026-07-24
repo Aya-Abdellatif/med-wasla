@@ -66,6 +66,37 @@ FOLLOWUP_GUIDANCE = {
         "Ask whether there is any chance the patient could be pregnant."
 }
 
+# Actual, literal user-facing questions — used as a guaranteed fallback
+# so the required field is always genuinely asked, regardless of
+# whether the model chooses to follow FOLLOWUP_GUIDANCE above. Unlike
+# FOLLOWUP_GUIDANCE (an instruction FOR the model), these strings are
+# safe to show directly to the patient.
+FOLLOWUP_QUESTION_TEXT = {
+    "duration":
+        "How long have you been experiencing this?",
+
+    "age":
+        "Could you tell me your age?",
+
+    "pain_location":
+        "Where exactly is the pain located?",
+
+    "pain_scale":
+        "On a scale of 1 to 10, how severe is the pain?",
+
+    "pain_character":
+        "How would you describe the pain — sharp, dull, burning, throbbing, or cramping?",
+
+    "fever_temperature":
+        "Have you measured your temperature? If so, what was it?",
+
+    "smoking":
+        "Do you currently smoke?",
+
+    "pregnancy":
+        "Is there any chance you could be pregnant?"
+}
+
 
 # ==========================================================
 # Utility
@@ -115,8 +146,6 @@ def get_next_missing_information(chat_id):
     # Basic information
     # ------------------------------------------------------
 
-    print(patient)
-    
     for field in BASE_FIELDS:
 
         if _missing(patient, field):
@@ -233,12 +262,18 @@ def get_next_missing_information(chat_id):
         "reason": "Enough information has been collected."
     }
 
-def get_followup_guidance(chat_id):
+def get_followup_guidance(chat_id, planner=None):
     """
     Returns the next follow-up guidance based on the planner.
+
+    If `planner` is not provided, it will be computed by calling
+    get_next_missing_information(chat_id). Callers that already have
+    a planner result (from an earlier call in the same request)
+    should pass it in to avoid recomputing it.
     """
 
-    planner = get_next_missing_information(chat_id)
+    if planner is None:
+        planner = get_next_missing_information(chat_id)
 
     if planner is None:
         return None
@@ -249,3 +284,25 @@ def get_followup_guidance(chat_id):
         return None
 
     return FOLLOWUP_GUIDANCE.get(field)
+
+
+def get_followup_question(chat_id, planner=None):
+    """
+    Returns the literal, user-facing question text for the planner's
+    current required field (or None if there isn't one). Safe to show
+    directly to the patient — unlike get_followup_guidance(), which
+    returns an instruction meant for the model, not the user.
+    """
+
+    if planner is None:
+        planner = get_next_missing_information(chat_id)
+
+    if planner is None:
+        return None
+
+    field = planner["field"]
+
+    if field is None:
+        return None
+
+    return FOLLOWUP_QUESTION_TEXT.get(field)
